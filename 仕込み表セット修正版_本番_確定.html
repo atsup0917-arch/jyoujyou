@@ -1,0 +1,1313 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>買い物リスト</title>
+<style>
+:root{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif;color:#171717;background:#f3f5f8}
+*{box-sizing:border-box} body{margin:0;padding:18px 14px 50px}
+.wrap{max-width:760px;margin:auto}.card{background:white;border-radius:22px;padding:18px;margin:0 0 16px}
+h1{font-size:30px;margin:4px 0 18px} h2{font-size:22px;margin:0 0 14px}
+label{font-weight:700;display:block;margin:12px 0 7px}
+input,select,button{width:100%;font-size:18px;border-radius:16px;padding:15px;border:1px solid #c9cdd3;background:white}
+button{font-weight:700;border:0;background:#3269df;color:white;margin-top:12px}
+button.gray{background:#e9eaed;color:#2371df}.danger{background:#fff0f0;color:#c62828;border:1px solid #f0bcbc}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.filters{display:flex;gap:8px;overflow:auto;padding-bottom:4px}
+.filters button{width:auto;white-space:nowrap;padding:10px 15px;margin:0;background:#e9eaed;color:#333}
+.filters button.active{background:#3269df;color:#fff}
+.filters button.has-items{background:#fff1b8;color:#7a5200;border:2px solid #e6b800}
+.filters button.has-items.active{background:#3269df;color:#fff;border-color:#3269df}
+.filters button .count{display:inline-block;margin-left:5px;font-weight:800}
+.storeGroup{background:#fff;border-radius:20px;margin:14px 0;overflow:hidden}
+.storeTitle{font-size:22px;font-weight:800;padding:16px 18px;background:#eef3ff}
+.item{display:flex;align-items:center;gap:12px;padding:15px 18px;border-top:1px solid #eee}
+.item input[type=checkbox]{width:26px;height:26px;flex:0 0 26px}
+.itemText{flex:1;font-size:18px}.item.done .itemText{text-decoration:line-through;opacity:.45}
+.itemDelete{width:auto;margin:0;padding:8px 11px;background:#f1f1f1;color:#b42318;font-size:14px}
+.empty{background:white;border-radius:20px;padding:20px;font-size:18px}
+.storeManage{display:flex;gap:8px;margin:8px 0}.storeManage span{flex:1;padding:12px;background:#f4f4f4;border-radius:12px}
+.storeManage button{width:auto;margin:0;padding:10px 12px}
+.small{font-size:13px;color:#666;margin-top:8px}
+.settingsCard{padding:0;overflow:hidden}.settingsCard summary{cursor:pointer;padding:20px 18px;font-size:20px;font-weight:800;color:#2867df;list-style:none}.settingsCard summary::-webkit-details-marker{display:none}.settingsCard summary::after{content:"▼";float:right}.settingsCard details[open] summary::after{content:"▲"}.settingsBody{padding:0 18px 20px;border-top:1px solid #eee}.settingsHeading{margin-top:26px!important;padding-top:20px;border-top:1px solid #eee}
+.navtabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
+.navtabs button{margin:0;background:#e9eaed;color:#333}
+.navtabs button.active{background:#3269df;color:#fff}
+.page[hidden]{display:none!important}
+.orderRow{display:grid;grid-template-columns:1fr 90px 105px;gap:8px;align-items:end;margin:10px 0}
+.orderRow button{margin:0}
+.orderItems{margin-top:14px}
+.orderItem{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;padding:12px 0;border-bottom:1px solid #eee}
+.orderItem button{width:auto;margin:0;padding:8px 11px;background:#f1f1f1;color:#b42318;font-size:14px}
+.preview{background:#fff;border:2px solid #222;border-radius:10px;padding:24px 20px;margin-top:14px;font-size:21px;line-height:1.75;white-space:pre-wrap}
+.previewTitle{text-align:center;font-size:25px;font-weight:800;margin-bottom:12px}
+.previewActions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.unitManage{display:flex;gap:8px;margin:8px 0}.unitManage span{flex:1;padding:12px;background:#f4f4f4;border-radius:12px}.unitManage button{width:auto;margin:0;padding:10px 12px}
+@media(max-width:520px){.orderRow{grid-template-columns:1fr 72px 92px}.preview{font-size:20px;padding:22px 16px}}
+.moveBtn{width:auto!important;margin:0!important;padding:9px 12px!important;background:#e9eaed!important;color:#2867df!important}.moveBtn:disabled{opacity:.3}.navtabs3{grid-template-columns:1fr 1fr 1fr}.navtabs3 button{font-size:15px;padding:13px 6px}
+display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}.nav3 button{margin:0;background:#e9eaed;color:#333}.nav3 button.active{background:#3269df;color:#fff}.prepGroup{background:#fff;border-radius:20px;margin:14px 0;overflow:hidden}.prepTitle{font-size:22px;font-weight:800;padding:15px 18px;background:#eef3ff}.prepRow{display:grid;grid-template-columns:30px 1fr 82px;gap:10px;align-items:center;padding:14px;border-top:1px solid #eee}.prepRow input[type=checkbox]{width:27px;height:27px}.prepCount{padding:11px 5px!important;text-align:center}.manage{display:grid;grid-template-columns:1fr auto auto auto;gap:6px;align-items:center;padding:8px 0;border-bottom:1px solid #eee}.manage span{padding:10px;background:#f4f4f4;border-radius:12px}.manage button{width:auto;margin:0;padding:9px}.needEdit{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px}.needEdit input{padding:10px;font-size:16px}.prepDone{opacity:.48;background:#f5f5f5}.prepDone b{text-decoration:line-through}.prepQtyWrap{display:flex;align-items:center;gap:5px}.prepQtyUnit{font-size:15px;font-weight:700;white-space:nowrap}.prepQtyWrap .prepCount{min-width:58px}
+#printSheet{display:none}
+@media print{
+ @page{size:A4 portrait;margin:9mm}
+ body{background:#fff!important;padding:0!important}
+ .wrap>*{display:none!important}
+ #printSheet{display:block!important;color:#000;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
+ #printSheet h1{text-align:center;font-size:20pt;margin:0 0 5mm}
+ #printSheet .printMeta{text-align:right;font-size:10pt;margin-bottom:3mm}
+ #printSheet .printPos{break-inside:avoid;margin:0 0 4mm}
+ #printSheet h2{font-size:13pt;margin:0;padding:2mm 2.5mm;background:#eee;border:1px solid #555}
+ #printSheet table{width:100%;border-collapse:collapse;table-layout:fixed}
+ #printSheet th,#printSheet td{border:1px solid #555;padding:1.7mm 2mm;font-size:10.5pt;line-height:1.2}
+ #printSheet th:nth-child(1),#printSheet td:nth-child(1){width:50%}
+ #printSheet th:nth-child(2),#printSheet td:nth-child(2){width:18%;text-align:center}
+ #printSheet th:nth-child(3),#printSheet td:nth-child(3){width:22%;text-align:center}
+ #printSheet th:nth-child(4),#printSheet td:nth-child(4){width:10%;text-align:center}
+}
+
+/* ===== 買い物シート チェック位置修正 ===== */
+.storeGroup .item{
+  display:flex;
+  align-items:center;
+}
+.storeGroup .item input[type="checkbox"]{
+  flex:0 0 auto;
+  margin:0 10px 0 0;
+  align-self:center;
+}
+.storeGroup .itemText{
+  display:flex;
+  align-items:center;
+  min-height:26px;
+}
+
+</style>
+
+
+
+
+
+<style id="prepSetStyle">
+/* ===== 仕込み表セットボタン：iPhone/Safariタップ安定化 ===== */
+.prepSetRow{position:relative;z-index:5}
+.prepSetButton{
+  position:relative!important;
+  z-index:6!important;
+  pointer-events:auto!important;
+  touch-action:manipulation;
+  -webkit-user-select:none;
+  user-select:none;
+  -webkit-tap-highlight-color:rgba(50,105,223,.18);
+}
+.prepSetButton:active{transform:translateY(1px)}
+</style>
+<style id="vegTapStyle">button{pointer-events:auto;-webkit-tap-highlight-color:rgba(0,0,0,.08);}</style>
+<style id="vegCopyStyle">
+#vegPreview{
+  position:relative;
+}
+#vegCopyBtn{
+  position:absolute;
+  top:18px;
+  right:18px;
+  width:34px;
+  height:34px;
+  margin:0;
+  padding:4px;
+  border:0;
+  background:rgba(255,255,255,.9);
+  color:#222;
+  border-radius:8px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:20;
+  cursor:pointer;
+}
+#vegCopyBtn svg{
+  width:22px;
+  height:22px;
+}
+</style>
+
+</head>
+<body><div class="wrap">
+<div class="navtabs navtabs3">
+<button id="tabShopping" class="active">🛒 買い物</button>
+<button id="tabVegetable">🥬 野菜発注</button>
+<button id="tabPrep">🔪 仕込み表</button>
+</div>
+<div id="shoppingPage" class="page">
+
+<h1>🛒 買い物リスト</h1>
+
+<div class="card">
+<h2>表示する場所</h2><div class="filters" id="filters"></div>
+</div>
+
+<div id="list"></div>
+
+<div class="card row">
+<button class="gray" id="deleteDone">購入済みを削除</button>
+<button class="gray" id="uncheckAll">チェックを全て外す</button>
+</div>
+
+<div class="card">
+<h2>買う物を追加</h2>
+<label>買う場所</label><select id="storeSelect"></select>
+<label>商品</label><select id="productSelect"></select>
+<label>自由入力</label><input id="freeProduct" placeholder="商品リストにない物を入力">
+<label>数量・メモ</label><input id="memo" placeholder="例：2袋 / 大サイズ">
+<button id="addItem">＋ 買う物に追加</button>
+</div>
+
+<div class="card settingsCard"><details><summary>⚙️ 買う場所・商品の登録・削除</summary><div class="settingsBody">
+<h2>買う場所の管理</h2>
+<label>新しい買う場所</label><input id="newStore" placeholder="例：魚屋">
+<button id="addStore">＋ 買う場所を追加</button><div id="storeManage"></div>
+<h2 class="settingsHeading">商品の管理</h2>
+<label>商品を登録する場所</label><select id="regStore"></select>
+<label>新しい商品</label><input id="newProduct" placeholder="例：玉子">
+<button id="addProduct">＋ 商品を登録</button><div id="productManage"></div>
+<div class="small">買う場所を削除すると、その場所に登録した商品も削除します。すでに買い物リストへ追加した品は残ります。</div>
+</div></details></div>
+</div>
+
+<div id="vegetablePage" class="page" hidden>
+<h1>🥬 野菜発注</h1>
+
+<div class="card">
+<label>納品日</label><input id="vegDate" type="date">
+<label>納品先・見出し</label><input id="vegDestination" value="刈谷納品" placeholder="例：刈谷納品">
+</div>
+
+<div class="card">
+<h2>発注する商品</h2>
+<label>品目</label><select id="vegProductSelect"></select>
+<div class="orderRow">
+<div><label>数量</label><select id="vegQty"></select></div>
+<div><label>単位</label><select id="vegUnit"></select></div>
+<div><button id="vegAdd">追加</button></div>
+</div>
+<div id="vegOrderItems" class="orderItems"></div>
+<button id="makeVegOrder">発注表を完成</button>
+</div>
+
+<div id="vegPreviewCard" class="card" hidden>
+<h2>LINE用 発注表</h2>
+<div id="vegPreview" class="preview"></div>
+<div class="previewActions">
+<button class="gray" id="vegEdit">編集に戻る</button>
+<button class="gray" id="vegClear">今回分をクリア</button>
+</div>
+<div class="small">この白い発注表が画面に収まるようにしてスクリーンショットし、そのままLINEへ送れます。</div>
+</div>
+
+<div class="card settingsCard">
+<details>
+<summary>⚙️ 野菜の商品・単位を登録・削除</summary>
+<div class="settingsBody">
+<h2>野菜商品の管理</h2>
+<label>新しい商品</label><input id="newVegProduct" placeholder="例：大葉">
+<button id="addVegProduct">＋ 商品を登録</button>
+<div id="vegProductManage"></div>
+<h2 class="settingsHeading">単位の管理</h2>
+<label>新しい単位</label><input id="newVegUnit" placeholder="例：ケース">
+<button id="addVegUnit">＋ 単位を登録</button>
+<div id="vegUnitManage"></div>
+</div>
+</details>
+</div>
+</div>
+<div id="prepPage" class="page" hidden>
+<h1>🔪 仕込み表</h1>
+<div class="card"><h2>表示するポジション</h2><div class="filters" id="prepFilters"></div></div>
+<div class="card row"><button class="gray" id="confirmPrep">仕込み確定</button></div><div class="card row prepSetRow"><button type="button" class="gray prepSetButton" id="setWeekday">平日必要数をセット</button><button type="button" class="gray prepSetButton" id="setWeekend">週末必要数をセット</button></div>
+<div id="prepList"></div>
+<div class="card printControls">
+<h2>🖨️ 紙で見る・PDF保存</h2><div class="small">仕込み数が1以上の品目だけ印刷します。</div>
+<div class="row"><button id="printWeekday">平日版 A4印刷</button><button id="printWeekend">週末版 A4印刷</button></div>
+<div class="small">iPhoneの印刷画面からプリンターで印刷、またはPDFとして保存できます。</div>
+</div>
+
+<div class="card row"><button class="gray" id="clearPrep">仕込み数を全て0</button><button class="gray" id="uncheckPrep">チェックを全て外す</button></div>
+<div class="card settingsCard"><details><summary>⚙️ 仕込み品目・ポジションの登録・並び替え</summary><div class="settingsBody">
+<h2>ポジション管理</h2><input id="newPos" placeholder="例：刺場"><button id="addPos">＋ ポジション追加</button><div id="posManage"></div>
+<h2 class="settingsHeading">品目管理</h2><label>ポジション</label><select id="prepPos"></select><label>品目</label><input id="newPrep" placeholder="例：大根つま">
+<div class="row"><div><label>平日必要数</label><input id="wdNeed" type="number" min="0" value="0"></div><div><label>週末必要数</label><input id="weNeed" type="number" min="0" value="0"></div></div>
+<label>単位</label><input id="prepUnit" placeholder="例：個 / p / 本"><button id="addPrep">＋ 品目登録</button><div id="prepManage"></div>
+</div></details></div>
+
+</div>
+
+<script type="module">
+import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+import {getDatabase,ref,onValue,set,push,remove,update} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-database.js";
+
+const firebaseConfig={
+  projectId:"shopping-list-4bc87",
+  databaseURL:"https://shopping-list-4bc87-default-rtdb.asia-southeast1.firebasedatabase.app",
+  appId:"1:535896228481:web:d06e634d2d7330630c4380"
+};
+const app=initializeApp(firebaseConfig), db=getDatabase(app);
+const storesRef=ref(db,"test/stores"), productsRef=ref(db,"test/products"), itemsRef=ref(db,"test/items");
+const vegProductsRef=ref(db,"test/vegetableOrder/products");
+const vegUnitsRef=ref(db,"test/vegetableOrder/units");
+let vegProducts={},vegUnits={},vegOrder=[];
+const prepPositionsRef=ref(db,"test/prep/positions"),prepItemsRef=ref(db,"test/prep/items"),prepStateRef=ref(db,"test/prep/state");
+let prepPositions={},prepItems={},prepState={},prepFilter="ALL",prepConfirmed=false;
+
+let stores={},products={},items={},filter="ALL";
+const $=id=>document.getElementById(id);
+function vals(o){return Object.entries(o||{})}
+function storeName(id){return stores[id]?.name||itemsStoreName(id)||"その他"}
+function itemsStoreName(id){for(const [,x] of vals(items))if(x.storeId===id&&x.storeName)return x.storeName;return ""}
+function renderSelectors(){
+ const opts=vals(stores).sort((a,b)=>(a[1].name||"").localeCompare(b[1].name||"ja")).map(([id,s])=>`<option value="${id}">${esc(s.name)}</option>`).join("");
+ const keep=$("storeSelect").value, keep2=$("regStore").value;
+ $("storeSelect").innerHTML=opts;$("regStore").innerHTML=opts;
+ if(stores[keep])$("storeSelect").value=keep;if(stores[keep2])$("regStore").value=keep2;
+ renderProducts();
+}
+function renderProducts(){
+ const sid=$("storeSelect").value;
+ const ps=vals(products[sid]||{}).sort((a,b)=>(a[1].name||"").localeCompare(b[1].name||"ja"));
+ $("productSelect").innerHTML=`<option value="">商品を選択</option>`+ps.map(([id,p])=>`<option value="${id}">${esc(p.name)}</option>`).join("");
+ renderProductManage();
+}
+function renderStoreManage(){
+ $("storeManage").innerHTML=vals(stores).sort((a,b)=>(a[1].name||"").localeCompare(b[1].name||"ja")).map(([id,s])=>`<div class="storeManage"><span>${esc(s.name)}</span><button class="danger" data-delstore="${id}">削除</button></div>`).join("");
+ document.querySelectorAll("[data-delstore]").forEach(b=>b.onclick=async()=>{
+   const id=b.dataset.delstore,name=stores[id]?.name||"";
+   if(confirm(`「${name}」を削除しますか？\\n登録商品も削除されます。\\n買い物リストの品は残ります。`)){
+     await remove(ref(db,"test/stores/"+id)); await remove(ref(db,"test/products/"+id));
+   }
+ });
+}
+function renderProductManage(){
+ const sid=$("regStore").value;
+ $("productManage").innerHTML=vals(products[sid]||{}).map(([id,p])=>`<div class="storeManage"><span>${esc(p.name)}</span><button class="danger" data-delproduct="${id}">削除</button></div>`).join("");
+ document.querySelectorAll("[data-delproduct]").forEach(b=>b.onclick=()=>remove(ref(db,`products/${sid}/${b.dataset.delproduct}`)));
+}
+function renderFilters(){
+ const counts={};
+ vals(items).forEach(([,x])=>{if(x.storeId)counts[x.storeId]=(counts[x.storeId]||0)+1});
+ const used=new Set(vals(items).map(([,x])=>x.storeId).filter(Boolean));
+ const ids=[...new Set([...Object.keys(stores),...used])];
+ const total=vals(items).length;
+ $("filters").innerHTML=`<button data-f="ALL" class="${filter==="ALL"?"active":""} ${total?"has-items":""}">全部${total?` <span class="count">${total}</span>`:""}</button>`+
+ ids.map(id=>`<button data-f="${id}" class="${filter===id?"active":""} ${counts[id]?"has-items":""}">${esc(storeName(id))}${counts[id]?` <span class="count">${counts[id]}</span>`:""}</button>`).join("");
+ document.querySelectorAll("[data-f]").forEach(b=>b.onclick=()=>{filter=b.dataset.f;renderList();renderFilters()});
+}
+function renderList(){
+ const arr=vals(items).map(([id,x])=>({id,...x})).filter(x=>filter==="ALL"||x.storeId===filter);
+ if(!arr.length){$("list").innerHTML='<div class="empty">買う物はまだありません。</div>';return}
+  const groups={};arr.forEach(x=>{const k=x.storeId||"OTHER";if(!groups[k])groups[k]=[];groups[k].push(x);}); $("list").innerHTML=Object.entries(groups).map(([sid,a])=>`<section class="storeGroup"><div class="storeTitle">${esc(a[0].storeName||storeName(sid))}</div>${a.map(x=>`<div class="item ${x.done?"done":""}"><input type="checkbox" ${x.done?"checked":""} data-check="${x.id}"><div class="itemText"><b>${esc(x.name)}</b></div><button class="itemDelete" data-delitem="${x.id}">削除</button></div>`).join("")}</section>`).join("");
+ document.querySelectorAll("[data-check]").forEach(c=>c.onchange=()=>update(ref(db,"test/items/"+c.dataset.check),{done:c.checked}));
+ document.querySelectorAll("[data-delitem]").forEach(b=>b.onclick=()=>remove(ref(db,"test/items/"+b.dataset.delitem)));
+}
+function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
+
+onValue(storesRef,s=>{stores=s.val()||{};renderSelectors();renderStoreManage();renderFilters()});
+onValue(productsRef,s=>{products=s.val()||{};renderProducts()});
+onValue(itemsRef,s=>{items=s.val()||{};renderList();renderFilters()});
+$("storeSelect").onchange=renderProducts;$("regStore").onchange=renderProductManage;
+
+$("addStore").onclick=async()=>{const name=$("newStore").value.trim();if(!name)return;await push(storesRef,{name});$("newStore").value=""};
+$("addProduct").onclick=async()=>{const sid=$("regStore").value,name=$("newProduct").value.trim();if(!sid||!name)return;await push(ref(db,"test/products/"+sid),{name});$("newProduct").value=""};
+$("addItem").onclick=async()=>{
+ const sid=$("storeSelect").value;if(!sid)return alert("買う場所を選んでください");
+ const free=$("freeProduct").value.trim(), pid=$("productSelect").value;
+ const name=free||(products[sid]?.[pid]?.name||"");if(!name)return alert("商品を選ぶか入力してください");
+ await push(itemsRef,{storeId:sid,storeName:stores[sid]?.name||"",name,memo:$("memo").value.trim(),done:false,createdAt:Date.now()});
+ $("freeProduct").value="";$("memo").value="";$("productSelect").value="";
+};
+$("deleteDone").onclick=async()=>{if(!confirm("購入済みを削除しますか？"))return;for(const [id,x] of vals(items))if(x.done)await remove(ref(db,"test/items/"+id))};
+$("uncheckAll").onclick=async()=>{for(const [id,x] of vals(items))if(x.done)await update(ref(db,"test/items/"+id),{done:false})};
+
+// ---- 野菜発注 ----
+const weekdays=["日","月","火","水","木","金","土"];
+function switchPage(which){
+ $("shoppingPage").hidden=which!=="shopping"; $("vegetablePage").hidden=which!=="vegetable"; $("prepPage").hidden=which!=="test/prep";
+ $("tabShopping").classList.toggle("active",which==="shopping");
+ $("tabVegetable").classList.toggle("active",which==="vegetable");
+ $("tabPrep").classList.toggle("active",which==="test/prep");
+}
+$("tabShopping").onclick=()=>switchPage("shopping");
+$("tabVegetable").onclick=()=>switchPage("vegetable");
+$("tabPrep").onclick=()=>switchPage("test/prep");
+
+const today=new Date();
+$("vegDate").value=[today.getFullYear(),String(today.getMonth()+1).padStart(2,"0"),String(today.getDate()).padStart(2,"0")].join("-");
+for(let i=1;i<=30;i++) $("vegQty").insertAdjacentHTML("beforeend",`<option value="${i}">${i}</option>`);
+
+function vegProductOptions(){
+ $("vegProductSelect").innerHTML='<option value="">品目を選択</option>'+vals(vegProducts).sort((a,b)=>(a[1].order??9999)-(b[1].order??9999)||(a[1].name||"").localeCompare(b[1].name||"","ja")).map(([id,x])=>`<option value="${id}">${esc(x.name)}</option>`).join("");
+ const ordered=vals(vegProducts).sort((a,b)=>(a[1].order??9999)-(b[1].order??9999)||(a[1].name||"").localeCompare(b[1].name||"","ja"));
+ $("vegProductManage").innerHTML=ordered.map(([id,x],i)=>`<div class="storeManage"><span>${esc(x.name)}</span><button class="moveBtn" data-upveg="${id}" ${i===0?"disabled":""}>↑</button><button class="moveBtn" data-downveg="${id}" ${i===ordered.length-1?"disabled":""}>↓</button><button class="danger" data-delveg="${id}">削除</button></div>`).join("");
+ document.querySelectorAll("[data-delveg]").forEach(b=>b.onclick=()=>remove(ref(db,"test/vegetableOrder/products/"+b.dataset.delveg)));
+ document.querySelectorAll("[data-upveg]").forEach(b=>b.onclick=()=>moveVeg(b.dataset.upveg,-1));
+ document.querySelectorAll("[data-downveg]").forEach(b=>b.onclick=()=>moveVeg(b.dataset.downveg,1));
+}
+async function normalizeVegOrder(){
+ const a=vals(vegProducts).sort((a,b)=>(a[1].order??9999)-(b[1].order??9999)||(a[1].name||"").localeCompare(b[1].name||"","ja"));
+ const u={}; a.forEach(([id],i)=>u[`test/vegetableOrder/products/${id}/order`]=i);
+ if(a.length) await update(ref(db),u);
+}
+async function moveVeg(id,dir){
+ const a=vals(vegProducts).sort((a,b)=>(a[1].order??9999)-(b[1].order??9999)||(a[1].name||"").localeCompare(b[1].name||"","ja"));
+ const i=a.findIndex(([x])=>x===id), j=i+dir;
+ if(i<0||j<0||j>=a.length)return;
+ const u={};
+ u[`test/vegetableOrder/products/${a[i][0]}/order`]=j;
+ u[`test/vegetableOrder/products/${a[j][0]}/order`]=i;
+ await update(ref(db),u);
+}
+function vegUnitOptions(){
+ $("vegUnit").innerHTML=vals(vegUnits).map(([id,x])=>`<option value="${id}">${esc(x.name)}</option>`).join("");
+ $("vegUnitManage").innerHTML=vals(vegUnits).map(([id,x])=>`<div class="unitManage"><span>${esc(x.name)}</span><button class="danger" data-delunit="${id}">削除</button></div>`).join("");
+ document.querySelectorAll("[data-delunit]").forEach(b=>b.onclick=()=>remove(ref(db,"test/vegetableOrder/units/"+b.dataset.delunit)));
+}
+onValue(vegProductsRef,async s=>{
+ vegProducts=s.val()||{};
+ if(!Object.keys(vegProducts).length){
+   for(const [order,name] of ["大葉","レモン","葉切り大根","しいたけ6入","茗荷","ナス"].entries()) await push(vegProductsRef,{name,order});
+   return;
+ }
+ vegProductOptions();
+ if(vals(vegProducts).some(([,x])=>x.order===undefined)) normalizeVegOrder();
+});
+onValue(vegUnitsRef,async s=>{
+ vegUnits=s.val()||{};
+ if(!Object.keys(vegUnits).length){
+   for(const name of ["p","ケース","本","個","束","袋","kg"]) await push(vegUnitsRef,{name});
+   return;
+ }
+ vegUnitOptions();
+});
+$("addVegProduct").onclick=async()=>{const name=$("newVegProduct").value.trim();if(!name)return;const max=Math.max(-1,...vals(vegProducts).map(([,x])=>Number.isFinite(x.order)?x.order:-1));await push(vegProductsRef,{name,order:max+1});$("newVegProduct").value=""};
+$("addVegUnit").onclick=async()=>{const name=$("newVegUnit").value.trim();if(!name)return;await push(vegUnitsRef,{name});$("newVegUnit").value=""};
+
+function renderVegOrder(){
+ $("vegOrderItems").innerHTML=vegOrder.length?vegOrder.map((x,i)=>`<div class="orderItem"><span><b>${esc(x.name)}</b>　${esc(x.qty)}${esc(x.unit)}</span><button data-vegremove="${i}">削除</button></div>`).join(""):'<div class="small">まだ商品を追加していません。</div>';
+ document.querySelectorAll("[data-vegremove]").forEach(b=>b.onclick=()=>{vegOrder.splice(Number(b.dataset.vegremove),1);renderVegOrder()});
+}
+renderVegOrder();
+$("vegAdd").onclick=()=>{
+ const pid=$("vegProductSelect").value, uid=$("vegUnit").value;
+ if(!pid||!uid)return alert("品目と単位を選んでください");
+ vegOrder.push({name:vegProducts[pid].name,qty:$("vegQty").value,unit:vegUnits[uid].name});
+ renderVegOrder();
+};
+function formatDate(v){
+ const d=new Date(v+"T00:00:00"); if(Number.isNaN(d.getTime()))return "";
+ return `${d.getMonth()+1}/${d.getDate()}(${weekdays[d.getDay()]})`;
+}
+$("makeVegOrder").onclick=()=>{
+ if(!vegOrder.length)return alert("発注する商品を追加してください");
+ const lines=[formatDate($("vegDate").value),$("vegDestination").value.trim(),"",...vegOrder.map(x=>`${x.name}　${x.qty}${x.unit}`),"","以上宜しくお願い致します。"];
+ $("vegPreview").textContent=lines.join("\n");
+ $("vegPreviewCard").hidden=false;
+ $("vegPreviewCard").scrollIntoView({behavior:"smooth",block:"start"});
+};
+$("vegEdit").onclick=()=>{$("vegPreviewCard").hidden=true};
+$("vegClear").onclick=()=>{if(confirm("今回の発注内容をクリアしますか？")){vegOrder=[];renderVegOrder();$("vegPreviewCard").hidden=true}};
+
+const op=()=>vals(prepPositions).sort((a,b)=>(a[1].order??9999)-(b[1].order??9999)||(a[1].name||"").localeCompare(b[1].name||"","ja"));
+const oi=pid=>vals(prepItems).filter(([,x])=>x.positionId===pid).sort((a,b)=>(a[1].order??9999)-(b[1].order??9999)||(a[1].name||"").localeCompare(b[1].name||"","ja"));
+function prepPosName(id){return prepPositions[id]?.name||"その他"}
+function renderPrepFilters(){
+ $("prepFilters").innerHTML=`<button data-pf="ALL" class="${prepFilter==="ALL"?"active":""}">全体</button>`+op().map(([id,x])=>`<button data-pf="${id}" class="${prepFilter===id?"active":""}" style="${prepFilter===id?'background:#fff3a8;color:#111;border:3px solid #2563eb;box-shadow:0 0 0 2px #bfdbfe;font-weight:700;':oi(id).some(([iid])=>Number(prepState[iid]?.count??0)>0)?'background:#fff3a8;color:#222;border:1px solid #e0c85a;':''}">${esc(x.name)}</button>`).join("");
+ document.querySelectorAll("[data-pf]").forEach(b=>b.onclick=()=>{prepFilter=b.dataset.pf;renderPrepFilters();renderPrepList()});
+}
+function renderPrepSelectors(){
+ const keep=$("prepPos").value;$("prepPos").innerHTML=op().map(([id,x])=>`<option value="${id}">${esc(x.name)}</option>`).join("");if(prepPositions[keep])$("prepPos").value=keep;renderPosManage();renderPrepManage();
+}
+function renderPrepList(){
+ let h="";for(const [pid,p] of op()){if(prepFilter!=="ALL"&&prepFilter!==pid)continue;let a=oi(pid);if(prepConfirmed)a=a.filter(([id])=>Number(prepState[id]?.count??0)>0);if(!a.length)continue;
+ a=a.sort((A,B)=>Number(!!prepState[A[0]]?.done)-Number(!!prepState[B[0]]?.done));
+ h+=`<section class="prepGroup"><div class="prepTitle">${esc(p.name)}</div>`;
+ h+=a.map(([id,x])=>{const st=prepState[id]||{},n=st.count??0;return `<div class="prepRow ${st.done?"prepDone":""}"><input type="checkbox" data-pc="${id}" ${st.done?"checked":""}><div><b class="prepRecipeOpen" data-recipe-id="${id}" data-recipe-name="${esc(x.name)}">${esc(x.name)}</b><div class="small">平日 ${x.weekday??0} ／ 週末 ${x.weekend??0}</div></div><div class="prepQtyWrap"><select class="prepCount" data-pn="${id}">${Array.from({length:51},(_,i)=>`<option ${Number(n)===i?"selected":""}>${i}</option>`).join("")}</select><span class="prepQtyUnit">${esc(x.unit||"")}</span></div></div>`}).join("")+"</section>"}
+ $("prepList").innerHTML=h||'<div class="empty">仕込み品目はまだありません。</div>';document.querySelectorAll("[data-pc]").forEach(c=>c.onchange=()=>update(ref(db,"test/prep/state/"+c.dataset.pc),{done:c.checked}));document.querySelectorAll("[data-pn]").forEach(c=>c.onchange=()=>update(ref(db,"test/prep/state/"+c.dataset.pn),{count:Number(c.value)}));
+}
+function renderPosManage(){const a=op();$("posManage").innerHTML=a.map(([id,x],i)=>`<div class="manage"><span>${esc(x.name)}</span><button data-pu="${id}">↑</button><button data-pd="${id}">↓</button><button class="danger" data-px="${id}">削除</button></div>`).join("");document.querySelectorAll("[data-pu]").forEach(b=>b.onclick=()=>movePos(b.dataset.pu,-1));document.querySelectorAll("[data-pd]").forEach(b=>b.onclick=()=>movePos(b.dataset.pd,1));document.querySelectorAll("[data-px]").forEach(b=>b.onclick=async()=>{const id=b.dataset.px;if(!confirm("このポジションと登録品目を削除しますか？"))return;const u={};u["test/prep/positions/"+id]=null;vals(prepItems).filter(([,x])=>x.positionId===id).forEach(([iid])=>{u["test/prep/items/"+iid]=null;u["test/prep/state/"+iid]=null});await update(ref(db),u)})}
+function renderPrepManage(){const pid=$("prepPos").value;if(!pid){$("prepManage").innerHTML="";return}const a=oi(pid);$("prepManage").innerHTML=a.map(([id,x])=>`<div class="manage"><span><b>${esc(x.name)}</b> ${esc(x.unit||"")}</span><button data-iu="${id}">↑</button><button data-id="${id}">↓</button><button class="danger" data-ix="${id}">削除</button></div><div class="needEdit"><input type="number" min="0" value="${x.weekday??0}" data-wd="${id}"><input type="number" min="0" value="${x.weekend??0}" data-we="${id}"></div>`).join("");document.querySelectorAll("[data-iu]").forEach(b=>b.onclick=()=>moveItem(b.dataset.iu,-1));document.querySelectorAll("[data-id]").forEach(b=>b.onclick=()=>moveItem(b.dataset.id,1));document.querySelectorAll("[data-ix]").forEach(b=>b.onclick=async()=>{await remove(ref(db,"test/prep/items/"+b.dataset.ix));await remove(ref(db,"test/prep/state/"+b.dataset.ix))});document.querySelectorAll("[data-wd]").forEach(i=>i.onchange=()=>update(ref(db,"test/prep/items/"+i.dataset.wd),{weekday:Number(i.value)||0}));document.querySelectorAll("[data-we]").forEach(i=>i.onchange=()=>update(ref(db,"test/prep/items/"+i.dataset.we),{weekend:Number(i.value)||0}))}
+async function movePos(id,d){const a=op(),i=a.findIndex(([x])=>x===id),j=i+d;if(j<0||j>=a.length)return;const u={};u[`test/prep/positions/${a[i][0]}/order`]=j;u[`test/prep/positions/${a[j][0]}/order`]=i;await update(ref(db),u)}
+async function moveItem(id,d){const x=prepItems[id],a=oi(x.positionId),i=a.findIndex(([z])=>z===id),j=i+d;if(j<0||j>=a.length)return;const u={};u[`test/prep/items/${a[i][0]}/order`]=j;u[`test/prep/items/${a[j][0]}/order`]=i;await update(ref(db),u)}
+$("prepPos").onchange=renderPrepManage;
+$("addPos").onclick=async()=>{const name=$("newPos").value.trim();if(!name)return;await push(prepPositionsRef,{name,order:op().length});$("newPos").value=""};
+$("addPrep").onclick=async()=>{const positionId=$("prepPos").value,name=$("newPrep").value.trim();if(!positionId||!name)return alert("ポジションと品目を入力してください");await push(prepItemsRef,{positionId,name,weekday:Number($("wdNeed").value)||0,weekend:Number($("weNeed").value)||0,unit:$("prepUnit").value.trim(),order:oi(positionId).length});$("newPrep").value="";$("prepUnit").value="";$("wdNeed").value=0;$("weNeed").value=0};
+
+async function setNeeds(k){
+  const entries=vals(prepItems);
+  if(!entries.length) throw new Error("仕込み品目が登録されていません");
+  const u={};
+  entries.forEach(([id,x])=>{
+    u[`test/prep/state/${id}/count`]=Number(x[k])||0;
+  });
+  await update(ref(db),u);
+}
+
+
+async function runPrepSet(kind){
+  const label=kind==="weekday"?"平日":"週末";
+  try{
+    await setNeeds(kind);
+    renderPrepFilters();
+    renderPrepList();
+  }catch(e){
+    console.error("仕込み数セット失敗:",e);
+    alert(label+"必要数のセットに失敗しました。通信状態を確認して、もう一度押してください。");
+  }
+}
+$("setWeekday").addEventListener("click",e=>{e.preventDefault();e.stopPropagation();runPrepSet("weekday")});
+$("setWeekend").addEventListener("click",e=>{e.preventDefault();e.stopPropagation();runPrepSet("weekend")});
+
+$("clearPrep").onclick=async()=>{const u={};vals(prepItems).forEach(([id])=>u[`test/prep/state/${id}/count`]=0);prepConfirmed=false;await update(ref(db),u);renderPrepFilters();renderPrepList()};
+$("uncheckPrep").onclick=async()=>{const u={};vals(prepItems).forEach(([id])=>u[`test/prep/state/${id}/done`]=false);await update(ref(db),u);renderPrepFilters();renderPrepList()};
+
+if($("confirmPrep"))$("confirmPrep").onclick=()=>{
+  prepConfirmed=!prepConfirmed;
+  $("confirmPrep").textContent=prepConfirmed?"仕込み確定を解除":"仕込み確定";
+  renderPrepFilters();
+  renderPrepList();
+};
+onValue(prepPositionsRef,s=>{prepPositions=s.val()||{};renderPrepSelectors();renderPrepFilters();renderPrepList()});onValue(prepItemsRef,s=>{prepItems=s.val()||{};renderPrepManage();renderPrepList()});onValue(prepStateRef,s=>{prepState=s.val()||{};renderPrepList()});
+
+
+
+function printPrep(kind){
+ const label=kind==="weekday"?"平日":"週末";
+ const d=new Date(), date=`${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`;
+ let html=`<h1>上々　仕込み表（${label}）</h1><div class="printMeta">${date}</div>`;
+ for(const [pid,p] of op()){
+   const a=oi(pid).filter(([id])=>Number(prepState[id]?.count??0)>0); if(!a.length)continue;
+   html+=`<section class="printPos"><h2>${esc(p.name)}</h2><table><thead><tr><th>品目</th><th>必要数</th><th>仕込み数</th><th>確認</th></tr></thead><tbody>`;
+   html+=a.map(([id,x])=>{
+     const st=prepState[id]||{}, need=Number(x[kind])||0, count=Number(st.count??0)||0, unit=esc(x.unit||"");
+     return `<tr><td>${esc(x.name)}</td><td>${need}${unit}</td><td>${count}${unit}</td><td>□</td></tr>`;
+   }).join("");
+   html+="</tbody></table></section>";
+ }
+ $("printSheet").innerHTML=html;
+ window.print();
+}
+$("printWeekday").onclick=()=>printPrep("weekday");
+$("printWeekend").onclick=()=>printPrep("weekend");
+
+</script>
+
+<!-- ===== 仕込みレシピ機能 ===== -->
+<style>
+#recipeModal{
+  display:none;position:fixed;inset:0;z-index:99999;
+  background:rgba(0,0,0,.45);padding:20px;
+}
+#recipeBox{
+  background:#fff;max-width:650px;margin:5vh auto;padding:22px;
+  border-radius:18px;box-shadow:0 10px 40px rgba(0,0,0,.25);
+}
+#recipeTitle{font-size:24px;font-weight:800;margin-bottom:14px}
+#recipeText{
+  width:100%;min-height:300px;box-sizing:border-box;
+  font-size:18px;line-height:1.6;padding:14px;
+  border:1px solid #ccc;border-radius:12px;
+}
+.recipeButtons{display:flex;gap:10px;margin-top:14px}
+.recipeButtons button{flex:1;padding:14px;font-size:17px;border:0;border-radius:12px}
+#recipeSave{background:#2563eb;color:white}
+#recipeClose{background:#eee}
+.prepRecipeName{cursor:pointer;text-decoration:underline;text-decoration-style:dotted}
+</style>
+
+<div id="recipeModal">
+ <div id="recipeBox">
+   <div id="recipeTitle">レシピ</div>
+   <textarea id="recipeText" placeholder="ここにレシピを入力してください"></textarea>
+   <div class="recipeButtons">
+     <button id="recipeClose" type="button">閉じる</button>
+     <button id="recipeSave" type="button">保存</button>
+   </div>
+ </div>
+</div>
+
+<script>
+
+document.addEventListener("click", function(e){
+  const name = e.target.closest(".prepRecipeName");
+  if(!name) return;
+
+  const id = name.dataset.recipeId;
+  const row = name.closest(".prepRow");
+  const countSelect = row ? row.querySelector("[data-pn]") : null;
+  const count = countSelect ? Number(countSelect.value || 0) : 0;
+
+  if(count <= 0) return;
+
+  openPrepRecipe(
+    id,
+    name.dataset.recipeName || name.textContent.trim()
+  );
+});
+
+let currentRecipeId=null;
+
+function recipeKey(id){
+  return "jyoujyou_recipe_"+id;
+}
+
+function openPrepRecipe(id,name){
+  currentRecipeId=id;
+  document.getElementById("recipeTitle").textContent=name+" のレシピ";
+  document.getElementById("recipeText").value=
+    localStorage.getItem(recipeKey(id)) || "";
+  document.getElementById("recipeModal").style.display="block";
+}
+
+document.getElementById("recipeClose").onclick=()=>{
+  document.getElementById("recipeModal").style.display="none";
+};
+
+document.getElementById("recipeSave").onclick=()=>{
+  if(!currentRecipeId)return;
+  localStorage.setItem(
+    recipeKey(currentRecipeId),
+    document.getElementById("recipeText").value
+  );
+  document.getElementById("recipeModal").style.display="none";
+  alert("レシピを保存しました");
+};
+
+document.getElementById("recipeModal").onclick=e=>{
+  if(e.target.id==="recipeModal")
+    document.getElementById("recipeModal").style.display="none";
+};
+
+/* 仕込み数が入っている品目だけタップ可能にする */
+function enablePrepRecipeLinks(){
+  document.querySelectorAll(".prepRow").forEach(row=>{
+    const sel=row.querySelector("[data-pn]");
+    const name=row.querySelector("b");
+    if(!sel || !name)return;
+
+    const id=sel.dataset.pn;
+    const count=Number(sel.value||0);
+
+    name.classList.toggle("prepRecipeName",count>0);
+
+    name.onclick=count>0 ? ()=>{
+      openPrepRecipe(id,name.textContent.trim());
+    } : null;
+  });
+}
+
+document.addEventListener("change",e=>{
+  if(e.target.matches("[data-pn]")){
+    setTimeout(enablePrepRecipeLinks,100);
+  }
+});
+
+document.addEventListener("click",e=>{
+  const sel=e.target.closest("[data-pn]");
+  if(!sel)return;
+
+  const count=Number(sel.value||0);
+  if(count<=0)return;
+
+  const row=sel.closest(".prepRow");
+  const name=row?.querySelector("b");
+  if(!name)return;
+
+  setTimeout(()=>{
+    openPrepRecipe(sel.dataset.pn,name.textContent.trim());
+  },50);
+});
+
+const recipeObserver=new MutationObserver(()=>{
+  enablePrepRecipeLinks();
+});
+recipeObserver.observe(document.body,{childList:true,subtree:true});
+
+setTimeout(enablePrepRecipeLinks,500);
+</script>
+
+<div id="printSheet"></div>
+
+
+
+
+<script id="vegCopyScript">
+document.addEventListener("DOMContentLoaded", function(){
+
+  const preview = document.getElementById("vegPreview");
+  if(!preview) return;
+
+  if(document.getElementById("vegCopyBtn")) return;
+
+  const btn = document.createElement("button");
+  btn.id = "vegCopyBtn";
+  btn.type = "button";
+  btn.title = "発注表をコピー";
+  btn.setAttribute("aria-label","発注表をコピー");
+
+  btn.innerHTML = `
+    <svg viewBox="0 0 24 24"
+         fill="none"
+         stroke="currentColor"
+         stroke-width="2"
+         stroke-linecap="round"
+         stroke-linejoin="round">
+      <rect x="9" y="9" width="11" height="11" rx="2"></rect>
+      <path d="M15 9V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h3"></path>
+    </svg>
+  `;
+
+  btn.addEventListener("click", async function(e){
+    e.stopPropagation();
+
+    const text = preview.innerText.trim();
+
+    try{
+      await navigator.clipboard.writeText(text);
+
+      const old = btn.innerHTML;
+      btn.innerHTML = "✓";
+
+      setTimeout(function(){
+        btn.innerHTML = old;
+      }, 800);
+
+    }catch(err){
+      alert("コピーできませんでした");
+    }
+  });
+
+  const card = document.getElementById("vegPreviewCard");
+    if(card){
+      card.style.position = "relative";
+      card.appendChild(btn);
+    }
+});
+</script>
+
+
+<!-- FINAL_RECIPE_CLICK_FIX_START -->
+<style>
+.prepRow b.recipe-ready{
+  cursor:pointer !important;
+  text-decoration:underline !important;
+  text-decoration-thickness:2px !important;
+  text-underline-offset:4px !important;
+}
+</style>
+
+<script id="finalRecipeClickFix">
+(function(){
+
+  function getCount(row){
+    if(!row) return 0;
+    const sel = row.querySelector("[data-pn]");
+    if(!sel) return 0;
+    return Number(sel.value || 0);
+  }
+
+  function updateRecipeNames(){
+    document.querySelectorAll(".prepRow").forEach(function(row){
+      const name = row.querySelector("b");
+      if(!name) return;
+
+      const count = getCount(row);
+
+      if(count > 0){
+        name.classList.add("recipe-ready");
+        name.setAttribute("title","クリックしてレシピを開く");
+      }else{
+        name.classList.remove("recipe-ready");
+        name.removeAttribute("title");
+      }
+    });
+  }
+
+  function openRecipeFromRow(row){
+    if(!row) return;
+
+    const sel = row.querySelector("[data-pn]");
+    const name = row.querySelector("b");
+
+    if(!sel || !name) return;
+
+    const count = Number(sel.value || 0);
+
+    if(count <= 0) return;
+
+    const id = sel.dataset.pn;
+    const itemName = name.textContent.trim();
+
+    if(typeof openPrepRecipe === "function"){
+      openPrepRecipe(id,itemName);
+      return;
+    }
+
+    const modal = document.getElementById("recipeModal");
+    const title = document.getElementById("recipeTitle");
+
+    if(title){
+      title.textContent = itemName + " のレシピ";
+    }
+
+    if(modal){
+      modal.style.display = "block";
+    }
+  }
+
+  /* 商品名クリックを最優先で受け取る */
+  document.addEventListener("click",function(e){
+    const name = e.target.closest(".prepRow b");
+    if(!name) return;
+
+    const row = name.closest(".prepRow");
+    if(!row) return;
+
+    if(getCount(row) <= 0) return;
+
+    e.preventDefault();
+    e.stopPropagation();
+    e.stopImmediatePropagation();
+
+    openRecipeFromRow(row);
+
+  },true);
+
+  /* 仕込み数を変更したら即クリック可能にする */
+  document.addEventListener("change",function(e){
+    if(e.target.matches("[data-pn]")){
+      updateRecipeNames();
+    }
+  },true);
+
+  document.addEventListener("input",function(e){
+    if(e.target.matches("[data-pn]")){
+      updateRecipeNames();
+    }
+  },true);
+
+  /* Firebase等で一覧が再描画されても対応 */
+  const observer = new MutationObserver(function(){
+    updateRecipeNames();
+  });
+
+  function startObserver(){
+    updateRecipeNames();
+
+    if(document.body){
+      observer.observe(document.body,{
+        childList:true,
+        subtree:true
+      });
+    }
+  }
+
+  if(document.readyState === "loading"){
+    document.addEventListener("DOMContentLoaded",startObserver);
+  }else{
+    startObserver();
+  }
+
+  setTimeout(updateRecipeNames,500);
+  setTimeout(updateRecipeNames,1500);
+  setTimeout(updateRecipeNames,3000);
+
+})();
+</script>
+<!-- FINAL_RECIPE_CLICK_FIX_END -->
+
+
+<!-- RECIPE_BOOK_V1_START -->
+
+<style>
+#recipeBookButton{
+  width:100%;
+  margin:16px 0;
+  padding:18px 14px;
+  border:0;
+  border-radius:16px;
+  background:#eef3ff;
+  color:#3568c8;
+  font-size:18px;
+  font-weight:700;
+  cursor:pointer;
+}
+
+#recipeBookOverlay{
+  display:none;
+  position:fixed;
+  inset:0;
+  z-index:999999;
+  background:rgba(0,0,0,.38);
+  padding:18px;
+  box-sizing:border-box;
+  overflow:auto;
+}
+
+#recipeBookPanel{
+  max-width:700px;
+  margin:25px auto;
+  background:white;
+  border-radius:20px;
+  padding:20px;
+  box-sizing:border-box;
+  box-shadow:0 15px 50px rgba(0,0,0,.2);
+}
+
+#recipeBookPanel h2{
+  margin:0 0 16px;
+}
+
+#recipeItemSelect,
+#recipeBookText{
+  width:100%;
+  box-sizing:border-box;
+  font-size:16px;
+  border:1px solid #ccd2dc;
+  border-radius:12px;
+  background:white;
+}
+
+#recipeItemSelect{
+  padding:12px;
+  margin-bottom:14px;
+}
+
+#recipeBookText{
+  min-height:300px;
+  padding:14px;
+  resize:vertical;
+}
+
+.recipeBookButtons{
+  display:flex;
+  gap:10px;
+  margin-top:14px;
+}
+
+.recipeBookButtons button{
+  flex:1;
+  padding:14px 8px;
+  border:0;
+  border-radius:12px;
+  font-size:16px;
+  font-weight:700;
+  cursor:pointer;
+}
+
+#recipeBookSave{
+  background:#3f73dd;
+  color:white;
+}
+
+#recipeBookClose{
+  background:#eceff3;
+  color:#333;
+}
+
+#recipeBookStatus{
+  min-height:24px;
+  margin:8px 0;
+  font-size:14px;
+  color:#5372a8;
+}
+
+@media(max-width:600px){
+  #recipeBookOverlay{
+    padding:8px;
+  }
+
+  #recipeBookPanel{
+    margin:8px auto;
+    padding:16px;
+  }
+
+  #recipeBookText{
+    min-height:45vh;
+  }
+}
+</style>
+
+<div id="recipeBookOverlay">
+  <div id="recipeBookPanel">
+    <h2>📖 レシピ帳・登録</h2>
+
+    <select id="recipeItemSelect">
+      <option value="">品目を選択してください</option>
+    </select>
+
+    <div id="recipeBookStatus"></div>
+
+    <textarea
+      id="recipeBookText"
+      placeholder="ここにレシピを入力してください。
+
+例：
+【材料】
+ピーマン　10個
+調味料　○○g
+
+【作り方】
+1. ○○する
+2. ○○を加える
+3. ○○分加熱する
+
+【保存・仕込みメモ】
+○日保存"
+    ></textarea>
+
+    <div class="recipeBookButtons">
+      <button id="recipeBookClose" type="button">閉じる</button>
+      <button id="recipeBookSave" type="button">保存</button>
+    </div>
+  </div>
+</div>
+
+<script id="recipeBookV1Script">
+(function(){
+
+  const STORAGE_KEY = "jyoujyou_recipe_book_v1";
+
+  function getRecipes(){
+    try{
+      return JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+    }catch(e){
+      return {};
+    }
+  }
+
+  function saveRecipes(data){
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  }
+
+  function getPrepNames(){
+    const names = [];
+
+    document.querySelectorAll(".prepRow").forEach(row=>{
+      const b = row.querySelector("b");
+      if(!b) return;
+
+      const name = b.textContent.trim();
+
+      if(name && !names.includes(name)){
+        names.push(name);
+      }
+    });
+
+    return names;
+  }
+
+  function fillSelect(){
+    const select = document.getElementById("recipeItemSelect");
+    if(!select) return;
+
+    const old = select.value;
+    const names = getPrepNames();
+
+    select.innerHTML =
+      '<option value="">品目を選択してください</option>';
+
+    names.forEach(name=>{
+      const op = document.createElement("option");
+      op.value = name;
+      op.textContent = name;
+      select.appendChild(op);
+    });
+
+    if(names.includes(old)){
+      select.value = old;
+    }
+  }
+
+  function loadRecipe(){
+    const select = document.getElementById("recipeItemSelect");
+    const text = document.getElementById("recipeBookText");
+    const status = document.getElementById("recipeBookStatus");
+
+    const name = select.value;
+
+    if(!name){
+      text.value = "";
+      status.textContent = "";
+      return;
+    }
+
+    const recipes = getRecipes();
+
+    if(recipes[name]){
+      text.value = recipes[name];
+      status.textContent = "📖 登録済みレシピ";
+    }else{
+      text.value = "";
+      status.textContent = "✏️ 未登録です。レシピを入力してください";
+    }
+  }
+
+  function openBook(){
+    fillSelect();
+
+    document.getElementById("recipeBookOverlay").style.display = "block";
+
+    document.body.style.overflow = "hidden";
+  }
+
+  function closeBook(){
+    document.getElementById("recipeBookOverlay").style.display = "none";
+    document.body.style.overflow = "";
+  }
+
+  function addButton(){
+    if(document.getElementById("recipeBookButton")) return;
+
+    const btn = document.createElement("button");
+    btn.id = "recipeBookButton";
+    btn.type = "button";
+    btn.textContent = "📖 レシピ帳・登録";
+
+    /*
+      写真で確認した
+      「仕込み品目・ポジションの登録・並び替え」
+      の直前を優先して探す
+    */
+    let target = null;
+
+    document.querySelectorAll("details,button,div").forEach(el=>{
+      if(target) return;
+
+      const t = (el.textContent || "").trim();
+
+      if(
+        t.includes("仕込み品目") &&
+        t.includes("ポジション") &&
+        t.includes("並び替え")
+      ){
+        target = el;
+      }
+    });
+
+    if(target){
+      target.parentNode.insertBefore(btn,target);
+    }else{
+      /*
+        見つからなかった場合も、
+        仕込み表の最後付近に表示する
+      */
+      const rows = document.querySelectorAll(".prepRow");
+
+      if(rows.length){
+        const last = rows[rows.length-1];
+        const parent = last.parentElement;
+        parent.insertAdjacentElement("afterend",btn);
+      }else{
+        document.body.appendChild(btn);
+      }
+    }
+
+    btn.addEventListener("click",openBook);
+  }
+
+  document.addEventListener("change",function(e){
+    if(e.target.id === "recipeItemSelect"){
+      loadRecipe();
+    }
+  });
+
+  document.addEventListener("click",function(e){
+
+    if(e.target.id === "recipeBookClose"){
+      closeBook();
+    }
+
+    if(e.target.id === "recipeBookSave"){
+
+      const select =
+        document.getElementById("recipeItemSelect");
+
+      const text =
+        document.getElementById("recipeBookText");
+
+      const status =
+        document.getElementById("recipeBookStatus");
+
+      const name = select.value;
+
+      if(!name){
+        alert("品目を選択してください");
+        return;
+      }
+
+      if(!text.value.trim()){
+        alert("レシピを入力してください");
+        return;
+      }
+
+      const recipes = getRecipes();
+
+      recipes[name] = text.value;
+
+      saveRecipes(recipes);
+
+      status.textContent = "✅ 保存しました";
+    }
+
+    if(e.target.id === "recipeBookOverlay"){
+      closeBook();
+    }
+
+  });
+
+  function start(){
+    addButton();
+    fillSelect();
+
+    /*
+      Firebase等で仕込み表が後から描画されても
+      品目を取得できるようにする
+    */
+    const observer = new MutationObserver(()=>{
+      addButton();
+    });
+
+    observer.observe(document.body,{
+      childList:true,
+      subtree:true
+    });
+  }
+
+  if(document.readyState === "loading"){
+    document.addEventListener("DOMContentLoaded",start);
+  }else{
+    start();
+  }
+
+})();
+</script>
+
+<!-- RECIPE_BOOK_V1_END -->
+
+
+<script id="recipeBookFinalFix">
+document.addEventListener("DOMContentLoaded", function(){
+
+  function getOverlay(){
+    return document.getElementById("recipeBookOverlay");
+  }
+
+  function openRecipeBook(){
+    const overlay = getOverlay();
+
+    if(!overlay){
+      alert("レシピ帳画面が見つかりません");
+      return;
+    }
+
+    try{
+      if(typeof fillSelect === "function"){
+        fillSelect();
+      }
+    }catch(e){
+      console.log(e);
+    }
+
+    overlay.style.display = "block";
+    overlay.style.visibility = "visible";
+    overlay.style.opacity = "1";
+    overlay.style.zIndex = "999999";
+    document.body.style.overflow = "hidden";
+  }
+
+  function closeRecipeBook(){
+    const overlay = getOverlay();
+    if(overlay){
+      overlay.style.display = "none";
+    }
+    document.body.style.overflow = "";
+  }
+
+  /* 既存ボタンを確実に動かす */
+  let btn = document.getElementById("recipeBookButton");
+
+  if(btn){
+    const newBtn = btn.cloneNode(true);
+    btn.parentNode.replaceChild(newBtn,btn);
+    btn = newBtn;
+
+    btn.type = "button";
+    btn.style.cursor = "pointer";
+
+    btn.addEventListener("click",function(e){
+      e.preventDefault();
+      e.stopPropagation();
+      openRecipeBook();
+    });
+  }
+
+  /* 上部に出ているボタンも確実に押せるようにする */
+  document.addEventListener("click",function(e){
+
+    const target = e.target.closest("#recipeBookButton");
+
+    if(target){
+      e.preventDefault();
+      e.stopPropagation();
+      openRecipeBook();
+      return;
+    }
+
+    if(e.target.id === "recipeBookClose"){
+      e.preventDefault();
+      closeRecipeBook();
+      return;
+    }
+
+    if(e.target.id === "recipeBookOverlay"){
+      closeRecipeBook();
+    }
+
+  },true);
+
+});
+</script>
+
+</body></html>
+<style id="vegCopyFix2">
+#vegPreviewCard{
+  position:relative !important;
+}
+
+#vegCopyBtn{
+  position:absolute !important;
+  top:22px !important;
+  right:22px !important;
+
+  width:38px !important;
+  height:38px !important;
+  min-width:38px !important;
+
+  padding:8px !important;
+  margin:0 !important;
+
+  border:0 !important;
+  border-radius:10px !important;
+  background:transparent !important;
+  color:#222 !important;
+
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+
+  z-index:9999 !important;
+  cursor:pointer !important;
+}
+
+#vegCopyBtn svg{
+  width:22px !important;
+  height:22px !important;
+  display:block !important;
+}
+</style>
