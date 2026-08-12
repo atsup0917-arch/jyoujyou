@@ -37,7 +37,7 @@ button.gray{background:#e9eaed;color:#2371df}.danger{background:#fff0f0;color:#c
 .navtabs button .count{display:inline-block;margin-left:4px;font-weight:800;background:#c62828;color:#fff;border-radius:10px;padding:1px 7px;font-size:12px}
 .navtabs button.active .count{background:#fff;color:#3269df}
 .page[hidden]{display:none!important}
-.orderRow{display:grid;grid-template-columns:1fr 90px 105px;gap:8px;align-items:end;margin:10px 0}
+.orderRow{display:grid;grid-template-columns:90px 1fr 105px;gap:8px;align-items:end;margin:10px 0}
 .orderRow button{margin:0}
 .orderItems{margin-top:14px}
 .orderItem{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;padding:12px 0;border-bottom:1px solid #eee}
@@ -46,7 +46,7 @@ button.gray{background:#e9eaed;color:#2371df}.danger{background:#fff0f0;color:#c
 .previewTitle{text-align:center;font-size:25px;font-weight:800;margin-bottom:12px}
 .previewActions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .unitManage{display:flex;gap:8px;margin:8px 0}.unitManage span{flex:1;padding:12px;background:#f4f4f4;border-radius:12px}.unitManage button{width:auto;margin:0;padding:10px 12px}
-@media(max-width:520px){.orderRow{grid-template-columns:1fr 72px 92px}.preview{font-size:20px;padding:22px 16px}}
+@media(max-width:520px){.orderRow{grid-template-columns:72px minmax(0,1fr) 92px}.preview{font-size:20px;padding:22px 16px}}
 .moveBtn{width:auto!important;margin:0!important;padding:9px 12px!important;background:#e9eaed!important;color:#2867df!important}.moveBtn:disabled{opacity:.3}.navtabs3{grid-template-columns:1fr 1fr 1fr}.navtabs3 button{font-size:15px;padding:12px 4px;min-width:0;white-space:normal;overflow-wrap:anywhere}
 .prepGroup{background:#fff;border-radius:20px;margin:14px 0;overflow:hidden}.prepTitle{font-size:22px;font-weight:800;padding:15px 18px;background:#eef3ff}.prepRow{display:grid;grid-template-columns:30px 1fr 82px;gap:10px;align-items:center;padding:14px;border-top:1px solid #eee}.prepRow input[type=checkbox]{width:27px;height:27px}.prepCount{padding:11px 5px!important;text-align:center}.manage{display:grid;grid-template-columns:1fr auto auto auto;gap:6px;align-items:center;padding:8px 0;border-bottom:1px solid #eee}.manage span{padding:10px;background:#f4f4f4;border-radius:12px}.manage button{width:auto;margin:0;padding:9px}.needEdit{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px}.needEdit input{padding:10px;font-size:16px}.prepDone{opacity:.48;background:#f5f5f5}.prepDone b{text-decoration:line-through}.prepQtyWrap{display:flex;align-items:center;gap:5px}.prepQtyUnit{font-size:15px;font-weight:700;white-space:nowrap}.prepQtyWrap .prepCount{min-width:58px}
 #printSheet{display:none}
@@ -248,47 +248,6 @@ input, select, textarea, button {
   .manage button{padding:8px 7px!important;font-size:14px}
   .needEdit{min-width:0}
 }
-
-
-/* ===== 野菜商品管理：iPhoneで商品名が消えないレイアウト ===== */
-.vegProductManageRow{
-  display:grid;
-  grid-template-columns:minmax(0,1fr) minmax(0,1fr) 150px 92px auto;
-  gap:6px;
-  align-items:center;
-  margin:6px 0;
-  min-width:0;
-}
-.vegProductManageRow input,
-.vegProductManageRow select{
-  width:100%;
-  min-width:0;
-  max-width:100%;
-  padding:9px;
-  border:1px solid #ddd;
-  border-radius:9px;
-  background:#fff;
-}
-.vegMoveBtns{display:flex;gap:4px;min-width:0}
-.vegMoveBtns button{
-  width:44px!important;min-width:0;margin:0!important;
-  padding:8px 4px!important;font-size:16px!important;
-}
-.vegDeleteBtn{
-  width:auto!important;min-width:60px;margin:0!important;white-space:nowrap;
-}
-@media(max-width:520px){
-  .vegProductManageRow{
-    grid-template-columns:minmax(0,1fr) minmax(0,1fr);
-    gap:7px;padding:8px 0;border-bottom:1px solid #eee;
-  }
-  .vegProductManageRow select[data-veg-default-unit]{grid-column:1}
-  .vegProductManageRow .vegMoveBtns{grid-column:2;justify-content:flex-end}
-  .vegProductManageRow .vegDeleteBtn{
-    grid-column:1 / -1;width:100%!important;min-height:44px;
-  }
-}
-
 </style>
 
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
@@ -362,10 +321,13 @@ input, select, textarea, button {
 
 <div id="vegPreviewCard" class="card" hidden>
 <h2>LINE用 発注表</h2>
-<button id="vegCopyBtn" type="button" title="コピー" aria-label="発注内容をコピー"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button><button id="vegLineSend" type="button" title="LINEで送る" aria-label="LINEで送る">LINEで送る</button>
-<div id="vegPreview" class="preview"></div><div id="vegLineStatus"></div>
+<button id="vegCopyBtn" type="button" title="コピー" aria-label="発注内容をコピー"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button>
+<div id="vegPreview" class="preview"></div>
 <div class="previewActions">
 <button class="gray" id="vegEdit">編集に戻る</button>
+<button id="vegLineSend" type="button">LINEで送る</button>
+</div>
+<div class="previewActions">
 <button class="gray" id="vegClear">今回分をクリア</button>
 </div>
 </div>
@@ -647,18 +609,18 @@ function renderVegProductManage(){
    const kana=p.kana||p.furigana||p.reading||"";
    const idx=a.findIndex(([x])=>x===id);
    const canUp=idx>0, canDown=idx<a.length-1;
-   return `<div class="vegProductManageRow">
-     <input value="${esc(p.name||"")}" data-veg-name="${esc(id)}" aria-label="商品名">
-     <input value="${esc(kana)}" placeholder="ふりがな" data-veg-kana="${esc(id)}" aria-label="ふりがな">
-     <select data-veg-default-unit="${esc(id)}" aria-label="デフォルト単位">
+   return `<div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) 150px 92px auto;gap:6px;align-items:center;margin:6px 0">
+     <input value="${esc(p.name||"")}" data-veg-name="${esc(id)}" style="min-width:0;padding:9px;border:1px solid #ddd;border-radius:9px">
+     <input value="${esc(kana)}" placeholder="ふりがな" data-veg-kana="${esc(id)}" style="min-width:0;padding:9px;border:1px solid #ddd;border-radius:9px">
+     <select data-veg-default-unit="${esc(id)}" style="padding:9px;border:1px solid #ddd;border-radius:9px">
        <option value="">単位なし</option>
        ${vals(vegUnits).map(([uid,u])=>`<option value="${esc(uid)}" ${p.defaultUnit===uid?"selected":""}>${esc(u.name||"")}</option>`).join("")}
      </select>
-     <div class="vegMoveBtns">
-       <button type="button" data-veg-up="${esc(id)}" ${canUp?"":"disabled"}>▲</button>
-       <button type="button" data-veg-down="${esc(id)}" ${canDown?"":"disabled"}>▼</button>
+     <div style="display:flex;gap:4px">
+       <button type="button" data-veg-up="${esc(id)}" ${canUp?"":"disabled"} style="width:44px;margin:0;padding:8px 4px;font-size:16px">▲</button>
+       <button type="button" data-veg-down="${esc(id)}" ${canDown?"":"disabled"} style="width:44px;margin:0;padding:8px 4px;font-size:16px">▼</button>
      </div>
-     <button type="button" class="danger vegDeleteBtn" data-veg-delete="${esc(id)}">削除</button>
+     <button type="button" class="danger" data-veg-delete="${esc(id)}" style="width:auto;margin:0">削除</button>
    </div>`;
  }).join("");
 
@@ -1119,62 +1081,137 @@ $("printWeekend").onclick=e=>{e.preventDefault();printPrep("weekend")};
 }
 </style>
 
-<script id="liffVegSendScript">
+<style id="lineSendStyle">
+#vegLineSend{background:#06c755!important;color:#fff!important}
+#lineSendStatus{margin-top:10px;padding:10px 12px;border-radius:10px;background:#f1f8f3;color:#333;font-size:14px;line-height:1.5;white-space:pre-wrap}
+</style>
+
+<script id="lineSendScript">
 (function(){
-  const LIFF_ID="2011073183-zyuU51Lw";
-  const LIFF_URL="https://liff.line.me/"+LIFF_ID;
-  let ready=false;
-  const $id=id=>document.getElementById(id);
-  function status(msg,error){const e=$id("vegLineStatus");if(!e)return;e.textContent=msg;e.style.display="block";e.style.background=error?"#fff0f0":"#f3f5f8";e.style.color=error?"#b42318":"#333";}
-  async function init(){if(!window.liff)throw new Error("LINE SDKを読み込めませんでした。");if(!ready){await liff.init({liffId:LIFF_ID,withLoginOnExternalBrowser:false});ready=true;}}
+  const LIFF_ID = "2011073183-zyuU51Lw";
+  let initPromise = null;
+
+  function status(text, error){
+    let el = document.getElementById("lineSendStatus");
+    if(!el){
+      el = document.createElement("div");
+      el.id = "lineSendStatus";
+      const btn = document.getElementById("vegLineSend");
+      if(btn) btn.parentElement.insertAdjacentElement("afterend", el);
+    }
+    el.textContent = text;
+    el.style.background = error ? "#fff0f0" : "#f1f8f3";
+    el.style.color = error ? "#b42318" : "#333";
+  }
+
+  async function init(){
+    if(initPromise) return initPromise;
+
+    initPromise = (async()=>{
+      if(!window.liff) throw new Error("LINE SDKが読み込まれていません。");
+
+      await liff.init({
+        liffId: LIFF_ID,
+        withLoginOnExternalBrowser: false
+      });
+
+      // ログイン後に戻ってきた場合も、ここで必ず再判定する
+      if(!liff.isLoggedIn()){
+        return false;
+      }
+      return true;
+    })();
+
+    try{
+      return await initPromise;
+    }catch(e){
+      initPromise = null;
+      throw e;
+    }
+  }
+
   async function send(){
-    const text=$id("vegPreview")?.textContent?.trim();
-    if(!text){alert("先に「発注表を完成」してください。");return;}
-    const b=$id("vegLineSend");b.disabled=true;b.textContent="LINE準備中…";
+    const btn = document.getElementById("vegLineSend");
+    const text = document.getElementById("vegPreview")?.textContent?.trim();
+
+    if(!text){
+      alert("先に「発注表を完成」してください。");
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = "LINEログイン中…";
+    status("LINEに接続しています…");
+
     try{
-      await init();
-      // 通常のGitHub Pagesから押した場合は、まずLIFF URLへ移動してLINE/LIFFブラウザを開く。
-      if(!liff.isInClient() && !liff.isLoggedIn()){sessionStorage.setItem("vegLinePending","1");sessionStorage.setItem("vegLineText",text);status("LINEを開きます…");location.href=LIFF_URL;return;}
-      // 外部ブラウザ/LINE内ブラウザでは未ログインならLINE Login。ログイン後は同じLIFFページへ戻る。
-      if(!liff.isLoggedIn()){sessionStorage.setItem("vegLinePending","1");sessionStorage.setItem("vegLineText",text);status("LINEログイン中…");liff.login();return;}
-      if(!liff.isApiAvailable("shareTargetPicker"))throw new Error("この環境ではLINEの送信先選択を利用できません。iPhoneのLINEアプリからLIFF URLを開いてください。");
-      status("LINEの送信先を選択してください。");
-      await liff.shareTargetPicker([{type:"text",text:text}],{isMultiple:false});
-      sessionStorage.removeItem("vegLinePending");status("LINEへの送信が完了しました。");
-       if(liff.isInClient()){setTimeout(()=>{try{liff.closeWindow();}catch(e){}},300);}
-       else{alert("LINEに送信しました。");}
-    }catch(e){console.error(e);status("LINE送信エラー\n"+(e?.message||String(e)),true);alert("LINE送信エラー\n\n"+(e?.message||String(e)));}
-    finally{b.disabled=false;b.textContent="LINEで送る";}
+      const loggedIn = await init();
+
+      if(!loggedIn){
+        status("LINEログイン画面を開きます。ログイン後、この画面に戻ってきてください。");
+        // 外部ブラウザでのログイン開始。
+        // redirectUriを現在のLIFF URLに明示して、戻り先を固定する。
+        const redirectUri = window.location.href.split("#")[0];
+        liff.login({redirectUri});
+        return;
+      }
+
+      status("LINEログイン成功。送信先を選択しています…");
+
+      // ログイン後に戻ってきた場合、ボタン押下を待たずに
+      // shareTargetPickerへ進めるためのフラグを利用
+      if(!liff.isApiAvailable("shareTargetPicker")){
+        throw new Error(
+          "このブラウザでは「友だちを選んで送信」が利用できません。iPhoneのLINEアプリからLIFF URLを開いて試してください。"
+        );
+      }
+
+      const result = await liff.shareTargetPicker(
+        [{type:"text", text:text}],
+        {isMultiple:true}
+      );
+
+      if(result){
+        status("LINEに送信しました。");
+        alert("LINEに送信しました。");
+      }else{
+        status("送信をキャンセルしました。");
+      }
+    }catch(e){
+      console.error(e);
+      status("LINE送信エラー\n"+(e?.message || e), true);
+      alert("LINE送信エラー\n\n"+(e?.message || e));
+    }finally{
+      btn.disabled = false;
+      btn.textContent = "LINEで送る";
+    }
   }
+
+  function bind(){
+    const btn = document.getElementById("vegLineSend");
+    if(!btn || btn.dataset.lineBound) return;
+    btn.dataset.lineBound = "1";
+    btn.addEventListener("click", send);
+  }
+
+  // ページ読み込み時にもLIFFを初期化。
+  // ログイン後に戻ったケースを検出しておく。
   async function boot(){
-    const b=$id("vegLineSend");if(!b)return;if(b.dataset.lineBound==="1")return;b.dataset.lineBound="1";b.addEventListener("click",send);
-    // LIFF URLから戻った後の再初期化。外部ブラウザでは login -> redirect -> init の順で必要。
+    bind();
     try{
-      await init();
-      const pending=sessionStorage.getItem("vegLinePending");
-      const savedText=sessionStorage.getItem("vegLineText")||"";
-      if(pending&&savedText){
-        // LIFFへの遷移でページが再読み込みされても、発注表を復元する。
-        const card=$id("vegPreviewCard"), preview=$id("vegPreview");
-        if(preview){preview.textContent=savedText;}
-        if(card){card.hidden=false;}
+      const loggedIn = await init();
+      if(loggedIn){
+        status("LINEログイン済みです。「LINEで送る」を押すと送信先を選べます。");
       }
-      if(pending&&liff.isLoggedIn()&&savedText){
-        if(!liff.isApiAvailable("shareTargetPicker")){
-          status("LINEログインは完了しました。\nこのMacBookのブラウザでは送信先選択が利用できません。iPhoneのLINEアプリから同じLIFF URLを開いて確認してください。",true);
-          return;
-        }
-        sessionStorage.removeItem("vegLinePending");
-        sessionStorage.removeItem("vegLineText");
-        status("LINEログイン完了。送信先を選択してください。");
-        await liff.shareTargetPicker([{type:"text",text:savedText}],{isMultiple:false});
-        status("LINEへの送信が完了しました。");
-        if(liff.isInClient()){setTimeout(()=>{try{liff.closeWindow();}catch(e){}},300);}
-      }
-    }catch(e){console.log("LIFF初期化:",e);}
+    }catch(e){
+      console.log("LIFF初期化待機:", e);
+    }
   }
-  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",boot);else boot();
+
+  if(document.readyState === "loading"){
+    document.addEventListener("DOMContentLoaded", boot);
+  }else{
+    boot();
+  }
 })();
 </script>
-<style id="vegLineStyle">#vegLineSend{position:absolute!important;top:22px!important;right:68px!important;width:auto!important;min-width:92px!important;height:38px!important;padding:7px 12px!important;margin:0!important;border:0!important;border-radius:10px!important;background:#06c755!important;color:#fff!important;font-weight:700!important;font-size:14px!important;z-index:9999!important;cursor:pointer!important}@media(max-width:520px){#vegLineSend{right:68px!important;min-width:88px!important;font-size:13px!important;padding:7px 10px!important}}#vegLineStatus{margin:10px 0 0;padding:10px 12px;border-radius:10px;background:#f3f5f8;font-size:14px;line-height:1.5;display:none;white-space:pre-wrap}</style>
 </body></html>
