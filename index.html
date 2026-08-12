@@ -253,38 +253,61 @@ input, select, textarea, button {
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 
 <style id="vegProductManageMobileFix">
-/* 野菜商品登録：iPhoneでも商品名・ふりがな・単位を見やすくする */
-#vegProductManage > div{
-  min-width:0 !important;
-}
-#vegProductManage input,
-#vegProductManage select{
+/* 野菜商品登録：iPhoneでは商品名・ふりがなを大きく縦に表示 */
+#vegProductManage > div{min-width:0 !important;}
+#vegProductManage input,#vegProductManage select{
   width:100% !important;
   min-width:0 !important;
   max-width:100% !important;
+  box-sizing:border-box !important;
 }
 @media(max-width:520px){
   #vegProductManage > div{
-    grid-template-columns:minmax(0,1fr) minmax(0,1fr) 44px 44px 58px !important;
+    grid-template-columns:minmax(0,1fr) 44px 44px 70px !important;
+    grid-template-rows:auto auto auto !important;
+    gap:6px !important;
+    margin:10px 0 14px !important;
+  }
+  #vegProductManage > div > input:nth-child(1){
+    grid-column:1 / 5 !important;
+    grid-row:1 !important;
+    font-size:18px !important;
+    padding:12px 10px !important;
+  }
+  #vegProductManage > div > input:nth-child(2){
+    grid-column:1 / 5 !important;
+    grid-row:2 !important;
+    font-size:18px !important;
+    padding:12px 10px !important;
+  }
+  #vegProductManage > div > select{
+    grid-column:1 / 2 !important;
+    grid-row:3 !important;
+    font-size:17px !important;
+    padding:12px 10px !important;
+  }
+  #vegProductManage > div > div{
+    grid-column:2 / 4 !important;
+    grid-row:3 !important;
+    display:flex !important;
     gap:5px !important;
   }
-  #vegProductManage > div > select{
-    grid-column:1 / 3 !important;
+  #vegProductManage > div > div > button{
+    flex:1 !important;
+    width:44px !important;
+    min-width:0 !important;
+    padding:9px 2px !important;
+    margin:0 !important;
+    font-size:16px !important;
   }
-  #vegProductManage > div > button{
+  #vegProductManage > div > button[data-veg-delete]{
+    grid-column:4 !important;
+    grid-row:3 !important;
     width:100% !important;
     min-width:0 !important;
-    padding:8px 3px !important;
+    padding:9px 4px !important;
     margin:0 !important;
-    font-size:14px !important;
-  }
-  #vegProductManage > div > input{
     font-size:15px !important;
-    padding:9px 7px !important;
-  }
-  #vegProductManage > div > select{
-    font-size:15px !important;
-    padding:9px 7px !important;
   }
 }
 </style>
@@ -1121,135 +1144,104 @@ $("printWeekend").onclick=e=>{e.preventDefault();printPrep("weekend")};
 
 <style id="lineSendStyle">
 #vegLineSend{background:#06c755!important;color:#fff!important}
-#lineSendStatus{margin-top:10px;padding:10px 12px;border-radius:10px;background:#f1f8f3;color:#333;font-size:14px;line-height:1.5;white-space:pre-wrap}
+#vegLineStatus{margin-top:10px;padding:10px 12px;border-radius:10px;background:#f3f5f8;color:#333;font-size:14px;line-height:1.5;white-space:pre-wrap}
 </style>
 
 <script id="lineSendScript">
 (function(){
-  const LIFF_ID = "2011073183-zyuU51Lw";
-  let initPromise = null;
-
-  function status(text, error){
-    let el = document.getElementById("lineSendStatus");
-    if(!el){
-      el = document.createElement("div");
-      el.id = "lineSendStatus";
-      const btn = document.getElementById("vegLineSend");
-      if(btn) btn.parentElement.insertAdjacentElement("afterend", el);
+  const LIFF_ID="2011073183-zyuU51Lw";
+  const LIFF_URL="https://liff.line.me/"+LIFF_ID;
+  let ready=false;
+  const $id=id=>document.getElementById(id);
+  function status(msg,error){
+    let e=$id("vegLineStatus");
+    if(!e){
+      e=document.createElement("div");
+      e.id="vegLineStatus";
+      const b=$id("vegLineSend");
+      if(b) b.insertAdjacentElement("afterend",e);
     }
-    el.textContent = text;
-    el.style.background = error ? "#fff0f0" : "#f1f8f3";
-    el.style.color = error ? "#b42318" : "#333";
+    e.textContent=msg;
+    e.style.display="block";
+    e.style.background=error?"#fff0f0":"#f3f5f8";
+    e.style.color=error?"#b42318":"#333";
   }
-
   async function init(){
-    if(initPromise) return initPromise;
-
-    initPromise = (async()=>{
-      if(!window.liff) throw new Error("LINE SDKが読み込まれていません。");
-
-      await liff.init({
-        liffId: LIFF_ID,
-        withLoginOnExternalBrowser: false
-      });
-
-      // ログイン後に戻ってきた場合も、ここで必ず再判定する
-      if(!liff.isLoggedIn()){
-        return false;
-      }
-      return true;
-    })();
-
-    try{
-      return await initPromise;
-    }catch(e){
-      initPromise = null;
-      throw e;
+    if(!window.liff)throw new Error("LINE SDKを読み込めませんでした。");
+    if(!ready){
+      await liff.init({liffId:LIFF_ID,withLoginOnExternalBrowser:false});
+      ready=true;
     }
   }
-
   async function send(){
-    const btn = document.getElementById("vegLineSend");
-    const text = document.getElementById("vegPreview")?.textContent?.trim();
-
-    if(!text){
-      alert("先に「発注表を完成」してください。");
-      return;
-    }
-
-    btn.disabled = true;
-    btn.textContent = "LINEログイン中…";
-    status("LINEに接続しています…");
-
+    const text=$id("vegPreview")?.textContent?.trim();
+    if(!text){alert("先に「発注表を完成」してください。");return;}
+    const b=$id("vegLineSend");
+    b.disabled=true;b.textContent="LINE準備中…";
     try{
-      const loggedIn = await init();
-
-      if(!loggedIn){
-        status("LINEログイン画面を開きます。ログイン後、この画面に戻ってきてください。");
-        // 外部ブラウザでのログイン開始。
-        // redirectUriを現在のLIFF URLに明示して、戻り先を固定する。
-        const redirectUri = window.location.href.split("#")[0];
-        liff.login({redirectUri});
+      await init();
+      // GitHub Pagesから直接押した場合は、まずLIFF URLへ移動してLINE側で開く。
+      if(!liff.isInClient()&&!liff.isLoggedIn()){
+        sessionStorage.setItem("vegLinePending","1");
+        sessionStorage.setItem("vegLineText",text);
+        status("LINEを開きます…");
+        location.href=LIFF_URL;
         return;
       }
-
-      status("LINEログイン成功。送信先を選択しています…");
-
-      // ログイン後に戻ってきた場合、ボタン押下を待たずに
-      // shareTargetPickerへ進めるためのフラグを利用
+      if(!liff.isLoggedIn()){
+        sessionStorage.setItem("vegLinePending","1");
+        sessionStorage.setItem("vegLineText",text);
+        status("LINEログイン中…");
+        liff.login();
+        return;
+      }
       if(!liff.isApiAvailable("shareTargetPicker")){
-        throw new Error(
-          "このブラウザでは「友だちを選んで送信」が利用できません。iPhoneのLINEアプリからLIFF URLを開いて試してください。"
-        );
+        throw new Error("この環境ではLINEの送信先選択を利用できません。iPhoneのLINEアプリからLIFF URLを開いてください。");
       }
-
-      const result = await liff.shareTargetPicker(
-        [{type:"text", text:text}],
-        {isMultiple:true}
-      );
-
-      if(result){
-        status("LINEに送信しました。");
-        alert("LINEに送信しました。");
-      }else{
-        status("送信をキャンセルしました。");
-      }
+      status("LINEの送信先を選択してください。");
+      await liff.shareTargetPicker([{type:"text",text:text}],{isMultiple:false});
+      sessionStorage.removeItem("vegLinePending");
+      sessionStorage.removeItem("vegLineText");
+      status("LINEへの送信が完了しました。");
+      alert("LINEに送信しました。");
     }catch(e){
       console.error(e);
-      status("LINE送信エラー\n"+(e?.message || e), true);
-      alert("LINE送信エラー\n\n"+(e?.message || e));
+      status("LINE送信エラー\n"+(e?.message||String(e)),true);
+      alert("LINE送信エラー\n\n"+(e?.message||String(e)));
     }finally{
-      btn.disabled = false;
-      btn.textContent = "LINEで送る";
+      b.disabled=false;b.textContent="LINEで送る";
     }
   }
-
-  function bind(){
-    const btn = document.getElementById("vegLineSend");
-    if(!btn || btn.dataset.lineBound) return;
-    btn.dataset.lineBound = "1";
-    btn.addEventListener("click", send);
-  }
-
-  // ページ読み込み時にもLIFFを初期化。
-  // ログイン後に戻ったケースを検出しておく。
   async function boot(){
-    bind();
+    const b=$id("vegLineSend");
+    if(!b)return;
+    if(b.dataset.lineBound==="1")return;
+    b.dataset.lineBound="1";
+    b.addEventListener("click",send);
     try{
-      const loggedIn = await init();
-      if(loggedIn){
-        status("LINEログイン済みです。「LINEで送る」を押すと送信先を選べます。");
+      await init();
+      const pending=sessionStorage.getItem("vegLinePending");
+      const savedText=sessionStorage.getItem("vegLineText")||"";
+      if(pending&&savedText){
+        const card=$id("vegPreviewCard"),preview=$id("vegPreview");
+        if(preview)preview.textContent=savedText;
+        if(card)card.hidden=false;
       }
-    }catch(e){
-      console.log("LIFF初期化待機:", e);
-    }
+      if(pending&&liff.isLoggedIn()&&savedText){
+        if(!liff.isApiAvailable("shareTargetPicker")){
+          status("LINEログインは完了しました。\nこのブラウザでは送信先選択が利用できません。iPhoneのLINEアプリからLIFF URLを開いてください。",true);
+          return;
+        }
+        sessionStorage.removeItem("vegLinePending");
+        sessionStorage.removeItem("vegLineText");
+        status("LINEログイン完了。送信先を選択してください。");
+        await liff.shareTargetPicker([{type:"text",text:savedText}],{isMultiple:false});
+        status("LINEへの送信が完了しました。");
+      }
+    }catch(e){console.log("LIFF初期化:",e);}
   }
-
-  if(document.readyState === "loading"){
-    document.addEventListener("DOMContentLoaded", boot);
-  }else{
-    boot();
-  }
+  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",boot);
+  else boot();
 })();
 </script>
 </body></html>
