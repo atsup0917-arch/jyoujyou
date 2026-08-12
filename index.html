@@ -248,6 +248,47 @@ input, select, textarea, button {
   .manage button{padding:8px 7px!important;font-size:14px}
   .needEdit{min-width:0}
 }
+
+
+/* ===== 野菜商品管理：iPhoneで商品名が消えないレイアウト ===== */
+.vegProductManageRow{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr) 150px 92px auto;
+  gap:6px;
+  align-items:center;
+  margin:6px 0;
+  min-width:0;
+}
+.vegProductManageRow input,
+.vegProductManageRow select{
+  width:100%;
+  min-width:0;
+  max-width:100%;
+  padding:9px;
+  border:1px solid #ddd;
+  border-radius:9px;
+  background:#fff;
+}
+.vegMoveBtns{display:flex;gap:4px;min-width:0}
+.vegMoveBtns button{
+  width:44px!important;min-width:0;margin:0!important;
+  padding:8px 4px!important;font-size:16px!important;
+}
+.vegDeleteBtn{
+  width:auto!important;min-width:60px;margin:0!important;white-space:nowrap;
+}
+@media(max-width:520px){
+  .vegProductManageRow{
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+    gap:7px;padding:8px 0;border-bottom:1px solid #eee;
+  }
+  .vegProductManageRow select[data-veg-default-unit]{grid-column:1}
+  .vegProductManageRow .vegMoveBtns{grid-column:2;justify-content:flex-end}
+  .vegProductManageRow .vegDeleteBtn{
+    grid-column:1 / -1;width:100%!important;min-height:44px;
+  }
+}
+
 </style>
 
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
@@ -606,18 +647,18 @@ function renderVegProductManage(){
    const kana=p.kana||p.furigana||p.reading||"";
    const idx=a.findIndex(([x])=>x===id);
    const canUp=idx>0, canDown=idx<a.length-1;
-   return `<div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) 150px 92px auto;gap:6px;align-items:center;margin:6px 0">
-     <input value="${esc(p.name||"")}" data-veg-name="${esc(id)}" style="min-width:0;padding:9px;border:1px solid #ddd;border-radius:9px">
-     <input value="${esc(kana)}" placeholder="ふりがな" data-veg-kana="${esc(id)}" style="min-width:0;padding:9px;border:1px solid #ddd;border-radius:9px">
-     <select data-veg-default-unit="${esc(id)}" style="padding:9px;border:1px solid #ddd;border-radius:9px">
+   return `<div class="vegProductManageRow">
+     <input value="${esc(p.name||"")}" data-veg-name="${esc(id)}" aria-label="商品名">
+     <input value="${esc(kana)}" placeholder="ふりがな" data-veg-kana="${esc(id)}" aria-label="ふりがな">
+     <select data-veg-default-unit="${esc(id)}" aria-label="デフォルト単位">
        <option value="">単位なし</option>
        ${vals(vegUnits).map(([uid,u])=>`<option value="${esc(uid)}" ${p.defaultUnit===uid?"selected":""}>${esc(u.name||"")}</option>`).join("")}
      </select>
-     <div style="display:flex;gap:4px">
-       <button type="button" data-veg-up="${esc(id)}" ${canUp?"":"disabled"} style="width:44px;margin:0;padding:8px 4px;font-size:16px">▲</button>
-       <button type="button" data-veg-down="${esc(id)}" ${canDown?"":"disabled"} style="width:44px;margin:0;padding:8px 4px;font-size:16px">▼</button>
+     <div class="vegMoveBtns">
+       <button type="button" data-veg-up="${esc(id)}" ${canUp?"":"disabled"}>▲</button>
+       <button type="button" data-veg-down="${esc(id)}" ${canDown?"":"disabled"}>▼</button>
      </div>
-     <button type="button" class="danger" data-veg-delete="${esc(id)}" style="width:auto;margin:0">削除</button>
+     <button type="button" class="danger vegDeleteBtn" data-veg-delete="${esc(id)}">削除</button>
    </div>`;
  }).join("");
 
@@ -1099,7 +1140,9 @@ $("printWeekend").onclick=e=>{e.preventDefault();printPrep("weekend")};
       if(!liff.isApiAvailable("shareTargetPicker"))throw new Error("この環境ではLINEの送信先選択を利用できません。iPhoneのLINEアプリからLIFF URLを開いてください。");
       status("LINEの送信先を選択してください。");
       await liff.shareTargetPicker([{type:"text",text:text}],{isMultiple:false});
-      sessionStorage.removeItem("vegLinePending");status("LINEへの送信が完了しました。");alert("LINEに送信しました。");
+      sessionStorage.removeItem("vegLinePending");status("LINEへの送信が完了しました。");
+       if(liff.isInClient()){setTimeout(()=>{try{liff.closeWindow();}catch(e){}},300);}
+       else{alert("LINEに送信しました。");}
     }catch(e){console.error(e);status("LINE送信エラー\n"+(e?.message||String(e)),true);alert("LINE送信エラー\n\n"+(e?.message||String(e)));}
     finally{b.disabled=false;b.textContent="LINEで送る";}
   }
@@ -1126,6 +1169,7 @@ $("printWeekend").onclick=e=>{e.preventDefault();printPrep("weekend")};
         status("LINEログイン完了。送信先を選択してください。");
         await liff.shareTargetPicker([{type:"text",text:savedText}],{isMultiple:false});
         status("LINEへの送信が完了しました。");
+        if(liff.isInClient()){setTimeout(()=>{try{liff.closeWindow();}catch(e){}},300);}
       }
     }catch(e){console.log("LIFF初期化:",e);}
   }
