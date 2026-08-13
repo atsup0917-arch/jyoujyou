@@ -124,6 +124,12 @@ button.gray{background:#e9eaed;color:#2371df}.danger{background:#fff0f0;color:#c
 }
 </style>
 
+<style id="barcodeShoppingFeature">
+#barcodeShoppingCard .small{font-size:14px;line-height:1.5}
+#barcodeModal .shoppingItemModalBox{max-width:560px}
+#barcodeTotal{font-size:24px}
+</style>
+
 <style id="recipeActualFullscreen">
 /* レシピ入力画面だけをMacの画面いっぱいにする */
 #recipeModal{
@@ -353,6 +359,44 @@ input, select, textarea, button {
 <div id="shoppingPage" class="page">
 
 <h1>🛒 買い物リスト</h1>
+<div class="card" id="barcodeShoppingCard">
+  <h2>📷 バーコードで買い物</h2>
+  <div class="small">商品バーコードを読み取ると、登録済みの商品は単価を表示します。未登録なら、その場で登録できます。</div>
+  <button type="button" id="openBarcodeScanner">📷 バーコードを読み取る</button>
+</div>
+
+<div id="barcodeModal" class="shoppingItemModal" hidden>
+  <div class="shoppingItemModalBox">
+    <div class="shoppingItemModalHeader">
+      <h2 id="barcodeModalTitle">📷 バーコード読み取り</h2>
+      <button type="button" class="shoppingModalClose" id="barcodeModalClose">×</button>
+    </div>
+    <div id="barcodeScannerWrap" style="background:#111;border-radius:16px;overflow:hidden;position:relative">
+      <video id="barcodeVideo" playsinline muted style="display:block;width:100%;max-height:48dvh;object-fit:cover"></video>
+      <div style="position:absolute;left:12%;right:12%;top:38%;height:24%;border:3px solid #fff;border-radius:12px;box-shadow:0 0 0 9999px rgba(0,0,0,.22);pointer-events:none"></div>
+    </div>
+    <div id="barcodeStatus" class="small" style="font-size:15px;margin-top:10px">バーコードを枠内に入れてください。</div>
+    <div id="barcodeResult" hidden style="margin-top:12px">
+      <div class="purchaseBox">
+        <div id="barcodeProductState" style="font-size:18px;font-weight:800;margin-bottom:10px"></div>
+        <label>商品名</label><input id="barcodeProductName" type="text">
+        <label>買う場所</label><select id="barcodeStoreSelect"></select>
+        <label>単価</label><input id="barcodePrice" type="number" min="0" step="0.01" inputmode="decimal" placeholder="例：175">
+        <div class="purchaseQtyWrap" style="margin-top:10px">
+          <span class="purchaseQtyLabel">個数</span>
+          <button type="button" class="gray purchaseQtyBtn" id="barcodeQtyMinus">−</button>
+          <input class="purchaseQtyValue" id="barcodeQty" type="number" min="1" step="1" inputmode="numeric" value="1">
+          <button type="button" class="purchaseQtyBtn" id="barcodeQtyPlus">＋</button>
+        </div>
+        <div class="purchaseTotal"><span>今回合計</span><strong id="barcodeTotal">¥0</strong></div>
+      </div>
+      <div class="shoppingModalActions">
+        <button type="button" class="gray" id="barcodeRescan">もう一度読み取る</button>
+        <button type="button" id="barcodeAdd">買い物に追加</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <div class="card">
 <h2>表示する場所</h2><div class="filters" id="filters"></div>
@@ -383,7 +427,7 @@ input, select, textarea, button {
 <button id="addStore">＋ 買う場所を追加</button><div id="storeManage"></div>
 <h2 class="settingsHeading">商品の管理</h2>
 <label>商品を登録する場所</label><select id="regStore"></select>
-<label>新しい商品</label><input id="newProduct" placeholder="例：玉子"><label>ふりがな（検索用）</label><input id="newProductKana" placeholder="例：たまご"><label>価格の種類</label><select id="newProductPriceMode"><option value="pack">商品単価</option><option value="gram">g単価</option></select><label>価格</label><input id="newProductPrice" type="number" min="0" step="0.01" inputmode="decimal" placeholder="例：175"><label>商品写真</label><div class="productRegUpload"><label for="newProductPhoto" class="productRegUploadLabel" title="写真を選択" aria-label="写真を選択">📷</label><input id="newProductPhoto" type="file" accept="image/*,.heic,.heif,.jpg,.jpeg,.png,.webp"><span class="small" style="margin:0">写真を選択</span></div><div id="newProductPhotoPreview" class="productRegPhotoPreview" hidden><img id="newProductPhotoImg" alt="商品写真"></div><div class="small">登録した価格・写真は、買い物リストにも自動反映されます。</div>
+<label>新しい商品</label><input id="newProduct" placeholder="例：玉子"><label>ふりがな（検索用）</label><input id="newProductKana" placeholder="例：たまご"><label>バーコード（任意）</label><input id="newProductBarcode" inputmode="numeric" placeholder="例：4901234567890"><label>価格の種類</label><select id="newProductPriceMode"><option value="pack">商品単価</option><option value="gram">g単価</option></select><label>価格</label><input id="newProductPrice" type="number" min="0" step="0.01" inputmode="decimal" placeholder="例：175"><label>商品写真</label><div class="productRegUpload"><label for="newProductPhoto" class="productRegUploadLabel" title="写真を選択" aria-label="写真を選択">📷</label><input id="newProductPhoto" type="file" accept="image/*,.heic,.heif,.jpg,.jpeg,.png,.webp"><span class="small" style="margin:0">写真を選択</span></div><div id="newProductPhotoPreview" class="productRegPhotoPreview" hidden><img id="newProductPhotoImg" alt="商品写真"></div><div class="small">登録した価格・写真は、買い物リストにも自動反映されます。</div>
 <button id="addProduct">＋ 商品を登録</button><div id="productManage"></div>
 <div class="small">買う場所を削除すると、その場所に登録した商品も削除します。すでに買い物リストへ追加した品は残ります。</div>
 </div></details></div>
@@ -406,7 +450,7 @@ input, select, textarea, button {
 
 <div class="purchaseBox">
 <label>今回の購入内容</label>
-<div class="purchaseHint">今回の買い方を選んで入力してください。<b>g単価</b>＝重量×g単価×個数、<b>商品単価</b>＝商品単価×個数。</div>
+<div class="purchaseHint">今回の買い方を選んで入力してください。<b>gで計算</b>を選んだ時だけ重さ（g）を入力します。<b>商品単価</b>は商品単価×個数で計算します。</div>
 <div id="purchaseRows"></div>
 <button type="button" class="gray" id="addPurchaseRow" style="margin-top:8px">＋ 購入内容を追加</button>
 <div class="purchaseTotal"><span>今回合計</span><strong id="purchaseTotalValue">¥0</strong></div>
@@ -638,6 +682,112 @@ let shoppingModalItemId=null;
 let shoppingPendingPhoto=null;
 let shoppingPurchases=[];
 
+
+/* ===== バーコード買い物機能 ===== */
+let barcodeStream=null, barcodeDetector=null, barcodeRunning=false;
+let barcodeMatchedProduct=null, barcodeCurrentCode="";
+
+function populateBarcodeStores(selectedId=""){
+  const sel=$("barcodeStoreSelect"); if(!sel)return;
+  sel.innerHTML='<option value="">買う場所を選択</option>'+
+    vals(stores).sort((a,b)=>(a[1].name||"").localeCompare(b[1].name||"ja"))
+      .map(([id,s])=>`<option value="${esc(id)}">${esc(s.name)}</option>`).join("");
+  if(selectedId && stores[selectedId]) sel.value=selectedId;
+}
+function updateBarcodeTotal(){
+  const p=Math.max(0,Number($("barcodePrice")?.value)||0);
+  const q=Math.max(1,Number($("barcodeQty")?.value)||1);
+  if($("barcodeTotal"))$("barcodeTotal").textContent=yen(p*q);
+}
+function findProductByBarcode(code){
+  const c=String(code||"").trim();
+  for(const [sid,plist] of vals(products)){
+    for(const [pid,p] of vals(plist||{})){
+      if(String(p.barcode||"").trim()===c)return {storeId:sid,id:pid,p};
+    }
+  }
+  return null;
+}
+function stopBarcodeCamera(){
+  barcodeRunning=false;
+  if(barcodeStream){barcodeStream.getTracks().forEach(t=>t.stop());barcodeStream=null;}
+  const v=$("barcodeVideo"); if(v){v.pause();v.srcObject=null;}
+}
+function resetBarcodeResult(){
+  barcodeMatchedProduct=null; barcodeCurrentCode="";
+  $("barcodeResult").hidden=true; $("barcodeScannerWrap").style.display="";
+  $("barcodeStatus").textContent="バーコードを枠内に入れてください。";
+  $("barcodeProductState").textContent="";
+  $("barcodeProductName").value=""; $("barcodePrice").value=""; $("barcodeQty").value="1";
+  populateBarcodeStores(""); updateBarcodeTotal();
+}
+async function showBarcodeResult(code){
+  const found=findProductByBarcode(code);
+  barcodeCurrentCode=String(code||"").trim(); barcodeMatchedProduct=found;
+  stopBarcodeCamera(); $("barcodeScannerWrap").style.display="none"; $("barcodeResult").hidden=false;
+  if(found){
+    $("barcodeProductState").textContent="✅ 登録済みの商品";
+    $("barcodeProductName").value=found.p?.name||"";
+    $("barcodePrice").value=Number(found.p?.price||0)||"";
+    populateBarcodeStores(found.storeId);
+  }else{
+    $("barcodeProductState").textContent="🆕 未登録の商品です";
+    $("barcodeProductName").value=""; $("barcodePrice").value=""; populateBarcodeStores("");
+  }
+  $("barcodeStatus").textContent=`バーコード：${barcodeCurrentCode}`;
+  updateBarcodeTotal();
+}
+async function startBarcodeCamera(){
+  resetBarcodeResult();
+  if(!navigator.mediaDevices?.getUserMedia){$("barcodeStatus").textContent="この環境ではカメラを利用できません。HTTPSの公開URLから開いてください。";return;}
+  if(!("BarcodeDetector" in window)){$("barcodeStatus").textContent="このiPhone/ブラウザではバーコード読み取りに対応していません。Safariを最新版にしてお試しください。";return;}
+  try{
+    const supported=BarcodeDetector.getSupportedFormats?await BarcodeDetector.getSupportedFormats():[];
+    barcodeDetector=new BarcodeDetector({formats:supported.length?supported:["ean_13","ean_8","upc_a","upc_e","code_128"]});
+    barcodeStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"}},audio:false});
+    const v=$("barcodeVideo"); v.srcObject=barcodeStream; await v.play(); barcodeRunning=true; scanBarcodeFrame();
+  }catch(err){console.error(err);stopBarcodeCamera();$("barcodeStatus").textContent="カメラを起動できませんでした。iPhoneのカメラ許可とSafariのサイト設定を確認してください。";}
+}
+async function scanBarcodeFrame(){
+  if(!barcodeRunning||!barcodeDetector)return;
+  try{
+    const codes=await barcodeDetector.detect($("barcodeVideo"));
+    if(codes?.length&&codes[0].rawValue){await showBarcodeResult(codes[0].rawValue);return;}
+  }catch(err){console.debug("barcode detect",err);}
+  setTimeout(scanBarcodeFrame,180);
+}
+async function closeBarcodeModal(){
+  stopBarcodeCamera(); $("barcodeModal").hidden=true; document.body.style.overflow="";
+}
+$("openBarcodeScanner").onclick=async()=>{$("barcodeModal").hidden=false;document.body.style.overflow="hidden";await startBarcodeCamera();};
+$("barcodeModalClose").onclick=closeBarcodeModal;
+$("barcodeModal").addEventListener("click",e=>{if(e.target===$("barcodeModal"))closeBarcodeModal();});
+$("barcodeRescan").onclick=startBarcodeCamera;
+$("barcodePrice").oninput=updateBarcodeTotal;
+$("barcodeQty").oninput=()=>{$("barcodeQty").value=Math.max(1,Number($("barcodeQty").value)||1);updateBarcodeTotal();};
+$("barcodeQtyMinus").onclick=()=>{$("barcodeQty").value=Math.max(1,(Number($("barcodeQty").value)||1)-1);updateBarcodeTotal();};
+$("barcodeQtyPlus").onclick=()=>{$("barcodeQty").value=(Number($("barcodeQty").value)||1)+1;updateBarcodeTotal();};
+$("barcodeAdd").onclick=async()=>{
+  const name=$("barcodeProductName").value.trim(),storeId=$("barcodeStoreSelect").value;
+  const price=Math.max(0,Number($("barcodePrice").value)||0),qty=Math.max(1,Number($("barcodeQty").value)||1);
+  if(!name)return alert("商品名を入力してください。");
+  if(!storeId)return alert("買う場所を選択してください。");
+  if(price<=0)return alert("単価を入力してください。");
+  try{
+    let productId=barcodeMatchedProduct?.id||null;
+    if(!barcodeMatchedProduct){
+      const newRef=push(ref(db,`products/${storeId}`)); productId=newRef.key;
+      await set(newRef,{name,kana:"",price,priceMode:"pack",barcode:barcodeCurrentCode});
+    }else{
+      await update(ref(db,`products/${storeId}/${productId}`),{name,price,barcode:barcodeCurrentCode});
+    }
+    const itemRef=push(itemsRef);
+    await set(itemRef,{storeId,storeName:stores[storeId]?.name||"",name,memo:"",quantity:qty,done:false,createdAt:Date.now(),productId,unitPrice:price,priceMode:"pack",price:price*qty,barcode:barcodeCurrentCode});
+    alert(barcodeMatchedProduct?"買い物に追加しました。":"商品を登録して、買い物に追加しました。");
+    await closeBarcodeModal();
+  }catch(err){console.error(err);alert("登録・追加に失敗しました。");}
+};
+
 function yen(v){
 const n=Number(v||0);
 return "¥"+Math.round(n).toLocaleString("ja-JP");
@@ -714,7 +864,7 @@ function renderPurchaseRows(){
    const pricePlaceholder=mode==="gram"?"例：1.75":"例：175";
    return `<div class="purchaseRow">
     <div class="purchaseMode"><button type="button" class="${mode==="gram"?"active":""}" data-pmode="gram" data-pi="${i}">⚖️ gで計算</button><button type="button" class="${mode==="pack"?"active":""}" data-pmode="pack" data-pi="${i}">💰 商品単価</button></div>
-    <div class="purchaseField"><label>重さ（g）</label><input type="number" min="0" step="0.01" inputmode="decimal" enterkeyhint="next" placeholder="例：235" value="${esc(r.grams)}" data-pg="${i}"></div>
+    ${mode==="gram"?`<div class="purchaseField"><label>重さ（g）</label><input type="number" min="0" step="0.01" inputmode="decimal" enterkeyhint="next" placeholder="例：235" value="${esc(r.grams)}" data-pg="${i}"></div>`:""}
     <div class="purchaseField"><label>${unitLabel}</label><input type="number" min="0" step="0.01" inputmode="decimal" enterkeyhint="done" placeholder="${pricePlaceholder}" value="${esc(currentPrice)}" data-pp="${i}"></div>
     <div class="purchaseQtyWrap"><span class="purchaseQtyLabel">個数</span><button type="button" class="gray purchaseQtyBtn" data-qminus="${i}">−</button><input class="purchaseQtyValue" type="number" min="1" step="1" inputmode="numeric" value="${esc(r.qty||1)}" data-pq="${i}"><button type="button" class="purchaseQtyBtn" data-qplus="${i}">＋</button><button type="button" class="gray purchaseRemove" data-pr="${i}" title="この購入内容を削除">🗑️</button></div>
     <div class="purchaseCalcNote">${mode==="gram"?"計算：重さ × g単価 × 個数":"計算：商品単価 × 個数"}</div>
@@ -888,15 +1038,15 @@ document.addEventListener("click",e=>{
 
 $("addStore").onclick=async()=>{const name=$("newStore").value.trim();if(!name)return;await push(storesRef,{name});$("newStore").value=""};
 $("addProduct").onclick=async()=>{
- const sid=$("regStore").value,name=$("newProduct").value.trim(),kana=$("newProductKana").value.trim();
+ const sid=$("regStore").value,name=$("newProduct").value.trim(),kana=$("newProductKana").value.trim(),barcode=$("newProductBarcode")?.value.trim()||"";
  const rawPrice=$("newProductPrice").value.trim();
  const price=rawPrice===""?0:Math.max(0,Number(rawPrice)||0);
  if(!sid||!name)return;
  let photo=null;
  const file=$("newProductPhoto").files?.[0];
  if(file){try{photo=await resizeShoppingPhoto(file);}catch(err){console.error(err);return alert("写真の読み込みに失敗しました。");}}
- const priceMode=$("newProductPriceMode").value||"pack"; await push(ref(db,"products/"+sid),{name,kana,price,priceMode,photo});
- $("newProduct").value="";$("newProductKana").value="";$("newProductPrice").value="";$("newProductPriceMode").value="pack";$("newProductPhoto").value="";
+ const priceMode=$("newProductPriceMode").value||"pack"; await push(ref(db,"products/"+sid),{name,kana,price,priceMode,photo,barcode});
+ $("newProduct").value="";$("newProductKana").value="";if($("newProductBarcode"))$("newProductBarcode").value="";$("newProductPrice").value="";$("newProductPriceMode").value="pack";$("newProductPhoto").value="";
  $("newProductPhotoPreview").hidden=true;
 };
 $("newProductPhoto").addEventListener("change",async e=>{
