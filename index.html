@@ -546,6 +546,8 @@ input, select, textarea, button {
 
 </div>
 
+<script src="https://unpkg.com/@zxing/browser@0.2.1"></script>
+
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
 import {getDatabase,ref,onValue,set,push,remove,update} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-database.js";
@@ -683,8 +685,8 @@ let shoppingPendingPhoto=null;
 let shoppingPurchases=[];
 
 
-/* ===== バーコード買い物機能 ===== */
-let barcodeStream=null, barcodeDetector=null, barcodeRunning=false;
+/* ===== バーコード買い物機能（iPhone Safari対応：ZXing） ===== */
+let barcodeControls=null, barcodeReader=null;
 let barcodeMatchedProduct=null, barcodeCurrentCode="";
 
 function populateBarcodeStores(selectedId=""){
@@ -709,83 +711,151 @@ function findProductByBarcode(code){
   return null;
 }
 function stopBarcodeCamera(){
-  barcodeRunning=false;
-  if(barcodeStream){barcodeStream.getTracks().forEach(t=>t.stop());barcodeStream=null;}
-  const v=$("barcodeVideo"); if(v){v.pause();v.srcObject=null;}
+  if(barcodeControls){
+    try{barcodeControls.stop();}catch(e){}
+    barcodeControls=null;
+  }
+  const v=$("barcodeVideo");
+  if(v){
+    try{v.pause();}catch(e){}
+    v.srcObject=null;
+  }
 }
 function resetBarcodeResult(){
   barcodeMatchedProduct=null; barcodeCurrentCode="";
   $("barcodeResult").hidden=true; $("barcodeScannerWrap").style.display="";
-  $("barcodeStatus").textContent="バーコードを枠内に入れてください。";
+  $("barcodeStatus").textContent="カメラを起動しています…";
   $("barcodeProductState").textContent="";
   $("barcodeProductName").value=""; $("barcodePrice").value=""; $("barcodeQty").value="1";
   populateBarcodeStores(""); updateBarcodeTotal();
 }
 async function showBarcodeResult(code){
   const found=findProductByBarcode(code);
-  barcodeCurrentCode=String(code||"").trim(); barcodeMatchedProduct=found;
-  stopBarcodeCamera(); $("barcodeScannerWrap").style.display="none"; $("barcodeResult").hidden=false;
+  barcodeCurrentCode=String(code||"").trim();
+  barcodeMatchedProduct=found;
+  stopBarcodeCamera();
+  $("barcodeScannerWrap").style.display="none";
+  $("barcodeResult").hidden=false;
+
   if(found){
     $("barcodeProductState").textContent="✅ 登録済みの商品";
     $("barcodeProductName").value=found.p?.name||"";
     $("barcodePrice").value=Number(found.p?.price||0)||"";
     populateBarcodeStores(found.storeId);
+    $("barcodeStatus").textContent=`バーコード：${barcodeCurrentCode}`;
   }else{
     $("barcodeProductState").textContent="🆕 未登録の商品です";
-    $("barcodeProductName").value=""; $("barcodePrice").value=""; populateBarcodeStores("");
+    $("barcodeProductName").value="";
+    $("barcodePrice").value="";
+    populateBarcodeStores("");
+    $("barcodeStatus").textContent=`バーコード：${barcodeCurrentCode}。商品名・買う場所・単価を入力してください。`;
   }
-  $("barcodeStatus").textContent=`バーコード：${barcodeCurrentCode}`;
   updateBarcodeTotal();
 }
 async function startBarcodeCamera(){
   resetBarcodeResult();
-  if(!navigator.mediaDevices?.getUserMedia){$("barcodeStatus").textContent="この環境ではカメラを利用できません。HTTPSの公開URLから開いてください。";return;}
-  if(!("BarcodeDetector" in window)){$("barcodeStatus").textContent="このiPhone/ブラウザではバーコード読み取りに対応していません。Safariを最新版にしてお試しください。";return;}
+  if(!window.ZXingBrowser){
+    $("barcodeStatus").textContent="バーコード読み取り機能の読み込みに失敗しました。インターネット接続を確認してください。";
+    return;
+  }
   try{
-    const supported=BarcodeDetector.getSupportedFormats?await BarcodeDetector.getSupportedFormats():[];
-    barcodeDetector=new BarcodeDetector({formats:supported.length?supported:["ean_13","ean_8","upc_a","upc_e","code_128"]});
-    barcodeStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"}},audio:false});
-    const v=$("barcodeVideo"); v.srcObject=barcodeStream; await v.play(); barcodeRunning=true; scanBarcodeFrame();
-  }catch(err){console.error(err);stopBarcodeCamera();$("barcodeStatus").textContent="カメラを起動できませんでした。iPhoneのカメラ許可とSafariのサイト設定を確認してください。";}
-}
-async function scanBarcodeFrame(){
-  if(!barcodeRunning||!barcodeDetector)return;
-  try{
-    const codes=await barcodeDetector.detect($("barcodeVideo"));
-    if(codes?.length&&codes[0].rawValue){await showBarcodeResult(codes[0].rawValue);return;}
-  }catch(err){console.debug("barcode detect",err);}
-  setTimeout(scanBarcodeFrame,180);
+    stopBarcodeCamera();
+    barcodeReader = new ZXingBrowser.BrowserMultiFormatReader();
+    const video=$("barcodeVideo");
+    $("barcodeStatus").textContent="カメラを起動しています…許可が出たら「許可」を押してください。";
+
+    barcodeControls = await barcodeReader.decodeFromVideoDevice(
+      undefined,
+      video,
+      (result,error,controls)=>{
+        if(result){
+          const value=result.getText();
+          if(value) showBarcodeResult(value);
+        }
+      }
+    );
+    $("barcodeStatus").textContent="バーコードを枠内に入れてください。";
+  }catch(err){
+    console.error(err);
+    stopBarcodeCamera();
+    if(err?.name==="NotAllowedError"){
+      $("barcodeStatus").textContent="カメラが許可されていません。iPhoneの「設定 → Safari → カメラ」で許可してください。";
+    }else{
+      $("barcodeStatus").textContent="カメラを起動できませんでした。サイトのカメラ許可とHTTPS接続を確認してください。";
+    }
+  }
 }
 async function closeBarcodeModal(){
-  stopBarcodeCamera(); $("barcodeModal").hidden=true; document.body.style.overflow="";
+  stopBarcodeCamera();
+  $("barcodeModal").hidden=true;
+  document.body.style.overflow="";
 }
-$("openBarcodeScanner").onclick=async()=>{$("barcodeModal").hidden=false;document.body.style.overflow="hidden";await startBarcodeCamera();};
+$("openBarcodeScanner").onclick=async()=>{
+  $("barcodeModal").hidden=false;
+  document.body.style.overflow="hidden";
+  await startBarcodeCamera();
+};
 $("barcodeModalClose").onclick=closeBarcodeModal;
 $("barcodeModal").addEventListener("click",e=>{if(e.target===$("barcodeModal"))closeBarcodeModal();});
 $("barcodeRescan").onclick=startBarcodeCamera;
 $("barcodePrice").oninput=updateBarcodeTotal;
-$("barcodeQty").oninput=()=>{$("barcodeQty").value=Math.max(1,Number($("barcodeQty").value)||1);updateBarcodeTotal();};
-$("barcodeQtyMinus").onclick=()=>{$("barcodeQty").value=Math.max(1,(Number($("barcodeQty").value)||1)-1);updateBarcodeTotal();};
-$("barcodeQtyPlus").onclick=()=>{$("barcodeQty").value=(Number($("barcodeQty").value)||1)+1;updateBarcodeTotal();};
+$("barcodeQty").oninput=()=>{
+  $("barcodeQty").value=Math.max(1,Number($("barcodeQty").value)||1);
+  updateBarcodeTotal();
+};
+$("barcodeQtyMinus").onclick=()=>{
+  $("barcodeQty").value=Math.max(1,(Number($("barcodeQty").value)||1)-1);
+  updateBarcodeTotal();
+};
+$("barcodeQtyPlus").onclick=()=>{
+  $("barcodeQty").value=(Number($("barcodeQty").value)||1)+1;
+  updateBarcodeTotal();
+};
 $("barcodeAdd").onclick=async()=>{
-  const name=$("barcodeProductName").value.trim(),storeId=$("barcodeStoreSelect").value;
-  const price=Math.max(0,Number($("barcodePrice").value)||0),qty=Math.max(1,Number($("barcodeQty").value)||1);
+  const name=$("barcodeProductName").value.trim();
+  const storeId=$("barcodeStoreSelect").value;
+  const price=Math.max(0,Number($("barcodePrice").value)||0);
+  const qty=Math.max(1,Number($("barcodeQty").value)||1);
   if(!name)return alert("商品名を入力してください。");
   if(!storeId)return alert("買う場所を選択してください。");
   if(price<=0)return alert("単価を入力してください。");
+
   try{
     let productId=barcodeMatchedProduct?.id||null;
     if(!barcodeMatchedProduct){
-      const newRef=push(ref(db,`products/${storeId}`)); productId=newRef.key;
+      const newRef=push(ref(db,`products/${storeId}`));
+      productId=newRef.key;
       await set(newRef,{name,kana:"",price,priceMode:"pack",barcode:barcodeCurrentCode});
     }else{
-      await update(ref(db,`products/${storeId}/${productId}`),{name,price,barcode:barcodeCurrentCode});
+      await update(ref(db,`products/${storeId}/${productId}`),{
+        name,price,barcode:barcodeCurrentCode
+      });
     }
+
     const itemRef=push(itemsRef);
-    await set(itemRef,{storeId,storeName:stores[storeId]?.name||"",name,memo:"",quantity:qty,done:false,createdAt:Date.now(),productId,unitPrice:price,priceMode:"pack",price:price*qty,barcode:barcodeCurrentCode});
-    alert(barcodeMatchedProduct?"買い物に追加しました。":"商品を登録して、買い物に追加しました。");
+    await set(itemRef,{
+      storeId,
+      storeName:stores[storeId]?.name||"",
+      name,
+      memo:"",
+      quantity:qty,
+      done:false,
+      createdAt:Date.now(),
+      productId,
+      unitPrice:price,
+      priceMode:"pack",
+      price:price*qty,
+      barcode:barcodeCurrentCode
+    });
+
+    alert(barcodeMatchedProduct
+      ?"買い物に追加しました。"
+      :"商品を登録して、買い物に追加しました。");
     await closeBarcodeModal();
-  }catch(err){console.error(err);alert("登録・追加に失敗しました。");}
+  }catch(err){
+    console.error(err);
+    alert("登録・追加に失敗しました。");
+  }
 };
 
 function yen(v){
