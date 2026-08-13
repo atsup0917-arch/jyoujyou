@@ -371,6 +371,7 @@ input, select, textarea, button {
 <label>商品</label><input id="productSearch" placeholder="商品名・ふりがなで検索" autocomplete="off">
 <div id="productSuggestions" style="display:none;background:#fff;border:1px solid #ccc;border-radius:10px;margin:-4px 0 8px;padding:4px;max-height:220px;overflow:auto"></div>
 <select id="productSelect"></select>
+<label>数量</label><select id="itemQty"></select>
 <label>自由入力</label><input id="freeProduct" placeholder="商品リストにない物を入力">
 <label>数量・メモ</label><input id="memo" placeholder="例：2袋 / 大サイズ">
 <button id="addItem">＋ 買う物に追加</button>
@@ -409,6 +410,8 @@ input, select, textarea, button {
 <div id="purchaseRows"></div>
 <button type="button" class="gray" id="addPurchaseRow" style="margin-top:8px">＋ 購入内容を追加</button>
 <div class="purchaseTotal"><span>今回合計</span><strong id="purchaseTotalValue">¥0</strong></div>
+<button type="button" class="gray" id="saveMasterUnitPrice" style="margin-top:8px">この単価を商品マスターに保存</button>
+<div class="small">※ 特売など今回だけの価格は保存せず、通常の基準単価として残したい時だけ押してください。</div>
 </div>
 
 <label>商品名</label>
@@ -653,7 +656,7 @@ const price=Number(x.price||0);
 const photo=x.photo||"";
 const purchaseQty=Array.isArray(x.purchaseDetails)&&x.purchaseDetails.length
   ? x.purchaseDetails.reduce((sum,r)=>sum+Math.max(0,Number(r.qty)||0),0)
-  : 0;
+  : Math.max(0,Number(x.quantity)||0);
 const qtyText=purchaseQty>0 ? `数量 ${purchaseQty}` : (x.memo||"");
 if(editingItemId===x.id){
 return `<div class="item"><input type="checkbox" ${x.done?"checked":""} data-check="${x.id}"><div class="itemText" style="display:block"><input type="text" value="${esc(x.name)}" data-editname="${x.id}" style="width:100%;margin-bottom:6px;padding:8px;border-radius:8px;border:1px solid #ccc;font-size:16px"><input type="text" value="${esc(x.memo||"")}" placeholder="数量・メモ" data-editmemo="${x.id}" style="width:100%;padding:8px;border-radius:8px;border:1px solid #ccc;font-size:16px"></div><button class="itemDelete" data-editsave="${x.id}" style="background:#3269df;color:#fff">保存</button></div>`;
@@ -691,7 +694,7 @@ if(Array.isArray(x.purchaseDetails)&&x.purchaseDetails.length){
  });
 }else{
  const masterPrice=master.price??x.price??"";
- shoppingPurchases=[{mode:defaultMode,grams:"",gramPrice:defaultMode==="gram"?masterPrice:"",packPrice:defaultMode==="pack"?masterPrice:"",qty:1}];
+ shoppingPurchases=[{mode:defaultMode,grams:"",gramPrice:defaultMode==="gram"?masterPrice:"",packPrice:defaultMode==="pack"?masterPrice:"",qty:Math.max(1,Number(x.quantity)||1)}];
 }
 $("shoppingModalTitle").textContent=x.name||"商品";
 $("shoppingNameInput").value=x.name||"";
@@ -791,6 +794,31 @@ shoppingPendingPhoto=null;
 $("shoppingPhotoInput").value="";
 renderShoppingPhotoPreview(null);
 };
+$("saveMasterUnitPrice").onclick=async()=>{
+ const id=shoppingModalItemId;
+ const x=id?items[id]:null;
+ if(!x)return;
+ const name=$("shoppingNameInput").value.trim();
+ const found=findProductByItem({...x,name});
+ if(!found)return alert("商品マスターに登録された商品ではありません。");
+ const r=shoppingPurchases[0];
+ if(!r)return alert("購入内容がありません。");
+ const mode=r.mode||"pack";
+ const unitPrice=mode==="gram"?Number(r.gramPrice)||0:Number(r.packPrice)||0;
+ if(unitPrice<=0)return alert("保存する単価を入力してください。");
+ const total=updatePurchaseTotal();
+ const qty=shoppingPurchases.reduce((sum,p)=>sum+Math.max(1,Number(p.qty)||1),0);
+ if(!confirm(`商品マスターの${mode==="gram"?"g単価":"商品単価"}を ${unitPrice} に更新し、今回の買物にも反映しますか？`))return;
+ try{
+   await update(ref(db,`products/${x.storeId}/${found.id}`),{price:unitPrice,priceMode:mode});
+   await update(ref(db,"items/"+id),{price:total,quantity:qty,priceMode:mode,unitPrice});
+   alert("商品単価を保存し、買物リストにも反映しました。");
+   closeShoppingItemModal();
+ }catch(err){
+   console.error(err);
+   alert("単価の保存に失敗しました。");
+ }
+};
 $("shoppingItemSave").onclick=async()=>{
 const id=shoppingModalItemId;
 if(!id||!items[id])return;
@@ -807,7 +835,11 @@ try{
    const pp=Math.max(0,Number(r.packPrice)||0);
    return {mode,grams:Math.max(0,Number(r.grams)||0),gramPrice:gp,packPrice:pp,unitPrice:mode==="gram"?gp:pp,qty:Math.max(1,Number(r.qty)||1)};
  });
- const itemPatch={name,memo,price,photo:shoppingPendingPhoto||null,purchaseDetails};
+ const totalQty=purchaseDetails.reduce((sum,r)=>sum+Math.max(1,Number(r.qty)||1),0);
+ const first=shoppingPurchases[0]||{};
+ const firstMode=first.mode||"pack";
+ const firstUnitPrice=firstMode==="gram"?Math.max(0,Number(first.gramPrice)||0):Math.max(0,Number(first.packPrice)||0);
+ const itemPatch={name,memo,price,quantity:totalQty,photo:shoppingPendingPhoto||null,purchaseDetails,unitPrice:firstUnitPrice,priceMode:firstMode};
  if(found){
    itemPatch.productId=found.id;
    await update(ref(db,`products/${current.storeId}/${found.id}`),{photo:shoppingPendingPhoto||null});
@@ -842,6 +874,7 @@ function updateShoppingBadge(){
  const remaining=vals(items).filter(([,x])=>!x.done).length;
  $("tabShopping").innerHTML=`🛒 買い物${remaining?` <span class="count">${remaining}</span>`:""}`;
 }
+$("itemQty").innerHTML=Array.from({length:20},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join("");
 $("storeSelect").onchange=()=>{ $("productSearch").value=""; renderProducts(); };
 $("regStore").onchange=renderProductManage;
 $("productSearch").oninput=renderProducts;
@@ -876,18 +909,19 @@ $("addItem").onclick=async()=>{
  const free=$("freeProduct").value.trim(), pid=$("productSelect").value;
  const product=pid?products[sid]?.[pid]:null;
  const name=free||(product?.name||"");if(!name)return alert("商品を選ぶか入力してください");
- const itemData={storeId:sid,storeName:stores[sid]?.name||"",name,memo:$("memo").value.trim(),done:false,createdAt:Date.now()};
+ const qty=Math.max(1,Number($("itemQty").value)||1);
+ const itemData={storeId:sid,storeName:stores[sid]?.name||"",name,memo:$("memo").value.trim(),quantity:qty,done:false,createdAt:Date.now()};
  if(product){
    itemData.productId=pid;
    const masterPrice=Number(product.price||0);
    const masterMode=product.priceMode||"pack";
    itemData.unitPrice=masterPrice;
    itemData.priceMode=masterMode;
-   itemData.price=0;
+   itemData.price=masterMode==="pack" ? Math.round(masterPrice*qty) : 0;
    if(product.photo)itemData.photo=product.photo;
  }
  await push(itemsRef,itemData);
- $("freeProduct").value="";$("memo").value="";$("productSelect").value="";
+ $("freeProduct").value="";$("memo").value="";$("productSelect").value="";$("itemQty").value="1";
 };
 $("deleteDone").onclick=async()=>{if(!confirm("購入済みを削除しますか？"))return;for(const [id,x] of vals(items))if(x.done)await remove(ref(db,"items/"+id))};
 $("uncheckAll").onclick=async()=>{for(const [id,x] of vals(items))if(x.done)await update(ref(db,"items/"+id),{done:false})};
