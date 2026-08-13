@@ -361,7 +361,7 @@ input, select, textarea, button {
 <h1>🛒 買い物リスト</h1>
 <div class="card" id="barcodeShoppingCard">
   <h2>📷 バーコードで買い物</h2>
-  <div class="small">商品バーコードを読み取ると、登録済みの商品は単価を表示します。未登録なら、その場で登録できます。</div>
+  <div class="small">商品バーコードを読み取ると、登録済みの商品は単価を表示します。未登録でも商品情報を検索し、見つかれば商品名を自動入力します。価格はこの店で実際に買った単価を入力します。</div>
   <button type="button" id="openBarcodeScanner">📷 バーコードを読み取る</button>
 </div>
 
@@ -729,6 +729,27 @@ function resetBarcodeResult(){
   $("barcodeProductName").value=""; $("barcodePrice").value=""; $("barcodeQty").value="1";
   populateBarcodeStores(""); updateBarcodeTotal();
 }
+async function lookupBarcodeProduct(code){
+  try{
+    const r=await fetch(`https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(code)}.json`,{
+      headers:{accept:"application/json"}
+    });
+    if(!r.ok)return null;
+    const data=await r.json();
+    if(data.status!==1 || !data.product)return null;
+    const p=data.product;
+    return {
+      name:(p.product_name_ja||p.product_name||"").trim(),
+      brand:(p.brands||"").trim(),
+      quantity:(p.quantity||"").trim(),
+      image:p.image_front_small_url||p.image_front_url||""
+    };
+  }catch(err){
+    console.debug("product lookup",err);
+    return null;
+  }
+}
+
 async function showBarcodeResult(code){
   const found=findProductByBarcode(code);
   barcodeCurrentCode=String(code||"").trim();
@@ -738,17 +759,33 @@ async function showBarcodeResult(code){
   $("barcodeResult").hidden=false;
 
   if(found){
-    $("barcodeProductState").textContent="✅ 登録済みの商品";
+    $("barcodeProductState").textContent="✅ アプリに登録済みの商品";
     $("barcodeProductName").value=found.p?.name||"";
     $("barcodePrice").value=Number(found.p?.price||0)||"";
     populateBarcodeStores(found.storeId);
     $("barcodeStatus").textContent=`バーコード：${barcodeCurrentCode}`;
+    updateBarcodeTotal();
+    return;
+  }
+
+  $("barcodeProductState").textContent="🔎 商品情報を検索しています…";
+  $("barcodeProductName").value="";
+  $("barcodePrice").value="";
+  populateBarcodeStores("");
+  $("barcodeStatus").textContent=`バーコード：${barcodeCurrentCode}`;
+
+  const info=await lookupBarcodeProduct(barcodeCurrentCode);
+  if(info?.name){
+    $("barcodeProductState").textContent="🆕 未登録の商品（商品名を自動取得）";
+    $("barcodeProductName").value=info.name;
+    $("barcodeStatus").textContent=
+      `バーコード：${barcodeCurrentCode}`+
+      (info.brand?` ／ ${info.brand}`:"")+
+      (info.quantity?` ／ ${info.quantity}`:"");
   }else{
-    $("barcodeProductState").textContent="🆕 未登録の商品です";
-    $("barcodeProductName").value="";
-    $("barcodePrice").value="";
-    populateBarcodeStores("");
-    $("barcodeStatus").textContent=`バーコード：${barcodeCurrentCode}。商品名・買う場所・単価を入力してください。`;
+    $("barcodeProductState").textContent="🆕 未登録の商品";
+    $("barcodeStatus").textContent=
+      `バーコード：${barcodeCurrentCode}。商品情報を取得できなかったため、商品名を入力してください。`;
   }
   updateBarcodeTotal();
 }
