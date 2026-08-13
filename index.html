@@ -115,7 +115,7 @@ button.gray{background:#e9eaed;color:#2371df}.danger{background:#fff0f0;color:#c
 .shoppingModalClose{width:46px!important;height:46px!important;padding:0!important;margin:0!important;background:#e9eaed!important;color:#333!important;font-size:30px!important;line-height:1}
 .shoppingPhotoPreviewWrap{margin:8px 0 14px;text-align:center}
 .shoppingPhotoPreviewWrap img{display:block;width:100%;max-height:300px;object-fit:contain;border-radius:14px;background:#f3f5f8;border:1px solid #ddd}
-.shoppingModalActions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.purchaseBox{margin:8px 0 14px;padding:12px;border:1px solid #e1e4e8;border-radius:14px;background:#f8fafc}.purchaseHint{font-size:13px;color:#666;margin:4px 0 8px}.purchaseMode{grid-column:1 / -1;display:grid;grid-template-columns:1fr 1fr;gap:6px}.purchaseMode button{margin:0!important;padding:9px!important;font-size:14px!important;border-radius:9px!important}.purchaseMode button.active{background:#3269df!important;color:#fff!important}.purchaseMode button:not(.active){background:#e9edf3!important;color:#333!important}.purchaseCalcNote{grid-column:1 / -1;font-size:12px;color:#666}.purchaseRow{padding:10px;background:#fff;border:1px solid #e1e4e8;border-radius:12px}.purchaseField{min-width:0}.purchaseField label{display:block;font-size:12px;font-weight:700;color:#555;margin:0 0 4px}.purchaseRow input{width:100%!important;min-width:0!important;margin:0!important;padding:11px 10px!important;font-size:18px!important;font-weight:700}.purchaseQtyWrap{grid-column:1 / -1;display:flex;align-items:center;gap:8px}.purchaseQtyWrap .purchaseQtyLabel{font-size:12px;font-weight:700;color:#555;margin-right:auto}.purchaseQtyBtn{width:42px!important;height:42px!important;padding:0!important;margin:0!important;border-radius:10px!important;font-size:22px!important}.purchaseQtyValue{width:72px!important;text-align:center!important}.purchaseRow .purchaseRemove{width:42px!important;height:42px!important;padding:0!important;margin:0!important;grid-column:1 / -1;justify-self:end}.purchaseTotal{display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding-top:10px;border-top:1px solid #ddd;font-size:17px}.purchaseTotal strong{font-size:22px}.shoppingModalActions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
 .shoppingModalActions button{margin:0}
 @media(max-width:520px){
 .shoppingItemModal{padding:10px}
@@ -371,7 +371,9 @@ input, select, textarea, button {
 <div id="productSuggestions" style="display:none;background:#fff;border:1px solid #ccc;border-radius:10px;margin:-4px 0 8px;padding:4px;max-height:220px;overflow:auto"></div>
 <select id="productSelect"></select>
 <label>自由入力</label><input id="freeProduct" placeholder="商品リストにない物を入力">
-<label>数量・メモ</label><input id="memo" placeholder="例：2袋 / 大サイズ">
+<label>数量</label><select id="addQty"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option><option value="16">16</option><option value="17">17</option><option value="18">18</option><option value="19">19</option><option value="20">20</option></select>
+<label>数量・メモ</label><input id="memo" placeholder="例：大サイズ / 2袋">
+<div id="addPricePreview" class="small" style="margin:6px 0 10px;font-weight:700"></div>
 <button id="addItem">＋ 買う物に追加</button>
 </div>
 
@@ -381,7 +383,7 @@ input, select, textarea, button {
 <button id="addStore">＋ 買う場所を追加</button><div id="storeManage"></div>
 <h2 class="settingsHeading">商品の管理</h2>
 <label>商品を登録する場所</label><select id="regStore"></select>
-<label>新しい商品</label><input id="newProduct" placeholder="例：玉子"><label>ふりがな（検索用）</label><input id="newProductKana" placeholder="例：たまご"><label>価格</label><input id="newProductPrice" type="number" min="0" step="1" inputmode="numeric" placeholder="例：1280"><label>商品写真</label><div class="productRegUpload"><label for="newProductPhoto" class="productRegUploadLabel" title="写真を選択" aria-label="写真を選択">📷</label><input id="newProductPhoto" type="file" accept="image/*,.heic,.heif,.jpg,.jpeg,.png,.webp"><span class="small" style="margin:0">写真を選択</span></div><div id="newProductPhotoPreview" class="productRegPhotoPreview" hidden><img id="newProductPhotoImg" alt="商品写真"></div><div class="small">登録した価格・写真は、買い物リストにも自動反映されます。</div>
+<label>新しい商品</label><input id="newProduct" placeholder="例：玉子"><label>ふりがな（検索用）</label><input id="newProductKana" placeholder="例：たまご"><label>価格の種類</label><select id="newProductPriceMode"><option value="pack">商品単価</option><option value="gram">g単価</option></select><label>価格</label><input id="newProductPrice" type="number" min="0" step="0.01" inputmode="decimal" placeholder="例：175"><label>商品写真</label><div class="productRegUpload"><label for="newProductPhoto" class="productRegUploadLabel" title="写真を選択" aria-label="写真を選択">📷</label><input id="newProductPhoto" type="file" accept="image/*,.heic,.heif,.jpg,.jpeg,.png,.webp"><span class="small" style="margin:0">写真を選択</span></div><div id="newProductPhotoPreview" class="productRegPhotoPreview" hidden><img id="newProductPhotoImg" alt="商品写真"></div><div class="small">登録した価格・写真は、買い物リストにも自動反映されます。</div>
 <button id="addProduct">＋ 商品を登録</button><div id="productManage"></div>
 <div class="small">買う場所を削除すると、その場所に登録した商品も削除します。すでに買い物リストへ追加した品は残ります。</div>
 </div></details></div>
@@ -402,8 +404,13 @@ input, select, textarea, button {
 <label>商品写真</label>
 <div class="productRegUpload"><label for="shoppingPhotoInput" class="productRegUploadLabel" title="写真を選択" aria-label="写真を選択">📷</label><input id="shoppingPhotoInput" type="file" accept="image/*,.heic,.heif,.jpg,.jpeg,.png,.webp"><span class="small" style="margin:0">写真・ファイルから選択</span></div>
 
-<label>購入価格（この商品分）</label>
-<input id="shoppingPriceInput" type="number" min="0" step="1" inputmode="numeric" placeholder="例：1280">
+<div class="purchaseBox">
+<label>今回の購入内容</label>
+<div class="purchaseHint">今回の買い方を選んで入力してください。<b>g単価</b>＝重量×g単価×個数、<b>商品単価</b>＝商品単価×個数。</div>
+<div id="purchaseRows"></div>
+<button type="button" class="gray" id="addPurchaseRow" style="margin-top:8px">＋ 購入内容を追加</button>
+<div class="purchaseTotal"><span>今回合計</span><strong id="purchaseTotalValue">¥0</strong></div>
+</div>
 
 <label>商品名</label>
 <input id="shoppingNameInput" type="text">
@@ -592,7 +599,7 @@ function renderProductManage(){
    return `<div class="storeManage productManageRow" style="display:grid;grid-template-columns:1fr 1fr 110px 1.2fr auto;gap:6px;align-items:center;margin:10px 0">
     <input type="text" value="${esc(p.name||"")}" data-pname="${id}" style="min-width:0;padding:9px;border:1px solid #ddd;border-radius:9px">
     <input type="text" value="${esc(p.kana||"")}" placeholder="ふりがな" data-pkana="${id}" style="min-width:0;padding:9px;border:1px solid #ddd;border-radius:9px">
-    <input type="number" min="0" step="1" inputmode="numeric" value="${price||""}" placeholder="価格" data-pprice="${id}" style="min-width:0;padding:9px;border:1px solid #ddd;border-radius:9px">
+    <div><select data-pmode="${id}" style="width:100%;padding:9px;border:1px solid #ddd;border-radius:9px"><option value="pack" ${p.priceMode!=="gram"?"selected":""}>商品単価</option><option value="gram" ${p.priceMode==="gram"?"selected":""}>g単価</option></select><input type="number" min="0" step="0.01" inputmode="decimal" value="${price||""}" placeholder="価格" data-pprice="${id}" style="min-width:0;width:100%;padding:9px;border:1px solid #ddd;border-radius:9px;margin-top:4px"></div>
     <div class="productManagePhoto">${photo?`<img src="${esc(photo)}" alt="">`:`<div class="noPhoto">写真なし</div>`}<label class="photoIconButton" for="pphoto-${esc(id)}" title="写真を変更" aria-label="写真を変更">📷</label>${photo?`<button type="button" class="photoDeleteButton" data-delphoto="${esc(id)}" title="写真を削除" aria-label="写真を削除">🗑️</button>`:""}<input id="pphoto-${esc(id)}" type="file" accept="image/*,.heic,.heif,.jpg,.jpeg,.png,.webp" data-pphoto="${id}"></div>
     <button class="danger" data-delproduct="${id}">削除</button></div>`;
  }).join("");
@@ -600,6 +607,7 @@ function renderProductManage(){
  document.querySelectorAll("[data-pname]").forEach(i=>i.onchange=()=>{const v=i.value.trim();if(v)update(ref(db,`products/${sid}/${i.dataset.pname}`),{name:v})});
  document.querySelectorAll("[data-pkana]").forEach(i=>i.onchange=()=>update(ref(db,`products/${sid}/${i.dataset.pkana}`),{kana:i.value.trim()}));
  document.querySelectorAll("[data-pprice]").forEach(i=>i.onchange=()=>update(ref(db,`products/${sid}/${i.dataset.pprice}`),{price:Math.max(0,Number(i.value)||0)}));
+document.querySelectorAll("[data-pmode]").forEach(i=>i.onchange=()=>update(ref(db,`products/${sid}/${i.dataset.pmode}`),{priceMode:i.value}));
  document.querySelectorAll("[data-pphoto]").forEach(i=>i.onchange=async()=>{
    const file=i.files?.[0]; if(!file)return;
    try{const photo=await resizeShoppingPhoto(file); await update(ref(db,`products/${sid}/${i.dataset.pphoto}`),{photo}); renderProductManage();}
@@ -626,6 +634,7 @@ function renderFilters(){
 let editingItemId=null;
 let shoppingModalItemId=null;
 let shoppingPendingPhoto=null;
+let shoppingPurchases=[];
 
 function yen(v){
 const n=Number(v||0);
@@ -670,21 +679,66 @@ if(!x)return;
 shoppingModalItemId=id;
 const master=productMasterForItem(x);
 shoppingPendingPhoto=x.photo||master.photo||null;
+const defaultMode=master.priceMode||x.priceMode||"pack";
+if(Array.isArray(x.purchaseDetails)&&x.purchaseDetails.length){
+ shoppingPurchases=x.purchaseDetails.map(r=>{
+   const mode=r.mode||defaultMode;
+   const legacy=r.unitPrice??r.packPrice??"";
+   return {mode,grams:r.grams??"",gramPrice:r.gramPrice??(mode==="gram"?legacy:""),packPrice:r.packPrice??(mode==="pack"?legacy:""),qty:r.qty??1};
+ });
+}else{
+ const masterPrice=master.price??x.price??"";
+ shoppingPurchases=[{mode:defaultMode,grams:"",gramPrice:defaultMode==="gram"?masterPrice:"",packPrice:defaultMode==="pack"?masterPrice:"",qty:1}];
+}
 $("shoppingModalTitle").textContent=x.name||"商品";
 $("shoppingNameInput").value=x.name||"";
 $("shoppingMemoInput").value=x.memo||"";
-$("shoppingPriceInput").value=x.price??master.price??"";
 $("shoppingPhotoInput").value="";
 renderShoppingPhotoPreview(shoppingPendingPhoto);
+renderPurchaseRows();
 $("shoppingItemModal").hidden=false;
 document.body.style.overflow="hidden";
 }
+function renderPurchaseRows(){
+ const box=$("purchaseRows"); if(!box)return;
+ box.innerHTML=shoppingPurchases.map((r,i)=>{
+   const mode=r.mode||"pack";
+   const unitLabel=mode==="gram"?"g単価（円/g）":"商品単価（円）";
+   const currentPrice=mode==="gram"?(r.gramPrice??""):(r.packPrice??"");
+   const pricePlaceholder=mode==="gram"?"例：1.75":"例：175";
+   return `<div class="purchaseRow">
+    <div class="purchaseMode"><button type="button" class="${mode==="gram"?"active":""}" data-pmode="gram" data-pi="${i}">⚖️ gで計算</button><button type="button" class="${mode==="pack"?"active":""}" data-pmode="pack" data-pi="${i}">💰 商品単価</button></div>
+    <div class="purchaseField"><label>重さ（g）</label><input type="number" min="0" step="0.01" inputmode="decimal" enterkeyhint="next" placeholder="例：235" value="${esc(r.grams)}" data-pg="${i}"></div>
+    <div class="purchaseField"><label>${unitLabel}</label><input type="number" min="0" step="0.01" inputmode="decimal" enterkeyhint="done" placeholder="${pricePlaceholder}" value="${esc(currentPrice)}" data-pp="${i}"></div>
+    <div class="purchaseQtyWrap"><span class="purchaseQtyLabel">個数</span><button type="button" class="gray purchaseQtyBtn" data-qminus="${i}">−</button><input class="purchaseQtyValue" type="number" min="1" step="1" inputmode="numeric" value="${esc(r.qty||1)}" data-pq="${i}"><button type="button" class="purchaseQtyBtn" data-qplus="${i}">＋</button><button type="button" class="gray purchaseRemove" data-pr="${i}" title="この購入内容を削除">🗑️</button></div>
+    <div class="purchaseCalcNote">${mode==="gram"?"計算：重さ × g単価 × 個数":"計算：商品単価 × 個数"}</div>
+   </div>`;
+ }).join("");
+ box.querySelectorAll("[data-pmode]").forEach(e=>e.onclick=()=>{
+   const r=shoppingPurchases[+e.dataset.pi];
+   r.mode=e.dataset.pmode;
+   renderPurchaseRows();
+ });
+ box.querySelectorAll("[data-pg]").forEach(e=>e.oninput=()=>{shoppingPurchases[+e.dataset.pg].grams=e.value;updatePurchaseTotal()});
+ box.querySelectorAll("[data-pp]").forEach(e=>e.oninput=()=>{
+   const r=shoppingPurchases[+e.dataset.pp];
+   if(r.mode==="gram") r.gramPrice=e.value; else r.packPrice=e.value;
+   updatePurchaseTotal();
+ });
+ box.querySelectorAll("[data-pq]").forEach(e=>e.oninput=()=>{shoppingPurchases[+e.dataset.pq].qty=Math.max(1,Number(e.value)||1);e.value=shoppingPurchases[+e.dataset.pq].qty;updatePurchaseTotal()});
+ box.querySelectorAll("[data-qminus]").forEach(e=>e.onclick=()=>{const i=+e.dataset.qminus;shoppingPurchases[i].qty=Math.max(1,(Number(shoppingPurchases[i].qty)||1)-1);renderPurchaseRows()});
+ box.querySelectorAll("[data-qplus]").forEach(e=>e.onclick=()=>{const i=+e.dataset.qplus;shoppingPurchases[i].qty=(Number(shoppingPurchases[i].qty)||1)+1;renderPurchaseRows()});
+ box.querySelectorAll("[data-pr]").forEach(e=>e.onclick=()=>{if(shoppingPurchases.length===1)shoppingPurchases[0]={mode:"pack",grams:"",gramPrice:"",packPrice:"",qty:1};else shoppingPurchases.splice(+e.dataset.pr,1);renderPurchaseRows()});
+ updatePurchaseTotal();
+}
+function updatePurchaseTotal(){const total=shoppingPurchases.reduce((sum,r)=>{const qty=Math.max(1,Number(r.qty)||1),p=Math.max(0,Number(r.mode==="gram"?r.gramPrice:r.packPrice)||0),g=Math.max(0,Number(r.grams)||0);return sum+(r.mode==="gram"?g*p*qty:p*qty)},0);$("purchaseTotalValue").textContent=yen(total);return total;}
 
 function closeShoppingItemModal(){
 $("shoppingItemModal").hidden=true;
 document.body.style.overflow="";
 shoppingModalItemId=null;
 shoppingPendingPhoto=null;
+shoppingPurchases=[];
 }
 
 function renderShoppingPhotoPreview(src){
@@ -727,6 +781,8 @@ console.error(err);
 alert("写真の読み込みに失敗しました。");
 }
 });
+$("addPurchaseRow").onclick=()=>{shoppingPurchases.push({mode:shoppingPurchases[0]?.mode||"pack",grams:"",gramPrice:"",packPrice:"",qty:1});renderPurchaseRows()};
+
 $("shoppingPhotoDelete").onclick=()=>{
 shoppingPendingPhoto=null;
 $("shoppingPhotoInput").value="";
@@ -737,16 +793,21 @@ const id=shoppingModalItemId;
 if(!id||!items[id])return;
 const name=$("shoppingNameInput").value.trim();
 const memo=$("shoppingMemoInput").value.trim();
-const rawPrice=$("shoppingPriceInput").value.trim();
-const price=rawPrice===""?0:Math.max(0,Number(rawPrice)||0);
+const price=updatePurchaseTotal();
 if(!name)return alert("商品名を入力してください");
 try{
  const current=items[id]||{};
  const found=findProductByItem({...current,name});
- const itemPatch={name,memo,price,photo:shoppingPendingPhoto||null};
+ const purchaseDetails=shoppingPurchases.filter(r=>Number(r.mode==="gram"?r.gramPrice:r.packPrice)>0).map(r=>{
+   const mode=r.mode||"pack";
+   const gp=Math.max(0,Number(r.gramPrice)||0);
+   const pp=Math.max(0,Number(r.packPrice)||0);
+   return {mode,grams:Math.max(0,Number(r.grams)||0),gramPrice:gp,packPrice:pp,unitPrice:mode==="gram"?gp:pp,qty:Math.max(1,Number(r.qty)||1)};
+ });
+ const itemPatch={name,memo,price,photo:shoppingPendingPhoto||null,purchaseDetails};
  if(found){
    itemPatch.productId=found.id;
-   await update(ref(db,`products/${current.storeId}/${found.id}`),{photo:shoppingPendingPhoto||null,price});
+   await update(ref(db,`products/${current.storeId}/${found.id}`),{photo:shoppingPendingPhoto||null});
  }
  await update(ref(db,"items/"+id),itemPatch);
  closeShoppingItemModal();
@@ -798,8 +859,8 @@ $("addProduct").onclick=async()=>{
  let photo=null;
  const file=$("newProductPhoto").files?.[0];
  if(file){try{photo=await resizeShoppingPhoto(file);}catch(err){console.error(err);return alert("写真の読み込みに失敗しました。");}}
- await push(ref(db,"products/"+sid),{name,kana,price,photo});
- $("newProduct").value="";$("newProductKana").value="";$("newProductPrice").value="";$("newProductPhoto").value="";
+ const priceMode=$("newProductPriceMode").value||"pack"; await push(ref(db,"products/"+sid),{name,kana,price,priceMode,photo});
+ $("newProduct").value="";$("newProductKana").value="";$("newProductPrice").value="";$("newProductPriceMode").value="pack";$("newProductPhoto").value="";
  $("newProductPhotoPreview").hidden=true;
 };
 $("newProductPhoto").addEventListener("change",async e=>{
@@ -807,19 +868,41 @@ $("newProductPhoto").addEventListener("change",async e=>{
  try{const src=await resizeShoppingPhoto(file);$("newProductPhotoImg").src=src;$("newProductPhotoPreview").hidden=false;}
  catch(err){console.error(err);alert("写真の読み込みに失敗しました。");}
 });
+function updateAddPricePreview(){
+ const sid=$("storeSelect").value, pid=$("productSelect").value, box=$("addPricePreview");
+ if(!box)return;
+ const product=pid?products[sid]?.[pid]:null;
+ const qty=Math.max(1,Number($("addQty")?.value)||1);
+ if(!product || Number(product.price||0)<=0){box.textContent="";return;}
+ const p=Number(product.price||0), mode=product.priceMode||"pack";
+ box.textContent=mode==="pack"?`商品単価 ${yen(p)} × ${qty}個 ＝ ${yen(p*qty)}`:`基準g単価 ${p}円/g（重量を入れると今回金額を計算）`;
+}
+$("productSelect").onchange=updateAddPricePreview;
+$("addQty").onchange=updateAddPricePreview;
 $("addItem").onclick=async()=>{
  const sid=$("storeSelect").value;if(!sid)return alert("買う場所を選んでください");
  const free=$("freeProduct").value.trim(), pid=$("productSelect").value;
  const product=pid?products[sid]?.[pid]:null;
  const name=free||(product?.name||"");if(!name)return alert("商品を選ぶか入力してください");
- const itemData={storeId:sid,storeName:stores[sid]?.name||"",name,memo:$("memo").value.trim(),done:false,createdAt:Date.now()};
+ const qty=Math.max(1,Number($("addQty")?.value)||1);
+ const itemData={storeId:sid,storeName:stores[sid]?.name||"",name,memo:$("memo").value.trim(),done:false,createdAt:Date.now(),qty};
  if(product){
    itemData.productId=pid;
-   if(product.price!==undefined)itemData.price=Number(product.price)||0;
+   const masterPrice=Number(product.price||0);
+   const masterMode=product.priceMode||"pack";
+   itemData.unitPrice=masterPrice;
+   itemData.priceMode=masterMode;
+   if(masterMode==="pack"){
+     itemData.price=masterPrice*qty;
+     itemData.purchaseDetails=[{mode:"pack",grams:"",gramPrice:"",packPrice:masterPrice,unitPrice:masterPrice,qty}];
+   }else{
+     itemData.price=0;
+     itemData.purchaseDetails=[{mode:"gram",grams:"",gramPrice:masterPrice,packPrice:"",unitPrice:masterPrice,qty}];
+   }
    if(product.photo)itemData.photo=product.photo;
- }
+ }else{ itemData.price=0; }
  await push(itemsRef,itemData);
- $("freeProduct").value="";$("memo").value="";$("productSelect").value="";
+ $("freeProduct").value="";$("memo").value="";$("productSelect").value="";$("addQty").value="1";updateAddPricePreview();
 };
 $("deleteDone").onclick=async()=>{if(!confirm("購入済みを削除しますか？"))return;for(const [id,x] of vals(items))if(x.done)await remove(ref(db,"items/"+id))};
 $("uncheckAll").onclick=async()=>{for(const [id,x] of vals(items))if(x.done)await update(ref(db,"items/"+id),{done:false})};
