@@ -773,6 +773,46 @@ function barcodeSuccess(code){
   showBarcodeResult(value);
 }
 
+const BARCODE_CACHE_KEY="kariya_barcode_product_cache_v1";
+function getBarcodeCache(){
+  try{return JSON.parse(localStorage.getItem(BARCODE_CACHE_KEY)||"{}")||{};}catch(e){return {};}
+}
+function saveBarcodeCache(code,info){
+  if(!code||!info?.name)return;
+  try{
+    const c=getBarcodeCache(); c[String(code).trim()]=info;
+    const keys=Object.keys(c); if(keys.length>5000)delete c[keys[0]];
+    localStorage.setItem(BARCODE_CACHE_KEY,JSON.stringify(c));
+  }catch(e){}
+}
+async function lookupBarcodeProduct(code){
+  const key=String(code||"").trim();
+  if(!key)return null;
+  const cached=getBarcodeCache()[key];
+  if(cached?.name)return cached;
+  const controller=new AbortController();
+  const timer=setTimeout(()=>controller.abort(),2500);
+  try{
+    const r=await fetch(
+      `https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(key)}.json?fields=product_name_ja,product_name,brands,quantity,image_front_small_url,image_front_url`,
+      {headers:{accept:"application/json"},signal:controller.signal,cache:"force-cache"}
+    );
+    if(!r.ok)return null;
+    const data=await r.json();
+    if(data.status!==1||!data.product)return null;
+    const p=data.product;
+    const info={
+      name:(p.product_name_ja||p.product_name||"").trim(),
+      brand:(p.brands||"").trim(),
+      quantity:(p.quantity||"").trim(),
+      image:p.image_front_small_url||p.image_front_url||""
+    };
+    if(info.name)saveBarcodeCache(key,info);
+    return info;
+  }catch(err){console.debug("product lookup",err);return null;}
+  finally{clearTimeout(timer);}
+}
+
 async function showBarcodeResult(code){
   const found=findProductByBarcode(code);
   barcodeCurrentCode=String(code||"").trim();
@@ -791,28 +831,35 @@ async function showBarcodeResult(code){
     return;
   }
 
-  $("barcodeProductState").textContent="🔎 商品情報を検索しています…";
-  $("barcodeProductName").value="";
+  // ネット検索を待たず、読み取り直後に入力画面を表示。
+  const cached=getBarcodeCache()[barcodeCurrentCode];
+  $("barcodeProductState").textContent=cached?.name
+    ?"🆕 未登録の商品（保存済み情報）":"🆕 未登録の商品";
+  $("barcodeProductName").value=cached?.name||"";
   $("barcodePrice").value="";
   populateBarcodeStores("");
-  $("barcodeStatus").textContent=`バーコード：${barcodeCurrentCode}`;
-
-  const info=await lookupBarcodeProduct(barcodeCurrentCode);
-  if(info?.name){
-    $("barcodeProductState").textContent="🆕 未登録の商品（商品名を自動取得）";
-    $("barcodeProductName").value=info.name;
-    $("barcodeStatus").textContent=
-      `バーコード：${barcodeCurrentCode}`+
-      (info.brand?` ／ ${info.brand}`:"")+
-      (info.quantity?` ／ ${info.quantity}`:"");
-  }else{
-    $("barcodeProductState").textContent="🆕 未登録の商品";
-    $("barcodeStatus").textContent=
-      `バーコード：${barcodeCurrentCode}。商品情報を取得できなかったため、商品名を入力してください。`;
-  }
+  $("barcodeStatus").textContent=cached?.name
+    ?`バーコード：${barcodeCurrentCode} ／ 商品情報を端末から即表示`
+    :`バーコード：${barcodeCurrentCode} ／ 商品名を入力できます。商品情報を検索中…`;
   updateBarcodeTotal();
-}
 
+  // 外部検索は裏で実行。ユーザーを待たせない。
+  if(!cached?.name){
+    const info=await lookupBarcodeProduct(barcodeCurrentCode);
+    if(barcodeCurrentCode!==String(code||"").trim())return;
+    if(info?.name){
+      $("barcodeProductState").textContent="🆕 未登録の商品（商品名を自動取得）";
+      $("barcodeProductName").value=info.name;
+      $("barcodeStatus").textContent=
+        `バーコード：${barcodeCurrentCode}`+
+        (info.brand?` ／ ${info.brand}`:"")+
+        (info.quantity?` ／ ${info.quantity}`:"");
+    }else{
+      $("barcodeStatus").textContent=
+        `バーコード：${barcodeCurrentCode} ／ 商品情報を取得できませんでした。商品名を入力してください。`;
+    }
+  }
+}
 async function startBarcodeCamera(){
   resetBarcodeResult();
   barcodeBusy=false;
