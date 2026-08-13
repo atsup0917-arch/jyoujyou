@@ -107,6 +107,7 @@ button.gray{background:#e9eaed;color:#2371df}.danger{background:#fff0f0;color:#c
 .itemProductLine b{min-width:0;overflow-wrap:anywhere}
 .itemThumb{display:none!important}
 .itemPrice{margin-top:5px;font-size:16px;font-weight:800;color:#b45309}
+.itemQuantity{display:block!important;font-size:18px!important;line-height:1.4!important;margin-top:4px!important;font-weight:600!important;color:#333!important}
 .shoppingItemModal{position:fixed;inset:0;background:rgba(0,0,0,.48);z-index:12000;padding:18px;display:flex;align-items:center;justify-content:center}
 .shoppingItemModal[hidden]{display:none!important}
 .shoppingItemModalBox{width:min(520px,100%);max-height:calc(100dvh - 36px);overflow:auto;background:#fff;border-radius:22px;padding:18px}
@@ -371,9 +372,7 @@ input, select, textarea, button {
 <div id="productSuggestions" style="display:none;background:#fff;border:1px solid #ccc;border-radius:10px;margin:-4px 0 8px;padding:4px;max-height:220px;overflow:auto"></div>
 <select id="productSelect"></select>
 <label>自由入力</label><input id="freeProduct" placeholder="商品リストにない物を入力">
-<label>数量</label><select id="addQty"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option><option value="16">16</option><option value="17">17</option><option value="18">18</option><option value="19">19</option><option value="20">20</option></select>
-<label>数量・メモ</label><input id="memo" placeholder="例：大サイズ / 2袋">
-<div id="addPricePreview" class="small" style="margin:6px 0 10px;font-weight:700"></div>
+<label>数量・メモ</label><input id="memo" placeholder="例：2袋 / 大サイズ">
 <button id="addItem">＋ 買う物に追加</button>
 </div>
 
@@ -652,10 +651,14 @@ const storeTotal=a.reduce((sum,x)=>sum+Number(x.price||0),0);
 return `<section class="storeGroup"><div class="storeTitle"><span>${esc(a[0].storeName||storeName(sid))}</span><span class="storeTotal">買物合計 ${yen(storeTotal)}</span></div>${a.map(x=>{
 const price=Number(x.price||0);
 const photo=x.photo||"";
+const purchaseQty=Array.isArray(x.purchaseDetails)&&x.purchaseDetails.length
+  ? x.purchaseDetails.reduce((sum,r)=>sum+Math.max(0,Number(r.qty)||0),0)
+  : 0;
+const qtyText=purchaseQty>0 ? `数量 ${purchaseQty}` : (x.memo||"");
 if(editingItemId===x.id){
 return `<div class="item"><input type="checkbox" ${x.done?"checked":""} data-check="${x.id}"><div class="itemText" style="display:block"><input type="text" value="${esc(x.name)}" data-editname="${x.id}" style="width:100%;margin-bottom:6px;padding:8px;border-radius:8px;border:1px solid #ccc;font-size:16px"><input type="text" value="${esc(x.memo||"")}" placeholder="数量・メモ" data-editmemo="${x.id}" style="width:100%;padding:8px;border-radius:8px;border:1px solid #ccc;font-size:16px"></div><button class="itemDelete" data-editsave="${x.id}" style="background:#3269df;color:#fff">保存</button></div>`;
 }
-return `<div class="item ${x.done?"done":""}"><input type="checkbox" ${x.done?"checked":""} data-check="${x.id}"><div class="itemText"><div class="itemProductLine"><span class="itemProductName"><b>${esc(x.name)}</b></span><button type="button" class="shoppingTapIcon" data-edit="${x.id}" title="写真・価格を登録・編集" aria-label="写真・価格を登録・編集">🔍</button></div>${x.memo?`<div class="small">${esc(x.memo)}</div>`:""}${price>0?`<div class="itemPrice">${yen(price)}</div>`:""}</div><button class="itemDelete" data-delitem="${x.id}">削除</button></div>`;
+return `<div class="item ${x.done?"done":""}"><input type="checkbox" ${x.done?"checked":""} data-check="${x.id}"><div class="itemText"><div class="itemProductLine"><span class="itemProductName"><b>${esc(x.name)}</b></span><button type="button" class="shoppingTapIcon" data-edit="${x.id}" title="写真・価格を登録・編集" aria-label="写真・価格を登録・編集">🔍</button></div>${qtyText?`<div class="small itemQuantity">${esc(qtyText)}</div>`:""}${price>0?`<div class="itemPrice">${yen(price)}</div>`:""}</div><button class="itemDelete" data-delitem="${x.id}">削除</button></div>`;
 }).join("")}</section>`;
 }).join("");
 document.querySelectorAll("[data-check]").forEach(c=>c.onchange=()=>update(ref(db,"items/"+c.dataset.check),{done:c.checked}));
@@ -868,41 +871,23 @@ $("newProductPhoto").addEventListener("change",async e=>{
  try{const src=await resizeShoppingPhoto(file);$("newProductPhotoImg").src=src;$("newProductPhotoPreview").hidden=false;}
  catch(err){console.error(err);alert("写真の読み込みに失敗しました。");}
 });
-function updateAddPricePreview(){
- const sid=$("storeSelect").value, pid=$("productSelect").value, box=$("addPricePreview");
- if(!box)return;
- const product=pid?products[sid]?.[pid]:null;
- const qty=Math.max(1,Number($("addQty")?.value)||1);
- if(!product || Number(product.price||0)<=0){box.textContent="";return;}
- const p=Number(product.price||0), mode=product.priceMode||"pack";
- box.textContent=mode==="pack"?`商品単価 ${yen(p)} × ${qty}個 ＝ ${yen(p*qty)}`:`基準g単価 ${p}円/g（重量を入れると今回金額を計算）`;
-}
-$("productSelect").onchange=updateAddPricePreview;
-$("addQty").onchange=updateAddPricePreview;
 $("addItem").onclick=async()=>{
  const sid=$("storeSelect").value;if(!sid)return alert("買う場所を選んでください");
  const free=$("freeProduct").value.trim(), pid=$("productSelect").value;
  const product=pid?products[sid]?.[pid]:null;
  const name=free||(product?.name||"");if(!name)return alert("商品を選ぶか入力してください");
- const qty=Math.max(1,Number($("addQty")?.value)||1);
- const itemData={storeId:sid,storeName:stores[sid]?.name||"",name,memo:$("memo").value.trim(),done:false,createdAt:Date.now(),qty};
+ const itemData={storeId:sid,storeName:stores[sid]?.name||"",name,memo:$("memo").value.trim(),done:false,createdAt:Date.now()};
  if(product){
    itemData.productId=pid;
    const masterPrice=Number(product.price||0);
    const masterMode=product.priceMode||"pack";
    itemData.unitPrice=masterPrice;
    itemData.priceMode=masterMode;
-   if(masterMode==="pack"){
-     itemData.price=masterPrice*qty;
-     itemData.purchaseDetails=[{mode:"pack",grams:"",gramPrice:"",packPrice:masterPrice,unitPrice:masterPrice,qty}];
-   }else{
-     itemData.price=0;
-     itemData.purchaseDetails=[{mode:"gram",grams:"",gramPrice:masterPrice,packPrice:"",unitPrice:masterPrice,qty}];
-   }
+   itemData.price=0;
    if(product.photo)itemData.photo=product.photo;
- }else{ itemData.price=0; }
+ }
  await push(itemsRef,itemData);
- $("freeProduct").value="";$("memo").value="";$("productSelect").value="";$("addQty").value="1";updateAddPricePreview();
+ $("freeProduct").value="";$("memo").value="";$("productSelect").value="";
 };
 $("deleteDone").onclick=async()=>{if(!confirm("購入済みを削除しますか？"))return;for(const [id,x] of vals(items))if(x.done)await remove(ref(db,"items/"+id))};
 $("uncheckAll").onclick=async()=>{for(const [id,x] of vals(items))if(x.done)await update(ref(db,"items/"+id),{done:false})};
