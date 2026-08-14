@@ -358,6 +358,44 @@ input, select, textarea, button {
 </style>
 
 
+
+<style id="nonVegProductMobileFix">
+@media(max-width:520px){
+  #nonVegProductList > div{
+    grid-template-columns:minmax(0,1fr) 44px 44px 70px !important;
+    grid-template-rows:auto auto auto !important;
+    gap:6px !important;
+    margin:10px 0 14px !important;
+  }
+  #nonVegProductList > div > input:nth-child(1){
+    grid-column:1 / 5 !important; grid-row:1 !important;
+    font-size:18px !important; padding:12px 10px !important;
+  }
+  #nonVegProductList > div > input:nth-child(2){
+    grid-column:1 / 5 !important; grid-row:2 !important;
+    font-size:18px !important; padding:12px 10px !important;
+  }
+  #nonVegProductList > div > select{
+    grid-column:1 / 2 !important; grid-row:3 !important;
+    font-size:17px !important; padding:12px 10px !important;
+    min-width:0 !important;
+  }
+  #nonVegProductList > div > div{
+    grid-column:2 / 4 !important; grid-row:3 !important;
+    display:flex !important; gap:5px !important; min-width:0 !important;
+  }
+  #nonVegProductList > div > div > button{
+    flex:1 !important; width:44px !important; min-width:0 !important;
+    padding:9px 2px !important; margin:0 !important; font-size:16px !important;
+  }
+  #nonVegProductList > div > button[data-np-delete]{
+    grid-column:4 !important; grid-row:3 !important;
+    width:100% !important; min-width:0 !important;
+    padding:9px 4px !important; margin:0 !important; font-size:15px !important;
+  }
+}
+</style>
+
 <style id="productMasterPhotoPriceFix">
 .productRegPhotoPreview{margin:8px 0;text-align:center}.productRegPhotoPreview img{width:120px;height:90px;object-fit:cover;border-radius:10px;border:1px solid #ddd}
 .productManagePhoto{display:flex;align-items:center;gap:6px;min-width:0}.productManagePhoto img{width:48px;height:48px;object-fit:cover;border-radius:8px;border:1px solid #ddd;flex:0 0 48px}.productManagePhoto .noPhoto{width:48px;height:48px;border-radius:8px;background:#f3f3f3;display:flex;align-items:center;justify-content:center;font-size:12px;color:#777;flex:0 0 48px}
