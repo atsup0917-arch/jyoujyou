@@ -2244,6 +2244,7 @@ $("printWeekend").onclick=e=>{e.preventDefault();printPrep("weekend")};
       recipeCache = s.val() || {};
       renderRecipeBook();
       bindPrepRecipeButtons();
+      decoratePrepPhotoButtons();
     });
 
     function openRecipe(id,name){
@@ -2302,7 +2303,29 @@ $("printWeekend").onclick=e=>{e.preventDefault();printPrep("weekend")};
       });
     }
 
+    function decoratePrepPhotoButtons(){
+      document.querySelectorAll("#prepList .prepRow").forEach(row=>{
+        const title=row.querySelector("[data-recipe-id]");
+        if(!title) return;
+        const id=title.dataset.recipeId;
+        const data=recipeData(recipeCache[id]);
+        const old=row.querySelector("[data-prep-photo-view]");
+        if(!data.photo){ if(old) old.remove(); return; }
+        if(old) return;
+        const btn=document.createElement("button");
+        btn.type="button";
+        btn.textContent="📷";
+        btn.setAttribute("data-prep-photo-view",id);
+        btn.setAttribute("aria-label",title.textContent.trim()+"の写真を見る");
+        btn.title="写真を見る";
+        btn.style.cssText="display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;min-width:34px;padding:0;margin:0 0 0 6px;background:#eef3ff;color:#2867df;border:1px solid #c9d7ff;border-radius:9px;font-size:17px;line-height:1;cursor:pointer;vertical-align:middle";
+        btn.onclick=e=>{e.preventDefault();e.stopPropagation();openRecipePhotoViewer(data.photo)};
+        title.insertAdjacentElement("afterend",btn);
+      });
+    }
+
     function bindPrepRecipeButtons(){
+      decoratePrepPhotoButtons();
       document.querySelectorAll(".prepRecipeOpen,.prepRecipeName").forEach(el=>{
         el.onclick = function(e){
           e.preventDefault();
@@ -2392,7 +2415,10 @@ $("printWeekend").onclick=e=>{e.preventDefault();printPrep("weekend")};
       }
     };
 
-    const observer = new MutationObserver(bindPrepRecipeButtons);
+    const observer = new MutationObserver(()=>{
+      bindPrepRecipeButtons();
+      decoratePrepPhotoButtons();
+    });
     observer.observe(document.getElementById("prepList"),{childList:true,subtree:true});
 
     bindPrepRecipeButtons();
