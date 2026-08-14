@@ -129,6 +129,12 @@ button.gray{background:#e9eaed;color:#2371df}.danger{background:#fff0f0;color:#c
 #barcodeModal .shoppingItemModalBox{max-width:560px}
 #barcodeTotal{font-size:24px}
 #barcodeScannerWrap{min-height:260px}
+#barcodeCameraTools{display:flex;gap:8px;margin-top:8px}
+#barcodeCameraTools button{margin:0;flex:1;padding:10px 8px;font-size:15px}
+#barcodeZoomRange{width:100%;margin:7px 0 0}
+#barcodeZoomLabel{text-align:center;font-size:13px;color:#666;margin-top:2px}
+#barcodeScanGuide{position:absolute;left:6%;right:6%;top:34%;height:32%;border:3px solid #fff;border-radius:14px;box-shadow:0 0 0 9999px rgba(0,0,0,.28);pointer-events:none}
+#barcodeScanGuide:after{content:"";position:absolute;left:3%;right:3%;top:50%;height:2px;background:rgba(255,255,255,.9);box-shadow:0 0 8px rgba(255,255,255,.9)}
 #barcodeScannerWrap video,#barcodeScannerWrap #html5BarcodeReader video{width:100%!important;height:auto!important;max-height:60dvh;object-fit:cover}
 #html5BarcodeReader{position:relative}
 #html5BarcodeReader__dashboard{display:none!important}
@@ -381,10 +387,16 @@ input, select, textarea, button {
       <button type="button" class="shoppingModalClose" id="barcodeModalClose">×</button>
     </div>
     <div id="barcodeScannerWrap" style="background:#111;border-radius:16px;overflow:hidden;position:relative">
-      <video id="barcodeVideo" playsinline muted style="display:block;width:100%;max-height:48dvh;object-fit:cover"></video>
-      <div style="position:absolute;left:12%;right:12%;top:38%;height:24%;border:3px solid #fff;border-radius:12px;box-shadow:0 0 0 9999px rgba(0,0,0,.22);pointer-events:none"></div>
+      <video id="barcodeVideo" playsinline muted autoplay style="display:block;width:100%;max-height:55dvh;object-fit:cover"></video>
+      <div id="barcodeScanGuide"></div>
     </div>
-    <div id="barcodeStatus" class="small" style="font-size:15px;margin-top:10px">バーコードを横長の枠いっぱいに近づけてください。</div>
+    <div id="barcodeCameraTools">
+      <button type="button" class="gray" id="barcodeTorchBtn">🔦 ライト</button>
+      <button type="button" class="gray" id="barcodeFocusBtn">🎯 ピント</button>
+    </div>
+    <input id="barcodeZoomRange" type="range" min="1" max="1" step="0.1" value="1" aria-label="カメラズーム">
+    <div id="barcodeZoomLabel">ズーム 1.0×</div>
+    <div id="barcodeStatus" class="small" style="font-size:15px;margin-top:10px">バーコードを枠いっぱいに入れてください。近づけすぎず、ピントが合う距離で止めてください。</div>
     <div class="small" style="margin-top:7px;line-height:1.5">
       💡 コツ：バーコードとスマホを平行にして、影や反射を避けてください。小さすぎる場合は少し近づけます。
     </div>
@@ -701,7 +713,8 @@ let shoppingPurchases=[];
 /* ===== バーコード買い物機能（最大強化版） ===== */
 let barcodeControls=null, barcodeReader=null, html5Barcode=null;
 let barcodeMatchedProduct=null, barcodeCurrentCode="", barcodeBusy=false;
-let barcodeTorchOn=false;
+let barcodeTorchOn=false, barcodeCameraTrack=null, barcodeZoomMin=1, barcodeZoomMax=1;
+let barcodeFocusBusy=false;
 
 function populateBarcodeStores(selectedId=""){
   const sel=$("barcodeStoreSelect"); if(!sel)return;
@@ -739,6 +752,9 @@ function stopBarcodeCamera(){
     html5Barcode=null;
   }
   barcodeTorchOn=false;
+  barcodeCameraTrack=null; barcodeZoomMin=1; barcodeZoomMax=1;
+  const zr=$("barcodeZoomRange"); if(zr){zr.min="1";zr.max="1";zr.value="1";zr.disabled=true;}
+  const zl=$("barcodeZoomLabel"); if(zl)zl.textContent="ズーム 1.0×";
   const v=$("barcodeVideo");
   if(v){
     try{v.pause();}catch(e){}
@@ -860,6 +876,32 @@ async function showBarcodeResult(code){
     }
   }
 }
+async function configureBarcodeTrack(track){
+  barcodeCameraTrack=track||null; if(!track)return;
+  try{
+    const caps=track.getCapabilities?.()||{}, advanced={};
+    if(Array.isArray(caps.focusMode)&&caps.focusMode.includes("continuous"))advanced.focusMode="continuous";
+    if(Array.isArray(caps.exposureMode)&&caps.exposureMode.includes("continuous"))advanced.exposureMode="continuous";
+    if(Object.keys(advanced).length)await track.applyConstraints({advanced:[advanced]});
+    const zr=$("barcodeZoomRange"),zl=$("barcodeZoomLabel");
+    if(caps.zoom&&Number.isFinite(caps.zoom.max)){
+      barcodeZoomMin=Number(caps.zoom.min||1); barcodeZoomMax=Number(caps.zoom.max||1);
+      const z=Math.min(barcodeZoomMax,Math.max(barcodeZoomMin,Math.min(1.5,barcodeZoomMax)));
+      zr.min=String(barcodeZoomMin); zr.max=String(barcodeZoomMax); zr.step="0.1"; zr.value=String(z); zr.disabled=false; zl.textContent=`ズーム ${z.toFixed(1)}×`;
+      await track.applyConstraints({advanced:[{zoom:z}]});
+    }
+    zr.oninput=async()=>{if(!barcodeCameraTrack)return;const z=Number(zr.value)||1;try{await barcodeCameraTrack.applyConstraints({advanced:[{zoom:z}]});zl.textContent=`ズーム ${z.toFixed(1)}×`;}catch(e){}};
+  }catch(e){console.debug("track setup",e);}
+}
+async function toggleBarcodeTorch(){
+  if(!barcodeCameraTrack)return;
+  try{const caps=barcodeCameraTrack.getCapabilities?.()||{};if(!caps.torch){alert("このブラウザではライト操作に対応していません。明るい場所でお試しください。");return;}barcodeTorchOn=!barcodeTorchOn;await barcodeCameraTrack.applyConstraints({advanced:[{torch:barcodeTorchOn}]});$("barcodeTorchBtn").textContent=barcodeTorchOn?"🔦 ライトOFF":"🔦 ライトON";}catch(e){barcodeTorchOn=false;}
+}
+async function refocusBarcodeCamera(){
+  if(barcodeFocusBusy||!barcodeCameraTrack)return; barcodeFocusBusy=true;
+  try{const caps=barcodeCameraTrack.getCapabilities?.()||{};if(Array.isArray(caps.focusMode)){if(caps.focusMode.includes("continuous"))await barcodeCameraTrack.applyConstraints({advanced:[{focusMode:"continuous"}]});if(caps.focusMode.includes("single-shot")){await barcodeCameraTrack.applyConstraints({advanced:[{focusMode:"single-shot"}]});await new Promise(r=>setTimeout(r,180));if(caps.focusMode.includes("continuous"))await barcodeCameraTrack.applyConstraints({advanced:[{focusMode:"continuous"}]});}}}catch(e){}finally{barcodeFocusBusy=false;}
+}
+
 async function startBarcodeCamera(){
   resetBarcodeResult();
   barcodeBusy=false;
@@ -895,16 +937,7 @@ async function startBarcodeCamera(){
       status.textContent="バーコードを画面いっぱいに近づけてください。自動で読み取ります。";
 
       const track=stream.getVideoTracks()[0];
-      // 対応機種では連続オートフォーカス/ズームを要求。
-      try{
-        const caps=track.getCapabilities?.();
-        const advanced={};
-        if(caps?.focusMode?.includes?.("continuous"))advanced.focusMode="continuous";
-        if(caps?.zoom){
-          advanced.zoom=Math.min(caps.zoom.max,Math.max(caps.zoom.min,Math.min(2.5,caps.zoom.max)));
-        }
-        if(Object.keys(advanced).length)await track.applyConstraints({advanced:[advanced]});
-      }catch(e){console.debug("camera constraints",e);}
+      await configureBarcodeTrack(track);
 
       barcodeControls={stop:()=>{
         try{stream.getTracks().forEach(t=>t.stop());}catch(e){}
@@ -951,11 +984,11 @@ async function startBarcodeCamera(){
       await html5Barcode.start(
         {facingMode:"environment"},
         {
-          fps:15,
+          fps:20,
           qrbox:function(viewfinderWidth,viewfinderHeight){
             // 横長のJANバーコードを優先。画面幅の約90%を使用。
-            const w=Math.floor(Math.min(viewfinderWidth*0.92,720));
-            const h=Math.floor(Math.min(Math.max(w*0.28,120),260));
+            const w=Math.floor(Math.min(viewfinderWidth*0.94,820));
+            const h=Math.floor(Math.min(Math.max(w*0.30,140),300));
             return {width:w,height:h};
           },
           aspectRatio:1.7777778,
@@ -988,10 +1021,11 @@ async function startBarcodeCamera(){
       }
       barcodeReader=new ZXingBrowser.BrowserMultiFormatReader(hints);
       barcodeControls=await barcodeReader.decodeFromConstraints(
-        {audio:false,video:{facingMode:{ideal:"environment"},width:{ideal:1920},height:{ideal:1080}}},
+        {audio:false,video:{facingMode:{ideal:"environment"},width:{ideal:1920},height:{ideal:1080},frameRate:{ideal:30,max:30}}},
         video,
         (result)=>{if(result)barcodeSuccess(result.getText());}
       );
+      try{await configureBarcodeTrack(video.srcObject?.getVideoTracks?.()[0]);}catch(e){}
       barcodeBusy=false;
       status.textContent="バーコードを横長の枠いっぱいに入れてください。";
       return;
@@ -1009,6 +1043,9 @@ async function closeBarcodeModal(){
   $("barcodeModal").hidden=true;
   document.body.style.overflow="";
 }
+
+$("barcodeTorchBtn").onclick=toggleBarcodeTorch;
+$("barcodeFocusBtn").onclick=refocusBarcodeCamera;
 
 $("openBarcodeScanner").onclick=async()=>{
   $("barcodeModal").hidden=false;
