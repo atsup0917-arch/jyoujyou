@@ -412,6 +412,228 @@ input, select, textarea, button {
 <style id="nonVegPreviewVisibilityFix">
 #nonVegPreviewCard[hidden]{display:none!important}
 </style>
+
+<style id="recipeMobileScrollPhotoFix">
+/* レシピ画面：写真で本文欄を圧迫しない。画面全体をスクロール可能にする */
+#recipeModal{
+  overflow-y:auto !important;
+  -webkit-overflow-scrolling:touch !important;
+  padding:12px !important;
+}
+#recipeModal .recipeBox{
+  width:min(680px,100%) !important;
+  max-width:680px !important;
+  height:auto !important;
+  min-height:0 !important;
+  max-height:none !important;
+  margin:2vh auto !important;
+  padding:16px !important;
+  display:block !important;
+  overflow:visible !important;
+}
+#recipeModal #recipeText{
+  display:block !important;
+  width:100% !important;
+  min-height:360px !important;
+  height:46vh !important;
+  max-height:none !important;
+  resize:vertical !important;
+  overflow-y:auto !important;
+  box-sizing:border-box !important;
+}
+.recipePhotoArea{margin:0 0 12px !important}
+.recipePhotoBar{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.recipePhotoIconBtn,.recipePhotoAddBtn{
+  min-height:50px;border:0;border-radius:14px;background:#eef3ff;
+  color:#2167d8;font-weight:800;font-size:16px;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;text-decoration:none;box-sizing:border-box
+}
+.recipePhotoIconBtn:disabled{opacity:.45;cursor:not-allowed}
+.recipePhotoEmpty{
+  margin-top:8px;padding:8px 10px !important;
+  border:0 !important;background:transparent !important;
+  color:#888;font-size:13px;text-align:left !important
+}
+.recipePhotoDeleteBtn{
+  width:100%;margin:0 !important;min-height:42px
+}
+.recipePhotoFile{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+.recipePhotoViewer{
+  display:none;position:fixed;inset:0;z-index:1000100;
+  background:rgba(0,0,0,.86);padding:12px;
+  align-items:center;justify-content:center
+}
+.recipePhotoViewer.open{display:flex}
+.recipePhotoViewerBox{
+  position:relative;max-width:96vw;max-height:96vh;
+  display:flex;align-items:center;justify-content:center
+}
+.recipePhotoViewerBox img{
+  display:block;max-width:96vw;max-height:92vh;
+  width:auto;height:auto;object-fit:contain;border-radius:12px
+}
+.recipePhotoViewerClose{
+  position:absolute;right:-4px;top:-52px;width:46px;height:46px;
+  border:0;border-radius:50%;background:#fff;color:#222;
+  font-size:34px;line-height:1;z-index:2
+}
+@media(max-width:520px){
+  #recipeModal{padding:6px !important}
+  #recipeModal .recipeBox{
+    width:100% !important;max-width:none !important;
+    margin:0 auto !important;padding:12px !important;
+    border-radius:16px !important;
+  }
+  #recipeModal .recipeBox h2{font-size:20px !important;margin-bottom:8px !important}
+  #recipeModal #recipeText{
+    min-height:340px !important;
+    height:52vh !important;
+    font-size:16px !important;
+    line-height:1.6 !important;
+  }
+  .recipePhotoBar{grid-template-columns:1fr 1fr;gap:7px}
+  .recipePhotoIconBtn,.recipePhotoAddBtn{min-height:48px;font-size:15px}
+  .recipePhotoViewerClose{right:0;top:-54px}
+}
+</style>
+
+
+<style id="recipeCloseAndPhotoCompactFix">
+/* レシピ画面：Macでも「閉じる・保存」が常に見えるようにする */
+#recipeModal{
+  overflow-y:auto !important;
+  -webkit-overflow-scrolling:touch !important;
+}
+#recipeModal .recipeBox{
+  overflow:visible !important;
+}
+#recipeModal .recipeBtns{
+  position:sticky !important;
+  bottom:0 !important;
+  z-index:10050 !important;
+  background:#fff !important;
+  padding:10px 0 calc(10px + env(safe-area-inset-bottom)) !important;
+  margin-top:10px !important;
+}
+#recipeModal .recipeBtns button{
+  min-height:52px !important;
+}
+#recipeModal .recipePhotoBar{
+  display:grid !important;
+  grid-template-columns:minmax(0,1fr) 52px !important;
+  gap:8px !important;
+}
+#recipeModal .recipePhotoAddBtn{
+  min-height:48px !important;
+}
+#recipeModal .recipePhotoDeleteBtn{
+  width:52px !important;
+  min-width:52px !important;
+  height:48px !important;
+  min-height:48px !important;
+  margin:0 !important;
+  padding:0 !important;
+  border:1px solid #f0b8b8 !important;
+  border-radius:14px !important;
+  background:#fff5f5 !important;
+  color:#d33 !important;
+  font-size:30px !important;
+  font-weight:700 !important;
+  line-height:1 !important;
+}
+#recipeModal .recipePhotoDeleteBtn:disabled{
+  opacity:.45 !important;
+}
+@media(max-width:520px){
+  #recipeModal .recipePhotoBar{
+    grid-template-columns:minmax(0,1fr) 48px !important;
+    gap:7px !important;
+  }
+  #recipeModal .recipePhotoDeleteBtn{
+    width:48px !important;
+    min-width:48px !important;
+    height:48px !important;
+    min-height:48px !important;
+    border-radius:12px !important;
+    font-size:28px !important;
+  }
+  #recipeModal .recipeBtns{
+    padding-bottom:calc(10px + env(safe-area-inset-bottom)) !important;
+  }
+}
+</style>
+
+
+<style id="recipeModalBackgroundScrollFix">
+/* レシピを開いている間は背面をスクロールさせない */
+html.recipeModalLocked, body.recipeModalLocked{
+  overflow:hidden !important;
+  height:100% !important;
+  overscroll-behavior:none !important;
+}
+#recipeModal{
+  overflow-y:auto !important;
+  overscroll-behavior:contain !important;
+  -webkit-overflow-scrolling:touch !important;
+  touch-action:pan-y !important;
+}
+#recipeModal .recipeBox{
+  max-height:none !important;
+  overflow:visible !important;
+}
+/* 写真3操作をすべて同じ小さなマークボタンに */
+#recipeModal .recipePhotoBar{
+  display:flex !important;
+  justify-content:flex-end !important;
+  align-items:center !important;
+  gap:8px !important;
+}
+#recipeModal .recipePhotoIconOnly{
+  width:48px !important;
+  height:48px !important;
+  min-width:48px !important;
+  min-height:48px !important;
+  padding:0 !important;
+  margin:0 !important;
+  border:1px solid #d8dee8 !important;
+  border-radius:14px !important;
+  background:#eef3ff !important;
+  color:#2167d8 !important;
+  font-size:24px !important;
+  line-height:1 !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  box-sizing:border-box !important;
+  cursor:pointer !important;
+  text-decoration:none !important;
+}
+#recipeModal .recipePhotoIconOnly:disabled{
+  opacity:.38 !important;
+  cursor:not-allowed !important;
+}
+#recipeModal .recipePhotoDeleteIcon{
+  background:#fff5f5 !important;
+  border-color:#efc3c3 !important;
+}
+#recipeModal .recipePhotoEmpty{
+  margin-top:6px !important;
+  padding:4px 2px !important;
+  font-size:12px !important;
+}
+@media(max-width:520px){
+  #recipeModal .recipePhotoIconOnly{
+    width:44px !important;
+    height:44px !important;
+    min-width:44px !important;
+    min-height:44px !important;
+    border-radius:12px !important;
+    font-size:22px !important;
+  }
+}
+</style>
+
 </head>
 <body><div class="wrap">
 <div class="navtabs navtabs3">
@@ -1848,6 +2070,30 @@ $("printWeekend").onclick=e=>{e.preventDefault();printPrep("weekend")};
   width:100%;min-height:300px;box-sizing:border-box;font-size:17px;
   line-height:1.6;padding:13px;border:1px solid #ccc;border-radius:12px;
 }
+.recipePhotoArea{margin:0 0 14px}
+.recipePhotoPreview{
+  display:block;width:100%;max-height:360px;object-fit:contain;
+  border-radius:14px;border:1px solid #ddd;background:#f5f6f8;
+}
+.recipePhotoEmpty{
+  padding:28px 12px;text-align:center;border:1px dashed #cfd4dc;
+  border-radius:14px;background:#f7f8fa;color:#777;
+}
+.recipePhotoActions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.recipePhotoActions button{margin:0}
+.recipePhotoFile{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+@media(max-width:520px){
+  #recipeModal,#recipeBookModal{padding:8px}
+  .recipeBox{
+    width:100%;box-sizing:border-box;margin:0 auto;padding:14px;
+    border-radius:16px;
+  }
+  .recipeBox h2{font-size:20px}
+  #recipeText{min-height:260px;font-size:16px;line-height:1.55}
+  .recipePhotoPreview{max-height:300px}
+  .recipePhotoActions{grid-template-columns:1fr}
+  .recipeBtns{grid-template-columns:1fr 1fr}
+}
 #recipeBookList{display:grid;gap:8px;margin:10px 0 14px}
 .recipeBookItem{
   width:100%;text-align:left;margin:0;background:#f1f4f8;color:#222;
@@ -1865,11 +2111,30 @@ $("printWeekend").onclick=e=>{e.preventDefault();printPrep("weekend")};
 <div id="recipeModal">
   <div class="recipeBox">
     <h2 id="recipeTitle">レシピ</h2>
+
+    <div class="recipePhotoArea">
+      <div class="recipePhotoBar">
+        <button id="recipePhotoView" class="recipePhotoIconOnly" type="button" disabled aria-label="写真を見る" title="写真を見る">📷</button>
+        <label class="recipePhotoIconOnly" for="recipePhotoInput" aria-label="写真を追加・変更" title="写真を追加・変更">➕</label>
+        <button id="recipePhotoDelete" class="recipePhotoIconOnly recipePhotoDeleteIcon" type="button" disabled aria-label="写真を削除" title="写真を削除">❌</button>
+      </div>
+      <div id="recipePhotoEmpty" class="recipePhotoEmpty">写真はまだ登録されていません</div>
+      <input id="recipePhotoInput" class="recipePhotoFile" type="file" accept="image/*,.heic,.heif,.jpg,.jpeg,.png,.webp">
+    </div>
+
     <textarea id="recipeText" placeholder="ここにレシピを入力してください"></textarea>
     <div class="recipeBtns">
       <button id="recipeClose" class="gray" type="button">閉じる</button>
       <button id="recipeSave" type="button">保存</button>
     </div>
+  </div>
+</div>
+
+
+<div id="recipePhotoViewer" class="recipePhotoViewer" aria-hidden="true">
+  <div class="recipePhotoViewerBox">
+    <button id="recipePhotoViewerClose" class="recipePhotoViewerClose" type="button">×</button>
+    <img id="recipePhotoViewerImg" alt="レシピ写真">
   </div>
 </div>
 
@@ -1888,12 +2153,75 @@ $("printWeekend").onclick=e=>{e.preventDefault();printPrep("weekend")};
   let currentRecipeName = "";
   let recipeCache = {};
   let prepItemsCache = {};
+  let currentRecipePhoto = "";
   let started = false;
 
   function escRecipe(v){
     return String(v ?? "").replace(/[&<>"']/g,m=>({
       "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
     }[m]));
+  }
+
+  function recipeData(value){
+    if(value && typeof value==="object"){
+      return {text:String(value.text??""),photo:String(value.photo??"")};
+    }
+    return {text:String(value??""),photo:""};
+  }
+
+  async function resizeRecipePhoto(file){
+    const dataUrl=await new Promise((resolve,reject)=>{
+      const reader=new FileReader();
+      reader.onload=()=>resolve(reader.result);
+      reader.onerror=reject;
+      reader.readAsDataURL(file);
+    });
+    const img=await new Promise((resolve,reject)=>{
+      const im=new Image();
+      im.onload=()=>resolve(im);
+      im.onerror=reject;
+      im.src=dataUrl;
+    });
+    const max=1200;
+    const scale=Math.min(1,max/Math.max(img.naturalWidth,img.naturalHeight));
+    const canvas=document.createElement("canvas");
+    canvas.width=Math.max(1,Math.round(img.naturalWidth*scale));
+    canvas.height=Math.max(1,Math.round(img.naturalHeight*scale));
+    const ctx=canvas.getContext("2d");
+    ctx.drawImage(img,0,0,canvas.width,canvas.height);
+    return canvas.toDataURL("image/jpeg",0.82);
+  }
+
+  function showRecipePhoto(src){
+    const empty=document.getElementById("recipePhotoEmpty");
+    const del=document.getElementById("recipePhotoDelete");
+    const view=document.getElementById("recipePhotoView");
+    if(src){
+      empty.textContent="写真を登録済み";
+      view.disabled=false;
+      del.disabled=false;
+    }else{
+      empty.textContent="写真はまだ登録されていません";
+      view.disabled=true;
+      del.disabled=true;
+    }
+  }
+
+  function openRecipePhotoViewer(src){
+    if(!src)return;
+    const viewer=document.getElementById("recipePhotoViewer");
+    const img=document.getElementById("recipePhotoViewerImg");
+    img.src=src;
+    viewer.classList.add("open");
+    viewer.setAttribute("aria-hidden","false");
+  }
+
+  function closeRecipePhotoViewer(){
+    const viewer=document.getElementById("recipePhotoViewer");
+    const img=document.getElementById("recipePhotoViewerImg");
+    viewer.classList.remove("open");
+    viewer.setAttribute("aria-hidden","true");
+    img.removeAttribute("src");
   }
 
   function start(){
@@ -1921,15 +2249,25 @@ $("printWeekend").onclick=e=>{e.preventDefault();printPrep("weekend")};
     function openRecipe(id,name){
       currentRecipeId = id;
       currentRecipeName = name || "";
+      const data=recipeData(recipeCache[id]);
+      currentRecipePhoto=data.photo||"";
       document.getElementById("recipeTitle").textContent =
         currentRecipeName + " のレシピ";
-      document.getElementById("recipeText").value = recipeCache[id] || "";
+      document.getElementById("recipeText").value = data.text;
+      document.getElementById("recipePhotoInput").value="";
+      showRecipePhoto(currentRecipePhoto);
       document.getElementById("recipeModal").style.display = "block";
+      document.documentElement.classList.add("recipeModalLocked");
+      document.body.classList.add("recipeModalLocked");
     }
 
     function closeRecipe(){
       document.getElementById("recipeModal").style.display = "none";
+      document.documentElement.classList.remove("recipeModalLocked");
+      document.body.classList.remove("recipeModalLocked");
       currentRecipeId = null;
+      currentRecipePhoto = "";
+      document.getElementById("recipePhotoInput").value="";
     }
 
     function renderRecipeBook(){
@@ -1946,11 +2284,12 @@ $("printWeekend").onclick=e=>{e.preventDefault();printPrep("weekend")};
         return;
       }
 
-      box.innerHTML = all.map(x =>
-        `<button type="button" class="recipeBookItem ${recipeCache[x.id] ? "hasRecipe":""}" data-recipe-book-id="${escRecipe(x.id)}">
-          ${recipeCache[x.id] ? "📖 " : "✏️ "}${escRecipe(x.name)}
-        </button>`
-      ).join("");
+      box.innerHTML = all.map(x => {
+        const data=recipeData(recipeCache[x.id]);
+        return `<button type="button" class="recipeBookItem ${data.text||data.photo ? "hasRecipe":""}" data-recipe-book-id="${escRecipe(x.id)}">
+          ${data.photo ? "📷 " : (data.text ? "📖 " : "✏️ ")}${escRecipe(x.name)}
+        </button>`;
+      }).join("");
 
       box.querySelectorAll("[data-recipe-book-id]").forEach(btn=>{
         btn.onclick = function(){
@@ -2003,6 +2342,32 @@ $("printWeekend").onclick=e=>{e.preventDefault();printPrep("weekend")};
         document.getElementById("recipeBookModal").style.display="none";
     };
 
+    document.getElementById("recipePhotoInput").onchange=async function(e){
+      const file=e.target.files?.[0];
+      if(!file)return;
+      try{
+        currentRecipePhoto=await resizeRecipePhoto(file);
+        showRecipePhoto(currentRecipePhoto);
+      }catch(err){
+        console.error(err);
+        alert("写真の読み込みに失敗しました。");
+      }
+    };
+
+    document.getElementById("recipePhotoDelete").onclick=function(){
+      currentRecipePhoto="";
+      document.getElementById("recipePhotoInput").value="";
+      showRecipePhoto("");
+    };
+
+    document.getElementById("recipePhotoView").onclick=function(){
+      openRecipePhotoViewer(currentRecipePhoto);
+    };
+    document.getElementById("recipePhotoViewerClose").onclick=closeRecipePhotoViewer;
+    document.getElementById("recipePhotoViewer").onclick=function(e){
+      if(e.target===this) closeRecipePhotoViewer();
+    };
+
     document.getElementById("recipeSave").onclick = async function(){
       if(!currentRecipeId){
         alert("レシピ品目を選んでください");
@@ -2010,7 +2375,14 @@ $("printWeekend").onclick=e=>{e.preventDefault();printPrep("weekend")};
       }
       const text = document.getElementById("recipeText").value;
       try{
-        await fb.update(recipesRef,{[currentRecipeId]:text});
+        // 旧データ（文字列）も読めるようにしつつ、
+        // 保存時は「本文＋写真」を同じレシピデータとして保存。
+        await fb.update(recipesRef,{
+          [currentRecipeId]:{
+            text:text,
+            photo:currentRecipePhoto||""
+          }
+        });
         closeRecipe();
         alert("レシピを保存しました");
       }catch(err){
@@ -2018,7 +2390,6 @@ $("printWeekend").onclick=e=>{e.preventDefault();printPrep("weekend")};
       }
     };
 
-    // 仕込み表がFirebase更新等で再描画された時にも必ず再接続
     const observer = new MutationObserver(bindPrepRecipeButtons);
     observer.observe(document.getElementById("prepList"),{childList:true,subtree:true});
 
