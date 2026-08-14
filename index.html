@@ -2355,6 +2355,8 @@ $("printWeekend").onclick=e=>{e.preventDefault();printPrep("weekend")};
     };
 
     document.getElementById("recipePhotoDelete").onclick=function(){
+      if(!currentRecipePhoto)return;
+      if(!confirm("写真を削除しますか？"))return;
       currentRecipePhoto="";
       document.getElementById("recipePhotoInput").value="";
       showRecipePhoto("");
