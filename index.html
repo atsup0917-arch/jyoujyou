@@ -364,6 +364,16 @@ input, select, textarea, button {
 .productManagePhoto input[type=file]{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}.photoIconButton{display:inline-flex!important;align-items:center;justify-content:center;width:34px!important;height:34px!important;min-width:34px!important;padding:0!important;margin:0!important;background:#eef3ff!important;color:#2867df!important;border:1px solid #c9d7ff!important;border-radius:9px!important;font-size:17px!important;line-height:1!important;cursor:pointer}.photoDeleteButton{display:inline-flex!important;align-items:center;justify-content:center;width:30px!important;height:30px!important;min-width:30px!important;padding:0!important;margin:0 0 0 3px!important;background:#fff0f0!important;color:#c62828!important;border:1px solid #f0bcbc!important;border-radius:8px!important;font-size:15px!important;line-height:1!important;cursor:pointer}.shoppingTapIcon{width:30px!important;height:30px!important;min-width:30px!important;padding:0!important;margin:0!important;background:transparent!important;color:#2867df!important;border:0!important;border-radius:50%!important;font-size:17px!important;line-height:1!important;cursor:pointer}.itemProductLine{display:flex;align-items:center;gap:6px;min-width:0}.itemProductName{flex:1;min-width:0}.itemProductName b{overflow-wrap:anywhere}.productRegUpload{display:flex;align-items:center;gap:8px}.productRegUpload input[type=file]{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}.productRegUploadLabel{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border:1px solid #c9d7ff;border-radius:9px;background:#eef3ff;color:#2867df;font-size:18px;cursor:pointer}
 @media(max-width:520px){#productManage .productManageRow{grid-template-columns:1fr!important}.productManagePhoto{margin-top:2px}}
 </style>
+
+<style id="orderModeAdditionStyle">
+#nonVegOrderArea .card{margin-bottom:16px}
+#nonVegLine{background:#06c755!important;color:#fff!important}
+#nonVegLineStatus{white-space:pre-wrap}
+</style>
+
+<style id="nonVegPreviewVisibilityFix">
+#nonVegPreviewCard[hidden]{display:none!important}
+</style>
 </head>
 <body><div class="wrap">
 <div class="navtabs navtabs3">
@@ -496,7 +506,11 @@ input, select, textarea, button {
 </div>
 
 <div id="vegetablePage" class="page" hidden>
-<h1>🥬 野菜発注</h1>
+<h1>📦 発注</h1>
+<div class="navtabs navtabs3" id="orderModeTabs">
+<button type="button" id="orderModeVeg" class="active">🥬 野菜</button>
+<button type="button" id="orderModeSupplier">🏪 業者</button>
+</div>
 
 <div class="card">
 <label>納品日</label><input id="vegDate" type="date">
@@ -529,6 +543,91 @@ input, select, textarea, button {
 <div class="previewActions">
 <button class="gray" id="vegClear">今回分をクリア</button>
 </div>
+</div>
+
+
+<div id="nonVegOrderArea" hidden>
+<div id="nonVegEditArea">
+
+<div class="card">
+<h2 id="nonVegOrderHeading">🏪 業者発注</h2>
+<div class="small">業者を選ぶと、その業者の商品だけが表示されます。</div>
+
+<label>業者</label>
+<select id="nonVegSupplier"></select>
+<button type="button" class="gray" id="nonVegAddSupplier">＋ 業者を登録</button>
+
+<div id="nonVegSupplierForm" hidden style="margin-top:10px">
+<input id="nonVegSupplierName" placeholder="例：〇〇商店">
+<button type="button" id="nonVegSaveSupplier">業者を登録</button>
+</div>
+</div>
+
+<div class="card">
+<h2>商品を選んで発注</h2>
+<label>商品</label>
+<input id="nonVegProductSearch" placeholder="商品名・ふりがなで検索" autocomplete="off">
+<select id="nonVegProductSelect"></select>
+
+<div class="orderRow">
+<div><label>数量</label><input id="nonVegQty" type="number" min="1" step="1" value="1"></div>
+<div><label>単位</label><select id="nonVegUnit"></select></div>
+<div><button type="button" id="nonVegAddOrder">追加</button></div>
+</div>
+
+<div id="nonVegOrderItems" class="orderItems"></div>
+<button type="button" id="nonVegMakeOrder">発注表を完成</button>
+</div>
+
+<div class="card settingsCard">
+<details>
+<summary>⚙️ 業者の商品・単位を登録・削除</summary>
+<div class="settingsBody">
+<div class="card">
+<h2>商品を登録</h2>
+<label>商品名</label>
+<input id="nonVegNewProduct" placeholder="例：醤油">
+<label>ふりがな（検索用）</label>
+<input id="nonVegNewProductKana" placeholder="例：しょうゆ">
+<label>デフォルト単位</label>
+<select id="nonVegNewProductUnit"></select>
+<button type="button" id="nonVegSaveProduct">＋ 商品を登録</button>
+<div id="nonVegRegisterMsg" class="small"></div>
+</div>
+<div id="nonVegProductManager" style="margin-top:14px">
+<h3>登録した商品</h3>
+<div class="small">商品名・ふりがな・デフォルト単位を編集できます。並び順は▲▼で変更できます。</div>
+<div id="nonVegProductList"></div>
+</div>
+
+<div class="card">
+<h3 class="settingsHeading">単位の管理</h3><div class="small">※業者発注専用の単位です。野菜発注の単位とは別管理です。</div>
+<label>新しい単位</label>
+<input id="nonVegNewUnit" placeholder="例：ケース / 個 / 本 / 袋">
+<button type="button" id="nonVegAddUnit" class="gray">＋ 単位を登録</button>
+<div id="nonVegUnitManage"></div>
+</div>
+
+</div>
+</details>
+</div>
+
+
+</div>
+<div id="nonVegPreviewCard" class="card" hidden>
+<h2>LINE用 発注表</h2>
+<button id="nonVegCopy" type="button" title="コピー" aria-label="発注内容をコピー"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button>
+<div id="nonVegPreview" class="preview"></div>
+<div class="previewActions">
+<button class="gray" id="nonVegEdit" type="button">編集に戻る</button>
+<button id="nonVegLine" type="button">LINEで送る</button>
+</div>
+<div class="previewActions">
+<button class="gray" id="nonVegClear" type="button">今回分をクリア</button>
+</div>
+<div id="nonVegLineStatus" class="small"></div>
+</div>
+
 </div>
 
 <div class="card settingsCard">
@@ -583,7 +682,7 @@ const firebaseConfig={
   appId:"1:535896228481:web:d06e634d2d7330630c4380"
 };
 const app=initializeApp(firebaseConfig), db=getDatabase(app);
-window.__fb={db,ref,onValue,set,update};
+window.__fb={db,ref,onValue,set,update,push,remove};
 const storesRef=ref(db,"stores"), productsRef=ref(db,"products"), itemsRef=ref(db,"items");
 const vegProductsRef=ref(db,"vegetableOrder/products");
 const vegUnitsRef=ref(db,"vegetableOrder/units");
@@ -1535,6 +1634,9 @@ onValue(vegUnitsRef,async s=>{
  }
  vegUnitOptions();
   newVegProductUnitOptions();
+  renderNonVegUnitOptions();
+  renderNonVegProductManager();
+  renderNonVegUnitManage();
 });
 onValue(lastVegOrderRef,s=>{
  lastVegOrder=s.val()||[];
@@ -2040,4 +2142,436 @@ $("printWeekend").onclick=e=>{e.preventDefault();printPrep("weekend")};
   else boot();
 })();
 </script>
+
+<script id="orderModeAdditionScript">
+(function(){
+  const $=id=>document.getElementById(id);
+  const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+  const norm=s=>String(s??"").trim().toLowerCase().replace(/[ァ-ヶ]/g,ch=>String.fromCharCode(ch.charCodeAt(0)-0x60)).replace(/[　 ]/g,"");
+
+  let suppliers={}, products={}, order=[], nonVegUnits={};
+  let ready=false;
+  const vals=o=>Object.entries(o||{});
+
+  function root(path){return window.__fb.ref(window.__fb.db,"orderSuppliers/"+path);}
+  function id(){return crypto.randomUUID?crypto.randomUUID().replace(/-/g,""):Date.now()+"_"+Math.random().toString(36).slice(2);}
+  let nonVegUnitsRef=null;
+
+  function renderSuppliers(){
+    const s=$("nonVegSupplier"), keep=s.value;
+    s.innerHTML='<option value="">業者を選択</option>'+
+      Object.entries(suppliers).sort((a,b)=>(a[1].name||"").localeCompare(b[1].name||"ja"))
+      .map(([k,v])=>`<option value="${esc(k)}">${esc(v.name)}</option>`).join("");
+    if(suppliers[keep])s.value=keep;
+    renderProducts();
+  }
+
+  function renderProducts(){
+    const sid=$("nonVegSupplier").value;
+    const q=norm($("nonVegProductSearch").value);
+    const all=Object.entries(products[sid]||{}).filter(([,p])=>{
+      if(!q)return true;
+      return norm(p.name).includes(q)||norm(p.kana||"").includes(q);
+    }).sort((a,b)=>(Number(a[1].order??999999)-Number(b[1].order??999999))||(a[1].name||"").localeCompare(b[1].name||"ja"));
+    $("nonVegProductSelect").innerHTML='<option value="">商品を選択</option>'+
+      all.map(([k,p])=>`<option value="${esc(k)}">${esc(p.name)}</option>`).join("");
+    renderNonVegProductManager();
+  }
+
+
+  async function saveNonVegProductsForSupplier(sid, data){
+    await window.__fb.set(root("products/"+sid), data);
+  }
+
+  async function addNonVegUnit(){
+  const input=$("nonVegNewUnit");
+  const name=input?.value.trim()||"";
+  if(!name)return alert("登録する単位を入力してください。");
+  const exists=vals(nonVegUnits).some(([,u])=>String(u.name||"").trim()===name);
+  if(exists){
+    input.value="";
+    return alert("その単位はすでに登録されています。");
+  }
+  try{
+    await window.__fb.push(nonVegUnitsRef,{name});
+    input.value="";
+    $("nonVegRegisterMsg").textContent=`✅ 単位「${name}」を登録しました。`;
+  }catch(e){
+    console.error(e);
+    alert("単位の登録に失敗しました。");
+  }
+}
+
+function renderNonVegUnitManage(){
+  const box=$("nonVegUnitManage");
+  if(!box)return;
+  const units=vals(nonVegUnits);
+  box.innerHTML=units.length
+    ? units.map(([id,u])=>`<div class="unitManage"><span>${esc(u.name||"")}</span><button type="button" class="danger" data-nonveg-delunit="${esc(id)}">削除</button></div>`).join("")
+    : '<div class="small">登録されている単位はありません。</div>';
+  box.querySelectorAll("[data-nonveg-delunit]").forEach(b=>b.onclick=async()=>{
+    const id=b.dataset.nonvegDelunit;
+    const unitName=nonVegUnits[id]?.name||"";
+    if(!confirm(`単位「${unitName}」を削除しますか？`))return;
+    try{ await window.__fb.remove(window.__fb.ref(window.__fb.db,`supplierOrder/units/${id}`)); }
+    catch(e){ console.error(e); alert("単位の削除に失敗しました。"); }
+  });
+}
+
+function renderNonVegUnitOptions(){
+  const orderUnit=$("nonVegUnit");
+  const regUnit=$("nonVegNewProductUnit");
+  const units=vals(nonVegUnits);
+  if(orderUnit){
+    const keep=orderUnit.value;
+    orderUnit.innerHTML=units.map(([id,u])=>`<option value="${esc(id)}">${esc(u.name||"")}</option>`).join("");
+    if(units.some(([id])=>id===keep)) orderUnit.value=keep;
+  }
+  if(regUnit){
+    const keepReg=regUnit.value;
+    regUnit.innerHTML='<option value="">デフォルト単位なし</option>'+
+      units.map(([id,u])=>`<option value="${esc(id)}">${esc(u.name||"")}</option>`).join("");
+    if(units.some(([id])=>id===keepReg)) regUnit.value=keepReg;
+  }
+  renderNonVegUnitManage();
+}
+
+function renderNonVegProductManager(){
+    renderNonVegUnitOptions();
+    const box=$("nonVegProductList");
+    if(!box)return;
+    const sid=$("nonVegSupplier")?.value||"";
+    if(!sid){
+      box.innerHTML='<div class="small">先に業者を選択してください。</div>';
+      return;
+    }
+
+    const arr=Object.entries(products[sid]||{}).sort((a,b)=>
+      (a[1].order??9999)-(b[1].order??9999) ||
+      (a[1].name||"").localeCompare(b[1].name||"","ja")
+    );
+
+    if(!arr.length){
+      box.innerHTML='<div class="small">この業者にはまだ商品が登録されていません。</div>';
+      return;
+    }
+
+    // 野菜発注の「登録した商品」と同じ1行レイアウト
+    box.innerHTML=arr.map(([id,p],idx)=>{
+      const kana=p.kana||p.furigana||p.reading||"";
+      const canUp=idx>0, canDown=idx<arr.length-1;
+      return `<div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) 150px 92px auto;gap:6px;align-items:center;margin:6px 0">
+        <input value="${esc(p.name||"")}" data-np-name="${esc(id)}" style="min-width:0;padding:9px;border:1px solid #ddd;border-radius:9px">
+        <input value="${esc(kana)}" placeholder="ふりがな" data-np-kana="${esc(id)}" style="min-width:0;padding:9px;border:1px solid #ddd;border-radius:9px">
+        <select data-np-default-unit="${esc(id)}" style="padding:9px;border:1px solid #ddd;border-radius:9px">
+          <option value="">単位なし</option>
+          ${vals(nonVegUnits).map(([uid,u])=>`<option value="${esc(uid)}" ${p.defaultUnit===uid?"selected":""}>${esc(u.name||"")}</option>`).join("")}
+        </select>
+        <div style="display:flex;gap:4px">
+          <button type="button" data-np-up="${esc(id)}" ${canUp?"":"disabled"} style="width:44px;margin:0;padding:8px 4px;font-size:16px">▲</button>
+          <button type="button" data-np-down="${esc(id)}" ${canDown?"":"disabled"} style="width:44px;margin:0;padding:8px 4px;font-size:16px">▼</button>
+        </div>
+        <button type="button" class="danger" data-np-delete="${esc(id)}" style="width:auto;margin:0">削除</button>
+      </div>`;
+    }).join("");
+
+    box.querySelectorAll("[data-np-kana]").forEach(i=>
+      i.onchange=async()=>{
+        const id=i.dataset.npKana;
+        const sidNow=$("nonVegSupplier")?.value||"";
+        const data={...(products[sidNow]||{})};
+        if(data[id]){
+          data[id]={...data[id],kana:i.value.trim()};
+          await saveNonVegProductsForSupplier(sidNow,data);
+          products[sidNow]=data;
+        }
+      }
+    );
+
+    box.querySelectorAll("[data-np-name]").forEach(i=>
+      i.onchange=async()=>{
+        const id=i.dataset.npName;
+        const sidNow=$("nonVegSupplier")?.value||"";
+        const v=i.value.trim();
+        if(!v)return;
+        const data={...(products[sidNow]||{})};
+        if(data[id]){
+          data[id]={...data[id],name:v};
+          await saveNonVegProductsForSupplier(sidNow,data);
+          products[sidNow]=data;
+          renderProducts();
+        }
+      }
+    );
+
+    box.querySelectorAll("[data-np-default-unit]").forEach(i=>
+      i.onchange=async()=>{
+        const id=i.dataset.npDefaultUnit;
+        const sidNow=$("nonVegSupplier")?.value||"";
+        const data={...(products[sidNow]||{})};
+        if(data[id]){
+          data[id]={...data[id],defaultUnit:i.value||""};
+          await saveNonVegProductsForSupplier(sidNow,data);
+          products[sidNow]=data;
+          renderProducts();
+        }
+      }
+    );
+
+    async function move(id,dir){
+      const sidNow=$("nonVegSupplier")?.value||"";
+      const data={...(products[sidNow]||{})};
+      const entries=Object.entries(data).sort((a,b)=>
+        (a[1].order??9999)-(b[1].order??9999) ||
+        (a[1].name||"").localeCompare(b[1].name||"","ja")
+      );
+      const idx=entries.findIndex(([k])=>k===id), ni=idx+dir;
+      if(idx<0||ni<0||ni>=entries.length)return;
+
+      const tmp=entries[idx]; entries[idx]=entries[ni]; entries[ni]=tmp;
+      const reordered={};
+      entries.forEach(([k,v],n)=>{reordered[k]={...v,order:n};});
+      await saveNonVegProductsForSupplier(sidNow,reordered);
+      products[sidNow]=reordered;
+      renderProducts();
+      renderNonVegProductManager();
+    }
+
+    box.querySelectorAll("[data-np-up]").forEach(b=>
+      b.onclick=()=>move(b.dataset.npUp,-1).catch(e=>{
+        console.error(e);alert("並び替えに失敗しました。");
+      })
+    );
+    box.querySelectorAll("[data-np-down]").forEach(b=>
+      b.onclick=()=>move(b.dataset.npDown,1).catch(e=>{
+        console.error(e);alert("並び替えに失敗しました。");
+      })
+    );
+
+    box.querySelectorAll("[data-np-delete]").forEach(b=>
+      b.onclick=async()=>{
+        if(!confirm("この商品を削除しますか？"))return;
+        const sidNow=$("nonVegSupplier")?.value||"";
+        const data={...(products[sidNow]||{})};
+        delete data[b.dataset.npDelete];
+        try{
+          await saveNonVegProductsForSupplier(sidNow,data);
+          products[sidNow]=data;
+          renderProducts();
+          renderNonVegProductManager();
+        }catch(e){
+          console.error(e);
+          alert("商品の削除に失敗しました。");
+        }
+      }
+    );
+  }
+
+  function renderOrder(){
+    $("nonVegOrderItems").innerHTML=order.length
+      ?order.map((x,i)=>`<div class="orderItem"><span><b>${esc(x.name)}</b>　${esc(x.qty)}${esc(x.unit)}</span><button type="button" data-nonveg-del="${i}">削除</button></div>`).join("")
+      :'<div class="small">まだ商品を追加していません。</div>';
+    document.querySelectorAll("[data-nonveg-del]").forEach(b=>b.onclick=()=>{
+      order.splice(Number(b.dataset.nonvegDel),1);renderOrder();
+    });
+  }
+
+  function switchMode(mode){
+    const supplierMode=mode==="supplier";
+    $("nonVegOrderArea").hidden=!supplierMode;
+
+    // 野菜ページ本体は、元の表示/非表示状態を壊さず、業者モード時だけ隠す。
+    const children=[...$("vegetablePage").children];
+    children.forEach(el=>{
+      if(el.id==="orderModeTabs"||el.id==="nonVegOrderArea"||el.tagName==="H1")return;
+      el.style.display=supplierMode ? "none" : "";
+    });
+
+    $("orderModeVeg").classList.toggle("active",!supplierMode);
+    $("orderModeSupplier").classList.toggle("active",supplierMode);
+    if($("nonVegOrderHeading")) $("nonVegOrderHeading").textContent="🏪 業者発注";
+    if(supplierMode && $("nonVegPreviewCard")){
+      $("nonVegPreviewCard").hidden=true;
+      if($("nonVegEditArea")) $("nonVegEditArea").hidden=false;
+    }
+  }
+
+  function bind(){
+    if(ready||!window.__fb?.db)return false;
+    ready=true;
+    nonVegUnitsRef=window.__fb.ref(window.__fb.db,"supplierOrder/units");
+
+    window.__fb.onValue(root("suppliers"),s=>{suppliers=s.val()||{};renderSuppliers();});
+    window.__fb.onValue(root("products"),s=>{products=s.val()||{};renderProducts();});
+    window.__fb.onValue(nonVegUnitsRef,s=>{
+      nonVegUnits=s.val()||{};
+      renderNonVegUnitOptions();
+      renderNonVegProductManager();
+    });
+
+    $("orderModeVeg").onclick=()=>switchMode("veg");
+    $("orderModeSupplier").onclick=()=>switchMode("supplier");
+
+    $("nonVegAddSupplier").onclick=()=>{
+      $("nonVegSupplierForm").hidden=false;
+      $("nonVegSupplierName").focus();
+    };
+
+    $("nonVegSaveSupplier").onclick=async()=>{
+      const name=$("nonVegSupplierName").value.trim();
+      if(!name)return alert("業者名を入力してください。");
+      const found=Object.entries(suppliers).find(([,v])=>String(v.name||"").trim()===name);
+      if(found){
+        $("nonVegSupplier").value=found[0];
+        renderProducts();
+        $("nonVegSupplierForm").hidden=true;
+        return alert("その業者はすでに登録されています。");
+      }
+      const k=id();
+      await window.__fb.set(root("suppliers/"+k),{name,createdAt:Date.now()});
+      $("nonVegSupplier").value=k;
+      $("nonVegSupplierName").value="";
+      $("nonVegSupplierForm").hidden=true;
+      $("nonVegRegisterMsg").textContent=`✅ 業者「${name}」を登録しました。`;
+      renderProducts();
+    };
+
+    $("nonVegSupplier").onchange=renderProducts;
+    $("nonVegProductSearch").oninput=renderProducts;
+    $("nonVegProductSelect").onchange=()=>{
+      const sid=$("nonVegSupplier").value;
+      const pid=$("nonVegProductSelect").value;
+      const p=products[sid]?.[pid];
+      if(p?.defaultUnit && nonVegUnits[p.defaultUnit]) $("nonVegUnit").value=p.defaultUnit;
+    };
+
+    $("nonVegAddUnit").onclick=addNonVegUnit;
+
+    $("nonVegSaveProduct").onclick=async()=>{
+      const sid=$("nonVegSupplier").value;
+      const name=$("nonVegNewProduct").value.trim();
+      const kana=$("nonVegNewProductKana").value.trim();
+      const defaultUnit=$("nonVegNewProductUnit").value||"";
+      if(!sid)return alert("先に業者を選択してください。");
+      if(!name)return alert("商品名を入力してください。");
+      if(Object.values(products[sid]||{}).some(p=>String(p.name||"").trim()===name))
+        return alert("この業者には同じ商品が登録されています。");
+      const k=id();
+      const current=Object.values(products[sid]||{});
+      const nextOrder=current.reduce((m,p)=>Math.max(m,Number(p.order??-1)), -1)+1;
+      await window.__fb.set(root("products/"+sid+"/"+k),{name,kana,defaultUnit,order:nextOrder,createdAt:Date.now()});
+      $("nonVegNewProduct").value="";
+      $("nonVegNewProductKana").value="";
+      $("nonVegNewProductUnit").value="";
+      $("nonVegRegisterMsg").textContent=`✅ 「${name}」を登録しました。`;
+      renderProducts();
+    };
+
+    $("nonVegAddOrder").onclick=()=>{
+      const sid=$("nonVegSupplier").value;
+      const pid=$("nonVegProductSelect").value;
+      const p=products[sid]?.[pid];
+      if(!sid)return alert("業者を選択してください。");
+      if(!p)return alert("商品を選択してください。");
+      const uid=$("nonVegUnit").value;
+      const unitName=nonVegUnits[uid]?.name||"個";
+      order.push({name:p.name,qty:Math.max(1,Number($("nonVegQty").value)||1),unit:unitName});
+      renderOrder();
+      $("nonVegQty").value="1";
+    };
+
+    $("nonVegMakeOrder").onclick=()=>{
+      if(!order.length)return alert("発注する商品を追加してください。");
+      const date=$("vegDate").value;
+      const d=new Date(date+"T00:00:00");
+      const dateText=Number.isNaN(d.getTime())?"":`${d.getMonth()+1}/${d.getDate()}(${["日","月","火","水","木","金","土"][d.getDay()]})`;
+      $("nonVegPreview").textContent=[dateText,"",...order.map(x=>`${x.name}　${x.qty}${x.unit}`),"","以上宜しくお願い致します。"].join("\n");
+      $("nonVegEditArea").hidden=true;
+      $("nonVegPreviewCard").hidden=false;
+      $("nonVegPreviewCard").scrollIntoView({behavior:"smooth",block:"start"});
+    };
+
+    $("nonVegEdit").onclick=()=>{
+      $("nonVegPreviewCard").hidden=true;
+      $("nonVegEditArea").hidden=false;
+      $("nonVegEditArea").scrollIntoView({behavior:"smooth",block:"start"});
+    };
+    $("nonVegClear").onclick=()=>{
+      order=[];renderOrder();
+      $("nonVegPreviewCard").hidden=true;
+      $("nonVegEditArea").hidden=false;
+    };
+    $("nonVegCopy").onclick=async()=>{
+      try{await navigator.clipboard.writeText($("nonVegPreview").textContent);alert("発注内容をコピーしました");}
+      catch(e){alert("コピーに失敗しました。");}
+    };
+
+    renderOrder();
+    switchMode("veg");
+    return true;
+  }
+
+  const t=setInterval(()=>{if(bind())clearInterval(t);},100);
+  setTimeout(()=>clearInterval(t),30000);
+
+  // LINEは既存の野菜LINEと同じLIFF IDを使い、既存処理には手を加えない。
+  const LIFF_ID="2011073183-zyuU51Lw";
+  async function lineSend(){
+    const text=$("nonVegPreview")?.textContent?.trim();
+    if(!text)return alert("先に発注表を完成してください。");
+    const b=$("nonVegLine");b.disabled=true;b.textContent="LINE準備中…";
+    try{
+      await liff.init({liffId:LIFF_ID,withLoginOnExternalBrowser:false});
+      if(!liff.isInClient()&&!liff.isLoggedIn()){sessionStorage.setItem("nonVegLineText",text);location.href="https://liff.line.me/"+LIFF_ID;return;}
+      if(!liff.isLoggedIn()){sessionStorage.setItem("nonVegLineText",text);liff.login();return;}
+      if(!liff.isApiAvailable("shareTargetPicker"))throw new Error("LINE送信はLINEアプリ内で利用してください。");
+      await liff.shareTargetPicker([{type:"text",text:text}],{isMultiple:false});
+      $("nonVegLineStatus").textContent="LINEに送信しました。";
+    }catch(e){console.error(e);$("nonVegLineStatus").textContent="LINE送信エラー\n"+(e?.message||String(e));}
+    finally{b.disabled=false;b.textContent="LINEで送る";}
+  }
+  document.addEventListener("click",e=>{
+    if(e.target?.id==="nonVegLine")lineSend();
+  });
+})();
+</script>
+
+
+
+
+
+
+<style id="nonVegCopyStyle">
+#nonVegPreviewCard{
+  position:relative !important;
+}
+#nonVegCopy{
+  position:absolute !important;
+  top:22px !important;
+  right:22px !important;
+  width:38px !important;
+  height:38px !important;
+  min-width:38px !important;
+  padding:8px !important;
+  margin:0 !important;
+  border:0 !important;
+  border-radius:10px !important;
+  background:transparent !important;
+  color:#222 !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  z-index:9999 !important;
+  cursor:pointer !important;
+}
+#nonVegCopy svg{
+  width:22px !important;
+  height:22px !important;
+  display:block !important;
+}
+#nonVegLine{
+  background:#06c755!important;
+  color:#fff!important;
+}
+</style>
 </body></html>
