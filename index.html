@@ -635,18 +635,11 @@ html.recipeModalLocked, body.recipeModalLocked{
 </style>
 
 <style id="prepMainActionsLayout">
-/* 仕込み表の操作ボタンを「管理・確認」と「仕込み操作」に分離 */
-.prepMainActions{display:flex;flex-direction:column;gap:12px;align-items:stretch}
-.prepActionGroup{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;padding:10px;border-radius:18px}
-.prepActionGroup>button{min-width:0;width:100%;min-height:52px;padding:10px 8px;font-size:16px;white-space:normal;line-height:1.25}
-.prepActionGroup.prepManagement{background:#f2f6ff;border:2px solid #c9d8ff}
-.prepActionGroup.prepOperation{background:#f7f8f5;border:2px solid #d7ddd0}
-.prepActionGroup.prepManagement>button{border-color:#c9d8ff}
-.prepActionGroup.prepOperation>button{border-color:#d7ddd0}
+.prepMainActions{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;align-items:stretch}
+.prepMainActions>button{min-width:0;width:100%;min-height:52px;padding:10px 8px;font-size:16px;white-space:normal;line-height:1.25}
 @media (max-width:600px){
-  .prepMainActions{gap:10px}
-  .prepActionGroup{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;padding:7px;border-radius:16px}
-  .prepActionGroup>button{min-height:54px;padding:9px 4px;font-size:14px}
+  .prepMainActions{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+  .prepMainActions>button{min-height:54px;padding:9px 4px;font-size:14px}
 }
 </style>
 </head>
@@ -924,18 +917,7 @@ html.recipeModalLocked, body.recipeModalLocked{
 <div id="prepPage" class="page" hidden>
 <h1>🔪 仕込み表</h1>
 <div class="card"><h2>表示するポジション</h2><div class="filters" id="prepFilters"></div></div>
-<div class="card prepMainActions">
-  <div class="prepActionGroup prepManagement">
-    <button class="gray" id="openCostSheet" type="button">💰 原価計算表</button>
-    <button class="gray" id="openRecipeBook" type="button">📖 レシピ帳・登録</button>
-    <button class="gray" id="openIngredientMaster" type="button">🥬 食材管理表</button>
-  </div>
-  <div class="prepActionGroup prepOperation">
-    <button class="gray" id="confirmPrep">仕込み確定</button>
-    <button class="gray" id="clearPrep">仕込み数を全て0</button>
-    <button class="gray" id="uncheckPrep">チェックを全て外す</button>
-  </div>
-</div>
+<div class="card prepMainActions"><button class="gray" id="confirmPrep">仕込み確定</button><button class="gray" id="openRecipeBook" type="button">📖 レシピ帳・登録</button><button class="gray" id="openIngredientMaster" type="button">🥬 食材管理表</button><button class="gray" id="openCostSheet" type="button">💰 原価計算表</button><button class="gray" id="clearPrep">仕込み数を全て0</button><button class="gray" id="uncheckPrep">チェックを全て外す</button></div>
 <div id="prepList"></div>
 <div class="card printControls">
 <h2>🖨️ 紙で見る・PDF保存</h2><div class="small">選択中のポジションを印刷します。「全体」なら全ポジションを印刷します。</div>
@@ -2104,7 +2086,7 @@ $("printWeekend").onclick=e=>{e.preventDefault();printPrep("weekend")};
 .recipeQuickCats button{width:auto;min-width:max-content;margin:0;padding:8px 11px;font-size:14px;background:#e9eaed;color:#333}.recipeQuickCats button.active{background:#3269df;color:#fff;border-color:#3269df;box-shadow:0 1px 3px rgba(50,105,223,.25)}
 .recipeQuickItems{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px}
 .recipeQuickItems button{width:auto;margin:0;padding:8px 10px;font-size:14px;background:#fff;border:1px solid #cfd4dc;color:#222}.recipeQuickEdit{display:none!important;display:block;width:100%;margin:8px 0 0!important;padding:9px!important;font-size:14px!important;background:#fff!important;color:#2867df!important;border:1px solid #c9d7ff!important}.recipeCategoryEdit{display:none!important;margin:6px 0 8px!important;width:100%!important;padding:9px!important;font-size:14px!important;background:#fff!important;color:#2867df!important;border:1px solid #c9d7ff!important}.recipeCategoryEditor{margin:8px 0;padding:10px;background:#f8fafc;border:1px solid #dfe3e8;border-radius:12px}.recipeCategoryEditor[hidden]{display:none!important}.recipeCategoryEditRow{position:relative;display:grid!important;grid-template-columns:44px minmax(240px,1fr) 44px!important;gap:8px!important;align-items:center!important;width:100%!important;min-width:330px!important;box-sizing:border-box!important;margin-top:8px!important;touch-action:none}.recipeCategoryNameEdit{min-width:0;min-height:40px;margin:0;padding:9px 8px;font-size:15px;line-height:20px;border:1px solid #d8dde5;border-radius:9px;background:#fff;color:#222!important;-webkit-text-fill-color:#222!important;opacity:1!important;outline:none;overflow:hidden;white-space:nowrap}.recipeCategoryNameEdit:focus{border-color:#6d9ff5;box-shadow:0 0 0 2px rgba(50,105,223,.12)}.recipeCategoryEditRow button{width:40px!important;height:40px!important;min-width:40px!important;padding:0!important;margin:0!important;background:#fff0f0!important;color:#c62828!important;border:1px solid #efc3c3!important}.recipeCategoryEditRow.dragging{opacity:.55;box-shadow:0 4px 12px rgba(0,0,0,.12)}.recipeCategoryEditRow.dragOver{outline:2px dashed #8aaef5;outline-offset:1px}.recipeCategoryEditorActions{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}.recipeCategoryEditorActions button{margin:0!important;padding:10px!important;font-size:14px!important}.recipeMaterialEditor{margin-top:8px;padding:10px;background:#fff;border:1px solid #dfe3e8;border-radius:12px}.recipeMaterialEditor[hidden]{display:none!important}.recipeMaterialEditTabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px}.recipeMaterialEditTabs button{width:auto;min-width:max-content;margin:0;padding:7px 10px;font-size:13px;background:#eef0f3;color:#333}.recipeMaterialEditTabs button.active{background:#3269df;color:#fff}.recipeMaterialEditRow{position:relative;display:grid;grid-template-columns:minmax(0,1fr) 68px 40px;gap:5px;align-items:center;padding-left:34px;margin-top:6px;touch-action:none;transition:transform .12s,opacity .12s}.recipeMaterialEditRow.dragging{opacity:.55;transform:scale(.99);box-shadow:0 4px 12px rgba(0,0,0,.12)}.recipeMaterialEditRow.dragOver{outline:2px dashed #8aaef5;outline-offset:1px}.recipeMaterialEditRow input{min-width:0;margin:0;padding:9px 7px;font-size:15px;border:1px solid #d8dde5;border-radius:9px}.recipeMaterialEditRow select{min-width:0;margin:0;padding:9px 4px;font-size:14px;border:1px solid #d8dde5;border-radius:9px;background:#fff}.recipeMaterialEditRow button{width:40px!important;height:40px!important;min-width:40px!important;padding:0!important;margin:0!important;background:#fff0f0!important;color:#c62828!important;border:1px solid #efc3c3!important}.recipeMaterialEditorActions{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}.recipeMaterialEditorActions button{margin:0!important;padding:10px!important;font-size:14px!important}
-.recipeDragHandle{position:absolute;left:5px;top:50%;transform:translateY(-50%);width:26px;height:34px;display:flex;align-items:center;justify-content:center;border:1px solid #d7dce5;border-radius:9px;background:#fff;color:#6b7280;font-size:18px;font-weight:700;line-height:1;touch-action:none;user-select:none;-webkit-user-select:none;cursor:grab;z-index:2}.recipeDragHandle:active{cursor:grabbing;background:#eef3ff;color:#2867df;border-color:#9bb7ef}.recipeIngredient.dragging .recipeDragHandle,.recipeMaterialEditRow.dragging .recipeDragHandle{background:#eef3ff;color:#2867df;border-color:#9bb7ef}
+.recipeDragHandle{position:absolute;left:5px;top:50%;transform:translateY(-50%);width:34px;height:40px;display:flex;align-items:center;justify-content:center;border:1px solid #d7dce5;border-radius:9px;background:#fff;color:#6b7280;font-size:18px;font-weight:700;line-height:1;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;cursor:grab;z-index:2}.recipeDragHandle:active{cursor:grabbing;background:#eef3ff;color:#2867df;border-color:#9bb7ef}.recipeIngredient.dragging .recipeDragHandle,.recipeMaterialEditRow.dragging .recipeDragHandle{background:#eef3ff;color:#2867df;border-color:#9bb7ef}
 .recipeText{width:100%;min-height:300px;box-sizing:border-box;font-size:17px;line-height:1.6;padding:13px;border:1px solid #ccc;border-radius:12px;resize:vertical}
 .recipePhotoArea{margin:0 0 10px}.recipePhotoPreview{display:block;width:100%;max-height:360px;object-fit:contain;border-radius:14px;border:1px solid #ddd;background:#f5f6f8}.recipePhotoEmpty{padding:22px 10px;text-align:center;border:1px dashed #cfd4dc;border-radius:14px;background:#f7f8fa;color:#777}.recipePhotoFile{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
 .recipePhotoBar{display:flex;justify-content:flex-end;align-items:center;gap:7px;margin-bottom:6px}.recipePhotoIconOnly{width:46px!important;height:46px!important;min-width:46px!important;padding:0!important;margin:0!important;border:1px solid #d8dee8!important;border-radius:12px!important;background:#eef3ff!important;color:#2167d8!important;font-size:22px!important;display:flex!important;align-items:center;justify-content:center;cursor:pointer}.recipePhotoIconOnly:disabled{opacity:.38}.recipePhotoDeleteIcon{background:#fff5f5!important;border-color:#efc3c3!important}
@@ -2299,6 +2281,17 @@ $("printWeekend").onclick=e=>{e.preventDefault();printPrep("weekend")};
         const y=getY(e);
         if(y==null)return;
         e.preventDefault();
+        // スマホで上端・下端へドラッグした時に食材マスターを自動スクロール
+        const edge=100, speed=16;
+        const scrollHost=box.closest("#recipeModal,#recipeBookModal") || box;
+        if(y<edge){
+          scrollHost.scrollTop=Math.max(0,scrollHost.scrollTop-speed);
+        }else if(y>window.innerHeight-edge){
+          scrollHost.scrollTop=Math.min(
+            Math.max(0,scrollHost.scrollHeight-scrollHost.clientHeight),
+            scrollHost.scrollTop+speed
+          );
+        }
         box.querySelectorAll(".recipeMaterialEditRow").forEach(r=>r.classList.remove("dragOver"));
         const rows=[...box.querySelectorAll("[data-me-row]")].filter(r=>r!==row);
         let target=null,before=true;
@@ -2324,9 +2317,71 @@ $("printWeekend").onclick=e=>{e.preventDefault();printPrep("weekend")};
         clearDrag();renderQuickCats();renderMaterialEditor(cat);
       };
       let pointerId=null;
+      let touchDrag=false;
+
+      // iPhone/Safari用：Pointer Eventsだけに頼らず、Touch Eventsでも直接ドラッグする。
+      // これにより文字選択やブラウザ側の長押し処理を起こさず、⋮⋮から確実に並び替える。
+      const beginTouchDrag=e=>{
+        const t=e.touches&&e.touches[0];
+        if(!t)return;
+        startY=t.clientY;
+        touchDrag=true;
+        begin();
+      };
+      const moveTouchDrag=e=>{
+        if(!touchDrag)return;
+        if(e.cancelable)e.preventDefault();
+        const t=e.touches&&e.touches[0];
+        if(!t)return;
+        update({clientY:t.clientY,cancelable:false,preventDefault(){}});
+      };
+      const endTouchDrag=e=>{
+        if(!touchDrag)return;
+        if(e.cancelable)e.preventDefault();
+        finish({cancelable:false,preventDefault(){}});
+        touchDrag=false;
+      };
+
+      handle.addEventListener("touchstart",e=>{
+        if(!e.touches||!e.touches[0])return;
+        if(holdTimer)clearTimeout(holdTimer);
+        startY=e.touches[0].clientY;
+        // 150msだけ待ってドラッグ開始。iOSの長押し選択より先にこちらを優先する。
+        holdTimer=setTimeout(()=>{
+          beginTouchDrag(e);
+          holdTimer=null;
+        },150);
+      },{passive:false});
+
+      handle.addEventListener("touchmove",e=>{
+        if(holdTimer && !touchDrag){
+          const t=e.touches&&e.touches[0];
+          if(t && Math.abs(t.clientY-startY)>12){
+            clearTimeout(holdTimer);
+            holdTimer=null;
+          }
+          return;
+        }
+        moveTouchDrag(e);
+      },{passive:false});
+
+      handle.addEventListener("touchend",e=>{
+        if(holdTimer){clearTimeout(holdTimer);holdTimer=null;}
+        endTouchDrag(e);
+      },{passive:false});
+
+      handle.addEventListener("touchcancel",()=>{
+        if(holdTimer){clearTimeout(holdTimer);holdTimer=null;}
+        if(touchDrag)clearDrag();
+        touchDrag=false;
+      },{passive:false});
+
+      // マウス/トラックパッドは従来どおりPointer Eventsで操作。
       handle.addEventListener("pointerdown",e=>{
+        if(e.pointerType==="touch")return;
         if(e.pointerType==="mouse" && e.button!==0)return;
         pointerId=e.pointerId;
+        startY=e.clientY;
         if(holdTimer)clearTimeout(holdTimer);
         holdTimer=setTimeout(()=>{
           begin();
@@ -2334,19 +2389,25 @@ $("printWeekend").onclick=e=>{e.preventDefault();printPrep("weekend")};
         },300);
       });
       handle.addEventListener("pointermove",e=>{
-        if(e.pointerId!==pointerId)return;
+        if(e.pointerType==="touch" || e.pointerId!==pointerId)return;
         if(!holding){
-          if(Math.abs(e.clientY-(startY||e.clientY))>10 && holdTimer){clearTimeout(holdTimer);holdTimer=null;}
+          if(Math.abs(e.clientY-startY)>18 && holdTimer){
+            clearTimeout(holdTimer);
+            holdTimer=null;
+          }
           return;
         }
         update(e);
       });
       handle.addEventListener("pointerup",e=>{
-        if(e.pointerId!==pointerId)return;
+        if(e.pointerType==="touch" || e.pointerId!==pointerId)return;
         finish(e);
         pointerId=null;
       });
-      handle.addEventListener("pointercancel",()=>{clearDrag();pointerId=null});
+      handle.addEventListener("pointercancel",e=>{
+        if(e.pointerType==="touch")return;
+        clearDrag();pointerId=null;
+      });
       handle.addEventListener("pointerleave",e=>{
         if(e.pointerType==="mouse" && !holding)clearDrag();
       });
@@ -3262,7 +3323,7 @@ function renderNonVegProductManager(){
 .costHeader h2{margin:0;font-size:22px}.costClose{width:46px!important;height:46px!important;padding:0!important;margin:0!important;background:#e9eaed!important;color:#333!important;font-size:30px!important}
 .costTabs{display:none!important;display:grid;grid-template-columns:1.28fr .72fr;gap:7px;margin:6px 0 12px;align-items:stretch}.costTabs button{margin:0;background:#e9eaed;color:#333;min-height:46px}.costTabs button#costTabCalc{font-size:17px;font-weight:700}.costTabs button#costTabMaster{font-size:14px}.costTabs button.active{background:#3269df;color:#fff}@media(max-width:520px){.costTabs{grid-template-columns:1.22fr .78fr}.costTabs button#costTabCalc{font-size:16px}}
 .costPanel[hidden]{display:none!important}.costCard{background:#f8fafc;border:1px solid #e1e5ea;border-radius:14px;padding:12px;margin:10px 0}.costGrid{display:grid;grid-template-columns:1.2fr .8fr .8fr;gap:7px}.costGrid2{display:grid;grid-template-columns:1fr 1fr;gap:7px}.costList{display:grid;gap:7px;margin-top:10px}.costItem{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;padding:10px;background:#fff;border:1px solid #e0e3e8;border-radius:11px}.costItem b{overflow-wrap:anywhere}.costSub{font-size:13px;color:#666;margin-top:3px}.costItem button{width:auto;margin:0;padding:8px 10px;font-size:14px}.costPriceBtn{background:#eef3ff!important;color:#2167d8!important;border:1px solid #c9d7ff!important}.costDeleteBtn{background:#fff0f0!important;color:#b42318!important;border:1px solid #efc3c3!important}.costTable{width:100%;border-collapse:collapse;margin-top:8px;font-size:15px}.costTable th,.costTable td{border-bottom:1px solid #ddd;padding:8px 5px;text-align:left;vertical-align:middle}.costTable th:last-child,.costTable td:last-child{text-align:right;white-space:nowrap}.costResult{display:grid;grid-template-columns:1fr 1fr;gap:8px}.costResultBox{background:#eef3ff;border-radius:12px;padding:11px}.costResultBox .label{font-size:13px;color:#555}.costResultBox strong{display:block;font-size:21px;margin-top:3px}.costWarn{background:#fff7d6;border:1px solid #ead17b;border-radius:12px;padding:10px;font-size:13px;margin-top:8px}.costEmpty{padding:14px;background:#fff;border:1px dashed #ccd2da;border-radius:12px;color:#777;text-align:center}.costHint{font-size:13px;color:#666;line-height:1.5;margin-top:5px}
-.masterManagerHead{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.masterManagerHead h3{margin:0 0 4px}.masterSmallBtn{width:auto!important;margin:0!important;padding:8px 10px!important;white-space:nowrap}.masterActions{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin:10px 0}.masterActions button{margin:0!important;min-height:44px}.masterFilters{display:grid;grid-template-columns:.9fr 1.1fr;gap:7px;margin:8px 0}.masterHelp{font-size:12px;color:#555;background:#f4f6f8;border-radius:10px;padding:9px;margin:8px 0}.masterStatus{min-height:20px;font-size:13px;font-weight:700;color:#2463cf;margin:3px 0}.masterList{display:grid;gap:9px}.masterCatBlock{background:#f8fafc;border:1px solid #dfe4ea;border-radius:13px;overflow:hidden}.masterCatHead{display:grid;grid-template-columns:34px minmax(0,1fr) auto;gap:6px;align-items:center;padding:9px;background:#eef3ff;border-bottom:1px solid #dfe4ea}.masterCatName{font-size:17px;font-weight:800;min-width:0}.masterCatName input{width:100%;box-sizing:border-box;font-size:17px;font-weight:800;padding:7px 8px;border:1px solid #cbd5e1;border-radius:8px;background:#fff}.masterSortBtns{display:flex;gap:4px}.masterSortBtns button{width:38px!important;min-width:38px!important;height:36px!important;padding:0!important;margin:0!important}.masterCatDelete{background:#fff0f0!important;color:#b42318!important;border:1px solid #efc3c3!important}.masterMaterial{display:grid;grid-template-columns:34px minmax(0,1fr) 88px 78px auto;gap:6px;align-items:center;padding:8px;border-bottom:1px solid #e7eaee;background:#fff}.masterMaterial:last-child{border-bottom:0}.masterMaterial input,.masterMaterial select{min-width:0;margin:0;padding:8px 6px;border:1px solid #d5dbe3;border-radius:8px;background:#fff;font-size:14px}.masterMaterial .materialName{font-weight:700}.masterMaterialBtns{display:flex;gap:4px;align-items:center}.masterMaterialBtns button{width:auto!important;min-width:38px!important;height:36px!important;padding:5px 7px!important;margin:0!important;font-size:13px!important}.masterPriceBtn{background:#eef3ff!important;color:#2167d8!important;border:1px solid #c9d7ff!important}.masterPriceBtn.registered{background:#e7f7ed!important;color:#16834b!important;border-color:#9ed8b7!important}.masterDeleteBtn{background:#fff0f0!important;color:#b42318!important;border:1px solid #efc3c3!important}.masterUnitBlock{background:#f8fafc;border:1px solid #dfe4ea;border-radius:13px;padding:10px;margin-top:10px}.masterUnitHead{font-weight:800;margin-bottom:7px}.masterUnitRow{display:grid;grid-template-columns:34px minmax(0,1fr) auto;gap:6px;align-items:center;margin-top:6px}.masterUnitRow input{min-width:0;margin:0;padding:8px;border:1px solid #d5dbe3;border-radius:8px;background:#fff}.masterEmpty{padding:15px;text-align:center;color:#777;background:#fff;border:1px dashed #cbd2da;border-radius:10px}.masterPriceEditor{grid-column:2/-1;background:#f5f8ff;border:1px solid #d6e1ff;border-radius:9px;padding:8px;display:none}.masterPriceEditor.open{display:grid;grid-template-columns:1fr 1fr;gap:6px}.masterPriceEditor label{font-size:12px;color:#555}.masterPriceEditor input,.masterPriceEditor select{width:100%;box-sizing:border-box;margin:3px 0 0;padding:8px;border:1px solid #ccd5e2;border-radius:7px;background:#fff}.masterPriceActions{grid-column:1/-1;display:flex;gap:6px}.masterPriceActions button{margin:0!important;width:auto!important;padding:8px 12px!important}.masterDragHandle{font-size:18px;text-align:center;color:#888}.masterCatFooter{padding:7px 9px;background:#f8fafc;color:#666;font-size:12px}.masterSelected{outline:2px solid #8aaef5;outline-offset:-2px}@media(max-width:600px){.masterActions{grid-template-columns:1fr}.masterFilters{grid-template-columns:1fr}.masterMaterial{grid-template-columns:30px minmax(0,1fr) 70px 65px}.masterMaterialBtns{grid-column:2/-1;justify-content:flex-end}.masterPriceEditor{grid-column:1/-1}.masterCatHead{grid-template-columns:28px minmax(0,1fr);}.masterCatHead .masterSortBtns{grid-column:2;justify-content:flex-end}.masterCatName input{font-size:16px}}
+.masterManagerHead{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.masterManagerHead h3{margin:0 0 4px}.masterSmallBtn{width:auto!important;margin:0!important;padding:8px 10px!important;white-space:nowrap}.masterActions{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin:10px 0}.masterActions button{margin:0!important;min-height:44px}.masterFilters{display:grid;grid-template-columns:.9fr 1.1fr;gap:7px;margin:8px 0}.masterHelp{font-size:12px;color:#555;background:#f4f6f8;border-radius:10px;padding:9px;margin:8px 0}.masterStatus{min-height:20px;font-size:13px;font-weight:700;color:#2463cf;margin:3px 0}.masterList{display:grid;gap:9px}.masterCatBlock{background:#f8fafc;border:1px solid #dfe4ea;border-radius:13px;overflow:hidden}.masterCatHead{display:grid;grid-template-columns:34px minmax(0,1fr) auto;gap:6px;align-items:center;padding:9px;background:#eef3ff;border-bottom:1px solid #dfe4ea}.masterCatName{font-size:17px;font-weight:800;min-width:0}.masterCatName input{width:100%;box-sizing:border-box;font-size:17px;font-weight:800;padding:7px 8px;border:1px solid #cbd5e1;border-radius:8px;background:#fff}.masterSortBtns{display:flex;gap:4px}.masterSortBtns button{width:38px!important;min-width:38px!important;height:36px!important;padding:0!important;margin:0!important}.masterCatDelete{background:#fff0f0!important;color:#b42318!important;border:1px solid #efc3c3!important}.masterMaterial{display:grid;grid-template-columns:34px minmax(0,1fr) 88px 78px auto;gap:6px;align-items:center;padding:8px;border-bottom:1px solid #e7eaee;background:#fff}.masterMaterial:last-child{border-bottom:0}.masterMaterial input,.masterMaterial select{min-width:0;margin:0;padding:8px 6px;border:1px solid #d5dbe3;border-radius:8px;background:#fff;font-size:14px}.masterMaterial .materialName{font-weight:700}.masterMaterialBtns{display:flex;gap:4px;align-items:center}.masterMaterialBtns button{width:auto!important;min-width:38px!important;height:36px!important;padding:5px 7px!important;margin:0!important;font-size:13px!important}.masterPriceBtn{background:#eef3ff!important;color:#2167d8!important;border:1px solid #c9d7ff!important}.masterPriceBtn.registered{background:#e7f7ed!important;color:#16834b!important;border-color:#9ed8b7!important}.masterDeleteBtn{background:#fff0f0!important;color:#b42318!important;border:1px solid #efc3c3!important}.masterUnitBlock{background:#f8fafc;border:1px solid #dfe4ea;border-radius:13px;padding:10px;margin-top:10px}.masterUnitHead{font-weight:800;margin-bottom:7px}.masterUnitRow{display:grid;grid-template-columns:34px minmax(0,1fr) auto;gap:6px;align-items:center;margin-top:6px}.masterUnitRow input{min-width:0;margin:0;padding:8px;border:1px solid #d5dbe3;border-radius:8px;background:#fff}.masterEmpty{padding:15px;text-align:center;color:#777;background:#fff;border:1px dashed #cbd2da;border-radius:10px}.masterPriceEditor{grid-column:2/-1;background:#f5f8ff;border:1px solid #d6e1ff;border-radius:9px;padding:8px;display:none}.masterPriceEditor.open{display:grid;grid-template-columns:1fr 1fr;gap:6px}.masterPriceEditor label{font-size:12px;color:#555}.masterPriceEditor input,.masterPriceEditor select{width:100%;box-sizing:border-box;margin:3px 0 0;padding:8px;border:1px solid #ccd5e2;border-radius:7px;background:#fff}.masterPriceActions{grid-column:1/-1;display:flex;gap:6px}.masterPriceActions button{margin:0!important;width:auto!important;padding:8px 12px!important}.masterDragHandle{display:flex;align-items:center;justify-content:center;width:34px;height:40px;box-sizing:border-box;font-size:18px;text-align:center;color:#6b7280;border:1px solid #d7dce5;border-radius:9px;background:#fff;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;cursor:grab}.masterMaterial.masterDragging{opacity:.55;transform:scale(.99);box-shadow:0 5px 14px rgba(0,0,0,.14)}.masterMaterial.masterDragOver{outline:2px dashed #8aaef5;outline-offset:1px}.masterCatFooter{padding:7px 9px;background:#f8fafc;color:#666;font-size:12px}.masterSelected{outline:2px solid #8aaef5;outline-offset:-2px}@media(max-width:600px){.masterActions{grid-template-columns:1fr}.masterFilters{grid-template-columns:1fr}.masterMaterial{grid-template-columns:40px minmax(0,1fr) 70px 65px}.masterMaterialBtns{grid-column:2/-1;justify-content:flex-end}.masterPriceEditor{grid-column:1/-1}.masterCatHead{grid-template-columns:28px minmax(0,1fr);}.masterCatHead .masterSortBtns{grid-column:2;justify-content:flex-end}.masterCatName input{font-size:16px}}
 .costRecipeSelect{width:100%!important;min-height:48px!important;font-size:17px!important;font-weight:600!important;padding:10px 12px!important;background:#fff!important;color:#222!important;-webkit-text-fill-color:#222!important}
 .costSearch{width:100%!important;margin:0!important;min-height:44px!important;box-sizing:border-box}.costCategoryTitle{font-size:15px;font-weight:700;margin:12px 0 6px;padding:6px 8px;background:#eef0f3;border-radius:8px}.costPriceEditor{display:none;margin-top:9px;padding:10px;background:#f8fafc;border:1px solid #dfe3e8;border-radius:10px}.costPriceEditor.open{display:block}.costPriceEditor .costGrid{grid-template-columns:1fr 1fr}.costPriceEditor .costGrid>div:last-child{grid-column:1/-1}.costPriceActions{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:8px}.costPriceActions button{margin:0!important;padding:10px!important}.costRegistered{color:#2167d8;font-weight:700}.costNoPrice{color:#9a6700;font-weight:700}
 .costCalcModes{display:grid;grid-template-columns:1fr 1fr;gap:7px}.costCalcModes button{margin:0;background:#e9eaed;color:#333}.costCalcModes button.active{background:#3269df;color:#fff}.freeCostComponents{display:grid;gap:8px}.freeCostRow{display:grid;grid-template-columns:82px minmax(0,1fr) 78px 68px 40px;gap:5px;align-items:center;background:#fff;border:1px solid #e0e3e8;border-radius:10px;padding:7px}.freeCostRow input,.freeCostRow select{min-width:0;font-size:14px;padding:9px 5px}.freeCostRow button{margin:0;width:40px;height:40px;padding:0}.freeCostSummary{display:grid;grid-template-columns:1fr 1fr;gap:8px}.freeCostRegister{margin-top:8px;width:100%}
@@ -3461,6 +3522,223 @@ import {ref,onValue,set,update,remove,push,runTransaction} from "https://www.gst
    box.querySelectorAll('[data-material-cat]').forEach(sel=>sel.onchange=async()=>{const row=sel.closest('.masterMaterial'),oldCat=row.dataset.masterCat,name=row.querySelector('[data-material-name]').value;const newCat=sel.value;if(oldCat===newCat)return;try{await masterTransaction(m=>{const a=m.categories[oldCat]||[],i=a.indexOf(name);if(i<0)throw new Error('食材が見つかりません。');a.splice(i,1);if(!m.categories[newCat])m.categories[newCat]=[];m.categories[newCat].push(name);return m});masterMsg(`「${name}」を「${newCat}」へ移動しました`)}catch(e){sel.value=oldCat;masterMsg(e.message,false)}});
    box.querySelectorAll('[data-material-unit]').forEach(sel=>sel.onchange=async()=>{const row=sel.closest('.masterMaterial'),name=row.querySelector('[data-material-name]').value,u=sel.value;try{await masterTransaction(m=>{m.defaults[name]=u;return m});masterMsg(`「${name}」の基準単位を${u}にしました`)}catch(e){masterMsg(e.message,false)}});
    box.querySelectorAll('[data-mat-up]').forEach(b=>b.onclick=async()=>{const row=b.closest('.masterMaterial'),cat=row.dataset.masterCat,i=Number(b.dataset.matUp);if(i<=0)return;try{await masterTransaction(m=>{[m.categories[cat][i-1],m.categories[cat][i]]=[m.categories[cat][i],m.categories[cat][i-1]];return m});masterMsg('食材の並び順を保存しました')}catch(e){masterMsg(e.message,false)}});
+   // 食材の並び替え：レシピ帳の材料並び替えと同じ方式
+   // DOMをドラッグ中に動かさず、指を離した時だけ配列を変更して再描画する。
+   // これがレシピ帳で正常に動いている方式。
+   box.querySelectorAll('.masterMaterial').forEach(row=>{
+     const handle=row.querySelector('.masterDragHandle');
+     if(!handle)return;
+     const cat=row.dataset.masterCat;
+     const originalName=row.querySelector('[data-material-name]')?.value||'';
+     let holdTimer=null,holding=false,startY=0,dragFrom=null,dropName=null,dropBefore=true;
+     let lastClientY=null,autoScrollFrame=null;
+
+     const getY=e=>e.touches&&e.touches[0]?e.touches[0].clientY:e.clientY;
+
+     // ドラッグ中の自動スクロール
+     // 食材管理表は #costModal 自体がスクロール領域なので、そこを直接動かす。
+     const getScrollHost=()=>{
+       const modal=document.getElementById('costModal');
+       if(modal && modal.scrollHeight>modal.clientHeight+2)return modal;
+       return document.scrollingElement||document.documentElement;
+     };
+     let autoScrollTimer=null;
+
+     const stopAutoScroll=()=>{
+       if(autoScrollTimer!==null){
+         cancelAnimationFrame(autoScrollTimer);
+         autoScrollTimer=null;
+       }
+     };
+
+     const runAutoScroll=()=>{
+       if(!holding || lastClientY==null){
+         stopAutoScroll();
+         return;
+       }
+       const host=getScrollHost();
+       const rect=host.getBoundingClientRect();
+       const edge=110;
+       const y=lastClientY;
+       let delta=0;
+       if(y<rect.top+edge){
+         const ratio=Math.min(1,Math.max(0,(rect.top+edge-y)/edge));
+         delta=-(5+15*ratio);
+       }else if(y>rect.bottom-edge){
+         const ratio=Math.min(1,Math.max(0,(y-(rect.bottom-edge))/edge));
+         delta=(5+15*ratio);
+       }
+       if(!delta){
+         stopAutoScroll();
+         return;
+       }
+       const before=host.scrollTop;
+       host.scrollTop+=delta;
+       if(host.scrollTop===before && host===document.scrollingElement)window.scrollBy(0,delta);
+       autoScrollTimer=requestAnimationFrame(runAutoScroll);
+     };
+
+     const startAutoScroll=()=>{
+       if(autoScrollTimer===null)autoScrollTimer=requestAnimationFrame(runAutoScroll);
+     };
+
+     const clearDrag=()=>{
+       if(holdTimer){clearTimeout(holdTimer);holdTimer=null;}
+       stopAutoScroll();
+       lastClientY=null;
+       holding=false;
+       row.classList.remove('masterDragging');
+       box.querySelectorAll('.masterMaterial').forEach(r=>r.classList.remove('masterDragOver'));
+       dragFrom=null;dropName=null;dropBefore=true;
+     };
+
+     const begin=()=>{
+       const list=getMasterCategories()[cat]||[];
+       const currentName=row.querySelector('[data-material-name]')?.value||originalName;
+       const idx=list.indexOf(currentName);
+       if(idx<0)return;
+       holding=true;
+       dragFrom=idx;
+       dropName=currentName;
+       dropBefore=true;
+       row.classList.add('masterDragging');
+     };
+
+     const update=e=>{
+       if(!holding)return;
+       const y=getY(e);
+       if(y==null)return;
+       lastClientY=y;
+       e.preventDefault();
+
+       // レシピ帳と同じく、ドラッグ中はDOMを動かさない。
+       // 画面上の候補だけを表示する。
+       box.querySelectorAll('.masterMaterial').forEach(r=>r.classList.remove('masterDragOver'));
+       const rows=[...box.querySelectorAll('.masterMaterial')]
+         .filter(r=>r!==row && r.dataset.masterCat===cat);
+
+       let target=null,before=true;
+       for(const r of rows){
+         const rect=r.getBoundingClientRect();
+         if(y<rect.top+rect.height/2){target=r;before=true;break;}
+         if(y<=rect.bottom){target=r;before=false;break;}
+       }
+       if(!target&&rows.length){
+         target=rows[rows.length-1];
+         before=false;
+       }
+
+       if(target){
+         dropName=target.querySelector('[data-material-name]')?.value||'';
+         dropBefore=before;
+         target.classList.add('masterDragOver');
+       }
+     };
+
+     const finish=async e=>{
+       if(holdTimer){clearTimeout(holdTimer);holdTimer=null;}
+       if(!holding){clearDrag();return;}
+       if(e?.cancelable)e.preventDefault();
+
+       const list=getMasterCategories()[cat]||[];
+       const fromName=row.querySelector('[data-material-name]')?.value||originalName;
+       const from=list.indexOf(fromName);
+       const to=dropName?list.indexOf(dropName):-1;
+
+       if(from>=0 && to>=0 && from!==to){
+         const next=[...list];
+         const item=next.splice(from,1)[0];
+         let insertAt=to;
+         if(to>from)insertAt--;
+         if(!dropBefore)insertAt++;
+         insertAt=Math.max(0,Math.min(next.length,insertAt));
+         next.splice(insertAt,0,item);
+
+         try{
+           await masterTransaction(m=>{
+             m.categories[cat]=next;
+             return m;
+           });
+           masterMsg('食材の並び順を保存しました');
+         }catch(err){
+           masterMsg(err.message||'食材の並び順保存に失敗しました',false);
+         }
+       }
+       clearDrag();
+     };
+
+     // iPhone：レシピ帳と同じTouch Events方式
+     handle.addEventListener('touchstart',e=>{
+       if(!e.touches||!e.touches[0])return;
+       if(holdTimer)clearTimeout(holdTimer);
+       startY=e.touches[0].clientY;
+       holdTimer=setTimeout(()=>{
+         begin();
+         holdTimer=null;
+       },300);
+     },{passive:false});
+
+     handle.addEventListener('touchmove',e=>{
+       if(holdTimer && !holding){
+         const t=e.touches&&e.touches[0];
+         if(t && Math.abs(t.clientY-startY)>10){
+           clearTimeout(holdTimer);holdTimer=null;
+         }
+         return;
+       }
+       if(holding){
+         if(e.cancelable)e.preventDefault();
+         update(e);
+         startAutoScroll();
+       }
+     },{passive:false});
+
+     handle.addEventListener('touchend',e=>{
+       if(holdTimer){clearTimeout(holdTimer);holdTimer=null;}
+       if(holding){
+         if(e.cancelable)e.preventDefault();
+         finish({cancelable:false,preventDefault(){}});
+       }else{
+         clearDrag();
+       }
+     },{passive:false});
+
+     handle.addEventListener('touchcancel',()=>{
+       clearDrag();
+     },{passive:false});
+
+     // Mac/PC：同じロジックをPointer Eventsで処理
+     let pointerId=null;
+     handle.addEventListener('pointerdown',e=>{
+       if(e.pointerType==='touch')return;
+       if(e.pointerType==='mouse'&&e.button!==0)return;
+       pointerId=e.pointerId;
+       startY=e.clientY;
+       if(holdTimer)clearTimeout(holdTimer);
+       holdTimer=setTimeout(()=>{
+         begin();
+         try{handle.setPointerCapture(pointerId)}catch(_){}
+       },300);
+     });
+     handle.addEventListener('pointermove',e=>{
+       if(e.pointerType==='touch'||e.pointerId!==pointerId)return;
+       if(!holding){
+         if(Math.abs(e.clientY-startY)>10&&holdTimer){
+           clearTimeout(holdTimer);holdTimer=null;
+         }
+         return;
+       }
+       update(e);
+     });
+     handle.addEventListener('pointerup',e=>{
+       if(e.pointerType==='touch'||e.pointerId!==pointerId)return;
+       finish(e);pointerId=null;
+     });
+     handle.addEventListener('pointercancel',()=>{
+       clearDrag();pointerId=null;
+     });
+   });
+
    box.querySelectorAll('[data-mat-down]').forEach(b=>b.onclick=async()=>{const row=b.closest('.masterMaterial'),cat=row.dataset.masterCat,i=Number(b.dataset.matDown),len=(getMasterCategories()[cat]||[]).length;if(i>=len-1)return;try{await masterTransaction(m=>{[m.categories[cat][i],m.categories[cat][i+1]]=[m.categories[cat][i+1],m.categories[cat][i]];return m});masterMsg('食材の並び順を保存しました')}catch(e){masterMsg(e.message,false)}});
    box.querySelectorAll('[data-mat-delete]').forEach(b=>b.onclick=async()=>{const row=b.closest('.masterMaterial'),cat=row.dataset.masterCat,name=b.dataset.matDelete;if(!confirm(`「${name}」を食材マスターから削除しますか？\nレシピに登録済みの材料名は残りますが、今後マスターから呼び出せなくなります。`))return;try{await masterTransaction(m=>{m.categories[cat]=(m.categories[cat]||[]).filter(n=>n!==name);delete m.defaults[name];delete m.prices[name];return m});masterMsg(`「${name}」を削除しました`)}catch(e){masterMsg(e.message,false)}});
    box.querySelectorAll('[data-price-edit]').forEach(b=>b.onclick=()=>{const ed=box.querySelector(`[data-price-editor="${masterEscName(b.dataset.priceEdit)}"]`);if(ed)ed.classList.toggle('open')});
@@ -3478,35 +3756,6 @@ import {ref,onValue,set,update,remove,push,runTransaction} from "https://www.gst
  $('masterRefresh')?.addEventListener('click',()=>{renderMasters();masterMsg('表示を更新しました')});
  $('costMaterialSearch')?.addEventListener('input',renderMasters);$('costMaterialCategory')?.addEventListener('change',renderMasters);
  function renderUnitManager(){return ''}
-
- function recipeName(id,r){
-   const item=prepItems&&prepItems[id];
-   return String(item?.name || r?.name || r?.title || id || '名称未設定');
- }
-
- function renderRecipes(){
-   const el=$('costRecipeSelect');
-   if(!el)return;
-   const keep=el.value;
-   const rows=Object.entries(recipes||{})
-     .filter(([id,r])=>{
-       const d=r&&typeof r==='object'?r:{};
-       const hasIngredients=Array.isArray(d.ingredients)&&d.ingredients.some(x=>String(x?.name||'').trim() || String(x?.qty||'').trim());
-       const hasText=String(d.text||'').trim()!=='';
-       const hasPhoto=String(d.photo||'').trim()!=='';
-       return hasIngredients||hasText||hasPhoto;
-     })
-     .map(([id,r])=>({id,name:recipeName(id,r)}))
-     .sort((a,b)=>a.name.localeCompare(b.name,'ja'));
-   if(!rows.length){
-     el.innerHTML='<option value="">登録済みのレシピがありません</option>';
-     el.value='';
-     return;
-   }
-   el.innerHTML='<option value="">レシピを選択してください</option>'+rows.map(x=>`<option value="${esc(x.id)}">${esc(x.name)}</option>`).join('');
-   if(rows.some(x=>x.id===keep))el.value=keep;
- }
-
  function renderCalc(){let id=$('costRecipeSelect')?.value,area=$('costCalcArea');if(!area)return;if(!id){area.innerHTML='';return}let r=recipes[id]||{},ings=Array.isArray(r.ingredients)?r.ingredients:[],rows=[],total=0,unknown=[];for(const x of ings){let name=String(x.name||'').trim(),q=parseQ(x.qty),unit=String(x.unit||'').trim();if(!name||q==null)continue;let p=priceFor(name),pu=p?calcPrice(p):null,converted=p?unitToBase(q,unit,p.baseUnit):null,c=pu!=null&&converted!=null?pu*converted:null;if(c!=null)total+=c;else unknown.push(name);rows.push({name,q,unit,c});}let rHtml=rows.length?`<table class="costTable"><thead><tr><th>材料</th><th>使用量</th><th>原価</th></tr></thead><tbody>${rows.map(x=>`<tr><td>${esc(x.name)}</td><td>${esc(x.q)} ${esc(x.unit)}</td><td>${x.c==null?'—':x.c.toFixed(2)+'円'}</td></tr>`).join('')}</tbody></table>`:'<div class="costEmpty">このレシピには材料が登録されていません。</div>';area.innerHTML=`<div class="costCard"><h3>${esc(recipeName(id,r))}</h3>${rHtml}<div class="costResult" style="margin-top:10px"><div class="costResultBox"><div class="label">仕込み原価</div><strong>${total.toFixed(2)}円</strong></div><div class="costResultBox"><div class="label">登録材料数</div><strong>${rows.length}件</strong></div></div>${unknown.length?`<div class="costWarn">⚠️ 単価・単位を計算できない材料：${unknown.map(esc).join('、')}<br>「材料・調味料」で単価を設定してください。</div>`:''}<div class="costCard" style="margin-top:10px"><h3>売価・原価率</h3><div class="costGrid2"><div><label>売価（円）</label><input id="costSellPrice" type="number" min="0" step="1" inputmode="numeric" placeholder="680"></div><div><label>出来上がり数</label><input id="costYield" type="number" min="0" step="0.01" inputmode="decimal" placeholder="10"></div></div><div id="costRateResult" class="costHint" style="font-size:16px;font-weight:700;margin-top:10px">売価と出来上がり数を入力すると表示します。</div></div></div>`;const sell=$('costSellPrice'),yieldEl=$('costYield'),rate=$('costRateResult');const updateRate=()=>{let s=Number(sell.value),y=Number(yieldEl.value);if(!s||!y){rate.textContent='売価と出来上がり数を入力すると表示します。';return}let per=total/y,ratio=per/s*100;rate.textContent=`1個（1人前）原価 ${per.toFixed(2)}円　｜　原価率 ${ratio.toFixed(1)}％`};sell.oninput=yieldEl.oninput=updateRate;const reg=document.createElement('button');reg.type='button';reg.className='freeCostRegister';reg.textContent='🍽️ 商品原価へ登録';reg.onclick=async()=>{if(unknown.length)return alert('単価・単位を計算できない材料があります。先に単価を登録してください。');const y=parseQ(yieldEl.value),sv=Number(sell.value)||0;if(!y||y<=0)return alert('出来上がり数を入力してください。');const name=recipeName(id,r);const cat=await getDefaultProductCategory();await set(push(productCostsRef),{name,category:cat||'未分類',salePrice:sv,cost:total/y,sourceType:'prep',recipeId:id,yield:y,_checked:false,createdAt:Date.now(),updatedAt:Date.now()});alert(`「${name}」を商品原価に登録しました。`);};area.querySelector('.costCard:last-child')?.appendChild(reg);}
  async function getDefaultProductCategory(){return await new Promise(resolve=>{let done=false;onValue(productCategoriesRef,s=>{if(done)return;done=true;const v=s.val()||{};const keys=Object.keys(v).filter(k=>v[k]);resolve(keys[0]||'未分類');},{onlyOnce:true});});}
  function fillFreeCategories(){const el=$('freeProductCategory');if(!el)return;onValue(productCategoriesRef,s=>{const v=s.val()||{};const cats=Object.keys(v).filter(k=>v[k]);const keep=el.value;el.innerHTML=(cats.length?cats:['未分類']).map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('');if(cats.includes(keep))el.value=keep;});}
@@ -3706,109 +3955,4 @@ button, label {
   user-select: none !important;
 }
 </style>
-
-<style id="recipeMobileScrollSaveFix">
-/* iPhone：レシピ編集画面は内容と一緒に縦スクロール。
-   保存ボタンを画面下に固定/追従させず、最後に自然に表示する。 */
-@media (max-width: 520px){
-  #recipeModal{
-    position: fixed !important;
-    inset: 0 !important;
-    padding: 0 !important;
-    overflow-y: auto !important;
-    -webkit-overflow-scrolling: touch !important;
-    touch-action: pan-y !important;
-    box-sizing: border-box !important;
-  }
-
-  #recipeModal .recipeBox{
-    width: 100% !important;
-    max-width: none !important;
-    min-height: auto !important;
-    height: auto !important;
-    max-height: none !important;
-    margin: 0 !important;
-    padding: 10px 12px calc(16px + env(safe-area-inset-bottom)) !important;
-    border-radius: 0 !important;
-    overflow: visible !important;
-    box-sizing: border-box !important;
-    display: block !important;
-  }
-
-  #recipeModal .recipeTopBar{
-    position: sticky !important;
-    top: 0 !important;
-    z-index: 30 !important;
-    background: #fff !important;
-    min-height: 46px !important;
-  }
-
-  #recipeModal .recipeTabs{
-    position: sticky !important;
-    top: 46px !important;
-    z-index: 20 !important;
-    background: #fff !important;
-  }
-
-  #recipeModal .recipePanel{
-    overflow: visible !important;
-  }
-
-  /* 保存ボタンを追従させない */
-  #recipeModal .recipeBtns,
-  #recipeModal #recipeEditPanel .recipeBtns,
-  #recipeModal #recipeViewPanel .recipeBtns{
-    position: static !important;
-    bottom: auto !important;
-    z-index: auto !important;
-    display: block !important;
-    background: transparent !important;
-    margin-top: 12px !important;
-    padding: 0 0 calc(8px + env(safe-area-inset-bottom)) !important;
-  }
-
-  #recipeModal .recipeBtns button{
-    width: 100% !important;
-    min-height: 52px !important;
-    margin: 0 !important;
-    font-size: 17px !important;
-    touch-action: manipulation !important;
-  }
-
-  #recipeModal .recipeIngredient{
-    grid-template-columns: minmax(0,1fr) 68px 68px 40px !important;
-    gap: 5px !important;
-    padding-left: 30px !important;
-  }
-
-  #recipeModal .recipeIngredient input,
-  #recipeModal .recipeIngredient select{
-    min-width: 0 !important;
-    width: 100% !important;
-    box-sizing: border-box !important;
-    font-size: 15px !important;
-    padding: 9px 5px !important;
-  }
-
-  #recipeModal .recipeText{
-    width: 100% !important;
-    min-height: 300px !important;
-    box-sizing: border-box !important;
-    font-size: 16px !important;
-    line-height: 1.6 !important;
-  }
-
-  #recipeModal .recipeQuickItems{
-    max-height: 180px !important;
-    overflow-y: auto !important;
-    -webkit-overflow-scrolling: touch !important;
-  }
-
-  #recipeModal .recipePhotoArea{
-    width: 100% !important;
-    box-sizing: border-box !important;
-  }
-}
-</style>
-
 </body></html>
