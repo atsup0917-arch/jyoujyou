@@ -940,7 +940,7 @@ html.recipeModalLocked, body.recipeModalLocked{
 
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-import {getDatabase,ref,onValue,set,push,remove,update} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-database.js";
+import {getDatabase,ref,onValue,set,push,remove,update,runTransaction,get} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-database.js";
 
 const firebaseConfig={
   projectId:"shopping-list-4bc87",
@@ -948,7 +948,7 @@ const firebaseConfig={
   appId:"1:535896228481:web:d06e634d2d7330630c4380"
 };
 const app=initializeApp(firebaseConfig), db=getDatabase(app);
-window.__fb={db,ref,onValue,set,update,push,remove};
+window.__fb={db,ref,onValue,set,update,push,remove,runTransaction,get};
 const storesRef=ref(db,"stores"), productsRef=ref(db,"products"), itemsRef=ref(db,"items");
 const vegProductsRef=ref(db,"vegetableOrder/products");
 const vegUnitsRef=ref(db,"vegetableOrder/units");
@@ -2366,8 +2366,8 @@ $("printWeekend").onclick=e=>{e.preventDefault();printPrep("weekend")};
       (list.length?list.map((n,i)=>`<div class="recipeMaterialEditRow" data-me-row="${i}"><span class="recipeDragHandle" data-me-drag="${i}" aria-label="材料を並び替え" title="長押しして並び替え">⋮⋮</span><input value="${escRecipe(n)}" data-men="${i}" placeholder="材料名"><select data-meu="${i}">${units.map(u=>`<option value="${escRecipe(u)}" ${(ingredientDefaults[n]||defaultUnitForIngredient(n))===u?"selected":""}>${escRecipe(u)}</option>`).join("")}</select><button type="button" data-med="${i}" title="削除">×</button></div>`).join(""):`<div class="small">このカテゴリーには材料がありません。</div>`)+ 
       `<div class="recipeMaterialEditorActions"><button type="button" id="recipeMaterialAdd">＋ 材料を追加</button><button type="button" id="recipeMaterialDone" class="gray">完了</button></div>`;
     box.querySelectorAll("[data-mec]").forEach(b=>b.onclick=()=>renderMaterialEditor(b.dataset.mec));
-    box.querySelectorAll("[data-men]").forEach(inp=>inp.onchange=()=>{const i=Number(inp.dataset.men),old=ingredientCategories[cat][i],v=inp.value.trim();if(!v)return; if(v!==old){ingredientCategories[cat][i]=v;ingredientDefaults[v]=ingredientDefaults[old]||defaultUnitForIngredient(old);delete ingredientDefaults[old];saveIngredientMaster();}renderQuickCats();renderMaterialEditor(cat)});
-    box.querySelectorAll("[data-meu]").forEach(sel=>sel.onchange=()=>{const n=ingredientCategories[cat][Number(sel.dataset.meu)];ingredientDefaults[n]=sel.value;saveIngredientMaster();});
+    box.querySelectorAll("[data-men]").forEach(inp=>inp.onchange=async()=>{const i=Number(inp.dataset.men),old=ingredientCategories[cat][i],v=inp.value.trim();if(!v)return;if(v!==old){ingredientCategories[cat][i]=v;ingredientDefaults[v]=ingredientDefaults[old]||defaultUnitForIngredient(old);delete ingredientDefaults[old];try{await saveIngredientMaster();}catch(err){ingredientCategories[cat][i]=old;delete ingredientDefaults[v];ingredientDefaults[old]=defaultUnitForIngredient(old);alert("商品名の保存に失敗しました。\n"+(err?.message||err));return;}}renderQuickCats();renderMaterialEditor(cat)});
+    box.querySelectorAll("[data-meu]").forEach(sel=>sel.onchange=async()=>{const n=ingredientCategories[cat][Number(sel.dataset.meu)],old=ingredientDefaults[n];ingredientDefaults[n]=sel.value;try{await saveIngredientMaster();}catch(err){ingredientDefaults[n]=old;alert("商品の単位設定の保存に失敗しました。\n"+(err?.message||err));}});
     let dragIndex=null,dropIndex=null,dropBefore=true;
     box.querySelectorAll("[data-me-row]").forEach(row=>{
       const handle=row.querySelector("[data-me-drag]");
@@ -2441,12 +2441,98 @@ $("printWeekend").onclick=e=>{e.preventDefault();printPrep("weekend")};
         if(e.pointerType==="mouse" && !holding)clearDrag();
       });
     });
-    box.querySelectorAll("[data-med]").forEach(b=>b.onclick=()=>{const i=Number(b.dataset.med),n=ingredientCategories[cat][i];if(!confirm(`「${n}」を材料選択から削除しますか？`))return;ingredientCategories[cat].splice(i,1);delete ingredientDefaults[n];saveIngredientMaster();renderQuickCats();renderMaterialEditor(cat)});
-    document.getElementById("recipeMaterialAdd")?.addEventListener("click",()=>{const n=prompt("追加する材料名を入力してください");if(!n||!n.trim())return;const v=n.trim();if((ingredientCategories[cat]||[]).includes(v))return alert("同じ材料がすでにあります。");ingredientCategories[cat].push(v);ingredientDefaults[v]=defaultUnitForIngredient(v);saveIngredientMaster();renderQuickCats();renderMaterialEditor(cat)});
+    box.querySelectorAll("[data-med]").forEach(b=>b.onclick=async()=>{const i=Number(b.dataset.med),n=ingredientCategories[cat][i];if(!confirm(`「${n}」を材料選択から削除しますか？`))return;const oldDefault=ingredientDefaults[n];ingredientCategories[cat].splice(i,1);delete ingredientDefaults[n];try{await saveIngredientMaster();renderQuickCats();renderMaterialEditor(cat);}catch(err){ingredientCategories[cat].splice(i,0,n);if(oldDefault!=null)ingredientDefaults[n]=oldDefault;alert("商品の削除保存に失敗しました。\n"+(err?.message||err));}});
+    document.getElementById("recipeMaterialAdd")?.addEventListener("click",async()=>{
+      const n=prompt("追加する材料名を入力してください");
+      if(!n||!n.trim())return;
+      const v=n.trim(),targetCategory=cat;
+      if(!ingredientCategories[targetCategory])ingredientCategories[targetCategory]=[];
+      if(ingredientCategories[targetCategory].includes(v))return alert("同じ材料がすでにあります。");
+      const oldCategories=JSON.parse(JSON.stringify(ingredientCategories));
+      const oldDefaults=JSON.parse(JSON.stringify(ingredientDefaults||{}));
+      ingredientCategories[targetCategory].push(v);
+      ingredientDefaults[v]=defaultUnitForIngredient(v);
+      try{
+        await saveIngredientMaster();
+        renderQuickCats();
+        renderMaterialEditor(targetCategory);
+        alert("保存しました。");
+      }catch(err){
+        ingredientCategories=oldCategories;
+        ingredientDefaults=oldDefaults;
+        window.ingredientCategories=ingredientCategories;
+        window.ingredientDefaults=ingredientDefaults;
+        alert("保存に失敗しました。\n"+(err?.message||err));
+      }
+    });
     document.getElementById("recipeMaterialDone")?.addEventListener("click",()=>{box.hidden=true});
   }
-  function saveIngredientMaster(){if(!window.__fb)return;try{window.ingredientCategories=ingredientCategories;window.ingredientDefaults=ingredientDefaults;ingredientPrices=(window.ingredientPrices&&typeof window.ingredientPrices==="object")?window.ingredientPrices:ingredientPrices;window.ingredientPrices=ingredientPrices;window.units=units;const ref=window.__fb.ref(window.__fb.db,"prep/ingredientMaster");window.__fb.update(ref,{categories:ingredientCategories,defaults:ingredientDefaults,categoryOrder:ingredientCategoryOrder(),units,prices:ingredientPrices});}catch(e){console.error(e)}}
-  function loadIngredientMaster(fb){const ref=fb.ref(fb.db,"prep/ingredientMaster");fb.onValue(ref,s=>{const v=s.val();if(v&&v.categories){ingredientCategories=v.categories;ingredientDefaults=v.defaults||{};ingredientPrices={...((v.prices&&typeof v.prices==="object")?v.prices:{}),...((window.ingredientPrices&&typeof window.ingredientPrices==="object")?window.ingredientPrices:{})};window.ingredientCategories=ingredientCategories;window.ingredientDefaults=ingredientDefaults;window.ingredientPrices=ingredientPrices;window.units=units;units=Array.isArray(v.units)&&v.units.length?v.units.filter(x=>String(x||"").trim()).map(x=>String(x).trim()):[...defaultRecipeUnits];ingredientCategoryOrderCache=Array.isArray(v.categoryOrder)?v.categoryOrder.filter(c=>Object.prototype.hasOwnProperty.call(ingredientCategories,c)):Object.keys(ingredientCategories);Object.keys(ingredientCategories).forEach(c=>{if(!ingredientCategoryOrderCache.includes(c))ingredientCategoryOrderCache.push(c)});renderQuickCats();if(!document.getElementById("recipeMaterialEditor").hidden){renderMaterialEditor(ingredientCategoryOrder()[0]||"")}if(!document.getElementById("recipeCategoryEditor").hidden){renderCategoryEditor()}if(!document.getElementById("recipeUnitEditor").hidden){renderUnitEditor()}}else{Object.values(ingredientCategories).flat().forEach(n=>ingredientDefaults[n]=defaultUnitForIngredient(n));ingredientCategoryOrderCache=Object.keys(ingredientCategories);units=[...defaultRecipeUnits];ingredientPrices={};window.ingredientCategories=ingredientCategories;window.ingredientDefaults=ingredientDefaults;window.ingredientPrices=ingredientPrices;window.units=units;renderQuickCats();}})}
+  let ingredientMasterSaveChain=Promise.resolve();
+  let ingredientMasterWriteInProgress=0;
+  async function saveIngredientMaster(){
+    if(!window.__fb)throw new Error("Firebase接続が準備できていません。");
+    ingredientMasterWriteInProgress++;
+    try{
+      const ref=window.__fb.ref(window.__fb.db,"prep/ingredientMaster");
+      const snap=await window.__fb.get(ref);
+      const server=snap.val()&&typeof snap.val()==="object"?snap.val():{};
+
+      const categories=server.categories&&typeof server.categories==="object"
+        ?JSON.parse(JSON.stringify(server.categories)):{};
+      const defaults=server.defaults&&typeof server.defaults==="object"
+        ?JSON.parse(JSON.stringify(server.defaults)):{};
+      const prices=server.prices&&typeof server.prices==="object"
+        ?JSON.parse(JSON.stringify(server.prices)):{};
+      const serverUnits=Array.isArray(server.units)?[...server.units]:[...defaultRecipeUnits];
+      const serverOrder=Array.isArray(server.categoryOrder)?[...server.categoryOrder]:[];
+
+      // 現在画面で編集した材料マスターを反映
+      Object.keys(ingredientCategories||{}).forEach(c=>{
+        categories[c]=[...(ingredientCategories[c]||[])];
+        if(!serverOrder.includes(c))serverOrder.push(c);
+      });
+      Object.keys(ingredientDefaults||{}).forEach(k=>{
+        defaults[k]=ingredientDefaults[k];
+      });
+      Object.keys(ingredientPrices||{}).forEach(k=>{
+        prices[k]=ingredientPrices[k];
+      });
+
+      const payload={
+        categories,
+        defaults,
+        categoryOrder:serverOrder.filter(c=>Object.prototype.hasOwnProperty.call(categories,c)),
+        units:Array.isArray(units)&&units.length?[...units]:serverUnits,
+        prices
+      };
+
+      // 材料マスターだけを保存。レシピ保存とは完全に分離。
+      await window.__fb.set(ref,payload);
+
+      // 保存直後にFirebaseから再取得し、実際に保存された値を画面の正本にする。
+      const verify=await window.__fb.get(ref);
+      const saved=verify.val();
+      if(!saved||!saved.categories)throw new Error("材料マスターの保存確認に失敗しました。");
+
+      ingredientCategories=saved.categories;
+      ingredientDefaults=saved.defaults||{};
+      ingredientPrices=saved.prices||{};
+      units=Array.isArray(saved.units)&&saved.units.length?saved.units:[...defaultRecipeUnits];
+      ingredientCategoryOrderCache=Array.isArray(saved.categoryOrder)
+        ?saved.categoryOrder:Object.keys(ingredientCategories);
+
+      window.ingredientCategories=ingredientCategories;
+      window.ingredientDefaults=ingredientDefaults;
+      window.ingredientPrices=ingredientPrices;
+      window.units=units;
+    }finally{
+      ingredientMasterWriteInProgress=Math.max(0,ingredientMasterWriteInProgress-1);
+    }
+  }
+  function loadIngredientMaster(fb){const ref=fb.ref(fb.db,"prep/ingredientMaster");fb.onValue(ref,s=>{
+    // 保存直後にFirebaseの古いonValueが返ってきても、ローカルの追加内容を上書きしない。
+    if(ingredientMasterWriteInProgress>0)return;
+    const v=s.val();if(v&&v.categories){ingredientCategories=v.categories;ingredientDefaults=v.defaults||{};ingredientPrices={...((v.prices&&typeof v.prices==="object")?v.prices:{}),...((window.ingredientPrices&&typeof window.ingredientPrices==="object")?window.ingredientPrices:{})};window.ingredientCategories=ingredientCategories;window.ingredientDefaults=ingredientDefaults;window.ingredientPrices=ingredientPrices;window.units=units;units=Array.isArray(v.units)&&v.units.length?v.units.filter(x=>String(x||"").trim()).map(x=>String(x).trim()):[...defaultRecipeUnits];ingredientCategoryOrderCache=Array.isArray(v.categoryOrder)?v.categoryOrder.filter(c=>Object.prototype.hasOwnProperty.call(ingredientCategories,c)):Object.keys(ingredientCategories);Object.keys(ingredientCategories).forEach(c=>{if(!ingredientCategoryOrderCache.includes(c))ingredientCategoryOrderCache.push(c)});renderQuickCats();if(!document.getElementById("recipeMaterialEditor").hidden){renderMaterialEditor(ingredientCategoryOrder()[0]||"")}if(!document.getElementById("recipeCategoryEditor").hidden){renderCategoryEditor()}if(!document.getElementById("recipeUnitEditor").hidden){renderUnitEditor()}}else{Object.values(ingredientCategories).flat().forEach(n=>ingredientDefaults[n]=defaultUnitForIngredient(n));ingredientCategoryOrderCache=Object.keys(ingredientCategories);units=[...defaultRecipeUnits];ingredientPrices={};window.ingredientCategories=ingredientCategories;window.ingredientDefaults=ingredientDefaults;window.ingredientPrices=ingredientPrices;window.units=units;renderQuickCats();}})}
   function renderIngredients(){
     const box=document.getElementById("recipeIngredients");
     box.innerHTML=currentIngredients.length?currentIngredients.map((x,i)=>{const a=normalizeIngredient(x);return `<div class="recipeIngredient" data-ri-key="${i}"><span class="recipeDragHandle" data-ri-drag="${i}" aria-label="材料を並び替え" title="長押しして並び替え">⋮⋮</span><input class="riName" value="${escRecipe(a.name)}" placeholder="材料名"><input class="riQty" type="text" inputmode="decimal" enterkeyhint="next" value="${escRecipe(a.qty)}" placeholder="数量 1/2" autocomplete="off"><select class="riUnit">${units.map(u=>`<option value="${escRecipe(u)}" ${a.unit===u?"selected":""}>${escRecipe(u)}</option>`).join("")}</select><button class="removeIngredient" type="button" title="削除">×</button></div>`}).join(""):'<div class="small">まだ材料がありません。「＋ 材料を追加」または下の材料をタップしてください。</div>';
@@ -2624,7 +2710,16 @@ $("printWeekend").onclick=e=>{e.preventDefault();printPrep("weekend")};
     document.querySelectorAll("#recipeEditPanel .recipeTabs button").forEach(b=>b.onclick=()=>setEditTab(b.dataset.rp));document.getElementById("recipeAddIngredient").onclick=()=>addIngredient("");const materialEditBtn=document.getElementById("recipeQuickEdit");if(materialEditBtn){const handleMaterialEditTap=(e)=>{if(e){e.preventDefault();e.stopPropagation()}const now=Date.now();if(Number(materialEditBtn.dataset.lastMaterialEditTap||0)>now-350)return;materialEditBtn.dataset.lastMaterialEditTap=String(now);const box=document.getElementById("recipeMaterialEditor");if(!box)return;const catEditor=document.getElementById("recipeCategoryEditor"),unitEditor=document.getElementById("recipeUnitEditor");if(catEditor)catEditor.hidden=true;if(unitEditor)unitEditor.hidden=true;box.hidden=!box.hidden;if(!box.hidden)renderMaterialEditor(ingredientCategoryOrder()[0]||"")};materialEditBtn.onclick=handleMaterialEditTap;materialEditBtn.onpointerup=handleMaterialEditTap}document.getElementById("recipeCategoryEdit").onclick=()=>{const box=document.getElementById("recipeCategoryEditor");box.hidden=!box.hidden;if(!box.hidden)renderCategoryEditor()};document.getElementById("recipeUnitEdit").onclick=()=>{const box=document.getElementById("recipeUnitEditor");box.hidden=!box.hidden;if(!box.hidden)renderUnitEditor()};
     document.getElementById("recipePhotoInput").onchange=async e=>{const file=e.target.files?.[0];if(!file)return;try{currentRecipePhoto=await resizeRecipePhoto(file);showRecipePhoto(currentRecipePhoto)}catch(err){console.error(err);alert("写真の読み込みに失敗しました。")}};
     document.getElementById("recipePhotoDelete").onclick=()=>{if(!currentRecipePhoto)return;if(!confirm("写真を削除しますか？"))return;currentRecipePhoto="";document.getElementById("recipePhotoInput").value="";showRecipePhoto("")};document.getElementById("recipePhotoView").onclick=()=>openRecipePhotoViewer(currentRecipePhoto);document.getElementById("recipePhotoViewerClose").onclick=closeRecipePhotoViewer;document.getElementById("recipePhotoViewer").onclick=e=>{if(e.target===e.currentTarget)closeRecipePhotoViewer()};
-    document.getElementById("recipeSave").onclick=async()=>{if(!currentRecipeId){alert("レシピ品目を選んでください");return}const text=document.getElementById("recipeText").value;try{await fb.update(recipesRef,{[currentRecipeId]:{text,photo:currentRecipePhoto||"",ingredients:currentIngredients.filter(x=>String(x.name||"").trim()).map(normalizeIngredient)}});closeRecipe();alert("レシピを保存しました")}catch(err){alert("レシピの保存に失敗しました。\n"+(err?.message||err))}};
+    document.getElementById("recipeSave").onclick=async()=>{
+      if(!currentRecipeId){alert("レシピ品目を選んでください");return}
+      const text=document.getElementById("recipeText").value;
+      try{
+        await fb.update(recipesRef,{[currentRecipeId]:{text,photo:currentRecipePhoto||"",ingredients:currentIngredients.filter(x=>String(x.name||"").trim()).map(normalizeIngredient)}});
+        alert("保存しました。");
+      }catch(err){
+        alert("レシピの保存に失敗しました。\n"+(err?.message||err));
+      }
+    };
     const bookBtn=document.getElementById("openRecipeBook");if(bookBtn)bookBtn.onclick=e=>{e.preventDefault();e.stopPropagation();renderRecipeBook();document.getElementById("recipeBookModal").style.display="block"};
     const observer=new MutationObserver(()=>{bindPrepRecipeButtons();decoratePrepPhotoButtons()});observer.observe(document.getElementById("prepList"),{childList:true,subtree:true});bindPrepRecipeButtons();renderRecipeBook();
   }
@@ -3345,7 +3440,42 @@ import {ref,onValue,set,update,remove,push,get} from "https://www.gstatic.com/fi
  function updateFreeCalc(){const area=$('freeCostResult');if(!area)return;let total=0,bad=[];const rows=[...($('freeCostComponents')?.children||[])];rows.forEach(r=>{const c=calcFreeRow(r);if(c.cost==null)bad.push(c.label);else total+=c.cost;});const sale=Number($('freeProductSale').value)||0;const rate=sale?total/sale*100:null;area.innerHTML=`<div class="costCard"><div class="freeCostSummary"><div class="costResultBox"><div class="label">商品原価</div><strong>${total.toFixed(2)}円</strong></div><div class="costResultBox"><div class="label">原価率</div><strong>${rate==null?'—':rate.toFixed(1)+'％'}</strong></div></div>${bad.length?`<div class="costWarn">⚠️ 計算できない項目：${bad.map(esc).join('、')}</div>`:''}<button type="button" id="freeCostRegister" class="freeCostRegister">🍽️ 商品原価へ登録</button></div>`;const b=$('freeCostRegister');b.onclick=async()=>{const name=$('freeProductName').value.trim();if(!name)return alert('商品名を入力してください。');if(!rows.length)return alert('材料を1つ以上追加してください。');if(bad.length)return alert('原価を計算できない項目があります。\n'+bad.join('、'));const components=rows.map(r=>({type:r.querySelector('.freeCostType').value,name:r.querySelector('.freeCostName').value,qty:r.querySelector('.freeCostQty').value,unit:r.querySelector('.freeCostUnit').value}));const cat=$('freeProductCategory').value||'未分類';await set(push(productCostsRef),{name,category:cat,salePrice:sale,cost:total,sourceType:'free',components,_checked:false,createdAt:Date.now(),updatedAt:Date.now()});alert(`「${name}」を商品原価に登録しました。`);};}
  $('openCostSheet')?.addEventListener('click',()=>{$('costModal').hidden=false;$('costTabCalc').classList.add('active');$('costTabMaster').classList.remove('active');$('costMasterPanel').hidden=true;$('costCalcPanel').hidden=false;renderMasters();renderRecipes();});$('costClose')?.addEventListener('click',()=>{$('costModal').hidden=true});$('costModal')?.addEventListener('click',e=>{if(e.target===e.currentTarget)$('costModal').hidden=true});$('costMaterialSearch')?.addEventListener('input',renderMasters);
  $('costTabMaster')?.addEventListener('click',()=>{$('costTabMaster').classList.add('active');$('costTabCalc').classList.remove('active');$('costMasterPanel').hidden=false;$('costCalcPanel').hidden=true;renderMasters()});$('costTabCalc')?.addEventListener('click',()=>{$('costTabCalc').classList.add('active');$('costTabMaster').classList.remove('active');$('costMasterPanel').hidden=true;$('costCalcPanel').hidden=false;renderRecipes();});$('costRecipeSelect')?.addEventListener('change',renderCalc); $('costCalcModeRecipe')?.addEventListener('click',()=>{$('costCalcModeRecipe').classList.add('active');$('costCalcModeFree').classList.remove('active');$('costRecipeCalcPanel').hidden=false;$('costFreeCalcPanel').hidden=true;renderRecipes();renderCalc()});$('costCalcModeFree')?.addEventListener('click',()=>{$('costCalcModeFree').classList.add('active');$('costCalcModeRecipe').classList.remove('active');$('costRecipeCalcPanel').hidden=true;$('costFreeCalcPanel').hidden=false;fillFreeCategories();if(!$('freeCostComponents').children.length)addFreeRow();updateFreeCalc()});$('freeCostAddComponent')?.addEventListener('click',()=>addFreeRow());$('freeProductSale')?.addEventListener('input',updateFreeCalc);$('freeProductName')?.addEventListener('input',updateFreeCalc);
- onValue(costRef,s=>{legacyMasters=s.val()||{};if(Object.keys(legacyMasters).length&&window.ingredientPrices&&Object.keys(window.ingredientPrices).length===0){Object.values(legacyMasters).forEach(m=>{if(m?.name&&!window.ingredientPrices[m.name])window.ingredientPrices[m.name]={packQty:m.packQty,packUnit:m.packUnit||(window.ingredientDefaults&&window.ingredientDefaults[m.name])||'g',packPrice:m.packPrice,baseUnit:m.baseUnit||(window.ingredientDefaults&&window.ingredientDefaults[m.name])||'g'}});if(typeof window.saveIngredientMaster==='function')window.saveIngredientMaster();}renderMasters();if(!$('costCalcPanel').hidden)renderCalc()});onValue(ingredientMasterRef,s=>{const v=s.val()||{};if(v.prices&&typeof v.prices==='object')window.ingredientPrices=v.prices;renderMasters();if(!$('costCalcPanel').hidden)renderCalc()});onValue(prepItemsRef,s=>{prepItems=s.val()||{};renderRecipes();if(!$('costCalcPanel').hidden)renderCalc()});onValue(recipesRef,s=>{recipes=s.val()||{};renderRecipes();if(!$('costCalcPanel').hidden)renderCalc()});
+ onValue(costRef,async s=>{
+   legacyMasters=s.val()||{};
+   // 旧原価データから単価を移行する場合でも、材料カテゴリー全体を保存し直さない。
+   // ここでsaveIngredientMaster()を呼ぶと、loadIngredientMaster()より先に
+   // 初期値のingredientCategoriesでprep/ingredientMaster全体を上書きしてしまい、
+   // 「その他」に追加した材料が再読み込み時に消える原因になる。
+   if(Object.keys(legacyMasters).length&&window.ingredientPrices&&Object.keys(window.ingredientPrices).length===0){
+     Object.values(legacyMasters).forEach(m=>{
+       if(m?.name&&!window.ingredientPrices[m.name]){
+         window.ingredientPrices[m.name]={
+           packQty:m.packQty,
+           packUnit:m.packUnit||(window.ingredientDefaults&&window.ingredientDefaults[m.name])||'g',
+           packPrice:m.packPrice,
+           baseUnit:m.baseUnit||(window.ingredientDefaults&&window.ingredientDefaults[m.name])||'g'
+         };
+       }
+     });
+     try{
+       // 単価だけを既存の材料マスターへ部分更新する。
+       await update(ingredientMasterRef,{prices:window.ingredientPrices});
+     }catch(e){
+       console.error("旧原価単価の移行保存に失敗しました",e);
+     }
+   }
+   renderMasters();
+   if(!$('costCalcPanel').hidden)renderCalc();
+ });onValue(ingredientMasterRef,s=>{
+   // 材料マスターの正本は上部の loadIngredientMaster() に一本化する。
+   // ここで window.ingredientCategories を再代入すると、材料編集で追加した直後に
+   // 別リスナーの古いスナップショットで「もずく」等が消えることがあるため、
+   // 商品原価側ではカテゴリー・材料・単位を上書きしない。
+   const v=s.val()||{};
+   if(v.prices&&typeof v.prices==='object') window.ingredientPrices=v.prices;
+   renderMasters();
+   if(!$('costCalcPanel').hidden)renderCalc();
+ });onValue(prepItemsRef,s=>{prepItems=s.val()||{};renderRecipes();if(!$('costCalcPanel').hidden)renderCalc()});onValue(recipesRef,s=>{recipes=s.val()||{};renderRecipes();if(!$('costCalcPanel').hidden)renderCalc()});
  // 既存の編集ボタン：他の編集欄を閉じてから元の処理を実行
  function stabilizeEditButtons(){const pairs=[['recipeQuickEdit','recipeMaterialEditor',['recipeCategoryEditor','recipeUnitEditor']],['recipeCategoryEdit','recipeCategoryEditor',['recipeMaterialEditor','recipeUnitEditor']],['recipeUnitEdit','recipeUnitEditor',['recipeMaterialEditor','recipeCategoryEditor']]];pairs.forEach(([bid,boxId,others])=>{const b=$(bid);if(!b||b.dataset.costWrapped)return;const old=b.onclick;b.onclick=e=>{others.forEach(id=>{let x=$(id);if(x)x.hidden=true});if(old)old.call(b,e)};b.dataset.costWrapped='1'});}
  const obs=new MutationObserver(stabilizeEditButtons);obs.observe(document.body,{childList:true,subtree:true});setTimeout(stabilizeEditButtons,500);setTimeout(stabilizeEditButtons,1500);
