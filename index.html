@@ -794,6 +794,46 @@ html.recipeModalLocked, body.recipeModalLocked{
   }
 }
 </style>
+
+<style id="all-search-voice-style">
+.voiceSearchAnyWrap{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  width:100%;
+}
+.voiceSearchAnyWrap > input{
+  flex:1;
+  min-width:0;
+}
+.voiceSearchAnyBtn{
+  flex:0 0 auto;
+  width:54px;
+  height:54px;
+  border:1px solid #cfd8ea;
+  border-radius:16px;
+  background:#f3f6fb;
+  color:#245fca;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:0;
+  cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+}
+.voiceSearchAnyBtn svg{
+  width:22px;
+  height:22px;
+}
+.voiceSearchAnyBtn.is-listening{
+  background:#e8f0ff;
+  border-color:#5b84df;
+}
+@media(max-width:600px){
+  .voiceSearchAnyBtn{width:52px;height:52px;}
+}
+</style>
+
 </head>
 <body><div class="wrap">
 <div class="navtabs navtabs3">
@@ -1068,11 +1108,10 @@ html.recipeModalLocked, body.recipeModalLocked{
 </div>
 <div id="prepPage" class="page" hidden>
 <h1>🔪 仕込み表</h1>
-<div class="card"><h2>表示するポジション</h2><div class="filters" id="prepFilters"></div></div>
-<div class="card prepRecipeSearchCard" id="prepRecipeSearchCard">
+<div class="card"><h2>表示するポジション</h2><div class="filters" id="prepFilters"></div></div><div class="card prepRecipeSearchCard" id="prepRecipeSearchCard">
   <h2>📖 仕込みレシピを検索</h2>
   <div class="prepRecipeSearchRow">
-    <input id="prepRecipeSearch" type="search" placeholder="🔎 レシピ名を検索" autocomplete="off" aria-label="仕込みレシピを検索">
+    <input id="prepRecipeSearch" type="search" placeholder="🔎 仕込みレシピ名を検索" autocomplete="off" aria-label="仕込みレシピを検索">
     <button type="button" id="prepRecipeVoiceSearch" class="prepRecipeVoiceBtn" aria-label="音声で仕込みレシピを検索" title="音声で検索">
       <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
         <path d="M12 14a3 3 0 0 0 3-3V6a3 3 0 1 0-6 0v5a3 3 0 0 0 3 3Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
@@ -1082,7 +1121,6 @@ html.recipeModalLocked, body.recipeModalLocked{
   </div>
   <div id="prepRecipeSearchResults" class="prepRecipeSearchResults" aria-live="polite"></div>
 </div>
-
 <div class="card prepMainActions">
   <div class="prepActionGroup prepManagement">
     <button class="gray" id="openCostSheet" type="button">💰 原価計算表</button>
@@ -4207,7 +4245,7 @@ import {ref,onValue,set,update,remove,push,runTransaction} from "https://www.gst
   direct.classList.add('is-open');
   openDirect();
 });
-$('productDirectCancel')?.addEventListener('click',()=>{
+$('directProductCancel')?.addEventListener('click',()=>{
   closeDirect();
   $('productDirectAdd')?.classList.remove('is-open');
 });$('directProductSave')?.addEventListener('click',saveDirect);$('directProductSale')?.addEventListener('input',calcRate);$('directProductCost')?.addEventListener('input',calcRate);
@@ -4313,117 +4351,254 @@ button, label {
   });
 })();
 </script>
-</body></html>
 
+<script id="all-search-voice-script">
+(function(){
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const targets = new Set(["productSearch","vegProductSearch","nonVegProductSearch","productCostSearch"]);
+  const icon = `<svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+<path d="M12 14a3 3 0 0 0 3-3V6a3 3 0 1 0-6 0v5a3 3 0 0 0 3 3Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+<path d="M19 11a7 7 0 0 1-14 0M12 18v4M8 22h8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+</svg>`;
 
-<style id="prepRecipeSearchStyle">
-.prepRecipeSearchCard{margin-top:10px}
-.prepRecipeSearchCard h2{margin-bottom:10px}
-.prepRecipeSearchRow{display:grid;grid-template-columns:minmax(0,1fr) 58px;gap:8px;align-items:stretch}
-.prepRecipeSearchRow input{width:100%;box-sizing:border-box;min-height:50px;border:2px solid #d7dce5;border-radius:16px;padding:0 14px;font-size:18px;background:#fff}
-.prepRecipeVoiceBtn{width:58px!important;min-height:50px!important;margin:0!important;padding:0!important;border:2px solid #c9d7ff!important;border-radius:16px!important;background:#f7f9ff!important;color:#3567d6!important;display:flex!important;align-items:center!important;justify-content:center!important}
-.prepRecipeVoiceBtn svg{display:block}
-.prepRecipeSearchResults{margin-top:8px;display:grid;gap:6px}
-.prepRecipeSearchResult{width:100%;text-align:left;background:#f7f8fb;border:1px solid #d9dee8;border-radius:12px;padding:11px 13px;font-size:17px;font-weight:700;color:#2457c5;cursor:pointer}
-.prepRecipeSearchResult small{display:block;color:#777;font-weight:400;margin-top:3px}
-.prepRecipeSearchEmpty{font-size:14px;color:#777;padding:6px 2px}
-@media (max-width:520px){
-  .prepRecipeSearchRow{grid-template-columns:minmax(0,1fr) 54px}
-  .prepRecipeVoiceBtn{width:54px!important}
-}
-</style>
+  function addButton(input){
+    if(!input || input.id==="costMaterialSearch" || input.dataset.voiceSearchReady==="1") return;
+    input.dataset.voiceSearchReady="1";
 
+    const wrap=document.createElement("div");
+    wrap.className="voiceSearchAnyWrap";
+    input.parentNode.insertBefore(wrap,input);
+    wrap.appendChild(input);
 
-<script type="module" id="prepRecipeSearchScript">
-import {ref,onValue} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-database.js";
+    const button=document.createElement("button");
+    button.type="button";
+    button.className="voiceSearchAnyBtn";
+    button.innerHTML=icon;
+    button.setAttribute("aria-label","音声で検索");
+    button.title="音声で検索";
+    wrap.appendChild(button);
 
-(()=>{
-  const waitForFb=()=>new Promise(resolve=>{
-    if(window.__fb){resolve(window.__fb);return;}
-    let n=0;
-    const t=setInterval(()=>{
-      if(window.__fb){clearInterval(t);resolve(window.__fb);}
-      else if(++n>100){clearInterval(t);resolve(null);}
-    },100);
-  });
-
-  const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-  const input=document.getElementById('prepRecipeSearch');
-  const voice=document.getElementById('prepRecipeVoiceSearch');
-  const results=document.getElementById('prepRecipeSearchResults');
-  if(!input||!voice||!results)return;
-
-  let items={},recipes={};
-
-  function recipeRows(){
-    const ids=new Set([...Object.keys(items||{}),...Object.keys(recipes||{})]);
-    return [...ids].map(id=>{
-      const item=items[id]||{};
-      const r=recipes[id]||{};
-      const name=String(item.name||r.name||r.title||id).trim();
-      return {id,name,hasRecipe:!!(r.text||r.photo||Array.isArray(r.ingredients)&&r.ingredients.length)};
-    }).filter(x=>x.name);
-  }
-
-  function render(){
-    const q=String(input.value||'').trim().toLowerCase();
-    if(!q){results.innerHTML='';return;}
-    const rows=recipeRows().filter(x=>x.name.toLowerCase().includes(q)).slice(0,20);
-    if(!rows.length){
-      results.innerHTML='<div class="prepRecipeSearchEmpty">該当する仕込みレシピがありません。</div>';
+    if(!SpeechRecognition){
+      button.addEventListener("click",()=>alert("このブラウザでは音声検索を利用できません。iPhoneのSafariでお試しください。"));
       return;
     }
-    results.innerHTML=rows.map(x=>`<button type="button" class="prepRecipeSearchResult" data-prep-recipe-id="${esc(x.id)}">${esc(x.name)}${x.hasRecipe?'<small>レシピ帳に登録済み</small>':'<small>レシピ未登録</small>'}</button>`).join('');
-    results.querySelectorAll('[data-prep-recipe-id]').forEach(btn=>{
-      btn.addEventListener('click',()=>{
-        const id=btn.dataset.prepRecipeId;
-        const open=document.getElementById('openRecipeBook');
-        if(!open)return;
-        open.click();
-        let tries=0;
-        const timer=setInterval(()=>{
-          const target=document.querySelector(`#recipeBookList [data-recipe-book-id="${CSS.escape(id)}"]`);
-          if(target){
-            clearInterval(timer);
-            target.click();
-          }else if(++tries>30){
-            clearInterval(timer);
-          }
-        },100);
-      });
-    });
-  }
 
-  input.addEventListener('input',render);
-
-  const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
-  if(SpeechRecognition){
     let recognition=null;
-    voice.addEventListener('click',()=>{
-      if(recognition){try{recognition.stop()}catch(e){};return;}
-      recognition=new SpeechRecognition();
-      recognition.lang='ja-JP';
-      recognition.interimResults=false;
-      recognition.continuous=false;
-      recognition.onresult=e=>{
-        const value=e.results?.[0]?.[0]?.transcript||'';
-        input.value=value;
-        render();
-      };
-      recognition.onerror=()=>{recognition=null};
-      recognition.onend=()=>{recognition=null};
-      try{recognition.start()}catch(e){recognition=null}
-    });
-  }else{
-    voice.addEventListener('click',()=>{
-      alert('このブラウザでは音声検索を利用できません。iPhoneのSafariでお試しください。');
+    let listening=false;
+
+    function setListening(flag){
+      listening=flag;
+      button.classList.toggle("is-listening",flag);
+      // マイクのSVGは開始中も終了後も絶対に変更しない
+      button.innerHTML=icon;
+    }
+
+    button.addEventListener("click",function(){
+      if(listening){
+        try{recognition && recognition.stop();}catch(e){}
+        return;
+      }
+      try{
+        recognition=new SpeechRecognition();
+        recognition.lang="ja-JP";
+        recognition.continuous=false;
+        recognition.interimResults=true;
+        recognition.maxAlternatives=1;
+        recognition.onstart=()=>setListening(true);
+        recognition.onresult=function(event){
+          let transcript="";
+          for(let i=event.resultIndex;i<event.results.length;i++){
+            transcript+=event.results[i][0].transcript;
+          }
+          transcript=transcript.trim();
+          if(transcript){
+            input.value=transcript;
+            input.dispatchEvent(new Event("input",{bubbles:true}));
+            input.dispatchEvent(new Event("change",{bubbles:true}));
+          }
+        };
+        recognition.onerror=function(event){
+          setListening(false);
+          if(event.error!=="aborted" && event.error!=="no-speech"){
+            alert("音声検索を開始できませんでした。マイクの使用を許可して、もう一度お試しください。");
+          }
+        };
+        recognition.onend=()=>setListening(false);
+        recognition.start();
+      }catch(e){
+        setListening(false);
+        alert("音声検索を開始できませんでした。もう一度お試しください。");
+      }
     });
   }
 
-  waitForFb().then(fb=>{
-    if(!fb)return;
-    onValue(ref(fb.db,'prep/items'),s=>{items=s.val()||{};render()});
-    onValue(ref(fb.db,'prep/recipes'),s=>{recipes=s.val()||{};render()});
-  });
+  function scan(){
+    document.querySelectorAll("input").forEach(input=>{
+      if(targets.has(input.id) || input.classList.contains("freeCostSearch")) addButton(input);
+    });
+  }
+
+  scan();
+  const observer=new MutationObserver(scan);
+  observer.observe(document.body,{childList:true,subtree:true});
 })();
 </script>
+
+
+
+
+<style id="prepRecipeSearchAndFreeVoiceStyle">
+.prepRecipeSearchCard{margin-top:10px}
+.prepRecipeVoiceBtn{width:54px!important;height:54px!important;min-width:54px!important;min-height:54px!important;border:1px solid #cfd8ea!important;border-radius:16px!important;background:#f3f6fb!important;color:#245fca!important;display:flex!important;align-items:center!important;justify-content:center!important;padding:0!important;margin:0!important;cursor:pointer!important;-webkit-tap-highlight-color:transparent!important;font-size:0!important}
+.prepRecipeVoiceBtn.is-listening{background:#e8f0ff!important;border-color:#5b84df!important}
+.prepRecipeVoiceBtn svg{width:22px!important;height:22px!important}
+.prepRecipeSearchRow{display:grid;grid-template-columns:minmax(0,1fr) 54px;gap:8px;align-items:stretch}
+.prepRecipeSearchRow input{width:100%;box-sizing:border-box;min-height:52px;border:1px solid #cfd8ea;border-radius:16px;padding:0 14px;font-size:17px;background:#fff}
+.prepRecipeSearchResults{display:grid;gap:6px;margin-top:8px}
+.prepRecipeSearchResult{width:100%;text-align:left;background:#f1f4f8;color:#222;border:1px solid #ddd;padding:12px 13px;border-radius:12px;cursor:pointer;font-size:16px;font-weight:700}
+.prepRecipeSearchResult.hasRecipe{background:#eef3ff;color:#1f55b5}
+.prepRecipeSearchResult small{display:block;color:#777;font-weight:400;margin-top:3px}
+.prepRecipeSearchEmpty{font-size:14px;color:#777;padding:5px 2px}
+</style>
+<script id="prep-recipe-search-addon">
+(function(){
+  const MIC='<svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 14a3 3 0 0 0 3-3V6a3 3 0 1 0-6 0v5a3 3 0 0 0 3 3Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M19 11a7 7 0 0 1-14 0M12 18v4M8 22h8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+
+  const searchInput=document.getElementById('prepRecipeSearch');
+  const voice=document.getElementById('prepRecipeVoiceSearch');
+  const results=document.getElementById('prepRecipeSearchResults');
+  if(!searchInput||!voice||!results)return;
+
+  let prepItems={},recipes={};
+  function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+  function nameOf(id,x){return String(x?.name||x?.title||id).trim()}
+  function render(){
+    const q=String(searchInput.value||'').trim().toLowerCase();
+    if(!q){results.innerHTML='';return}
+    const rows=Object.entries(prepItems||{}).map(([id,x])=>({id,name:nameOf(id,x),r:recipes?.[id]||{}})).filter(x=>x.name&&x.name.toLowerCase().includes(q)).slice(0,30);
+    if(!rows.length){results.innerHTML='<div class="prepRecipeSearchEmpty">該当する仕込みレシピがありません。</div>';return}
+    results.innerHTML=rows.map(x=>{const r=x.r||{},has=!!(r.text||r.photo||(Array.isArray(r.ingredients)&&r.ingredients.length));return `<button type="button" class="prepRecipeSearchResult ${has?'hasRecipe':''}" data-prep-recipe-id="${esc(x.id)}">${esc(x.name)}<small>${has?'レシピ帳に登録済み':'レシピ未登録'}</small></button>`}).join('');
+    results.querySelectorAll('[data-prep-recipe-id]').forEach(b=>b.addEventListener('click',()=>{
+      const open=document.getElementById('openRecipeBook');if(!open)return;open.click();
+      let n=0;const timer=setInterval(()=>{const t=document.querySelector(`#recipeBookList [data-recipe-book-id="${CSS.escape(b.dataset.prepRecipeId)}"]`);if(t){clearInterval(timer);t.click()}else if(++n>40)clearInterval(timer)},100);
+    }));
+  }
+  searchInput.addEventListener('input',render);searchInput.addEventListener('change',render);
+
+  if(SR){let rec=null,listening=false;const setL=v=>{listening=v;voice.classList.toggle('is-listening',v);voice.innerHTML=MIC};voice.addEventListener('click',()=>{if(listening){try{rec&&rec.stop()}catch(e){};return}try{rec=new SR();rec.lang='ja-JP';rec.continuous=false;rec.interimResults=true;rec.maxAlternatives=1;rec.onstart=()=>setL(true);rec.onresult=e=>{let t='';for(let i=e.resultIndex;i<e.results.length;i++)t+=e.results[i][0].transcript;t=t.trim();if(t){searchInput.value=t;searchInput.dispatchEvent(new Event('input',{bubbles:true}))}};rec.onerror=()=>setL(false);rec.onend=()=>setL(false);rec.start()}catch(e){setL(false)}})}
+  else voice.addEventListener('click',()=>alert('このブラウザでは音声検索を利用できません。iPhoneのSafariでお試しください。'));
+
+  const fbWait=setInterval(()=>{if(window.__fb){clearInterval(fbWait);const {db,ref,onValue}=window.__fb;onValue(ref(db,'prep/items'),s=>{prepItems=s.val()||{};render()});onValue(ref(db,'prep/recipes'),s=>{recipes=s.val()||{};render()})}},100);
+  setTimeout(()=>clearInterval(fbWait),30000);
+
+})();
+</script>
+
+
+<!-- ===== 検索窓クリアボタン追加：指定箇所以外は変更なし ===== -->
+<style id="search-clear-buttons-addon">
+.searchClearWrap{
+  position:relative!important;
+  min-width:0!important;
+}
+.searchClearWrap > input{
+  padding-right:48px!important;
+}
+.searchClearBtn{
+  position:absolute!important;
+  right:9px!important;
+  top:50%!important;
+  transform:translateY(-50%)!important;
+  width:30px!important;
+  height:30px!important;
+  min-width:30px!important;
+  min-height:30px!important;
+  margin:0!important;
+  padding:0!important;
+  border:0!important;
+  border-radius:50%!important;
+  background:#e5e7eb!important;
+  color:#555!important;
+  display:none!important;
+  align-items:center!important;
+  justify-content:center!important;
+  font-size:20px!important;
+  line-height:1!important;
+  font-weight:400!important;
+  cursor:pointer!important;
+  z-index:3!important;
+  -webkit-tap-highlight-color:transparent!important;
+}
+.searchClearBtn.is-visible{display:flex!important}
+.searchClearWrap input[type="search"]::-webkit-search-cancel-button{
+  -webkit-appearance:none!important;
+  appearance:none!important;
+  display:none!important;
+}
+</style>
+<script id="search-clear-buttons-addon-script">
+(function(){
+  const targets = new Set([
+    'productSearch',
+    'vegProductSearch',
+    'nonVegProductSearch',
+    'prepRecipeSearch',
+    'costMaterialSearch',
+    'productCostSearch'
+  ]);
+
+  function isTarget(input){
+    return !!input && (
+      targets.has(input.id) ||
+      input.classList.contains('freeCostSearch')
+    );
+  }
+
+  function addClear(input){
+    if(!isTarget(input) || input.dataset.searchClearAdded==='1') return;
+
+    const wrap=document.createElement('div');
+    wrap.className='searchClearWrap';
+
+    input.parentNode.insertBefore(wrap,input);
+    wrap.appendChild(input);
+
+    const btn=document.createElement('button');
+    btn.type='button';
+    btn.className='searchClearBtn';
+    btn.setAttribute('aria-label','検索をクリア');
+    btn.title='検索をクリア';
+    btn.textContent='×';
+    wrap.appendChild(btn);
+
+    input.dataset.searchClearAdded='1';
+
+    function update(){
+      btn.classList.toggle('is-visible',String(input.value||'').length>0);
+    }
+
+    btn.addEventListener('click',function(){
+      input.value='';
+      input.dispatchEvent(new Event('input',{bubbles:true}));
+      input.dispatchEvent(new Event('change',{bubbles:true}));
+      input.focus();
+      update();
+    });
+
+    input.addEventListener('input',update);
+    input.addEventListener('change',update);
+    update();
+  }
+
+  function scan(){
+    document.querySelectorAll('input').forEach(addClear);
+  }
+
+  scan();
+  new MutationObserver(scan).observe(document.body,{childList:true,subtree:true});
+})();
+</script>
+<!-- ===== 検索窓クリアボタン追加ここまで ===== -->
+
+</body></html>
