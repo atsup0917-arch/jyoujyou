@@ -754,6 +754,46 @@ html.recipeModalLocked, body.recipeModalLocked{
   }
 }
 </style>
+<style id="voice-search-only">
+.costVoiceSearchWrap{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  width:100%;
+}
+.costVoiceSearchWrap .costSearch{
+  flex:1;
+  min-width:0;
+}
+.costVoiceSearchBtn{
+  flex:0 0 auto;
+  width:54px;
+  height:54px;
+  border:1px solid #cfd8ea;
+  border-radius:16px;
+  background:#f3f6fb;
+  color:#245fca;
+  font-size:27px;
+  line-height:1;
+  cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+}
+.costVoiceSearchBtn.is-listening{
+  background:#e8f0ff;
+  border-color:#5b84df;
+  transform:scale(1.03);
+}
+.costVoiceSearchBtn:disabled{
+  opacity:.55;
+  cursor:not-allowed;
+}
+@media (max-width:600px){
+  .costVoiceSearchBtn{
+    width:52px;
+    height:52px;
+  }
+}
+</style>
 </head>
 <body><div class="wrap">
 <div class="navtabs navtabs3">
@@ -3477,7 +3517,13 @@ function renderNonVegProductManager(){
     <div id="masterStatus" class="masterStatus" aria-live="polite"></div>
     <div class="masterFilters">
       <select id="costMaterialCategory" class="costSearch" aria-label="カテゴリーで絞り込み"><option value="">すべてのカテゴリー</option></select>
+      <div class="costVoiceSearchWrap">
       <input id="costMaterialSearch" class="costSearch" placeholder="🔍 食材名を検索">
+      <button type="button" id="costMaterialVoiceSearch" class="costVoiceSearchBtn" aria-label="音声で食材名を検索" title="音声で検索"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+<path d="M12 14a3 3 0 0 0 3-3V6a3 3 0 1 0-6 0v5a3 3 0 0 0 3 3Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+<path d="M19 11a7 7 0 0 1-14 0M12 18v4M8 22h8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+</svg></button>
+    </div>
     </div>
     <div class="masterHelp">💡 カテゴリー・食材名・単位は変更した時点で自動保存。並び順は「↑」「↓」で変更します。単価は「💰 単価を編集」から設定します。</div>
     <div id="costMasterList" class="masterList"></div>
@@ -4184,4 +4230,74 @@ button, label {
   user-select: none !important;
 }
 </style>
+<script id="voice-search-only-script">
+(function(){
+  const input = document.getElementById('costMaterialSearch');
+  const button = document.getElementById('costMaterialVoiceSearch');
+  if(!input || !button) return;
+
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if(!SpeechRecognition){
+    button.addEventListener('click', function(){
+      alert('このブラウザでは音声検索を利用できません。iPhoneのSafariでお試しください。');
+    });
+    return;
+  }
+
+  let recognition = null;
+  let listening = false;
+
+  function setListening(flag){
+    listening = flag;
+    button.classList.toggle('is-listening', flag);
+    button.textContent = flag ? '⏹️' : '🎤';
+    button.setAttribute('aria-label', flag ? '音声検索を停止' : '音声で食材名を検索');
+  }
+
+  button.addEventListener('click', function(){
+    if(listening){
+      try { recognition && recognition.stop(); } catch(e){}
+      return;
+    }
+
+    try{
+      recognition = new SpeechRecognition();
+      recognition.lang = 'ja-JP';
+      recognition.continuous = false;
+      recognition.interimResults = true;
+      recognition.maxAlternatives = 1;
+
+      recognition.onstart = function(){ setListening(true); };
+
+      recognition.onresult = function(event){
+        let transcript = '';
+        for(let i=event.resultIndex; i<event.results.length; i++){
+          transcript += event.results[i][0].transcript;
+        }
+        transcript = transcript.trim();
+        if(transcript){
+          input.value = transcript;
+          input.dispatchEvent(new Event('input', {bubbles:true}));
+        }
+      };
+
+      recognition.onerror = function(event){
+        setListening(false);
+        if(event.error !== 'aborted' && event.error !== 'no-speech'){
+          alert('音声検索を開始できませんでした。マイクの使用を許可して、もう一度お試しください。');
+        }
+      };
+
+      recognition.onend = function(){
+        setListening(false);
+      };
+
+      recognition.start();
+    }catch(e){
+      setListening(false);
+      alert('音声検索を開始できませんでした。もう一度お試しください。');
+    }
+  });
+})();
+</script>
 </body></html>
