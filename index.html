@@ -794,6 +794,46 @@ html.recipeModalLocked, body.recipeModalLocked{
   }
 }
 </style>
+
+<style id="all-search-voice-style">
+.voiceSearchAnyWrap{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  width:100%;
+}
+.voiceSearchAnyWrap > input{
+  flex:1;
+  min-width:0;
+}
+.voiceSearchAnyBtn{
+  flex:0 0 auto;
+  width:54px;
+  height:54px;
+  border:1px solid #cfd8ea;
+  border-radius:16px;
+  background:#f3f6fb;
+  color:#245fca;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:0;
+  cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+}
+.voiceSearchAnyBtn svg{
+  width:22px;
+  height:22px;
+}
+.voiceSearchAnyBtn.is-listening{
+  background:#e8f0ff;
+  border-color:#5b84df;
+}
+@media(max-width:600px){
+  .voiceSearchAnyBtn{width:52px;height:52px;}
+}
+</style>
+
 </head>
 <body><div class="wrap">
 <div class="navtabs navtabs3">
@@ -4299,4 +4339,97 @@ button, label {
   });
 })();
 </script>
+
+<script id="all-search-voice-script">
+(function(){
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const targets = new Set(["productSearch","vegProductSearch","nonVegProductSearch","productCostSearch"]);
+  const icon = `<svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+<path d="M12 14a3 3 0 0 0 3-3V6a3 3 0 1 0-6 0v5a3 3 0 0 0 3 3Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+<path d="M19 11a7 7 0 0 1-14 0M12 18v4M8 22h8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+</svg>`;
+
+  function addButton(input){
+    if(!input || input.id==="costMaterialSearch" || input.dataset.voiceSearchReady==="1") return;
+    input.dataset.voiceSearchReady="1";
+
+    const wrap=document.createElement("div");
+    wrap.className="voiceSearchAnyWrap";
+    input.parentNode.insertBefore(wrap,input);
+    wrap.appendChild(input);
+
+    const button=document.createElement("button");
+    button.type="button";
+    button.className="voiceSearchAnyBtn";
+    button.innerHTML=icon;
+    button.setAttribute("aria-label","音声で検索");
+    button.title="音声で検索";
+    wrap.appendChild(button);
+
+    if(!SpeechRecognition){
+      button.addEventListener("click",()=>alert("このブラウザでは音声検索を利用できません。iPhoneのSafariでお試しください。"));
+      return;
+    }
+
+    let recognition=null;
+    let listening=false;
+
+    function setListening(flag){
+      listening=flag;
+      button.classList.toggle("is-listening",flag);
+      // マイクのSVGは開始中も終了後も絶対に変更しない
+      button.innerHTML=icon;
+    }
+
+    button.addEventListener("click",function(){
+      if(listening){
+        try{recognition && recognition.stop();}catch(e){}
+        return;
+      }
+      try{
+        recognition=new SpeechRecognition();
+        recognition.lang="ja-JP";
+        recognition.continuous=false;
+        recognition.interimResults=true;
+        recognition.maxAlternatives=1;
+        recognition.onstart=()=>setListening(true);
+        recognition.onresult=function(event){
+          let transcript="";
+          for(let i=event.resultIndex;i<event.results.length;i++){
+            transcript+=event.results[i][0].transcript;
+          }
+          transcript=transcript.trim();
+          if(transcript){
+            input.value=transcript;
+            input.dispatchEvent(new Event("input",{bubbles:true}));
+            input.dispatchEvent(new Event("change",{bubbles:true}));
+          }
+        };
+        recognition.onerror=function(event){
+          setListening(false);
+          if(event.error!=="aborted" && event.error!=="no-speech"){
+            alert("音声検索を開始できませんでした。マイクの使用を許可して、もう一度お試しください。");
+          }
+        };
+        recognition.onend=()=>setListening(false);
+        recognition.start();
+      }catch(e){
+        setListening(false);
+        alert("音声検索を開始できませんでした。もう一度お試しください。");
+      }
+    });
+  }
+
+  function scan(){
+    document.querySelectorAll("input").forEach(input=>{
+      if(targets.has(input.id) || input.classList.contains("freeCostSearch")) addButton(input);
+    });
+  }
+
+  scan();
+  const observer=new MutationObserver(scan);
+  observer.observe(document.body,{childList:true,subtree:true});
+})();
+</script>
+
 </body></html>
