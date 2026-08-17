@@ -4250,7 +4250,6 @@ button, label {
   function setListening(flag){
     listening = flag;
     button.classList.toggle('is-listening', flag);
-    button.textContent = flag ? '⏹️' : '🎤';
     button.setAttribute('aria-label', flag ? '音声検索を停止' : '音声で食材名を検索');
   }
 
