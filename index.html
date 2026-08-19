@@ -834,12 +834,76 @@ html.recipeModalLocked, body.recipeModalLocked{
 }
 </style>
 
+<style id="shiftFeatureStyle">
+/* ===== シフト機能：既存機能と独立 ===== */
+.navtabs4{grid-template-columns:repeat(4,minmax(0,1fr))!important}
+.navtabs4 button{font-size:15px;padding:12px 4px;min-width:0;white-space:normal}
+.shiftImportGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.shiftDateRow{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:end}
+.shiftDateRow button{width:auto;margin:0;white-space:nowrap}
+.shiftStatus{padding:12px 14px;border-radius:14px;background:#f3f6fb;color:#333;white-space:pre-wrap;line-height:1.5}
+.shiftStatus.ok{background:#eefaf1;color:#176b32}.shiftStatus.warn{background:#fff8e5;color:#805b00}.shiftStatus.err{background:#fff0f0;color:#a52222}
+.shiftTableWrap{overflow:auto;border-radius:14px;border:1px solid #ddd}
+.shiftTable{width:100%;border-collapse:collapse;min-width:560px;background:#fff}
+.shiftTable th,.shiftTable td{border:1px solid #ddd;padding:9px 7px;text-align:center;vertical-align:middle;font-size:15px}
+.shiftTable th{background:#eef3ff;font-weight:800;position:sticky;top:0;z-index:1}.shiftTable td.name{text-align:left;font-weight:800;white-space:nowrap;position:sticky;left:0;background:#fff;z-index:1}
+.shiftCell{min-width:62px}.shiftCell.s{background:#fff1b8}.shiftCell.y{background:#fff1b8}.shiftCell.o{background:#e9f5ff}.shiftCell.unknown{background:#fff8e5}
+.shiftPill{display:inline-block;padding:3px 7px;border-radius:9px;font-weight:800}.shiftPill.s{background:#ffe58a}.shiftPill.y{background:#ffd9a8}.shiftPill.o{background:#cfe8ff}
+.shiftMemo{min-height:220px;resize:vertical;font-size:20px;line-height:1.6;padding:16px}.shiftMemoItem{border:1px solid #e1e4e8;border-radius:14px;padding:16px;margin-top:12px;background:#fff;white-space:pre-wrap;font-size:20px;line-height:1.6}.shiftMemoMeta{font-size:13px;color:#666;margin-bottom:6px}.shiftActions{display:grid;grid-template-columns:1fr 1fr;gap:10px}.shiftActions button{margin:0}
+.shiftPreview{max-height:280px;overflow:auto;border:1px solid #ddd;border-radius:14px;background:#fafafa;padding:8px}.shiftPreview img{display:block;width:100%;height:auto;max-height:260px;object-fit:contain;border-radius:10px}
+.shiftHint{font-size:13px;color:#666;line-height:1.5}
+.shiftConfirmRow{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:end}.shiftConfirmRow button{width:auto;margin:0;white-space:nowrap}
+@media(max-width:600px){.navtabs4 button{font-size:13px;padding:11px 2px}.shiftImportGrid{grid-template-columns:1fr}.shiftTable th,.shiftTable td{font-size:14px;padding:8px 6px}.shiftActions{grid-template-columns:1fr}.shiftConfirmRow{grid-template-columns:1fr}}
+</style>
+
+<style id="shift-memo-only-size-fix">
+/* シフト：出勤者表示・引き継ぎメモカレンダー */
+#shiftPage .shiftHeroNames{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 12px;margin-top:10px}
+#shiftPage .shiftHeroName{min-height:48px;padding:10px 12px;border:1px solid #e1e4e8;border-radius:12px;background:#fff;box-sizing:border-box;display:flex;align-items:center;font-weight:800}
+#shiftPage .shiftAttendanceGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 12px;margin-top:10px}
+#shiftPage .shiftAttendanceName{display:flex;align-items:center;gap:8px;min-height:48px;padding:10px 12px;border:1px solid #e1e4e8;border-radius:12px;background:#fff;box-sizing:border-box}
+#shiftPage .shiftAttendanceNo{display:inline-flex;align-items:center;justify-content:center;min-width:28px;height:28px;border-radius:50%;background:#eef3ff;color:#2864d7;font-weight:800;font-size:14px}
+#shiftPage .shiftMemoCalendar{margin-top:14px;border:1px solid #e1e4e8;border-radius:16px;padding:12px;background:#fff}
+#shiftPage .shiftMemoCalendarHead{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
+#shiftPage .shiftMemoCalendarHead button{margin:0;min-width:48px;padding:9px 12px}
+#shiftPage .shiftMemoCalendarTitle{font-size:20px;font-weight:800;text-align:center;flex:1}
+#shiftPage .shiftMemoCalendarWeek{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:4px}
+#shiftPage .shiftMemoCalendarWeek div{text-align:center;font-size:12px;font-weight:700;color:#666;padding:4px 0}
+#shiftPage .shiftMemoCalendarGrid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+#shiftPage .shiftMemoDay{position:relative;min-height:48px;padding:6px 2px;border:1px solid #e5e7eb;border-radius:10px;background:#fff;color:#222 !important;-webkit-text-fill-color:#222 !important;font-size:15px;font-weight:700;cursor:pointer}
+#shiftPage .shiftMemoDay.empty{border-color:transparent;background:transparent;cursor:default}
+#shiftPage .shiftMemoDay.hasMemo{background:#fff3a8;border-color:#e0c200;color:#222 !important;-webkit-text-fill-color:#222 !important}
+#shiftPage .shiftMemoDay.selected{outline:3px solid #3f6fd9;outline-offset:-2px}
+#shiftPage .shiftMemoDot{position:absolute;right:5px;bottom:4px;width:7px;height:7px;border-radius:50%;background:#e0a800}
+#shiftPage .shiftMemoCalendarHint{font-size:13px;color:#666;margin-top:8px}
+#shiftPage .shiftMemoSelected{margin-top:12px;border-radius:12px;background:#f5f7fb;padding:12px;white-space:pre-wrap;line-height:1.6}
+@media(max-width:520px){#shiftPage .shiftAttendanceGrid{grid-template-columns:1fr 1fr;gap:6px 8px}#shiftPage .shiftAttendanceName{padding:8px;font-size:16px}#shiftPage .shiftMemoDay{min-height:44px}}
+
+/* シフト：引き継ぎメモだけ拡大。その他の既存UIは変更しない */
+#shiftPage .shiftFutureMemo{
+  width:100% !important;
+  min-width:0 !important;
+  box-sizing:border-box !important;
+  min-height:180px !important;
+  height:180px !important;
+  font-size:22px !important;
+  line-height:1.6 !important;
+  padding:16px !important;
+  display:block !important;
+}
+#shiftPage .shiftMemoListBig .shiftMemoItem{
+  font-size:24px !important;
+  line-height:1.7 !important;
+  padding:20px !important;
+}
+</style>
 </head>
 <body><div class="wrap">
-<div class="navtabs navtabs3">
+<div class="navtabs navtabs3 navtabs4">
 <button id="tabShopping" class="active">🛒 買い物</button>
 <button id="tabVegetable">🥬 野菜発注</button>
 <button id="tabPrep">🔪 仕込み表</button>
+<button id="tabShift">👥 シフト</button>
 </div>
 <div id="shoppingPage" class="page">
 
@@ -1106,6 +1170,107 @@ html.recipeModalLocked, body.recipeModalLocked{
 </details>
 </div>
 </div>
+<div id="shiftPage" class="page" hidden>
+<h1>👥 シフト</h1>
+
+<div class="card shiftHero">
+  <div class="shiftHeroTitle">
+    <div>
+      <div class="shiftSectionTitle">👥 本日の出勤者</div>
+      <div id="shiftTodayDateLabel" class="shiftHeroDate"></div>
+    </div>
+    <button type="button" class="gray shiftTodaySmallBtn" id="shiftTodayQuickBtn">今日を表示</button>
+  </div>
+  <div id="shiftTodayQuickSummary" class="shiftHeroCount">読み込み中…</div>
+  <div id="shiftTodayQuickList" class="shiftHeroNames"></div>
+  <div id="shiftTodayQuickMemo" class="shiftHeroMemo" hidden></div>
+</div>
+
+<div class="card">
+  <div class="shiftSectionTitle">📝 引き継ぎメモ</div>
+  <div class="shiftHint">先の日付も登録できます。例：8/30 テイクアウトあり。</div>
+  <div class="shiftDateRow" style="margin-top:10px">
+    <div><label>登録する日</label><input id="shiftMemoDate" type="date"></div>
+    <button type="button" class="gray" id="shiftMemoTodayBtn">今日</button>
+  </div>
+  <label style="margin-top:10px">メモ</label>
+  <textarea id="shiftMemoText" class="shiftMemo shiftFutureMemo" placeholder="例：8/30 テイクアウトあり。
+明日の予約多め。
+仕込み確認。"></textarea>
+  <button type="button" id="shiftMemoSave">＋ 引き継ぎメモを保存</button>
+  <div id="shiftMemoCalendar" class="shiftMemoCalendar"></div>
+  <div id="shiftMemoSelected" class="shiftMemoSelected" hidden></div>
+  <div id="shiftMemoList" class="shiftMemoListBig" style="margin-top:10px"></div>
+</div>
+
+<div class="card">
+  <div class="shiftSectionTitle">📅 別の日を見る</div>
+  <div class="shiftDateRow">
+    <div><label>日付</label><input id="shiftViewDate" type="date"></div>
+    <button type="button" class="gray" id="shiftTodayBtn">今日</button>
+  </div>
+  <div id="shiftDaySummary" class="shiftStatus" style="margin-top:10px">この日のシフトはありません。</div>
+  <div id="shiftDayList" style="margin-top:10px"></div>
+</div>
+
+<div class="card shiftUploadStatusCard">
+  <div class="shiftSectionTitle">📷 シフト登録状況</div>
+  <div class="shiftHint">今どの期間のシフトが登録されているかを確認できます。写真の入れ替えは必要な時だけ行います。</div>
+  <div id="shiftRegisteredPeriods" class="shiftRegisteredPeriods" style="margin-top:12px"></div>
+</div>
+
+<details class="card shiftUpdateCard">
+  <summary>📷 シフト表を入れ替える（必要な時だけ）</summary>
+  <div class="shiftHint" style="margin-top:10px">前半の途中でも後半を登録できます。後半の途中でも次の月の前半を登録できます。</div>
+  <div class="shiftPeriodRow" style="margin-top:12px">
+    <div><label class="shiftPeriodLabel">対象月</label><input id="shiftTargetMonth" type="month"></div>
+    <div><label class="shiftPeriodLabel">対象期間</label><select id="shiftPeriod"><option value="first">前半（1〜15日）</option><option value="second" selected>後半（16日〜月末）</option></select></div>
+  </div>
+  <div id="shiftUploadTargetLabel" class="shiftUploadTargetLabel" style="margin-top:12px"></div>
+  <div style="margin-top:12px"><button type="button" id="shiftPhotoChoose">📷 この期間の写真を選ぶ</button></div>
+  <input id="shiftPhotoInput" type="file" accept="image/*,.heic,.heif,.jpg,.jpeg,.png,.webp" style="display:none">
+  <div id="shiftPhotoFileName" class="shiftHint" style="margin-top:8px">写真はまだ選択されていません。</div>
+  <button type="button" class="gray" id="shiftOcrStart" style="margin-top:10px">🔎 出勤者を読み取る</button>
+  <div id="shiftOcrStatus" class="shiftStatus" style="margin-top:10px">写真を選択してください。</div>
+  <div id="shiftPhotoPreview" class="shiftPreview" hidden style="margin-top:10px"></div>
+  <button type="button" class="danger" id="shiftDeletePeriod" style="margin-top:10px">🗑️ この期間の登録シフトを削除</button>
+  <div class="shiftHint" style="margin-top:6px">※古い登録結果を消してから再読み取りしたい時に使います。対象期間だけを削除します。</div>
+</details>
+
+<div class="card" id="shiftReviewCard" hidden>
+  <div class="shiftSectionTitle">✅ 登録前の確認</div>
+  <div class="shiftHint">日付を選ぶと、その日の出勤者だけを確認できます。写真から名前は読みません。番号で名前を結び付け、未登録の人だけ名前を入力してください。</div>
+  <div class="shiftReviewDateBar" style="margin-top:10px">
+    <div><label>確認する日</label><input id="shiftReviewDate" type="date"></div>
+    <div class="shiftStatus" id="shiftReviewCount">0人</div>
+  </div>
+  <div id="shiftReviewNames" class="shiftReviewNames"></div>
+  <div class="shiftActions" style="margin-top:10px">
+    <button type="button" class="gray" id="shiftReviewCancel">キャンセル</button>
+    <button type="button" id="shiftSave">✅ この期間を登録</button>
+  </div>
+</div>
+
+<details class="shiftStaffSettings">
+  <summary>⚙️ スタッフ番号と名前の登録・変更（必要な時だけ）</summary>
+  <div class="shiftStaffQuick" style="margin-top:12px">
+    <div class="shiftHint">写真の名前は読み取りません。シフト表の左端の番号と出勤日だけを読み取り、ここで登録した番号と名前を結び付けます。<br>例：<b>9.10 加藤</b>／<b>11.12 坂口</b>／<b>13.14 竹内</b>／<b>15.16 未登録</b><br>同じ名前に複数の番号を付けられます。</div>
+    <textarea id="shiftStaffMasterText" class="shiftMemo" placeholder="例：
+9.10 加藤
+11.12 坂口
+13.14 竹内
+15.16 未登録"></textarea>
+    <div class="shiftQuickBtns">
+      <button type="button" id="shiftStaffMasterSave">💾 番号と名前を保存</button>
+      <button type="button" class="gray" id="shiftStaffMasterLoad">登録済みを表示</button>
+    </div>
+    <div id="shiftStaffMasterStatus" class="shiftStatus" style="margin-top:8px"></div>
+  </div>
+</details>
+
+</div>
+
+
 <div id="prepPage" class="page" hidden>
 <h1>🔪 仕込み表</h1>
 <div class="card"><h2>表示するポジション</h2><div class="filters" id="prepFilters"></div></div><div class="card prepRecipeSearchCard" id="prepRecipeSearchCard">
@@ -1975,14 +2140,16 @@ $("uncheckAll").onclick=async()=>{for(const [id,x] of vals(items))if(x.done)awai
 // ---- 野菜発注 ----
 const weekdays=["日","月","火","水","木","金","土"];
 function switchPage(which){
- $("shoppingPage").hidden=which!=="shopping"; $("vegetablePage").hidden=which!=="vegetable"; $("prepPage").hidden=which!=="prep";
+ $("shoppingPage").hidden=which!=="shopping"; $("vegetablePage").hidden=which!=="vegetable"; $("prepPage").hidden=which!=="prep"; $("shiftPage").hidden=which!=="shift";
  $("tabShopping").classList.toggle("active",which==="shopping");
  $("tabVegetable").classList.toggle("active",which==="vegetable");
  $("tabPrep").classList.toggle("active",which==="prep");
+ $("tabShift").classList.toggle("active",which==="shift");
 }
 $("tabShopping").onclick=()=>switchPage("shopping");
 $("tabVegetable").onclick=()=>switchPage("vegetable");
 $("tabPrep").onclick=()=>switchPage("prep");
+$("tabShift").onclick=()=>switchPage("shift");
 
 const tomorrow=new Date();
 tomorrow.setDate(tomorrow.getDate()+1);
@@ -4537,6 +4704,902 @@ button, label {
   display:none!important;
 }
 </style>
+<script id="shiftStandaloneFixed">
+(function(){
+  'use strict';
+  const $=id=>document.getElementById(id);
+  const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  const today=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};
+  const targetYM=()=>{const v=$('shiftTargetMonth')?.value; if(v&&/^\d{4}-\d{2}$/.test(v)) return v; const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`};
+  const periodRange=()=>{const v=$('shiftPeriod')?.value||'second';const [ys,ms]=targetYM().split('-').map(Number);const last=new Date(ys,ms,0).getDate();return v==='first'?[1,Math.min(15,last)]:[16,last]};
+  const periodKey=()=>`${targetYM()}-${$('shiftPeriod')?.value||'second'}`;
+  const periodText=(ym,p)=>{const [y,m]=ym.split('-').map(Number);return `${y}年${m}月${p==='first'?'前半（1〜15日）':'後半（16日〜月末）'}`};
+  const dateLabel=date=>{const d=new Date(date+'T00:00:00');return `${d.getMonth()+1}/${d.getDate()}（${['日','月','火','水','木','金','土'][d.getDay()]}）`};
+  const norm=s=>String(s??'').replace(/[\s　]/g,'').replace(/[「」『』（）()]/g,'').toLowerCase();
+  let schedules={},memos={},staff=[],staffMap={},pending=[],selectedFile=null;
+  let dbReady=false;
+
+  function fb(){return window.__fb||null}
+  function ref(path){return fb().ref(fb().db,path)}
+  function localKey(){return 'karuya_shift_staff_master_v2'}
+
+  function setStatus(msg,kind=''){
+    const e=$('shiftOcrStatus'); if(!e)return;
+    e.className='shiftStatus '+kind; e.textContent=msg;
+  }
+  function normalizeStaffNumber(v){
+    return String(v||'').replace(/[０-９]/g,ch=>String.fromCharCode(ch.charCodeAt(0)-0xFEE0)).replace(/[^0-9]/g,'').trim();
+  }
+  function parseStaffMapText(v){
+    const map={};
+    String(v||'').split(/\r?\n/).forEach(line=>{
+      const t=line.trim(); if(!t)return;
+      const m=t.match(/^([0-9０-９][0-9０-９.,、\s]*)\s*(.+)$/);
+      if(!m)return;
+      const nums=(m[1].match(/[0-9０-９]+/g)||[]).map(normalizeStaffNumber).filter(Boolean);
+      let name=String(m[2]||'').trim().replace(/^[.．,、:：\-–—]+/,'').trim();
+      if(!nums.length||!name)return;
+      nums.forEach(n=>{map[n]=name;});
+    });
+    return map;
+  }
+  function staffMapToText(map){
+    const groups={};
+    Object.entries(map||{}).forEach(([n,name])=>{const k=String(name||'未登録').trim()||'未登録';(groups[k]||(groups[k]=[])).push(Number(n));});
+    return Object.entries(groups).sort((a,b)=>Math.min(...a[1])-Math.min(...b[1])).map(([name,nums])=>`${nums.sort((a,b)=>a-b).join('.')} ${name}`).join('\n');
+  }
+  function staffFromText(v){return parseStaffMapText(v)}
+  function renderStaff(){
+    const ta=$('shiftStaffMasterText'); if(ta && document.activeElement!==ta) ta.value=staffMapToText(staffMap);
+    const st=$('shiftStaffMasterStatus'); const n=Object.keys(staffMap||{}).length; if(st) st.textContent=n?`✅ ${n}番号登録済み`:'スタッフ番号と名前がまだ登録されていません。';
+  }
+  async function saveStaff(){
+    const ta=$('shiftStaffMasterText'); const next=staffFromText(ta?.value);
+    if(!Object.keys(next).length){alert('番号と名前を1つ以上入力してください。\n例：9.10 加藤');return;}
+    staffMap=next;
+    staff=Object.entries(staffMap).sort((a,b)=>Number(a[0])-Number(b[0])).map(([,name])=>name);
+    localStorage.setItem(localKey(),JSON.stringify(staff));
+    localStorage.setItem('karuya_shift_staff_map_v1',JSON.stringify(staffMap));
+    try{
+      if(fb()){
+        const obj={}; Object.entries(staffMap).forEach(([number,name])=>obj[number]={name,number});
+        await fb().set(ref('shift/staffMap'),obj);
+      }
+      $('shiftStaffMasterStatus').textContent=`✅ ${Object.keys(staffMap).length}番号を保存しました。`;
+    }catch(e){
+      console.error(e);
+      $('shiftStaffMasterStatus').textContent=`✅ この端末に${Object.keys(staffMap).length}番号保存しました（共有保存は未完了）。`;
+    }
+  }
+  async function loadStaff(){
+    try{
+      const mapRaw=localStorage.getItem('karuya_shift_staff_map_v1');
+      if(mapRaw){const a=JSON.parse(mapRaw);if(a&&typeof a==='object')staffMap=a;}
+      if(fb()){
+        const snap=await fb().get(ref('shift/staffMap'));
+        const v=snap.val()||{};
+        const a={}; Object.entries(v).forEach(([n,x])=>{const name=String(x?.name||'').trim();if(name)a[normalizeStaffNumber(n)]=name;});
+        if(Object.keys(a).length)staffMap=a;
+      }
+      if(!Object.keys(staffMap).length){
+        const raw=localStorage.getItem(localKey());
+        if(raw){const a=JSON.parse(raw);if(Array.isArray(a))a.forEach((name,i)=>{if(String(name||'').trim())staffMap[String(i+1)]=String(name).trim();});}
+      }
+      staff=Object.entries(staffMap).sort((a,b)=>Number(a[0])-Number(b[0])).map(([,name])=>name);
+    }catch(e){console.warn('staff load',e)}
+    renderStaff();
+  }
+
+  function showPreview(file){
+    const box=$('shiftPhotoPreview'); if(!box)return;
+    const url=URL.createObjectURL(file);
+    box.hidden=false; box.innerHTML=`<img src="${url}" alt="シフト表プレビュー">`;
+  }
+
+  // シフト表専用読み取り：表の「位置」を先に確定し、白セルだけを判定します。
+  // 数字・黄色セル・ポジションの意味は読みません。全員の名前マスターも必須ではありません。
+  async function readShiftTableByCells(file, status){
+    const img=await createImageBitmap(file);
+    const maxW=2600;
+    const scale=Math.min(maxW/img.width,3.0);
+    const src=document.createElement('canvas');
+    src.width=Math.max(1,Math.round(img.width*scale));
+    src.height=Math.max(1,Math.round(img.height*scale));
+    const ctx=src.getContext('2d',{willReadFrequently:true});
+    ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
+    ctx.drawImage(img,0,0,src.width,src.height);
+    if(img.close)img.close();
+
+    const W=src.width,H=src.height;
+    const data=ctx.getImageData(0,0,W,H).data;
+    const yellow=(r,g,b)=>{
+      const mx=Math.max(r,g,b),mn=Math.min(r,g,b);
+      return r>155 && g>145 && b<190 && r-b>45 && g-b>35 && (mx-mn)>55;
+    };
+    const neutralDark=(r,g,b)=>{
+      const mx=Math.max(r,g,b),mn=Math.min(r,g,b);
+      return mx<175 && (mx-mn)<42;
+    };
+
+    // ① 黄色帯を検出。黄色帯＝各日付の「右側セル」です。
+    const y0=Math.floor(H*0.10), y1=Math.floor(H*0.97), span=y1-y0;
+    const colScore=new Uint32Array(W);
+    for(let y=y0;y<y1;y++){
+      let i=(y*W)*4;
+      for(let x=0;x<W;x++,i+=4){
+        if(yellow(data[i],data[i+1],data[i+2])) colScore[x]++;
+      }
+    }
+    let threshold=Math.max(12,Math.floor(span*0.22));
+    let xs=[];
+    for(let x=0;x<W;x++) if(colScore[x]>=threshold) xs.push(x);
+    function makeRuns(vals,gap=3){
+      const out=[];if(!vals.length)return out;
+      let a=vals[0],p=a;
+      for(let i=1;i<vals.length;i++){
+        const x=vals[i];
+        if(x-p>gap){out.push([a,p]);a=x;}
+        p=x;
+      }
+      out.push([a,p]);return out;
+    }
+    let yellowRuns=makeRuns(xs,4).filter(([a,b])=>b-a>=5);
+    // 罫線で黄色帯が途中分断される場合は近接帯を結合。
+    const merged=[];
+    for(const r of yellowRuns){
+      if(merged.length && r[0]-merged[merged.length-1][1]<=6){merged[merged.length-1][1]=r[1];}
+      else merged.push([...r]);
+    }
+    yellowRuns=merged;
+    if(yellowRuns.length<10){
+      // 少し緩めて再試行
+      threshold=Math.max(8,Math.floor(span*0.14));
+      xs=[];for(let x=0;x<W;x++)if(colScore[x]>=threshold)xs.push(x);
+      yellowRuns=makeRuns(xs,5).filter(([a,b])=>b-a>=5);
+    }
+    if(yellowRuns.length<10) throw new Error('シフト表の黄色列を検出できませんでした。表全体が写った写真を選んでください。');
+
+    // 15本＝前半、16本＝後半。余分な帯が混ざった場合は最も規則的な15/16本を採用。
+    function chooseRuns(runs){
+      if(runs.length===15||runs.length===16)return runs;
+      let best=null,bestScore=Infinity;
+      for(const n of [16,15]){
+        if(runs.length<n)continue;
+        for(let s=0;s<=runs.length-n;s++){
+          const a=runs.slice(s,s+n);
+          const centers=a.map(x=>(x[0]+x[1])/2);
+          const gaps=centers.slice(1).map((v,i)=>v-centers[i]);
+          const med=gaps.slice().sort((x,y)=>x-y)[Math.floor(gaps.length/2)]||1;
+          const score=gaps.reduce((z,g)=>z+Math.abs(g-med),0)/Math.max(1,gaps.length);
+          if(score<bestScore){bestScore=score;best=a;}
+        }
+      }
+      return best||runs;
+    }
+    yellowRuns=chooseRuns(yellowRuns);
+    const count=yellowRuns.length;
+    if(count!==15&&count!==16) throw new Error(`日付列を正しく検出できませんでした（${count}本）。`);
+
+    const target=$('shiftPeriod')?.value||'second';
+    const startDay=count===16?16:1;
+    const dates=yellowRuns.map((r,i)=>({date:startDay+i,y0:r[0],y1:r[1]}));
+
+    // ② スタッフ行は「名前欄の横罫線」から検出。
+    // 黄色帯の内部罫線を行境界と誤認しないため、黄色帯の左側だけを使います。
+    const firstYellow=yellowRuns[0][0];
+    const nameRight=Math.max(40,firstYellow-4);
+    const staffStart=Math.max(0,Math.floor(H*0.08));
+    const rowScore=new Uint32Array(H);
+    const xL=2,xR=Math.min(nameRight,Math.max(20,Math.floor(W*0.30)));
+    for(let y=staffStart;y<H;y++){
+      let n=0;
+      for(let x=xL;x<xR;x++){
+        const i=(y*W+x)*4;
+        if(neutralDark(data[i],data[i+1],data[i+2]))n++;
+      }
+      rowScore[y]=n;
+    }
+    // 表のスタッフ開始位置を「最初の黄色が広く出る行」で確定。
+    let staffTop=-1;
+    for(let y=staffStart;y<H;y++){
+      let n=0;
+      for(let x=yellowRuns[0][0];x<=yellowRuns[0][1];x++){
+        const i=(y*W+x)*4;
+        if(yellow(data[i],data[i+1],data[i+2]))n++;
+      }
+      if(n>Math.max(8,(yellowRuns[0][1]-yellowRuns[0][0])*0.35)){staffTop=y;break;}
+    }
+    if(staffTop<0)staffTop=Math.floor(H*0.15);
+
+    // 横罫線候補。近接した線を1本にまとめる。
+    const lineYs=[];
+    for(let y=staffTop;y<H;y++) if(rowScore[y]>=Math.max(18,Math.floor((xR-xL)*0.55))) lineYs.push(y);
+    let hRuns=makeRuns(lineYs,3).map(r=>Math.round((r[0]+r[1])/2));
+    // 2行/人の表なので、スタッフ行の間隔は概ね一定。細いノイズを除外。
+    hRuns=hRuns.filter((y,i)=>i===0||y-hRuns[i-1]>18);
+    if(hRuns.length<5) throw new Error('スタッフ行を検出できませんでした。表全体が写った写真を選んでください。');
+
+    // スタッフ開始線は黄色開始付近に最も近いものを採用。
+    let startIndex=0;
+    let bestDist=Infinity;
+    hRuns.forEach((y,i)=>{const d=Math.abs(y-staffTop);if(d<bestDist){bestDist=d;startIndex=i;}});
+    let boundaries=hRuns.slice(startIndex);
+    // 下端まで一定ピッチで罫線が見えない場合は補間する。
+    if(boundaries.length>=3){
+      const diffs=boundaries.slice(1).map((v,i)=>v-boundaries[i]).filter(v=>v>20&&v<120);
+      if(diffs.length>=2){
+        const sorted=diffs.slice().sort((a,b)=>a-b),med=sorted[Math.floor(sorted.length/2)];
+        const ext=[];
+        for(let i=1;i<boundaries.length;i++){
+          const gap=boundaries[i]-boundaries[i-1];
+          if(gap>med*1.65 && gap<med*3.2){
+            const n=Math.round(gap/med);
+            for(let k=1;k<n;k++)ext.push(Math.round(boundaries[i-1]+gap*k/n));
+          }
+        }
+        boundaries=[...boundaries,...ext].sort((a,b)=>a-b);
+      }
+    }
+    boundaries=boundaries.filter((y,i)=>i===0||y-boundaries[i-1]>18);
+    if(boundaries.length<2)throw new Error('スタッフ行の境界を確定できませんでした。');
+
+    const year=Number(targetYM().split('-')[0]), month=Number(targetYM().split('-')[1]);
+
+    // 【重要】この表では、スタッフ名セルがExcelの2行を縦結合しています。
+    // そのため「横罫線1区間＝1スタッフ」です。
+    // 以前のように2区間を1人としてまとめると、出勤者が半分になり、
+    // 別スタッフの出勤が次の人へずれる原因になります。
+    // ここでは罫線から1スタッフ区間をそのまま取り、
+    // 固定のスタッフ番号 10,12,14…60 を上から順番に割り当てます。
+    const staffRows=[];
+    const maxStaff=26; // 10～60（2刻み）の26名。表の同じ形式に対応。
+    for(let g=0;g<Math.min(maxStaff,boundaries.length-1);g++){
+      const a=boundaries[g], b=boundaries[g+1];
+      if(!Number.isFinite(a)||!Number.isFinite(b)||b-a<20)continue;
+      const number=10+g*2;
+      staffRows.push({index:g,ya:a,yb:b,number:String(number)});
+    }
+    if(staffRows.length<20)throw new Error(`スタッフ行を十分に検出できませんでした（${staffRows.length}人）。表全体が写った写真を選んでください。`);
+    // 名前欄のOCRは行番号の補正には使いません。
+    // この表では番号が固定の2行ペアで決まるため、画像OCRより
+    // 行位置から番号を確定した方が安定します。
+    // 名前OCRは「1行ずつ・複数の切り取り・複数PSM」で候補を集め、
+    // 登録済みスタッフ名がある場合だけ候補照合に使います。
+    // 数字・ポジション記号は名前候補から除外します。
+    function cleanOcrName(v){
+      return String(v||'')
+        .replace(/[\r\n\t\s　|｜「」『』【】［］()（）<>＜＞]/g,'')
+        .replace(/[0-9０-９]+/g,'')
+        .replace(/[.,，。:：;；_＿~〜^*+＝=\\/／\-―–—]/g,'')
+        .replace(/[^\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}A-Za-zー]/gu,'')
+        .trim();
+    }
+    function japaneseCount(v){return (String(v||'').match(/[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}]/gu)||[]).length;}
+    function latinCount(v){return (String(v||'').match(/[A-Za-z]/g)||[]).length;}
+    function levenshtein(a,b){
+      a=String(a||'');b=String(b||'');
+      if(a===b)return 0;if(!a.length)return b.length;if(!b.length)return a.length;
+      const prev=new Array(b.length+1);for(let j=0;j<=b.length;j++)prev[j]=j;
+      for(let i=1;i<=a.length;i++){
+        let cur=[i];
+        for(let j=1;j<=b.length;j++)cur[j]=Math.min(cur[j-1]+1,prev[j]+1,prev[j-1]+(a[i-1]===b[j-1]?0:1));
+        for(let j=0;j<=b.length;j++)prev[j]=cur[j];
+      }
+      return prev[b.length];
+    }
+    function matchStaffName(candidate, masterList){
+      const c=cleanOcrName(candidate);
+      if(!c||!masterList?.length)return '';
+      let best='',bestScore=0;
+      for(const raw of masterList){
+        const m=cleanOcrName(raw);if(!m)continue;
+        const dist=levenshtein(c,m), sim=1-dist/Math.max(c.length,m.length,1);
+        let common=0;
+        for(const ch of new Set(c)) if(m.includes(ch))common++;
+        const score=sim + Math.min(0.30,common*0.08) - (latinCount(c)>0?0.08:0);
+        if(score>bestScore){bestScore=score;best=String(raw).trim();}
+      }
+      // OCRが2文字以上あり、登録名とかなり近い場合のみ補正。
+      if(best && japaneseCount(c)>=2 && bestScore>=0.72)return best;
+      return '';
+    }
+
+    // 白セル内の「黒い記号そのもの」を画像処理で検出します。
+    // ここでは文字の種類を読む必要がありません。
+    // S/Y/K/F/O/L・出勤時間は出勤候補、▲・×・イベは判定なし。
+    // まず黒インクの連結成分を取り、三角形とイベント表示を除外します。
+    function detectAttendanceInk(c){
+      const cd=c.getContext('2d',{willReadFrequently:true});
+      const id=cd.getImageData(0,0,c.width,c.height),d=id.data;
+      if(c.width<8||c.height<8)return {ok:false,confidence:0,reason:'small'};
+
+      // 【判定しない記号】
+      // ・赤い×（休み/対象外）
+      // ・▲（休み/対象外）
+      // ・「イベ」（イベント表示）
+      // は、出勤として数えません。
+      // まず赤い×を色で確実に除外します。
+      let redPixels=0, darkPixels=0, darkMinX=c.width, darkMaxX=-1, darkMinY=c.height, darkMaxY=-1;
+      for(let y=0;y<c.height;y++)for(let x=0;x<c.width;x++){
+        const i=(y*c.width+x)*4,r=d[i],g=d[i+1],b=d[i+2];
+        if(r>150 && r>g*1.35 && r>b*1.35 && g<150 && b<150) redPixels++;
+        const mx=Math.max(r,g,b),mn=Math.min(r,g,b),lum=.299*r+.587*g+.114*b;
+        if(lum<190 && mx-mn<55){
+          darkPixels++;
+          darkMinX=Math.min(darkMinX,x); darkMaxX=Math.max(darkMaxX,x);
+          darkMinY=Math.min(darkMinY,y); darkMaxY=Math.max(darkMaxY,y);
+        }
+      }
+      if(redPixels>=Math.max(6,Math.floor(c.width*c.height*0.002))) return {ok:false,confidence:0,reason:'red-x-ignore'};
+
+      // 「イベ」は2文字のイベント表示。単一の勤務記号ではないため判定しません。
+      // 白セル内で、中央に横長の複数文字塊がある場合をイベント表示として除外します。
+      // 数字の勤務時間は黄色セル側で判定できるため、この除外は白セル側に限定します。
+      if(c.width>20 && darkPixels>=18 && darkMaxX>=0){
+        const bw=darkMaxX-darkMinX+1, bh=darkMaxY-darkMinY+1;
+        const ratio=bw/Math.max(1,bh);
+        if(ratio>=1.35 && bw>=Math.min(22,c.width*0.45) && bh>=6){
+          // 「イベ」は文字が横に2つ並ぶため、単一の S/Y/K/F/O/L より横長になります。
+          // ただし、極端に広いものは罫線の可能性があるため既存の罫線除外へ任せます。
+          if(ratio<=4.2) return {ok:false,confidence:0,reason:'event-ignore'};
+        }
+      }
+
+      // 同じセルを複数のしきい値・切り出しで判定し、2パス以上一致した時だけ出勤とする。
+      // 1回だけの誤検出を落とし、薄い勤務記号の取[削除済み]ぼしを救済する。
+      const passes=[
+        {pad:.06,lum:218,color:72},
+        {pad:.04,lum:225,color:78},
+        {pad:.02,lum:232,color:84},
+        {pad:.08,lum:210,color:68},
+        {pad:.00,lum:238,color:90}
+      ];
+      function analyze(p){
+        // セル境界の罫線を拾わないため、外周を大きめに除外します。
+        const edgePadX=Math.max(3,Math.round(c.width*0.18));
+        const edgePadY=Math.max(4,Math.round(c.height*0.18));
+        const px=Math.max(edgePadX,Math.round(c.width*p.pad)), py=Math.max(edgePadY,Math.round(c.height*p.pad));
+        const x0=px,x1=Math.max(x0+1,c.width-px),y0=py,y1=Math.max(y0+1,c.height-py);
+        const w=x1-x0,h=y1-y0;
+        const mask=new Uint8Array(w*h);let dark=0;
+        for(let y=0;y<h;y++)for(let x=0;x<w;x++){
+          const i=((y0+y)*c.width+(x0+x))*4,r=d[i],g=d[i+1],b=d[i+2];
+          const mx=Math.max(r,g,b),mn=Math.min(r,g,b),lum=.299*r+.587*g+.114*b;
+          // 色付きセル（黄色・赤）を除外し、ほぼ無彩色の暗いインクだけを見る。
+          if(lum<p.lum && mx-mn<p.color){mask[y*w+x]=1;dark++;}
+        }
+        if(dark<6)return {ok:false,score:0};
+        const seen=new Uint8Array(w*h), comps=[];
+        const qx=new Int32Array(w*h),qy=new Int32Array(w*h);
+        const dirs=[-1,-1,0,-1,1,-1,-1,0,1,0,-1,1,0,1,1,1];
+        for(let sy=0;sy<h;sy++)for(let sx=0;sx<w;sx++){
+          const si=sy*w+sx;if(!mask[si]||seen[si])continue;
+          let head=0,tail=0;qx[tail]=sx;qy[tail]=sy;tail++;seen[si]=1;
+          let area=0,minX=sx,maxX=sx,minY=sy,maxY=sy;const rows=new Int16Array(h);
+          while(head<tail){
+            const x=qx[head],y=qy[head];head++;area++;rows[y]++;
+            minX=Math.min(minX,x);maxX=Math.max(maxX,x);minY=Math.min(minY,y);maxY=Math.max(maxY,y);
+            for(let k=0;k<16;k+=2){const nx=x+dirs[k],ny=y+dirs[k+1];if(nx<0||ny<0||nx>=w||ny>=h)continue;const ni=ny*w+nx;if(mask[ni]&&!seen[ni]){seen[ni]=1;qx[tail]=nx;qy[tail]=ny;tail++;}}
+          }
+          const bw=maxX-minX+1,bh=maxY-minY+1;
+          // セルの外周に接する成分は、ほぼ確実にExcelの罫線・枠線なので除外。
+          const touchesEdge=(minX<=1||minY<=1||maxX>=w-2||maxY>=h-2);
+          if(area>=5&&bw>=2&&bh>=3&&!touchesEdge){
+            const span=Math.max(1,Math.floor(bh*.28));let top=0,bottom=0,tn=0,bn=0;
+            for(let yy=minY;yy<=maxY;yy++){const r=rows[yy],rel=yy-minY;if(rel<span){top+=r;tn++;}if(rel>=bh-span){bottom+=r;bn++;}}
+            comps.push({area,bw,bh,density:area/(bw*bh),top:top/Math.max(1,tn),bottom:bottom/Math.max(1,bn)});
+          }
+        }
+        if(!comps.length)return {ok:false,score:0};
+        function triangle(o){
+          if(o.bh<5||o.bw<3||o.density<.22)return false;
+          const expanding=o.bottom>Math.max(2,o.top*1.35);
+          const bottomWide=o.bottom>=o.bw*.32;
+          const topNarrow=o.top<=o.bw*.68;
+          return expanding&&bottomWide&&topNarrow;
+        }
+        const usable=comps.filter(o=>{
+          if(triangle(o))return false;
+          // 罫線の塊・全面塗りつぶしは除外。通常のS/Y/O/K/F/Lは残す。
+          const ar=o.bw/Math.max(1,o.bh);
+          // 横長・縦長すぎる細線は罫線やセル境界の残骸として除外。
+          if((ar>5 && o.bh<=4)||(ar<0.18 && o.bw<=4))return false;
+          if(o.density>.94&&ar>.35&&ar<2.8)return false;
+          return o.area>=5;
+        });
+        if(!usable.length)return {ok:false,score:0};
+        const ink=usable.reduce((z,o)=>z+o.area,0);
+        // 小さなJPEGノイズだけでは出勤にしない。ただし薄い本物を救える範囲に設定。
+        if(ink<7)return {ok:false,score:0};
+        let score=55+Math.min(35,ink);
+        // 文字らしい幅・高さの成分があれば加点。
+        if(usable.some(o=>o.bh>=5&&o.bw>=3&&o.density>.04))score+=5;
+        return {ok:true,score:Math.min(99,score)};
+      }
+      const results=passes.map(analyze);
+      const votes=results.filter(x=>x.ok).length;
+      // 基本は2/5一致。極端に薄い場合だけ3/5を要求するのではなく、
+      // 低コントラスト用パスを含めて多数決にする。
+      if(votes>=3)return {ok:true,confidence:Math.round(results.filter(x=>x.ok).reduce((z,x)=>z+x.score,0)/votes)};
+      if(votes===2){
+        const scores=results.filter(x=>x.ok).map(x=>x.score).sort((a,b)=>b-a);
+        if(scores[0]>=78&&scores[1]>=68)return {ok:true,confidence:Math.round((scores[0]+scores[1])/2)};
+      }
+      return {ok:false,confidence:0,reason:'majority-no'};
+    }
+
+
+
+    // ③ 1日=黄色帯の左側にある白セルだけを検査。
+    const detected=[];
+    const totalCells=staffRows.length*dates.length;
+    let done=0;
+    for(const row of staffRows){
+      const active=[];
+      for(let di=0;di<dates.length;di++){
+        const d=dates[di];
+        // 各日付の白セルは「前の黄色帯の直後～現在の黄色帯の直前」。
+        // 16日の場合も名前欄(左端)を含めず、黄色帯間隔から白セル幅を算出します。
+        const yellowWidths=yellowRuns.map(r=>r[1]-r[0]+1);
+        const yellowWidth=yellowWidths.slice().sort((a,b)=>a-b)[Math.floor(yellowWidths.length/2)]||26;
+        const centers=yellowRuns.map(r=>(r[0]+r[1])/2);
+        const gaps=centers.slice(1).map((v,i)=>v-centers[i]).filter(v=>v>10);
+        const medianGap=(gaps.slice().sort((a,b)=>a-b)[Math.floor(gaps.length/2)]||60);
+        const whiteWidth=Math.max(12,Math.round(medianGap-yellowWidth));
+        const left=di===0?Math.max(0,Math.round(d.y0-whiteWidth)):yellowRuns[di-1][1]+2;
+        const right=d.y0-2;
+        const top=row.ya+4,bottom=row.yb-4;
+        if(right-left<10){done++;continue;}
+
+        // 【重要】1日分は「白セル＋黄色セル」の2セルで構成されています。
+        // 出勤記号は白セル側だけでなく黄色セル側にも入るため、
+        // どちらか一方だけを見ると、特定の日だけ出勤者が抜けます。
+        // 2セルをそれぞれ独立判定し、どちらかに有効な勤務記号が
+        // あれば、そのスタッフはその日に出勤とします。
+        const whiteCell=document.createElement('canvas');
+        whiteCell.width=right-left;
+        whiteCell.height=Math.max(10,bottom-top);
+        whiteCell.getContext('2d').drawImage(src,left,top,whiteCell.width,whiteCell.height,0,0,whiteCell.width,whiteCell.height);
+        const whiteRR=detectAttendanceInk(whiteCell);
+
+        const yellowLeft=d.y0+2;
+        const yellowRight=d.y1-2;
+        const yellowCell=document.createElement('canvas');
+        yellowCell.width=Math.max(8,yellowRight-yellowLeft+1);
+        yellowCell.height=Math.max(10,bottom-top);
+        yellowCell.getContext('2d').drawImage(src,yellowLeft,top,yellowCell.width,yellowCell.height,0,0,yellowCell.width,yellowCell.height);
+        const yellowRR=detectAttendanceInk(yellowCell);
+
+        done++;
+        if(done%8===0)status.textContent=`セルを確認しています… ${done}/${totalCells}`;
+
+        // 白セルの希望・区分記号より、実際の勤務時間が入る黄色セルを優先。
+        // 黄色セルに有効な勤務記号があれば出勤。黄色が空のときだけ
+        // 白セルを補助判定として使用します。
+        const rr = whiteRR.ok || yellowRR.ok ? (whiteRR.ok ? whiteRR : yellowRR) : null;
+        if(rr?.ok)active.push({date:d.date,confidence:rr.confidence>=70?'high':'medium'});
+      }
+      if(active.length)detected.push({...row,active});
+    }
+
+    // ④ 名前も番号も画像OCRしません。
+    // 同じ書式の表なので「上から何人目か」だけで番号を確定します。
+    // これにより、写真の文字品質に左右されず、別の写真でも同じ番号→名前で照合できます。
+    if(status)status.textContent='番号と出勤日を照合しています…';
+    const items=[];
+    for(const row of detected){
+      const number=normalizeStaffNumber(row.number);
+      const name=number?(String(staffMap?.[number]||'').trim()||`未登録（番号${number}）`):`番号不明（${row.index+1}人目）`;
+      for(const a of row.active){
+        const dt=`${year}-${String(month).padStart(2,'0')}-${String(a.date).padStart(2,'0')}`;
+        items.push({date:dt,name,number,selected:true,unregistered:!staffMap?.[number],confidence:a.confidence});
+      }
+    }
+    if(!items.length)throw new Error('出勤者を判定できませんでした。表全体が写った写真を選んでください。');
+    return {items,raw:`表構造解析：黄色列${dates.length}本／スタッフ行${staffRows.length}行／罫線・▲・×・イベを判定対象外＋番号＋出勤日を判定`};
+  }
+
+  async function deleteShiftPeriod(){
+    const ym=targetYM(), p=$('shiftPeriod')?.value||'second';
+    const [fromDay,toDay]=periodRange();
+    const prefix=`${ym}-`;
+    const inPeriod=d=>{if(!String(d).startsWith(prefix))return false;const n=Number(String(d).slice(-2));return n>=fromDay&&n<=toDay};
+    const label=periodText(ym,p);
+    if(!fb()){alert('Firebaseが準備できていません。');return}
+    try{
+      const liveSnap=await fb().get(ref('shift/schedules'));
+      const current=liveSnap.val()||{};
+      const ids=Object.entries(current).filter(([,x])=>inPeriod(x?.date)).map(([id])=>id);
+      const hasMeta=!!(window.__shiftPeriodMeta||{})[`${ym}-${p}`];
+      if(!ids.length&&!hasMeta){alert(`${label}には登録されているシフトがありません。`);return}
+      if(!confirm(`${label}の登録シフトをすべて削除します。\n\n対象：${ids.length}件\n\nこの操作は元に戻せません。よろしいですか？`))return;
+      const updates={};
+      ids.forEach(id=>{updates[`shift/schedules/${id}`]=null});
+      updates[`shift/periodMeta/${ym}-${p}`]=null;
+      await fb().update(fb().ref(fb().db),updates);
+      pending=[];
+      if($('shiftReviewCard'))$('shiftReviewCard').hidden=true;
+      alert(`${label}の登録シフトを削除しました。\nこれで古い結果を残さず、再読み取りできます。`);
+      renderShiftRegisteredPeriods(); renderDay();
+    }catch(e){
+      console.error(e);
+      alert('シフトの削除に失敗しました。\n'+(e?.message||String(e)));
+    }
+  }
+
+  async function runOCR(){
+    if(!selectedFile){alert('先に「この期間の写真を選ぶ」でシフト写真を選んでください。');return}
+    const b=$('shiftOcrStart'); if(b){b.disabled=true;b.textContent='🔎 表を解析中…'}
+    setStatus('シフト表の位置を自動検出しています…','');
+    try{
+      // 完全無料・端末内処理。OCRは使わず、黄色列・罫線・セル内の黒い記号を画像処理します。
+      // 同じ書式なら写真が変わっても、番号→名前マスターで安定して照合できます。
+      const result=await readShiftTableByCells(selectedFile,$('shiftOcrStatus'));
+      pending=result.items;
+      renderReview();
+      $('shiftReviewCard').hidden=false;
+      setStatus(`読み取り完了：${[...new Set(pending.map(x=>x.date))].length}日・${pending.length}件。登録前に確認してください。`,'ok');
+    }catch(e){
+      console.error(e);
+      setStatus('読み取りに失敗しました。\n'+(e?.message||String(e)),'err');
+    }finally{if(b){b.disabled=false;b.textContent='🔎 出勤者を読み取る'}}
+  }
+
+  function renderReview(){
+    const card=$('shiftReviewCard'), date=$('shiftReviewDate'), box=$('shiftReviewNames'), count=$('shiftReviewCount');
+    if(!card||!date||!box||!count)return;
+    const dates=[...new Set(pending.map(x=>x.date).filter(Boolean))].sort();
+    if(!dates.length){card.hidden=true;return}
+    if(!dates.includes(date.value))date.value=dates[0];
+    const rows=pending.map((x,i)=>({...x,i})).filter(x=>x.date===date.value);
+    count.textContent=`${rows.filter(x=>x.selected!==false).length}人`;
+    box.innerHTML=rows.map(x=>{
+      const val=x.name.startsWith('未登録')||x.name.startsWith('番号不明')?'':x.name;
+      return `<div class="shiftReviewName" style="display:grid;grid-template-columns:24px 92px 1fr;align-items:center;gap:8px">
+        <input type="checkbox" data-sr="${x.i}" ${x.selected!==false?'checked':''}>
+        <b style="font-size:14px">番号 ${esc(x.number||'?')}</b>
+        <input type="text" data-sn="${x.i}" value="${esc(val)}" placeholder="${esc(x.name.startsWith('未登録')||x.name.startsWith('番号不明')?'名前を入力':'名前')}" style="width:100%;box-sizing:border-box;border:1px solid #ddd;border-radius:10px;padding:10px;font-weight:700">
+      </div>`;
+    }).join('');
+    box.querySelectorAll('[data-sr]').forEach(c=>c.addEventListener('change',()=>{pending[Number(c.dataset.sr)].selected=c.checked;renderReview()}));
+    box.querySelectorAll('[data-sn]').forEach(c=>c.addEventListener('change',()=>{const i=Number(c.dataset.sn),v=c.value.trim();if(v){pending[i].name=v;pending[i].unregistered=false;const num=normalizeStaffNumber(pending[i].number);if(num){staffMap[num]=v;localStorage.setItem('karuya_shift_staff_map_v1',JSON.stringify(staffMap));}staff=[...new Set([...staff,v])];localStorage.setItem(localKey(),JSON.stringify(staff));}renderReview()}));
+  }
+  async function saveShift(){
+    const chosen=pending.filter(x=>x.selected!==false&&x.date&&x.name&&!String(x.name).startsWith('未登録')&&!String(x.name).startsWith('番号不明'));
+    if(!chosen.length){alert('登録する出勤者がありません。番号または名前を確認してください。');return}
+    const [fromDay,toDay]=periodRange();
+    const ym=targetYM();
+    const [y,m]=ym.split('-').map(Number);
+    const prefix=`${ym}-`;
+    const inPeriod=d=>{if(!String(d).startsWith(prefix))return false;const n=Number(String(d).slice(-2));return n>=fromDay&&n<=toDay};
+    const p=$('shiftPeriod')?.value||'second';
+    const label=periodText(ym,p);
+    const dates=[...new Set(chosen.map(x=>x.date))].sort();
+    if(!confirm(`${label}のシフトを新しい写真の内容に入れ替えます。\n\n読み取り：${dates.length}日・${chosen.length}件\n\nよろしいですか？`))return;
+    try{
+      if(!fb())throw new Error('Firebaseが準備できていません。');
+      // 画面側のschedulesは直前のonValue更新前の可能性があるため、保存直前にFirebaseから再取得して期間を確実に置換する。
+      const liveSnap=await fb().get(ref('shift/schedules'));
+      const current=liveSnap.val()||{}; const u={};
+      Object.entries(current).forEach(([id,x])=>{if(inPeriod(x?.date))u[`shift/schedules/${id}`]=null});
+      chosen.forEach(x=>{const id=fb().push(ref('shift/schedules')).key;u[`shift/schedules/${id}`]={date:x.date,name:x.name,position:'',time:'',period:($('shiftPeriod')?.value||'second'),source:'photo-attendance',createdAt:Date.now()}});
+      u[`shift/periodMeta/${periodKey()}`]={yearMonth:ym,period:p,label,updatedAt:Date.now(),count:chosen.length};
+      await fb().update(fb().ref(fb().db),u);
+      pending=[];$('shiftReviewCard').hidden=true;alert(`${label}を登録しました。\n${chosen.length}件`);renderShiftRegisteredPeriods();renderDay();
+    }catch(e){console.error(e);alert('登録に失敗しました。\n'+(e?.message||String(e)))}
+  }
+  function renderDay(){
+    const date=$('shiftViewDate')?.value||today(); const list=$('shiftDayList'),sum=$('shiftDaySummary');if(!list||!sum)return;
+    const rows=Object.values(schedules).filter(x=>x?.date===date&&x?.name);
+    const byName={};
+    rows.forEach(x=>{
+      const name=String(x.name).trim(); if(!name)return;
+      const num=Number(x.number);
+      if(!byName[name] || (Number.isFinite(num)&&num<Number(byName[name].number||Infinity))) byName[name]={name,number:Number.isFinite(num)?num:9999};
+    });
+    const names=Object.values(byName).sort((a,b)=>a.number-b.number||a.name.localeCompare(b.name,'ja'));
+    sum.textContent=names.length?`${dateLabel(date)}　出勤 ${names.length}人`:'この日のシフトはありません。';
+    list.innerHTML=names.length?`<div class="shiftAttendanceGrid">${names.map((x,i)=>`<div class="shiftAttendanceName"><span class="shiftAttendanceNo">${i+1}</span><b>${esc(x.name)}</b></div>`).join('')}</div>`:'';
+    renderTodayQuick();
+    renderMemos();
+  }
+  function renderTodayQuick(){
+    const date=today();
+    const label=$('shiftTodayDateLabel'),sum=$('shiftTodayQuickSummary'),list=$('shiftTodayQuickList'),memoBox=$('shiftTodayQuickMemo');
+    if(!sum||!list)return;
+    if(label){const d=new Date(date+'T00:00:00');label.textContent=`${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日（${['日','月','火','水','木','金','土'][d.getDay()]}）`; }
+    const rows=Object.values(schedules).filter(x=>x?.date===date&&x?.name);
+    const byName={};
+    rows.forEach(x=>{
+      const name=String(x.name).trim(); if(!name)return;
+      const num=Number(x.number);
+      if(!byName[name] || (Number.isFinite(num)&&num<Number(byName[name].number||Infinity))) byName[name]={name,number:Number.isFinite(num)?num:9999};
+    });
+    const names=Object.values(byName).sort((a,b)=>a.number-b.number||a.name.localeCompare(b.name,'ja'));
+    sum.textContent=names.length?`出勤 ${names.length}人`:'本日のシフトはまだ登録されていません。';
+    list.innerHTML=names.length?names.map(x=>`<div class="shiftHeroName">${esc(x.name)}</div>`).join(''):'';
+    const ma=Object.values(memos).filter(x=>x?.date===date).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+    if(memoBox){memoBox.hidden=!ma.length;memoBox.textContent=ma.length?`📝 引き継ぎ\n${ma.map(x=>x.text).join('\n\n')}`:'';}
+  }
+
+  function renderMemoCalendar(){
+    const box=$('shiftMemoCalendar'); if(!box)return;
+    const selected=$('shiftMemoDate')?.value||today();
+    const base=new Date((selected||today())+'T00:00:00');
+    const y=base.getFullYear(), m=base.getMonth();
+    const first=new Date(y,m,1), last=new Date(y,m+1,0);
+    const memoDates=new Set(Object.values(memos||{}).filter(x=>x?.date&&String(x.text||'').trim()).map(x=>x.date));
+    const monthLabel=`${y}年${m+1}月`;
+    let html=`<div class="shiftMemoCalendarHead"><button type="button" class="gray" id="shiftMemoPrevMonth">‹</button><div class="shiftMemoCalendarTitle">${monthLabel}</div><button type="button" class="gray" id="shiftMemoNextMonth">›</button></div>`;
+    html+='<div class="shiftMemoCalendarWeek"><div>日</div><div>月</div><div>火</div><div>水</div><div>木</div><div>金</div><div>土</div></div>';
+    html+='<div class="shiftMemoCalendarGrid">';
+    for(let i=0;i<first.getDay();i++)html+='<div class="shiftMemoDay empty"></div>';
+    for(let d=1;d<=last.getDate();d++){
+      const iso=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      const has=memoDates.has(iso), sel=iso===selected;
+      html+=`<button type="button" class="shiftMemoDay${has?' hasMemo':''}${sel?' selected':''}" data-memo-day="${iso}">${d}${has?'<span class="shiftMemoDot"></span>':''}</button>`;
+    }
+    html+='</div><div class="shiftMemoCalendarHint">🟨 色が付いた日は引き継ぎメモが登録されています。日付をタップすると確認できます。</div>';
+    box.innerHTML=html;
+    box.querySelectorAll('[data-memo-day]').forEach(b=>b.addEventListener('click',()=>{
+      const d=b.dataset.memoDay;
+      if($('shiftMemoDate'))$('shiftMemoDate').value=d;
+      if($('shiftViewDate'))$('shiftViewDate').value=d;
+      renderMemos(); renderDay();
+    }));
+    $('shiftMemoPrevMonth')?.addEventListener('click',()=>{
+      const d=new Date(y,m-1,1); const iso=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-01`;
+      if($('shiftMemoDate'))$('shiftMemoDate').value=iso; renderMemos();
+    });
+    $('shiftMemoNextMonth')?.addEventListener('click',()=>{
+      const d=new Date(y,m+1,1); const iso=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-01`;
+      if($('shiftMemoDate'))$('shiftMemoDate').value=iso; renderMemos();
+    });
+  }
+  function renderMemos(){
+    const date=$('shiftMemoDate')?.value||$('shiftViewDate')?.value||today(), box=$('shiftMemoList');if(!box)return;
+    const a=Object.values(memos||{}).filter(x=>x?.date===date).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+    const selectedBox=$('shiftMemoSelected');
+    if(selectedBox){selectedBox.hidden=!a.length;selectedBox.innerHTML=a.length?`<b>📝 ${esc(dateLabel(date))}の引き継ぎ</b><div style="margin-top:6px">${a.map(x=>esc(x.text)).join('\n\n')}</div>`:'';}
+    box.innerHTML=a.length?a.map(x=>`<div class="shiftMemoItem"><div class="shiftMemoMeta">${esc(date)}</div>${esc(x.text)}</div>`).join(''):'<div class="small">この日の引き継ぎメモはありません。</div>';
+    renderMemoCalendar();
+  }
+  async function saveMemo(){
+    const date=$('shiftMemoDate')?.value||today(), text=$('shiftMemoText')?.value.trim();
+    if(!text){alert('引き継ぎメモを入力してください。');return}
+    const item={date,text,createdAt:Date.now()};
+    try{
+      if(fb()) await fb().push(ref('shift/memos'),item);
+      else throw new Error('Firebaseが準備されていません。');
+      $('shiftMemoText').value='';renderMemos();renderTodayQuick();alert(`${dateLabel(date)}の引き継ぎメモを保存しました。`);
+    }catch(e){
+      const a=JSON.parse(localStorage.getItem('karuya_shift_memos_v1')||'[]');a.unshift(item);localStorage.setItem('karuya_shift_memos_v1',JSON.stringify(a));memos={...memos,[`local-${item.createdAt}`]:item};$('shiftMemoText').value='';renderMemos();renderTodayQuick();alert('この端末にメモを保存しました。');
+    }
+  }
+  function periodRegistered(ym,p){
+    const [y,m]=ym.split('-').map(Number); const last=new Date(y,m,0).getDate(); const from=p==='first'?1:16, to=p==='first'?Math.min(15,last):last;
+    const prefix=`${ym}-`;
+    return Object.values(schedules||{}).some(x=>{if(!x?.date||!String(x.date).startsWith(prefix))return false;const n=Number(String(x.date).slice(-2));return n>=from&&n<=to&&x?.name});
+  }
+  function renderShiftRegisteredPeriods(){
+    const box=$('shiftRegisteredPeriods'); if(!box)return;
+    const d=new Date(); const ymNow=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    const next=new Date(d.getFullYear(),d.getMonth()+1,1); const ymNext=`${next.getFullYear()}-${String(next.getMonth()+1).padStart(2,'0')}`;
+    const metas=window.__shiftPeriodMeta||{};
+    const items=[[ymNow,'first'],[ymNow,'second'],[ymNext,'first']];
+    box.innerHTML=items.map(([ym,p])=>{const reg=periodRegistered(ym,p);const meta=metas[`${ym}-${p}`];const state=reg?`登録済み${meta?.updatedAt?`・更新 ${new Date(meta.updatedAt).toLocaleDateString('ja-JP')}`:''}`:'未登録';return `<div class="shiftRegisteredPeriod ${reg?'registered':'empty'}"><div class="periodName">${esc(periodText(ym,p))}</div><div class="periodState">${reg?'✅ ':'⚪ '}${esc(state)}</div></div>`}).join('');
+    updateShiftUploadTargetLabel();
+  }
+  function updateShiftUploadTargetLabel(){
+    const e=$('shiftUploadTargetLabel'); if(!e)return; const ym=targetYM(),p=$('shiftPeriod')?.value||'second'; e.textContent=`📌 今から登録するシフト：${periodText(ym,p)}`;
+  }
+
+  function bind(){
+    if(window.__shiftStandaloneBound)return;window.__shiftStandaloneBound=true;
+    const d=today(); if($('shiftViewDate'))$('shiftViewDate').value=d;if($('shiftMemoDate'))$('shiftMemoDate').value=d;if($('shiftTargetMonth'))$('shiftTargetMonth').value=targetYM(); updateShiftUploadTargetLabel();
+    $('shiftStaffMasterSave')?.addEventListener('click',saveStaff);
+    $('shiftStaffMasterLoad')?.addEventListener('click',loadStaff);
+    $('shiftPeriod')?.addEventListener('change',updateShiftUploadTargetLabel);
+    $('shiftTargetMonth')?.addEventListener('change',updateShiftUploadTargetLabel);
+    $('shiftPhotoChoose')?.addEventListener('click',()=>{$('shiftPhotoInput')?.click()});
+    $('shiftPhotoInput')?.addEventListener('change',e=>{selectedFile=e.target.files?.[0]||null;if(selectedFile){showPreview(selectedFile);if($('shiftPhotoFileName'))$('shiftPhotoFileName').textContent=`選択中：${selectedFile.name}`;setStatus('写真を選択しました。「🔎 読み取る」を押してください。','ok')}});
+    $('shiftOcrStart')?.addEventListener('click',runOCR);
+    $('shiftDeletePeriod')?.addEventListener('click',deleteShiftPeriod);
+    $('shiftReviewDate')?.addEventListener('change',renderReview);
+    $('shiftSave')?.addEventListener('click',saveShift);
+    $('shiftReviewCancel')?.addEventListener('click',()=>{$('shiftReviewCard').hidden=true;pending=[]});
+    $('shiftViewDate')?.addEventListener('change',renderDay);
+    $('shiftTodayBtn')?.addEventListener('click',()=>{if($('shiftViewDate'))$('shiftViewDate').value=today();renderDay()});
+    $('shiftTodayQuickBtn')?.addEventListener('click',()=>{if($('shiftViewDate'))$('shiftViewDate').value=today();renderDay();$('shiftDaySummary')?.scrollIntoView({behavior:'smooth',block:'start'});});
+    $('shiftMemoDate')?.addEventListener('change',renderMemos);
+    $('shiftMemoSave')?.addEventListener('click',saveMemo);
+    $('shiftMemoTodayBtn')?.addEventListener('click',()=>{if($('shiftMemoDate'))$('shiftMemoDate').value=today();renderMemos()});
+    try{const a=JSON.parse(localStorage.getItem('karuya_shift_memos_v1')||'[]');a.forEach((x,i)=>memos[`local-${x.createdAt||i}`]=x)}catch(e){}
+    loadStaff();renderShiftRegisteredPeriods();renderDay();renderMemoCalendar();
+  }
+  function initData(){
+    const start=Date.now(), timer=setInterval(()=>{
+      if(window.__fb){clearInterval(timer);dbReady=true;bind();
+        try{fb().onValue(ref('shift/schedules'),s=>{schedules=s.val()||{};renderShiftRegisteredPeriods();renderDay()});fb().onValue(ref('shift/memos'),s=>{memos=s.val()||{};renderMemos();renderMemoCalendar()});fb().onValue(ref('shift/periodMeta'),s=>{window.__shiftPeriodMeta=s.val()||{};renderShiftRegisteredPeriods()});fb().onValue(ref('shift/staffMap'),s=>{const v=s.val()||{};const a={};Object.entries(v).forEach(([n,x])=>{const name=String(x?.name||'').trim();if(name)a[normalizeStaffNumber(n)]=name;});if(Object.keys(a).length){staffMap=a;staff=Object.values(a);renderStaff();}});}catch(e){console.warn('shift realtime',e)}
+      }else if(Date.now()-start>15000){clearInterval(timer);bind();setStatus('Firebaseの共有接続がまだ準備できていません。写真・名前はこの端末で操作できます。','warn')}
+    },100);
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initData);else initData();
+})();
+</script>
+<style id="shiftGeminiAiStyle">
+#shiftGeminiAiBox{margin-top:12px;padding:14px;border:1px solid #d8e2f5;border-radius:16px;background:#f7faff}
+#shiftGeminiAiBox .aiTitle{font-weight:800;font-size:18px;margin-bottom:6px}
+#shiftGeminiAiBox .aiHint{font-size:13px;color:#555;line-height:1.55}
+#shiftGeminiKeyRow{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:end;margin-top:10px}
+#shiftGeminiKeyRow button{width:auto;margin:0;white-space:nowrap}
+#shiftGeminiKeyStatus{font-size:13px;margin-top:6px;color:#176b32}
+#shiftAiPhotoBox{margin-top:12px}
+#shiftAiPhotoBox .aiPhotoActions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+#shiftAiPhotoBox button{margin:0}
+#shiftAiPhotoPreview{margin-top:10px;max-height:300px;overflow:auto;border:1px solid #ddd;border-radius:14px;background:#fff;padding:7px}
+#shiftAiPhotoPreview img{display:block;width:100%;height:auto;max-height:280px;object-fit:contain;border-radius:10px}
+.shiftAiResult{margin-top:10px;padding:10px 12px;border-radius:12px;background:#fff;border:1px solid #e1e4e8;white-space:pre-wrap;line-height:1.5}
+@media(max-width:600px){#shiftGeminiKeyRow{grid-template-columns:1fr}#shiftGeminiKeyRow button{width:100%}.aiPhotoActions{grid-template-columns:1fr!important}}
+</style>
+<script id="shiftGeminiAiReader">
+(function(){
+  'use strict';
+  const $=id=>document.getElementById(id);
+  const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  const KEY_STORE='karuya_shift_gemini_api_key_v1';
+  const MODEL='gemini-3.6-flash';
+  let aiFile=null, aiPhotoData='';
+
+  function getKey(){return String(localStorage.getItem(KEY_STORE)||'').trim()}
+  function setAiStatus(msg,kind=''){const e=$('shiftGeminiAiStatus');if(!e)return;e.className='shiftStatus '+kind;e.textContent=msg}
+  function injectUi(){
+    const target=$('shiftPhotoPreview'); if(!target||$('shiftGeminiAiBox'))return;
+    target.insertAdjacentHTML('afterend',`
+      <div id="shiftGeminiAiBox">
+        <div class="aiTitle">🤖 AIでシフト表を読み取る</div>
+        <div class="aiHint">シフト表の写真をGemini AIに読み込ませ、日付・名前・出勤状況を読み取ります。写真はAI読み取り後に自動保存せず、登録操作をした時だけシフトを保存します。</div>
+        <div id="shiftGeminiKeyRow">
+          <div><label style="margin-top:8px">Gemini APIキー</label><input id="shiftGeminiApiKey" type="password" autocomplete="off" placeholder="AIza..."></div>
+          <button type="button" class="gray" id="shiftGeminiKeySave">キーを保存</button>
+        </div>
+        <div id="shiftGeminiKeyStatus"></div>
+        <div id="shiftAiPhotoBox">
+          <div class="aiPhotoActions">
+            <button type="button" class="gray" id="shiftAiPhotoChoose">📷 AI読み取り用の写真を選ぶ</button>
+            <button type="button" class="danger" id="shiftAiPhotoDelete">❌ 写真を削除</button>
+          </div>
+          <input id="shiftAiPhotoInput" type="file" accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp,.heic,.heif" style="display:none">
+          <div id="shiftAiPhotoName" class="aiHint" style="margin-top:7px">AI読み取り用の写真はまだありません。</div>
+          <div id="shiftAiPhotoPreview" hidden></div>
+        </div>
+        <button type="button" id="shiftGeminiRead" style="margin-top:10px">🤖 AIで出勤者を読み取る</button>
+        <div id="shiftGeminiAiStatus" class="shiftStatus" style="margin-top:10px">Gemini APIキーと写真を用意してください。</div>
+        <div id="shiftGeminiAiResult" class="shiftAiResult" hidden></div>
+      </div>`);
+    const k=getKey(); if($('shiftGeminiApiKey'))$('shiftGeminiApiKey').value=k;
+    $('shiftGeminiKeyStatus').textContent=k?'✅ この端末にAPIキーを保存済み':'APIキーはこの端末だけに保存します。HTMLやGitHubには書き込みません。';
+    $('shiftGeminiKeySave').onclick=()=>{const v=$('shiftGeminiApiKey').value.trim();if(!v){alert('APIキーを入力してください。');return}localStorage.setItem(KEY_STORE,v);$('shiftGeminiKeyStatus').textContent='✅ APIキーをこの端末に保存しました。';setAiStatus('APIキーを保存しました。写真を選んでAI読み取りしてください。','ok')};
+    $('shiftAiPhotoChoose').onclick=()=>$('shiftAiPhotoInput').click();
+    $('shiftPhotoInput')?.addEventListener('change',e=>{const f=e.target.files?.[0];if(f){aiFile=f;showAiPhoto(f)}});
+    $('shiftAiPhotoInput').onchange=e=>{aiFile=e.target.files?.[0]||null;if(aiFile)showAiPhoto(aiFile)};
+    $('shiftAiPhotoDelete').onclick=deleteAiPhoto;
+    $('shiftGeminiRead').onclick=runGeminiRead;
+  }
+  function showAiPhoto(file){
+    const box=$('shiftAiPhotoPreview'); if(!box)return;
+    const url=URL.createObjectURL(file); box.hidden=false; box.innerHTML=`<img src="${url}" alt="AI読み取り用シフト表">`;
+    $('shiftAiPhotoName').textContent='選択中：'+file.name;
+    setAiStatus('写真を選択しました。「🤖 AIで出勤者を読み取る」を押してください。','ok');
+  }
+  function deleteAiPhoto(){
+    aiFile=null;aiPhotoData='';
+    if($('shiftAiPhotoInput'))$('shiftAiPhotoInput').value='';
+    if($('shiftAiPhotoPreview')){$('shiftAiPhotoPreview').hidden=true;$('shiftAiPhotoPreview').innerHTML=''}
+    if($('shiftAiPhotoName'))$('shiftAiPhotoName').textContent='AI読み取り用の写真はまだありません。';
+    if($('shiftGeminiAiResult'))$('shiftGeminiAiResult').hidden=true;
+    setAiStatus('写真を削除しました。','');
+  }
+  async function fileToBase64Image(file){
+    // まず画像をCanvasで縮小し、APIへ送る容量を抑えます。HEIC等でCanvas化できない場合は元データを試します。
+    try{
+      const bmp=await createImageBitmap(file);
+      const max=1800, scale=Math.min(1,max/Math.max(bmp.width,bmp.height));
+      const c=document.createElement('canvas');c.width=Math.max(1,Math.round(bmp.width*scale));c.height=Math.max(1,Math.round(bmp.height*scale));
+      const ctx=c.getContext('2d');ctx.drawImage(bmp,0,0,c.width,c.height);if(bmp.close)bmp.close();
+      const dataUrl=c.toDataURL('image/jpeg',0.82);
+      return {mime:'image/jpeg',data:dataUrl.split(',')[1],dataUrl};
+    }catch(e){
+      const dataUrl=await new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result);r.onerror=reject;r.readAsDataURL(file)});
+      const m=String(dataUrl).match(/^data:([^;]+);base64,(.*)$/s);if(!m)throw new Error('画像データを読み取れませんでした。');
+      return {mime:m[1],data:m[2],dataUrl};
+    }
+  }
+  function staffMasterText(){
+    try{return String($('shiftStaffMasterText')?.value||'').trim()}catch(_){return ''}
+  }
+  function targetInfo(){
+    const ym=$('shiftTargetMonth')?.value||'';const p=$('shiftPeriod')?.value||'second';
+    return `${ym} ${p==='first'?'前半（1〜15日）':'後半（16日〜月末）'}`;
+  }
+  function cleanJsonText(text){
+    let t=String(text||'').trim();
+    t=t.replace(/^```(?:json)?\s*/i,'').replace(/\s*```$/,'').trim();
+    const a=t.indexOf('{'),b=t.lastIndexOf('}');if(a>=0&&b>a)t=t.slice(a,b+1);
+    return t;
+  }
+  function normalizeDate(v){
+    const s=String(v||'').trim().replace(/[./]/g,'-');
+    let m=s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);if(m)return `${m[1]}-${String(m[2]).padStart(2,'0')}-${String(m[3]).padStart(2,'0')}`;
+    return '';
+  }
+  function normalizeNum(v){return String(v??'').replace(/[０-９]/g,ch=>String.fromCharCode(ch.charCodeAt(0)-0xFEE0)).replace(/[^0-9]/g,'')}
+  function mapNameByNumber(num){
+    const n=normalizeNum(num);if(!n)return '';
+    const txt=staffMasterText();
+    for(const line of txt.split(/\r?\n/)){const m=line.trim().match(/^([0-9０-９.,、\s]+)/);if(!m)continue;const nums=(m[1].match(/[0-9０-９]+/g)||[]).map(normalizeNum);if(nums.includes(n))return line.trim().slice(m[0].length).trim().replace(/^[.．,、:：\-–—]+/,'').trim()}
+    return '';
+  }
+  function buildPending(entries){
+    const out=[];const [ym]=targetInfo().split(' ');const [yy,mm]=ym.split('-').map(Number);const p=$('shiftPeriod')?.value||'second';
+    const [from,to]=p==='first'?[1,15]:[16,new Date(yy,mm,0).getDate()];
+    for(const x of (Array.isArray(entries)?entries:[])){
+      if(x?.present===false)continue;
+      let date=normalizeDate(x?.date);if(!date)continue;
+      const [y,m,d]=date.split('-').map(Number);if(y!==yy||m!==mm||d<from||d>to)continue;
+      const number=normalizeNum(x?.number);let name=String(x?.name||'').trim();if(!name&&number)name=mapNameByNumber(number);
+      if(!name)name=number?`未登録（番号${number}）`:'番号不明';
+      const exists=out.find(z=>z.date===date&&z.name===name&&z.number===number);if(exists)continue;
+      out.push({date,name,number,selected:true,unregistered:name.startsWith('未登録')||name==='番号不明',confidence:String(x?.confidence||'medium'),aiNote:String(x?.note||'')});
+    }
+    return out;
+  }
+  async function runGeminiRead(){
+    const key=getKey();if(!key){alert('先にGemini APIキーを保存してください。');return}
+    if(!aiFile){alert('先に「AI読み取り用の写真を選ぶ」で写真を選んでください。');return}
+    const b=$('shiftGeminiRead');if(b){b.disabled=true;b.textContent='🤖 AIが読み取り中…'}
+    setAiStatus('写真をAIに送信して、日付・名前・出勤状況を確認しています…','');
+    try{
+      const img=await fileToBase64Image(aiFile);aiPhotoData=img.dataUrl;
+      const prompt=`あなたは飲食店のシフト表を読み取る専用AIです。画像を細かく確認してください。\n対象期間：${targetInfo()}\nスタッフ番号・名前マスター（参考。画像に書かれた名前と照合してください）：\n${staffMasterText()||'（未登録）'}\n\n目的：シフト表の各日について「実際に出勤になっている人」を読み取ります。\nルール：\n1. 日付、曜日、スタッフ名、スタッフ番号、勤務記号を画像から読み取る。\n2. 「×」「休」「公休」「イベント等で出勤ではない印」は出勤にしない。\n3. 出勤と明確に判断できる人だけ present=true。判定が曖昧なら present=false にせず confidence="low" として残す。\n4. 名前が読める場合は名前を返し、番号も読める場合は番号を返す。\n5. 対象期間外の日付は返さない。\n6. 同じ人・同じ日を重複させない。\n7. JSON以外の説明は返さない。\n\n次のJSONだけを返してください：\n{"entries":[{"date":"YYYY-MM-DD","number":"9","name":"加藤","present":true,"confidence":"high","note":"出勤記号を確認"}]}`;
+      const url=`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`;
+      const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':key},body:JSON.stringify({contents:[{role:'user',parts:[{text:prompt},{inline_data:{mime_type:img.mime,data:img.data}}]}],generationConfig:{temperature:0,responseMimeType:'application/json'}})});
+      const raw=await res.text();let data;try{data=JSON.parse(raw)}catch(_){throw new Error('Geminiから正しい応答を受け取れませんでした。')}
+      if(!res.ok)throw new Error(data?.error?.message||`Gemini APIエラー（${res.status}）`);
+      const text=(data?.candidates||[]).flatMap(c=>c?.content?.parts||[]).map(p=>p?.text||'').join('').trim();
+      if(!text)throw new Error('AIの読み取り結果が空でした。写真全体が写っているか確認してください。');
+      const obj=JSON.parse(cleanJsonText(text));const entries=Array.isArray(obj.entries)?obj.entries:[];const next=buildPending(entries);
+      if(!next.length)throw new Error('対象期間の出勤者を読み取れませんでした。写真全体が写っているか、対象月・前半/後半が合っているか確認してください。');
+      window.dispatchEvent(new CustomEvent('shift-ai-pending',{detail:{items:next,photoData:aiPhotoData,photoName:aiFile.name}}));
+      const uniqueDates=[...new Set(next.map(x=>x.date))].length;
+      const low=next.filter(x=>x.confidence==='low').length;
+      if($('shiftGeminiAiResult')){$('shiftGeminiAiResult').hidden=false;$('shiftGeminiAiResult').textContent=`AI読み取り完了：${uniqueDates}日・${next.length}件${low?`\n⚠️ 確信度が低い項目：${low}件`:'\n✅ すべて確認してください'}`;}
+      setAiStatus('AI読み取り完了。登録前の確認画面で内容を確認してください。','ok');
+    }catch(e){console.error(e);setAiStatus('AI読み取りに失敗しました。\n'+(e?.message||String(e)),'err')}
+    finally{if(b){b.disabled=false;b.textContent='🤖 AIで出勤者を読み取る'}}
+  }
+  function hookPending(){
+    window.addEventListener('shift-ai-pending',e=>{
+      const items=e.detail?.items||[];if(!items.length)return;
+      // 既存の登録前確認UIをそのまま利用するため、既存runOCRと同じ状態へ橋渡しします。
+      const original=window.__shiftAiPendingBridge;if(typeof original==='function'){original(items);return}
+      // 既存IIFE内のpendingには直接触れられないため、画面上の確認UIへ反映するためにカスタムデータを保存。
+      window.__shiftGeminiPending=items;
+      const card=$('shiftReviewCard'),date=$('shiftReviewDate'),box=$('shiftReviewNames'),count=$('shiftReviewCount');
+      if(!card||!date||!box||!count)return;
+      const dates=[...new Set(items.map(x=>x.date))].sort();date.value=dates[0];count.textContent=`${items.length}件`;
+      box.innerHTML=items.map((x,i)=>`<div class="shiftReviewName" style="display:grid;grid-template-columns:24px 92px 1fr;align-items:center;gap:8px"><input type="checkbox" data-gsr="${i}" checked><b style="font-size:14px">番号 ${esc(x.number||'?')}</b><input type="text" data-gn="${i}" value="${esc(x.name.startsWith('未登録')||x.name==='番号不明'?'':x.name)}" placeholder="名前" style="width:100%;box-sizing:border-box;border:1px solid #ddd;border-radius:10px;padding:10px;font-weight:700"></div>`).join('');
+      const render=()=>{const d=date.value;const rows=items.map((x,i)=>({...x,i})).filter(x=>x.date===d);count.textContent=`${rows.filter(x=>x.selected!==false).length}人`;box.innerHTML=rows.map(x=>`<div class="shiftReviewName" style="display:grid;grid-template-columns:24px 92px 1fr;align-items:center;gap:8px"><input type="checkbox" data-gsr="${x.i}" ${x.selected!==false?'checked':''}><b style="font-size:14px">番号 ${esc(x.number||'?')}</b><input type="text" data-gn="${x.i}" value="${esc(x.name.startsWith('未登録')||x.name==='番号不明'?'':x.name)}" placeholder="名前" style="width:100%;box-sizing:border-box;border:1px solid #ddd;border-radius:10px;padding:10px;font-weight:700"></div>`).join('');box.querySelectorAll('[data-gsr]').forEach(c=>c.onchange=()=>{items[Number(c.dataset.gsr)].selected=c.checked;render()});box.querySelectorAll('[data-gn]').forEach(c=>c.onchange=()=>{items[Number(c.dataset.gn)].name=c.value.trim()||items[Number(c.dataset.gn)].name;render()})};
+      date.onchange=render;render();card.hidden=false;card.scrollIntoView({behavior:'smooth',block:'start'});
+      // 保存処理をAI結果に切り替えるため、保存ボタンを一時的に差し替えます。
+      const save=$('shiftSave');if(save){if(save.dataset.aiBound!=='1'){save.dataset.aiBound='1';save.addEventListener('click',async(e)=>{e.preventDefault();e.stopImmediatePropagation();const chosen=items.filter(x=>x.selected!==false&&x.date&&x.name&&!String(x.name).startsWith('未登録')&&x.name!=='番号不明');if(!chosen.length){alert('登録する出勤者がありません。');return}const ym=$('shiftTargetMonth').value,p=$('shiftPeriod').value||'second';const [from,to]=p==='first'?[1,15]:[16,new Date(Number(ym.slice(0,4)),Number(ym.slice(5,7)),0).getDate()];const label=`${ym} ${p==='first'?'前半（1〜15日）':'後半（16日〜月末）'}`;if(!confirm(`${label}のシフトをAI読み取り結果に入れ替えます。\n\n${chosen.length}件を登録します。\n\nよろしいですか？`))return;try{if(!window.__fb)throw new Error('Firebaseが準備できていません。');const fb=window.__fb,live=await fb.get(fb.ref(fb.db,'shift/schedules')),cur=live.val()||{},u={};Object.entries(cur).forEach(([id,x])=>{if(x?.date&&String(x.date).startsWith(ym+'-')){const d=Number(String(x.date).slice(-2));if(d>=from&&d<=to)u[`shift/schedules/${id}`]=null}});chosen.forEach(x=>{const id=fb.push(fb.ref(fb.db,'shift/schedules')).key;u[`shift/schedules/${id}`]={date:x.date,name:x.name,number:x.number||'',position:'',time:'',period:p,source:'gemini-ai',confidence:x.confidence||'medium',createdAt:Date.now()}});u[`shift/periodMeta/${ym}-${p}`]={yearMonth:ym,period:p,label,updatedAt:Date.now(),count:chosen.length,source:'gemini-ai',photoData:aiPhotoData||'',photoName:aiFile?.name||''};await fb.update(fb.ref(fb.db),u);card.hidden=true;setAiStatus('AI読み取り結果を保存しました。','ok');alert('AI読み取り結果をシフトに登録しました。');}catch(err){alert('シフト登録に失敗しました。\n'+(err?.message||err))}},true)}}
+    });
+  }
+  function init(){injectUi();hookPending();}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+})();
+</script>
+
 <script id="search-clear-buttons-addon-script">
 (function(){
   const targets = new Set([
@@ -4601,4 +5664,31 @@ button, label {
 </script>
 <!-- ===== 検索窓クリアボタン追加ここまで ===== -->
 
+<script id="shiftNavIndependentFix">
+(function(){
+  function bindShiftNav(){
+    const $=id=>document.getElementById(id);
+    const pages={shopping:'shoppingPage',vegetable:'vegetablePage',prep:'prepPage',shift:'shiftPage'};
+    const tabs={shopping:'tabShopping',vegetable:'tabVegetable',prep:'tabPrep',shift:'tabShift'};
+    function show(which){
+      Object.entries(pages).forEach(([key,id])=>{const el=$(id);if(el)el.hidden=key!==which;});
+      Object.entries(tabs).forEach(([key,id])=>{const el=$(id);if(el)el.classList.toggle('active',key===which);});
+      if(which==='shift'){
+        const d=new Date();
+        const iso=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+        const v=$('shiftViewDate'); if(v&&!v.value)v.value=iso;
+        const m=$('shiftMemoDate'); if(m&&!m.value)m.value=iso;
+        window.dispatchEvent(new CustomEvent('shift-page-opened'));
+      }
+    }
+    Object.entries(tabs).forEach(([key,id])=>{
+      const el=$(id); if(!el||el.dataset.independentShiftNav==='1')return;
+      el.dataset.independentShiftNav='1';
+      el.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();show(key);},true);
+    });
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bindShiftNav);else bindShiftNav();
+  window.addEventListener('load',bindShiftNav);
+})();
+</script>
 </body></html>
