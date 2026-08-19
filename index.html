@@ -911,6 +911,148 @@ html.recipeModalLocked, body.recipeModalLocked{
   .shiftTodayEditRow input{min-width:0}
 }
 </style>
+
+<style id="final-visual-only-selection-design">
+/* =========================================================
+   最終デザイン調整：見た目のみ変更
+   機能・HTML・JavaScriptの動作には変更を加えない
+   ========================================================= */
+
+/* 全体：明るい白ベース */
+html, body{
+  background:#ffffff !important;
+}
+body{
+  color:#172033 !important;
+}
+
+/* 上部4メニュー：白を基本に、選択中だけ色を付ける */
+.navtabs.navtabs4{
+  gap:10px !important;
+  margin-bottom:18px !important;
+}
+.navtabs.navtabs4 button{
+  background:#ffffff !important;
+  color:#25324a !important;
+  border:2px solid #e2e7ef !important;
+  box-shadow:0 3px 10px rgba(30,55,90,.08) !important;
+  transition:background .15s ease,border-color .15s ease,box-shadow .15s ease,color .15s ease,transform .15s ease;
+}
+.navtabs.navtabs4 button:hover{
+  background:#f8fbff !important;
+  border-color:#b9c9e8 !important;
+}
+.navtabs.navtabs4 button:active{
+  transform:translateY(1px);
+}
+
+/* 選択中だけ色を変更。4項目とも同じデザインルールで統一 */
+.navtabs.navtabs4 #tabShopping.active{
+  background:#2f6fe4 !important;
+  border-color:#2f6fe4 !important;
+  color:#ffffff !important;
+  box-shadow:0 5px 14px rgba(47,111,228,.24) !important;
+}
+.navtabs.navtabs4 #tabVegetable.active{
+  background:#2aa052 !important;
+  border-color:#2aa052 !important;
+  color:#ffffff !important;
+  box-shadow:0 5px 14px rgba(42,160,82,.22) !important;
+}
+.navtabs.navtabs4 #tabPrep.active{
+  background:#ed8a19 !important;
+  border-color:#ed8a19 !important;
+  color:#ffffff !important;
+  box-shadow:0 5px 14px rgba(237,138,25,.23) !important;
+}
+.navtabs.navtabs4 #tabShift.active{
+  background:#7656c9 !important;
+  border-color:#7656c9 !important;
+  color:#ffffff !important;
+  box-shadow:0 5px 14px rgba(118,86,201,.22) !important;
+}
+
+/* 「表示する場所」：基本は白。選択中だけ青。
+   買い物がある場所はゴールドで分かるようにする。 */
+#shoppingPage #filters{
+  gap:9px !important;
+}
+#shoppingPage #filters button{
+  background:#ffffff !important;
+  color:#26344d !important;
+  border:2px solid #dfe5ed !important;
+  box-shadow:0 2px 7px rgba(30,55,90,.07) !important;
+  font-weight:800 !important;
+  transition:background .15s ease,border-color .15s ease,color .15s ease,box-shadow .15s ease,transform .15s ease;
+}
+#shoppingPage #filters button:hover{
+  background:#f8fbff !important;
+  border-color:#b9c9e8 !important;
+}
+
+/* 通常の選択中 */
+#shoppingPage #filters button.active{
+  background:#2f6fe4 !important;
+  color:#ffffff !important;
+  border-color:#2f6fe4 !important;
+  box-shadow:0 4px 12px rgba(47,111,228,.23) !important;
+}
+
+/* 買い物が存在する場所＝ゴールド */
+#shoppingPage #filters button.has-items{
+  background:#fff8df !important;
+  color:#805b00 !important;
+  border:2px solid #dcae32 !important;
+  box-shadow:0 3px 9px rgba(196,145,20,.13) !important;
+}
+
+/* 「買い物あり」かつ現在選択中：ゴールドを維持して、選択状態も明確に */
+#shoppingPage #filters button.has-items.active{
+  background:#d6a82b !important;
+  color:#ffffff !important;
+  border-color:#b98b16 !important;
+  box-shadow:0 5px 13px rgba(185,139,22,.28) !important;
+}
+
+/* 全体のカードを白く、境界だけ軽くして統一感を出す */
+.card{
+  background:#ffffff !important;
+  border:1px solid #e5eaf1;
+  box-shadow:0 3px 14px rgba(28,48,78,.06);
+}
+
+/* セクション見出しの文字を読みやすく */
+.card h2,
+label{
+  color:#172033;
+}
+
+/* 選択系の入力欄も白ベースで統一 */
+input,select,textarea{
+  background:#ffffff !important;
+  color:#172033 !important;
+}
+
+/* スマホでもボタン文字が潰れないように */
+.navtabs.navtabs4 button,
+#shoppingPage #filters button{
+  -webkit-text-fill-color:currentColor !important;
+  text-shadow:none !important;
+}
+</style>
+
+
+<style id="lightBackgroundOnlyFinal">
+/* 背景だけを薄く色付け。既存の機能・デザイン・JavaScriptは変更しない */
+html{
+  background:#edf3f8 !important;
+}
+body{
+  background:
+    linear-gradient(180deg,#eef4f9 0%,#e9f0f6 100%) !important;
+}
+</style>
+
 </head>
 <body><div class="wrap">
 <div class="navtabs navtabs3 navtabs4">
