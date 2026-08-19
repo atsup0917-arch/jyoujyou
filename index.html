@@ -4781,6 +4781,17 @@ button, label {
   'use strict';
   const $=id=>document.getElementById(id);
   const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  // AI読み取り側とは別のIIFEなので、ポジション変換関数をここでも安全に参照できるようにする。
+  function shiftPositionForMark(mark){
+    const k=String(mark??'').trim().toUpperCase();
+    const defaults={S:'板場',Y:'焼場',O:'ホール',K:'コンロ',F:'揚場'};
+    let map={...defaults};
+    try{
+      const raw=localStorage.getItem('karitaya_shift_position_map_v1');
+      if(raw){const x=JSON.parse(raw);if(x&&typeof x==='object')map={...map,...x};}
+    }catch(_){}
+    return String(map[k]||defaults[k]||k).trim();
+  }
   const today=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};
   const targetYM=()=>{const v=$('shiftTargetMonth')?.value; if(v&&/^\d{4}-\d{2}$/.test(v)) return v; const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`};
   const periodRange=()=>{const v=$('shiftPeriod')?.value||'second';const [ys,ms]=targetYM().split('-').map(Number);const last=new Date(ys,ms,0).getDate();return v==='first'?[1,Math.min(15,last)]:[16,last]};
@@ -5369,15 +5380,11 @@ button, label {
     rows.forEach(x=>{
       const name=String(x.name).trim(); if(!name)return;
       const num=Number(x.number);
-      if(!byName[name] || (Number.isFinite(num)&&num<Number(byName[name].number||Infinity))){
-        byName[name]={name,number:Number.isFinite(num)?num:9999,position:String(x.position||'').trim(),mark:String(x.mark||'').trim().toUpperCase()};
-      }else if(!byName[name].position && String(x.position||'').trim()){
-        byName[name].position=String(x.position||'').trim();
-      }
+      const pos=String(x.position||'').trim()||shiftPositionForMark(x.mark); const mark=String(x.mark||'').trim().toUpperCase(); if(!byName[name] || (Number.isFinite(num)&&num<Number(byName[name].number||Infinity))) byName[name]={name,number:Number.isFinite(num)?num:9999,position:pos,mark}; else { if(!String(byName[name].position||'').trim()&&pos) byName[name].position=pos; if(!String(byName[name].mark||'').trim()&&mark) byName[name].mark=mark; }
     });
     const names=Object.values(byName).sort((a,b)=>a.number-b.number||a.name.localeCompare(b.name,'ja'));
     sum.textContent=names.length?`${dateLabel(date)}　出勤 ${names.length}人`:'この日のシフトはありません。';
-    list.innerHTML=names.length?`<div class="shiftAttendanceGrid">${names.map((x,i)=>`<div class="shiftAttendanceName"><span class="shiftAttendanceNo">${i+1}</span><div style="min-width:0;flex:1"><b>${esc(x.name)}</b>${x.position?`<span style="display:block;margin-top:2px;font-size:.86em;font-weight:700;color:#555">${esc(x.position)}</span>`:''}</div></div>`).join('')}</div>`:'';
+    list.innerHTML=names.length?`<div class="shiftAttendanceGrid">${names.map((x,i)=>`<div class="shiftAttendanceName"><span class="shiftAttendanceNo">${i+1}</span><b>${esc(x.name)}</b>${x.position?`　<span style="font-size:.85em;font-weight:700;color:#555">${esc(x.position)}</span>`:''}</div>`).join('')}</div>`:'';
     renderTodayQuick();
     renderMemos();
   }
@@ -5474,7 +5481,7 @@ button, label {
     // 同名スタッフが複数行ある場合でもポジションを拾う
     names.forEach(n=>{
       const same=rows.filter(r=>String(r.name||'').trim()===n.name);
-      n.position=String(same.find(r=>String(r.position||'').trim())?.position||'').trim();n.mark=String(same.find(r=>String(r.mark||'').trim())?.mark||'').trim().toUpperCase();
+      n.mark=String(same.find(r=>String(r.mark||'').trim())?.mark||'').trim().toUpperCase();n.position=String(same.find(r=>String(r.position||'').trim())?.position||'').trim()||shiftPositionForMark(n.mark);
     });
     sum.textContent=names.length?`出勤 ${names.length}人`:'本日のシフトはまだ登録されていません。';
     list.innerHTML=names.length?names.map(x=>`<div class="shiftHeroName">${esc(x.name)}${x.position?`　<span style="font-size:.85em;font-weight:700;color:#555">${esc(x.position)}</span>`:''}</div>`).join(''):'';
