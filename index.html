@@ -4166,6 +4166,38 @@ import {ref,onValue,set,update,remove,push,runTransaction} from "https://www.gst
    if(!html)html='<div class="masterEmpty">該当する食材がありません。</div>';
    box.innerHTML=html;
 
+   // 動的に再描画されるボタンへイベントを接続
+   const addCategoryBtn=$('masterAddCategory');
+   if(addCategoryBtn) addCategoryBtn.onclick=async()=>{
+     const name=prompt('追加するカテゴリー名');
+     if(!name||!name.trim())return;
+     const n=name.trim();
+     try{
+       await masterTransaction(m=>{
+         if(m.categories[n])throw new Error('同じカテゴリーがすでにあります。');
+         m.categories[n]=[];
+         m.categoryOrder.push(n);
+         return m;
+       });
+       window.__masterSelectedCategory=n;
+       masterMsg(`カテゴリー「${n}」を追加しました`);
+     }catch(e){masterMsg(e.message||'カテゴリー追加に失敗しました',false)}
+   };
+   const addUnitBtn=$('masterAddUnit');
+   if(addUnitBtn) addUnitBtn.onclick=async()=>{
+     const name=prompt('追加する単位');
+     if(!name||!name.trim())return;
+     const n=name.trim();
+     try{
+       await masterTransaction(m=>{
+         if(m.units.includes(n))throw new Error('同じ単位がすでにあります。');
+         m.units.push(n);
+         return m;
+       });
+       masterMsg(`単位「${n}」を追加しました`);
+     }catch(e){masterMsg(e.message||'単位追加に失敗しました',false)}
+   };
+
    box.querySelectorAll('[data-add-material-category]').forEach(b=>b.onclick=async()=>{
      const cat=b.dataset.addMaterialCategory||'';
      if(!cat)return;
@@ -4426,9 +4458,7 @@ import {ref,onValue,set,update,remove,push,runTransaction} from "https://www.gst
    box.querySelectorAll('[data-unit-delete]').forEach(b=>b.onclick=async()=>{const u=b.dataset.unitDelete;if(!confirm(`単位「${u}」を削除しますか？`))return;try{await masterTransaction(m=>{m.units=m.units.filter(x=>x!==u);Object.keys(m.defaults).forEach(k=>{if(m.defaults[k]===u)m.defaults[k]=m.units.includes('g')?'g':(m.units[0]||'g')});Object.values(m.prices).forEach(p=>{if(p?.packUnit===u)p.packUnit=m.units[0]||'g';if(p?.baseUnit===u)p.baseUnit=m.units.includes('g')?'g':(m.units[0]||'g')});return m});masterMsg(`単位「${u}」を削除しました`)}catch(e){masterMsg(e.message,false)}});
 
  }
- $('masterAddCategory')?.addEventListener('click',async()=>{const name=prompt('追加するカテゴリー名');if(!name||!name.trim())return;const n=name.trim();try{await masterTransaction(m=>{if(m.categories[n])throw new Error('同じカテゴリーがすでにあります。');m.categories[n]=[];m.categoryOrder.push(n);return m});masterMsg(`カテゴリー「${n}」を追加しました`)}catch(e){masterMsg(e.message||'カテゴリー追加に失敗しました',false)}});
 
- $('masterAddUnit')?.addEventListener('click',async()=>{const name=prompt('追加する単位');if(!name||!name.trim())return;const n=name.trim();try{await masterTransaction(m=>{if(m.units.includes(n))throw new Error('同じ単位がすでにあります。');m.units.push(n);return m});masterMsg(`単位「${n}」を追加しました`)}catch(e){masterMsg(e.message||'単位追加に失敗しました',false)}});
  $('masterRefresh')?.addEventListener('click',()=>{renderMasters();masterMsg('表示を更新しました')});
  $('costMaterialSearch')?.addEventListener('input',renderMasters);
  function renderUnitManager(){return ''}
