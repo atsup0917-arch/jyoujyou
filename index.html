@@ -3959,7 +3959,7 @@ function renderNonVegProductManager(){
 #recipeModal .recipeBox{height:auto!important;min-height:0!important;max-height:none!important;overflow:visible!important;margin:0 auto!important;display:block!important}
 #recipeModal .recipePanel{overflow:visible!important}
 #recipeModal .recipeBtns{position:sticky!important;bottom:0!important;z-index:40!important;background:#fff!important}
-@media(max-width:520px){#costModal{padding:0}.costBox{width:100%;min-height:100dvh;border-radius:0;padding:12px}.costGrid{grid-template-columns:1fr 1fr}.costResult{grid-template-columns:1fr 1fr}.costTable{font-size:14px}.costTable th,.costTable td{padding:7px 4px}}
+@media(max-width:520px){#costModal{padding:0;touch-action:pan-y;overscroll-behavior:contain}.costBox{width:100%;min-height:100dvh;border-radius:0;padding:12px}.costGrid{grid-template-columns:1fr 1fr}.costResult{grid-template-columns:1fr 1fr}.costTable{font-size:14px}.costTable th,.costTable td{padding:7px 4px}#costModal input,#costModal select,#costModal button{font-size:16px!important;transform:none!important;zoom:1!important}#costModal .masterMaterial input,#costModal .masterMaterial select{font-size:16px!important}#costModal .masterMaterialBtns button{font-size:15px!important}}
 </style>
 <div id="costModal" hidden>
  <div class="costBox">
@@ -4698,10 +4698,24 @@ $('directProductCancel')?.addEventListener('click',()=>{
   if(opening)renderCategoryPanel();
 });$('productCategoryAdd')?.addEventListener('click',async()=>{const inp=$('productCategoryNew'),name=inp.value.trim();if(!name)return alert('カテゴリー名を入力してください。');if(categoryNames().includes(name))return alert('同じカテゴリーがすでにあります。');const next={...(categories||{})};next[name]=true;await set(categoriesRef,next);inp.value='';renderCategoryPanel();render();});
  $('productCostSearch')?.addEventListener('input',render);$('productCostCategoryFilter')?.addEventListener('change',render);
+ async function refreshProductCostsFromFirebase(priceOverrides={}){
+   try{
+     const masterSnap=await get(ingredientMasterRef);
+     ingredientMasterCache=masterSnap.val()||{};
+     const productSnap=await get(productsRef);
+     products=productSnap.val()||{};
+     const recipeSnap=await get(recipesRef);
+     recipeDataCache=recipeSnap.val()||{};
+     await syncRecipeProductCosts(recipeDataCache,priceOverrides);
+     const updatedSnap=await get(productsRef);
+     products=updatedSnap.val()||{};
+     if(!$('productCostModal')?.hidden)render();
+   }catch(err){console.error('商品原価の最新単価同期に失敗しました',err)}
+ }
  window.addEventListener('ingredientMasterPriceChanged',e=>{
    const d=e?.detail,n=String(d?.name||'').trim(),price=d?.price;
    if(!n||!price)return;
-   syncRecipeProductCosts(recipeDataCache,{[n]:price}).catch(err=>console.error('商品原価の単価変更連動更新に失敗しました',err));
+   refreshProductCostsFromFirebase({[n]:price});
  });
  onValue(productsRef,s=>{products=s.val()||{};syncRecipeProductCosts(recipeDataCache).catch(e=>console.error('商品原価のレシピ連動更新に失敗しました',e));if(!$('productCostModal')?.hidden)render()});onValue(categoriesRef,s=>{categories=s.val()||{};if(!Object.keys(categories).length)ensureCategories();if(!$('productCostModal')?.hidden){renderCategoryPanel();render()}});
  onValue(ingredientMasterRef,s=>{ingredientMasterCache=s.val()||{};syncRecipeProductCosts(recipeDataCache).catch(e=>console.error('商品原価のレシピ連動更新に失敗しました',e));});
