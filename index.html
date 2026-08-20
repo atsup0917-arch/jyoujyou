@@ -849,7 +849,22 @@ html.recipeModalLocked, body.recipeModalLocked{
 .shiftTable th{background:#eef3ff;font-weight:800;position:sticky;top:0;z-index:1}.shiftTable td.name{text-align:left;font-weight:800;white-space:nowrap;position:sticky;left:0;background:#fff;z-index:1}
 .shiftCell{min-width:62px}.shiftCell.s{background:#fff1b8}.shiftCell.y{background:#fff1b8}.shiftCell.o{background:#e9f5ff}.shiftCell.unknown{background:#fff8e5}
 .shiftPill{display:inline-block;padding:3px 7px;border-radius:9px;font-weight:800}.shiftPill.s{background:#ffe58a}.shiftPill.y{background:#ffd9a8}.shiftPill.o{background:#cfe8ff}
-.shiftMemo{min-height:220px;resize:vertical;font-size:20px;line-height:1.6;padding:16px}.shiftMemoItem{border:1px solid #e1e4e8;border-radius:14px;padding:16px;margin-top:12px;background:#fff;white-space:pre-wrap;font-size:20px;line-height:1.6}.shiftMemoMeta{font-size:13px;color:#666;margin-bottom:6px}.shiftActions{display:grid;grid-template-columns:1fr 1fr;gap:10px}.shiftActions button{margin:0}
+.shiftMemo{min-height:220px;resize:vertical;font-size:20px;line-height:1.6;padding:16px}.shiftMemoItem{border:1px solid #e1e4e8;border-radius:14px;padding:16px;margin-top:12px;background:#fff;white-space:pre-wrap;font-size:20px;line-height:1.6}
+.shiftMemoItem{position:relative}
+.shiftMemoItemText{white-space:pre-wrap}
+.shiftMemoInlineEdit{margin-top:10px}
+.shiftMemoInlineEdit textarea{width:100%;min-height:150px;resize:vertical;font-size:20px;line-height:1.6;padding:12px;border:1px solid #c9cdd3;border-radius:12px;box-sizing:border-box}
+.shiftMemoItemActions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.shiftMemoItemActions button{margin:0!important}
+.shiftMemoEditBtn{background:#eef3ff!important;color:#2867df!important;border:1px solid #c7d8fb!important}
+.shiftMemoDeleteBtn{background:#fff0f0!important;color:#c62828!important;border:1px solid #f0bcbc!important}
+.shiftMemoSaveBtn{background:#2aa052!important;color:#fff!important}
+.shiftMemoCancelBtn{background:#e9eaed!important;color:#333!important}
+@media(max-width:600px){
+  .shiftMemoItemActions{grid-template-columns:1fr 1fr}
+  .shiftMemoInlineEdit textarea{font-size:18px}
+}
+.shiftMemoMeta{font-size:13px;color:#666;margin-bottom:6px}.shiftActions{display:grid;grid-template-columns:1fr 1fr;gap:10px}.shiftActions button{margin:0}
 .shiftPreview{max-height:280px;overflow:auto;border:1px solid #ddd;border-radius:14px;background:#fafafa;padding:8px}.shiftPreview img{display:block;width:100%;height:auto;max-height:260px;object-fit:contain;border-radius:10px}
 .shiftHint{font-size:13px;color:#666;line-height:1.5}
 .shiftConfirmRow{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:end}.shiftConfirmRow button{width:auto;margin:0;white-space:nowrap}
@@ -5740,14 +5755,103 @@ button, label {
       if($('shiftMemoDate'))$('shiftMemoDate').value=iso; renderMemos();
     });
   }
+  let shiftMemoEditingId=null;
+
   function renderMemos(){
     const date=$('shiftMemoDate')?.value||$('shiftViewDate')?.value||today(), box=$('shiftMemoList');if(!box)return;
-    const a=Object.values(memos||{}).filter(x=>x?.date===date).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+    const a=Object.entries(memos||{})
+      .filter(([,x])=>x?.date===date)
+      .sort(([,a],[,b])=>(b.createdAt||0)-(a.createdAt||0));
     const selectedBox=$('shiftMemoSelected');
-    if(selectedBox){selectedBox.hidden=!a.length;selectedBox.innerHTML=a.length?`<b>📝 ${esc(dateLabel(date))}の引き継ぎ</b><div style="margin-top:6px">${a.map(x=>esc(x.text)).join('\n\n')}</div>`:'';}
-    box.innerHTML=a.length?a.map(x=>`<div class="shiftMemoItem"><div class="shiftMemoMeta">${esc(date)}</div>${esc(x.text)}</div>`).join(''):'<div class="small">この日の引き継ぎメモはありません。</div>';
+    if(selectedBox){selectedBox.hidden=true;selectedBox.innerHTML='';}
+
+    box.innerHTML=a.length?a.map(([id,x])=>{
+      const editing=String(shiftMemoEditingId||'')===String(id);
+      if(editing){
+        return `<div class="shiftMemoItem" data-memo-id="${esc(id)}">
+          <div class="shiftMemoMeta">${esc(x.date||date)}</div>
+          <div class="shiftMemoInlineEdit">
+            <textarea data-memo-edit-text>${esc(x.text||'')}</textarea>
+            <div class="shiftMemoItemActions">
+              <button type="button" class="shiftMemoSaveBtn" data-memo-save>保存</button>
+              <button type="button" class="shiftMemoCancelBtn" data-memo-cancel>キャンセル</button>
+            </div>
+          </div>
+        </div>`;
+      }
+      return `<div class="shiftMemoItem" data-memo-id="${esc(id)}">
+        <div class="shiftMemoMeta">${esc(x.date||date)}</div>
+        <div class="shiftMemoItemText">${esc(x.text||'')}</div>
+        <div class="shiftMemoItemActions">
+          <button type="button" class="shiftMemoEditBtn" data-memo-edit>✏️ 編集</button>
+          <button type="button" class="shiftMemoDeleteBtn" data-memo-delete>🗑️ 削除</button>
+        </div>
+      </div>`;
+    }).join(''):'<div class="small">この日の引き継ぎメモはありません。</div>';
+
+    box.querySelectorAll('[data-memo-edit]').forEach(btn=>btn.addEventListener('click',()=>{
+      shiftMemoEditingId=btn.closest('[data-memo-id]')?.dataset.memoId||null;
+      renderMemos();
+      const ta=box.querySelector(`[data-memo-id="${CSS.escape(String(shiftMemoEditingId))}"] textarea`);
+      ta?.focus();
+      ta?.setSelectionRange(ta.value.length,ta.value.length);
+    }));
+    box.querySelectorAll('[data-memo-cancel]').forEach(btn=>btn.addEventListener('click',()=>{
+      shiftMemoEditingId=null; renderMemos();
+    }));
+    box.querySelectorAll('[data-memo-save]').forEach(btn=>btn.addEventListener('click',async()=>{
+      const id=btn.closest('[data-memo-id]')?.dataset.memoId;
+      const ta=btn.closest('[data-memo-id]')?.querySelector('[data-memo-edit-text]');
+      const nextText=ta?.value.trim()||'';
+      if(!id||!nextText){alert('引き継ぎメモを入力してください。');return}
+      const current=memos?.[id];
+      if(!current)return;
+      const next={...current,text:nextText,updatedAt:Date.now()};
+      try{
+        if(String(id).startsWith('local-')){
+          const raw=JSON.parse(localStorage.getItem('karuya_shift_memos_v1')||'[]');
+          const idx=raw.findIndex(x=>String(`local-${x.createdAt||''}`)===String(id));
+          if(idx<0)throw new Error('この端末のメモが見つかりません。');
+          raw[idx]=next;
+          localStorage.setItem('karuya_shift_memos_v1',JSON.stringify(raw));
+          memos={...memos,[id]:next};
+        }else{
+          if(!fb())throw new Error('Firebaseが準備されていません。');
+          await fb().update(ref(`shift/memos/${id}`),next);
+          memos={...memos,[id]:next};
+        }
+        shiftMemoEditingId=null;
+        renderMemos();renderTodayQuick();
+      }catch(e){
+        alert('引き継ぎメモの編集に失敗しました。\n'+(e?.message||String(e)));
+      }
+    }));
+    box.querySelectorAll('[data-memo-delete]').forEach(btn=>btn.addEventListener('click',async()=>{
+      const id=btn.closest('[data-memo-id]')?.dataset.memoId;
+      const current=memos?.[id];
+      if(!id||!current)return;
+      if(!confirm(`${dateLabel(current.date||date)}の引き継ぎメモを削除します。\n\nこの操作は元に戻せません。よろしいですか？`))return;
+      try{
+        if(String(id).startsWith('local-')){
+          const raw=JSON.parse(localStorage.getItem('karuya_shift_memos_v1')||'[]');
+          const nextRaw=raw.filter(x=>String(`local-${x.createdAt||''}`)!==String(id));
+          localStorage.setItem('karuya_shift_memos_v1',JSON.stringify(nextRaw));
+          const nextMemos={...memos};delete nextMemos[id];memos=nextMemos;
+        }else{
+          if(!fb())throw new Error('Firebaseが準備されていません。');
+          // Realtime Databaseから対象メモを明示的に削除する。
+          await fb().set(ref(`shift/memos/${id}`),null);
+          const nextMemos={...memos};delete nextMemos[id];memos=nextMemos;
+        }
+        if(String(shiftMemoEditingId||'')===String(id))shiftMemoEditingId=null;
+        renderMemos();renderTodayQuick();
+      }catch(e){
+        alert('引き継ぎメモの削除に失敗しました。\n'+(e?.message||String(e)));
+      }
+    }));
     renderMemoCalendar();
   }
+
   async function saveMemo(){
     const date=$('shiftMemoDate')?.value||today(), text=$('shiftMemoText')?.value.trim();
     if(!text){alert('引き継ぎメモを入力してください。');return}
