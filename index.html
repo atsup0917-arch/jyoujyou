@@ -3981,14 +3981,9 @@ function renderNonVegProductManager(){
       <div><div class="masterStandaloneTitle">🥬 食材管理表</div><div class="masterStandaloneHint">ここが唯一の食材マスターです。カテゴリー・食材・単位・単価をここで管理します。レシピと原価計算表はここから呼び出します。</div></div>
       <button type="button" id="masterRefresh" class="gray masterSmallBtn">↻ 再読込</button>
     </div>
-    <div class="masterActions">
-      <button type="button" id="masterAddCategory">＋ カテゴリー</button>
-      <button type="button" id="masterAddMaterial" class="gray">＋ 食材・調味料</button>
-      <button type="button" id="masterAddUnit" class="gray">＋ 単位</button>
-    </div>
+    <div id="masterCategoryTags" class="masterCategoryTags" aria-label="食材カテゴリー"></div>
     <div id="masterStatus" class="masterStatus" aria-live="polite"></div>
-    <div class="masterFilters">
-      <select id="costMaterialCategory" class="costSearch" aria-label="カテゴリーで絞り込み"><option value="">すべてのカテゴリー</option></select>
+    <div class="masterFilters masterFiltersNoCategory">
       <div class="costVoiceSearchWrap">
       <input id="costMaterialSearch" class="costSearch" placeholder="🔍 食材名を検索">
       <button type="button" id="costMaterialVoiceSearch" class="costVoiceSearchBtn" aria-label="音声で食材名を検索" title="音声で検索"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
@@ -4134,16 +4129,31 @@ import {ref,onValue,set,update,remove,push,runTransaction} from "https://www.gst
 
  function masterMsg(text,ok=true){const el=$('masterStatus');if(!el)return;el.textContent=(ok?'✓ ':'⚠️ ')+text;el.style.color=ok?'#2463cf':'#b42318';clearTimeout(masterMsg._t);masterMsg._t=setTimeout(()=>{el.textContent=''},2200);}
  function masterEscName(name){return CSS.escape(String(name));}
- function renderCostMasterCategories(){const el=$('costMaterialCategory');if(!el)return;const keep=el.value;const cats=getMasterOrder();el.innerHTML='<option value="">すべてのカテゴリー</option>'+cats.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('');if(cats.includes(keep))el.value=keep;}
+ function renderMasterCategoryTags(){
+   const el=$('masterCategoryTags');if(!el)return;
+   const order=getMasterOrder();
+   let selected=window.__masterSelectedCategory||'';
+   if(selected && !order.includes(selected))selected='';
+   window.__masterSelectedCategory=selected;
+   el.innerHTML=[
+     `<button type="button" class="masterCategoryTag ${selected===''?'active':''}" data-master-category-tag="">すべて <span>${Object.values(getMasterCategories()).reduce((n,a)=>n+(Array.isArray(a)?a.length:0),0)}</span></button>`,
+     ...order.map(c=>`<button type="button" class="masterCategoryTag ${selected===c?'active':''}" data-master-category-tag="${esc(c)}">${esc(c)} <span>${(getMasterCategories()[c]||[]).length}</span></button>`)
+   ].join('');
+   el.querySelectorAll('[data-master-category-tag]').forEach(b=>b.onclick=()=>{
+     window.__masterSelectedCategory=b.dataset.masterCategoryTag||'';
+     renderMasters();
+   });
+ }
+ function renderCostMasterCategories(){ renderMasterCategoryTags(); }
  function renderMasters(){
-   const box=$('costMasterList');if(!box)return;renderCostMasterCategories();
-   const q=String($('costMaterialSearch')?.value||'').trim().toLowerCase();const filter=$('costMaterialCategory')?.value||'';
+   const box=$('costMasterList');if(!box)return;renderMasterCategoryTags();
+   const q=String($('costMaterialSearch')?.value||'').trim().toLowerCase();const filter=window.__masterSelectedCategory||'';
    const order=getMasterOrder();let html='';
    order.forEach((cat,ci)=>{
      if(filter&&filter!==cat)return;
      const names=(getMasterCategories()[cat]||[]).filter(n=>!q||String(n).toLowerCase().includes(q));
      if(q&&!names.length)return;
-     html+=`<div class="masterCatBlock" data-master-cat="${esc(cat)}"><div class="masterCatHead"><span class="masterDragHandle" data-master-top="1" title="画面の一番上へ">🔝</span><div class="masterCatName"><input data-master-cat-input value="${esc(cat)}" aria-label="カテゴリー名"></div><div class="masterSortBtns"><button type="button" class="gray" data-cat-up="${ci}" title="上へ">↑</button><button type="button" class="gray" data-cat-down="${ci}" title="下へ">↓</button><button type="button" class="masterCatDelete" data-cat-delete="${esc(cat)}" title="カテゴリー削除">×</button></div></div>`;
+     html+=`<div class="masterCatBlock" data-master-cat="${esc(cat)}"><div class="masterCatHead"><span class="masterDragHandle" data-master-top="1" title="画面の一番上へ">🔝</span><div class="masterCatName"><input data-master-cat-input value="${esc(cat)}" aria-label="カテゴリー名"></div><div class="masterSortBtns"><button type="button" class="gray" data-cat-up="${ci}" title="上へ">↑</button><button type="button" class="gray" data-cat-down="${ci}" title="下へ">↓</button><button type="button" class="masterCatDelete" data-cat-delete="${esc(cat)}" title="カテゴリー削除">×</button></div></div><div class="masterCategoryPageAdd"><button type="button" class="gray" data-add-material-category="${esc(cat)}">＋ このカテゴリーに食材・調味料を追加</button></div>`;
      if(!names.length) html+=`<div class="masterEmpty">このカテゴリーに食材がありません。<br>「＋ 食材・調味料」から追加できます。</div>`;
      names.forEach((name,ni)=>{
        const def=(getMasterDefaults()[name])||masterDefaultUnitForIngredient(name), p=priceFor(name), base=p?.baseUnit||def;
@@ -4152,10 +4162,33 @@ import {ref,onValue,set,update,remove,push,runTransaction} from "https://www.gst
      });
      html+=`<div class="masterCatFooter">${names.length}品　／　カテゴリー ${ci+1}/${order.length}</div></div>`;
    });
-   html+=`<div class="masterUnitBlock"><div class="masterUnitHead">📏 単位管理</div><div class="costHint">単位もここがマスターです。変更・削除・並び替えは即時保存されます。</div>${getMasterUnits().map((u,i)=>`<div class="masterUnitRow" data-unit-row="${i}"><span class="masterDragHandle">↕</span><input data-unit-input value="${esc(u)}" aria-label="単位"><div class="masterSortBtns"><button type="button" class="gray" data-unit-up="${i}">↑</button><button type="button" class="gray" data-unit-down="${i}">↓</button><button type="button" class="masterDeleteBtn" data-unit-delete="${esc(u)}">×</button></div></div>`).join('')}</div>`;
+   html+=`<div class="masterBottomManagement"><div class="masterBottomActions"><button type="button" id="masterAddCategory">＋ カテゴリーを追加</button><button type="button" id="masterAddUnit" class="gray">＋ 単位を追加</button></div><div class="masterUnitBlock"><div class="masterUnitHead">📏 単位管理</div><div class="costHint">単位もここがマスターです。変更・削除・並び替えは即時保存されます。</div>${getMasterUnits().map((u,i)=>`<div class="masterUnitRow" data-unit-row="${i}"><span class="masterDragHandle">↕</span><input data-unit-input value="${esc(u)}" aria-label="単位"><div class="masterSortBtns"><button type="button" class="gray" data-unit-up="${i}">↑</button><button type="button" class="gray" data-unit-down="${i}">↓</button><button type="button" class="masterDeleteBtn" data-unit-delete="${esc(u)}">×</button></div></div>`).join('')}</div></div>`;
    if(!html)html='<div class="masterEmpty">該当する食材がありません。</div>';
    box.innerHTML=html;
 
+   box.querySelectorAll('[data-add-material-category]').forEach(b=>b.onclick=async()=>{
+     const cat=b.dataset.addMaterialCategory||'';
+     if(!cat)return;
+     const name=prompt(`「${cat}」に追加する食材・調味料名`);
+     if(!name||!name.trim())return;
+     const n=name.trim();
+     try{
+       await masterTransaction(m=>{
+         if(Object.values(m.categories).some(a=>Array.isArray(a)&&a.includes(n)))throw new Error('同じ食材名がすでにあります。');
+         if(!m.categories[cat])m.categories[cat]=[];
+         m.categories[cat].push(n);
+         const def=masterDefaultUnitForIngredient(n);
+         m.defaults[n]=def;
+         const legacy=Object.values(legacyMasters||{}).find(x=>String(x?.name||'').trim()===n);
+         if(!m.prices[n]&&legacy&&Number(legacy.packQty)>0&&Number.isFinite(Number(legacy.packPrice))){
+           m.prices[n]={packQty:Number(legacy.packQty),packUnit:legacy.packUnit||def,packPrice:Number(legacy.packPrice),baseUnit:legacy.baseUnit||def};
+         }
+         return m;
+       });
+       window.__masterSelectedCategory=cat;
+       masterMsg(`「${n}」を「${cat}」に追加しました`);
+     }catch(e){masterMsg(e.message||'食材追加に失敗しました',false)}
+   });
    box.querySelectorAll('[data-master-cat-input]').forEach(inp=>inp.addEventListener('change',async()=>{const old=inp.closest('.masterCatBlock').dataset.masterCat,newName=inp.value.trim();if(!newName||newName===old){inp.value=old;return;}try{await masterTransaction(m=>{if(m.categories[newName])throw new Error('同じカテゴリーがすでにあります。');m.categories[newName]=m.categories[old]||[];delete m.categories[old];m.categoryOrder=m.categoryOrder.map(c=>c===old?newName:c);return m;});masterMsg(`カテゴリー「${newName}」を保存しました`);}catch(e){inp.value=old;masterMsg(e.message||'カテゴリー保存に失敗しました',false);}}));
    box.querySelectorAll('[data-cat-up]').forEach(b=>b.onclick=async()=>{const i=Number(b.dataset.catUp);if(i<=0)return;try{await masterTransaction(m=>{[m.categoryOrder[i-1],m.categoryOrder[i]]=[m.categoryOrder[i],m.categoryOrder[i-1]];return m});masterMsg('カテゴリーの並び順を保存しました')}catch(e){masterMsg(e.message,false)}});
    box.querySelectorAll('[data-cat-down]').forEach(b=>b.onclick=async()=>{const i=Number(b.dataset.catDown),len=getMasterOrder().length;if(i>=len-1)return;try{await masterTransaction(m=>{[m.categoryOrder[i],m.categoryOrder[i+1]]=[m.categoryOrder[i+1],m.categoryOrder[i]];return m});masterMsg('カテゴリーの並び順を保存しました')}catch(e){masterMsg(e.message,false)}});
@@ -4394,10 +4427,10 @@ import {ref,onValue,set,update,remove,push,runTransaction} from "https://www.gst
 
  }
  $('masterAddCategory')?.addEventListener('click',async()=>{const name=prompt('追加するカテゴリー名');if(!name||!name.trim())return;const n=name.trim();try{await masterTransaction(m=>{if(m.categories[n])throw new Error('同じカテゴリーがすでにあります。');m.categories[n]=[];m.categoryOrder.push(n);return m});masterMsg(`カテゴリー「${n}」を追加しました`)}catch(e){masterMsg(e.message||'カテゴリー追加に失敗しました',false)}});
- $('masterAddMaterial')?.addEventListener('click',async()=>{const cats=getMasterOrder();if(!cats.length)return alert('先にカテゴリーを追加してください。');const name=prompt('追加する食材・調味料名');if(!name||!name.trim())return;const n=name.trim();const cat=prompt(`カテゴリーを入力してください。\n\n${cats.join(' / ')}`,cats[0]);if(!cat||!cats.includes(cat.trim()))return alert('登録済みのカテゴリーを選択してください。');try{await masterTransaction(m=>{if(Object.values(m.categories).some(a=>Array.isArray(a)&&a.includes(n)))throw new Error('同じ食材名がすでにあります。');m.categories[cat.trim()].push(n);const def=masterDefaultUnitForIngredient(n);m.defaults[n]=def;const legacy=Object.values(legacyMasters||{}).find(x=>String(x?.name||'').trim()===n);if(!m.prices[n]&&legacy&&Number(legacy.packQty)>0&&Number.isFinite(Number(legacy.packPrice))){m.prices[n]={packQty:Number(legacy.packQty),packUnit:legacy.packUnit||def,packPrice:Number(legacy.packPrice),baseUnit:legacy.baseUnit||def};}return m});masterMsg(`「${n}」を追加しました`)}catch(e){masterMsg(e.message||'食材追加に失敗しました',false)}});
+
  $('masterAddUnit')?.addEventListener('click',async()=>{const name=prompt('追加する単位');if(!name||!name.trim())return;const n=name.trim();try{await masterTransaction(m=>{if(m.units.includes(n))throw new Error('同じ単位がすでにあります。');m.units.push(n);return m});masterMsg(`単位「${n}」を追加しました`)}catch(e){masterMsg(e.message||'単位追加に失敗しました',false)}});
  $('masterRefresh')?.addEventListener('click',()=>{renderMasters();masterMsg('表示を更新しました')});
- $('costMaterialSearch')?.addEventListener('input',renderMasters);$('costMaterialCategory')?.addEventListener('change',renderMasters);
+ $('costMaterialSearch')?.addEventListener('input',renderMasters);
  function renderUnitManager(){return ''}
 
  function recipeName(id,r){
@@ -6623,5 +6656,47 @@ present=true のセルで黄色セル内に時間が1つでも実際に見える
 }
 #shiftMemoList.shiftMemoListBig .shiftMemoSavedItem .shiftMemoItemActions{
   margin-top:6px !important;
+}
+</style>
+
+
+<style id="masterCategoryTagPageStyle">
+.masterFiltersNoCategory{grid-template-columns:1fr!important}
+.masterCategoryTags{
+  display:flex;flex-wrap:wrap;gap:7px;margin:8px 0 10px;
+}
+.masterCategoryTag{
+  width:auto!important;margin:0!important;padding:9px 13px!important;
+  min-height:42px!important;border-radius:22px!important;
+  background:#fff!important;color:#374151!important;
+  border:1px solid #cfd6df!important;font-weight:800!important;
+  white-space:nowrap;
+}
+.masterCategoryTag.active{
+  background:#dbe9ff!important;color:#2167d8!important;
+  border-color:#8eb4f4!important;
+}
+.masterCategoryTag span{
+  font-size:12px;font-weight:700;margin-left:3px;opacity:.8;
+}
+.masterCategoryPageAdd{
+  padding:8px 9px;background:#fff;border-bottom:1px solid #e7eaee;
+}
+.masterCategoryPageAdd button{
+  width:100%!important;margin:0!important;min-height:42px!important;
+}
+.masterBottomManagement{
+  margin-top:12px;
+}
+.masterBottomActions{
+  display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:10px;
+}
+.masterBottomActions button{
+  margin:0!important;min-height:44px!important;
+}
+@media(max-width:600px){
+  .masterCategoryTags{gap:6px}
+  .masterCategoryTag{font-size:15px!important;padding:8px 11px!important}
+  .masterBottomActions{grid-template-columns:1fr 1fr}
 }
 </style>
