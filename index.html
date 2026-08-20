@@ -906,11 +906,6 @@ html.recipeModalLocked, body.recipeModalLocked{
   padding:16px !important;
   display:block !important;
 }
-#shiftPage .shiftMemoListBig .shiftMemoItem{
-  font-size:24px !important;
-  line-height:1.7 !important;
-  padding:20px !important;
-}
 </style>
 
 <style id="shiftTodayEditStyle">
@@ -5560,13 +5555,27 @@ button, label {
     }finally{if(b){b.disabled=false;b.textContent='🔎 出勤者を読み取る'}}
   }
 
+  function shiftAiStaffOrder(name){
+    const n=String(name||'').trim();
+    const list=Array.isArray(staff)?staff:[];
+    const i=list.findIndex(v=>String(v||'').trim()===n);
+    return i<0?999999:i;
+  }
+  function sortShiftAiRows(rows){
+    return [...rows].sort((a,b)=>{
+      const ao=shiftAiStaffOrder(a.name), bo=shiftAiStaffOrder(b.name);
+      if(ao!==bo)return ao-bo;
+      return String(a.name||'').localeCompare(String(b.name||''),'ja');
+    });
+  }
+
   function renderReview(){
     const card=$('shiftReviewCard'), date=$('shiftReviewDate'), box=$('shiftReviewNames'), count=$('shiftReviewCount');
     if(!card||!date||!box||!count)return;
     const dates=[...new Set(pending.map(x=>x.date).filter(Boolean))].sort();
     if(!dates.length){card.hidden=true;return}
     if(!dates.includes(date.value))date.value=dates[0];
-    const rows=pending.map((x,i)=>({...x,i})).filter(x=>x.date===date.value);
+    const rows=sortShiftAiRows(pending.map((x,i)=>({...x,i})).filter(x=>x.date===date.value));
     count.textContent=`${rows.filter(x=>x.selected!==false).length}人`;
     box.innerHTML=rows.map(x=>{
       const val=x.name.startsWith('未登録')||x.name.startsWith('番号不明')?'':x.name;
@@ -5599,24 +5608,35 @@ button, label {
       const liveSnap=await fb().get(ref('shift/schedules'));
       const current=liveSnap.val()||{}; const u={};
       Object.entries(current).forEach(([id,x])=>{if(inPeriod(x?.date))u[`shift/schedules/${id}`]=null});
-      chosen.forEach(x=>{const id=fb().push(ref('shift/schedules')).key;u[`shift/schedules/${id}`]={date:x.date,name:x.name,position:x.position||shiftPositionForMark(x.mark),time:'',period:($('shiftPeriod')?.value||'second'),source:'photo-attendance',createdAt:Date.now()}});
+      chosen.forEach(x=>{const id=fb().push(ref('shift/schedules')).key;u[`shift/schedules/${id}`]={date:x.date,name:x.name,position:x.position||shiftPositionForMark(x.mark),time:normalizeShiftTimeRange(x.startTime,x.endTime,x.time),period:($('shiftPeriod')?.value||'second'),source:'photo-attendance',createdAt:Date.now()}});
       u[`shift/periodMeta/${periodKey()}`]={yearMonth:ym,period:p,label,updatedAt:Date.now(),count:chosen.length};
       await fb().update(fb().ref(fb().db),u);
       pending=[];$('shiftReviewCard').hidden=true;alert(`${label}を登録しました。\n${chosen.length}件`);renderShiftRegisteredPeriods();renderDay();
     }catch(e){console.error(e);alert('登録に失敗しました。\n'+(e?.message||String(e)))}
   }
-  function renderDay(){
+  function displayShiftTime(v){
+  let s=String(v??'').trim();
+  if(!s)return '';
+  s=s.replace(/\s+/g,'');
+  s=s.replace(/[～~]/g,'〜');
+  // Collapse duplicated range separators, especially old saved values such as 16:00〜〜〜L.
+  s=s.replace(/〜+/g,'〜');
+  s=s.replace(/^〜/,'').replace(/〜$/,'');
+  return s;
+}
+
+function renderDay(){
     const date=$('shiftViewDate')?.value||today(); const list=$('shiftDayList'),sum=$('shiftDaySummary');if(!list||!sum)return;
-    const rows=Object.values(schedules).filter(x=>x?.date===date&&x?.name);
+    const rows=window.sortShiftDisplayByPosition(Object.values(schedules).filter(x=>x?.date===date&&x?.name));
     const byName={};
     rows.forEach(x=>{
       const name=String(x.name).trim(); if(!name)return;
       const num=Number(x.number);
-      const pos=String(x.position||'').trim()||shiftPositionForMark(x.mark); const mark=String(x.mark||'').trim().toUpperCase(); if(!byName[name] || (Number.isFinite(num)&&num<Number(byName[name].number||Infinity))) byName[name]={name,number:Number.isFinite(num)?num:9999,position:pos,mark}; else { if(!String(byName[name].position||'').trim()&&pos) byName[name].position=pos; if(!String(byName[name].mark||'').trim()&&mark) byName[name].mark=mark; }
+      const pos=String(x.position||'').trim()||shiftPositionForMark(x.mark); const mark=String(x.mark||'').trim().toUpperCase(); const time=String(x.time||'').trim(); if(!byName[name] || (Number.isFinite(num)&&num<Number(byName[name].number||Infinity))) byName[name]={name,number:Number.isFinite(num)?num:9999,position:pos,mark,time}; else { if(!String(byName[name].position||'').trim()&&pos) byName[name].position=pos; if(!String(byName[name].mark||'').trim()&&mark) byName[name].mark=mark; if(!String(byName[name].time||'').trim()&&time) byName[name].time=time; }
     });
-    const names=Object.values(byName).sort((a,b)=>a.number-b.number||a.name.localeCompare(b.name,'ja'));
+    const names=window.sortShiftDisplayByPosition(Object.values(byName));
     sum.textContent=names.length?`${dateLabel(date)}　出勤 ${names.length}人`:'この日のシフトはありません。';
-    list.innerHTML=names.length?`<div class="shiftAttendanceGrid">${names.map((x,i)=>`<div class="shiftAttendanceName"><span class="shiftAttendanceNo">${i+1}</span><b>${esc(x.name)}</b>${x.position?`　<span style="font-size:.85em;font-weight:700;color:#555">${esc(x.position)}</span>`:''}</div>`).join('')}</div>`:'';
+    list.innerHTML=names.length?`<div class="shiftAttendanceGrid">${names.map((x,i)=>`<div class="shiftAttendanceName"><span class="shiftAttendanceNo">${i+1}</span><b>${esc(x.name)}</b>${displayShiftTime(x.time)?`　<span style="font-size:.9em;font-weight:800;color:#222">${esc(displayShiftTime(x.time))}</span>`:''}${x.position?`　<span style="font-size:.85em;font-weight:700;color:#555">${esc(x.position)}</span>`:''}</div>`).join('')}</div>`:'';
     renderTodayQuick();
     renderMemos();
   }
@@ -5709,7 +5729,7 @@ button, label {
       const num=Number(x.number);
       if(!byName[name] || (Number.isFinite(num)&&num<Number(byName[name].number||Infinity))) byName[name]={name,number:Number.isFinite(num)?num:9999};
     });
-    const names=Object.values(byName).sort((a,b)=>a.number-b.number||a.name.localeCompare(b.name,'ja'));
+    const names=window.sortShiftDisplayByPosition(Object.values(byName));
     // 同名スタッフが複数行ある場合でもポジションを拾う
     names.forEach(n=>{
       const same=rows.filter(r=>String(r.name||'').trim()===n.name);
@@ -5779,10 +5799,9 @@ button, label {
           </div>
         </div>`;
       }
-      return `<div class="shiftMemoItem" data-memo-id="${esc(id)}">
-        <div class="shiftMemoMeta">${esc(x.date||date)}</div>
-        <div class="shiftMemoItemText">${esc(x.text||'')}</div>
-        <div class="shiftMemoItemActions">
+      return `<div class="shiftMemoItem shiftMemoSavedItem" data-memo-id="${esc(id)}" style="height:auto;min-height:0;padding:8px 10px;margin-top:6px;box-sizing:border-box;display:block;">
+        <div class="shiftMemoItemText" style="margin:0;padding:0;line-height:1.35;">${esc(String(x.text||'').trim())}</div>
+        <div class="shiftMemoItemActions" style="margin-top:6px;">
           <button type="button" class="shiftMemoEditBtn" data-memo-edit>✏️ 編集</button>
           <button type="button" class="shiftMemoDeleteBtn" data-memo-delete>🗑️ 削除</button>
         </div>
@@ -5946,6 +5965,24 @@ button, label {
 
   function getKey(){return String(localStorage.getItem(KEY_STORE)||'').trim()}
   function setAiStatus(msg,kind=''){const e=$('shiftGeminiAiStatus');if(!e)return;e.className='shiftStatus '+kind;e.textContent=msg}
+  function shiftAiStaffOrderLocal(name){
+    const n=String(name||'').trim();
+    let list=[];
+    try{
+      const raw=localStorage.getItem('karuya_shift_staff_master_v2');
+      const parsed=raw?JSON.parse(raw):[];
+      if(Array.isArray(parsed)) list=parsed.map(v=>String(v||'').trim()).filter(Boolean);
+    }catch(_){}
+    const i=list.findIndex(v=>v===n);
+    return i<0?999999:i;
+  }
+  function sortShiftAiRowsLocal(rows){
+    return [...rows].sort((a,b)=>{
+      const ao=shiftAiStaffOrderLocal(a.name),bo=shiftAiStaffOrderLocal(b.name);
+      if(ao!==bo)return ao-bo;
+      return String(a.name||'').localeCompare(String(b.name||''),'ja');
+    });
+  }
   function injectUi(){
     const target=$('shiftPhotoPreview'); if(!target)return;
     if(!$('shiftGeminiAiBox')) target.insertAdjacentHTML('afterend',`
@@ -6020,7 +6057,31 @@ button, label {
       const c=document.createElement('canvas');c.width=Math.max(1,Math.round(bmp.width*scale));c.height=Math.max(1,Math.round(bmp.height*scale));
       const ctx=c.getContext('2d');ctx.drawImage(bmp,0,0,c.width,c.height);if(bmp.close)bmp.close();
       const dataUrl=c.toDataURL('image/jpeg',0.90);
-      return {mime:'image/jpeg',data:dataUrl.split(',')[1],dataUrl};
+      // 時間欄は非常に小さいため、表全体の1枚拡大ではなく、
+      // スタッフ行を複数の横帯に分けて拡大します。これで全スタッフの時間欄を確認できます。
+      const bands=[];
+      const bandTop=Math.floor(c.height*0.18);
+      const bandBottom=Math.floor(c.height*0.97);
+      const bandCount=5;
+      const bandSpan=(bandBottom-bandTop)/bandCount;
+      const overlap=0.12;
+      for(let bi=0;bi<bandCount;bi++){
+        const y0=Math.max(0,Math.floor(bandTop+bi*bandSpan-bandSpan*overlap));
+        const y1=Math.min(c.height,Math.floor(bandTop+(bi+1)*bandSpan+bandSpan*overlap));
+        const cropW=c.width;
+        const cropH=Math.max(1,y1-y0);
+        const zScale=Math.min(2.5,3000/Math.max(cropW,cropH));
+        const z=document.createElement('canvas');
+        z.width=Math.max(1,Math.round(cropW*zScale));
+        z.height=Math.max(1,Math.round(cropH*zScale));
+        const zctx=z.getContext('2d');
+        zctx.imageSmoothingEnabled=true;
+        zctx.imageSmoothingQuality='high';
+        zctx.drawImage(c,0,y0,cropW,cropH,0,0,z.width,z.height);
+        const zoomUrl=z.toDataURL('image/jpeg',0.94);
+        bands.push(zoomUrl.split(',')[1]);
+      }
+      return {mime:'image/jpeg',data:dataUrl.split(',')[1],dataUrl,zoomData:bands[0],zoomBands:bands};
     }catch(e){
       const dataUrl=await new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result);r.onerror=reject;r.readAsDataURL(file)});
       const m=String(dataUrl).match(/^data:([^;]+);base64,(.*)$/s);if(!m)throw new Error('画像データを読み取れませんでした。');
@@ -6099,6 +6160,48 @@ button, label {
     return '';
   }
   function normalizeNum(v){return String(v??'').replace(/[０-９]/g,ch=>String.fromCharCode(ch.charCodeAt(0)-0xFEE0)).replace(/[^0-9]/g,'')}
+  function normalizeShiftTime(v){
+    let s=String(v??'').trim().replace(/[：]/g,':').replace(/[時]/g,':').replace(/[分]/g,'').replace(/\s+/g,'');
+    if(!s)return '';
+    s=s.replace(/[０-９]/g,ch=>String.fromCharCode(ch.charCodeAt(0)-0xFEE0));
+    let m=s.match(/^(\d{1,2}):(\d{1,2})$/);
+    if(m){const h=Number(m[1]),mi=Number(m[2]);if(h>=0&&h<=23&&mi>=0&&mi<=59)return `${String(h).padStart(2,'0')}:${String(mi).padStart(2,'0')}`;return ''}
+    if(/半$/.test(s)){const h=Number(s.replace(/半$/,''));if(h>=0&&h<=23)return `${String(h).padStart(2,'0')}:30`}
+    const n=Number(s);
+    if(!Number.isFinite(n)||n<0||n>23.99)return '';
+    const h=Math.floor(n), frac=Math.round((n-h)*100);
+    const mi=frac===50?30:(frac===0?0:Math.round(frac*0.6));
+    if(mi<0||mi>59)return '';
+    return `${String(h).padStart(2,'0')}:${String(mi).padStart(2,'0')}`;
+  }
+  function normalizeShiftTimeRange(start,end,time){
+    const clean=v=>String(v??'').trim();
+    let a=clean(start),b=clean(end),t=clean(time);
+    if(!a&&!b&&t){
+      const z=t.replace(/\s+/g,'').replace(/[〜～至\-—–]/g,'~');
+      if(/^L$/i.test(z)){b='L';}
+      else if(/L$/i.test(z)&&z.length>1){a=z.slice(0,-1);b='L';}
+      else {const parts=z.split('~').map(x=>x.trim());if(parts.length>=2){a=parts[0];b=parts[1];}else a=z;}
+    }
+    const norm=v=>{
+      const z=clean(v); if(!z)return '';
+      if(/^L$/i.test(z))return 'L';
+      const n=Number(z);
+      if(Number.isFinite(n)&&n>=0&&n<=23.99){
+        const h=Math.floor(n), frac=Math.round((n-h)*100);
+        const mi=frac===50?30:(frac===0?0:Math.round(frac*0.6));
+        if(mi>=0&&mi<=59)return `${String(h).padStart(2,'0')}:${String(mi).padStart(2,'0')}`;
+      }
+      const mm=z.match(/^(\d{1,2})(?::(\d{1,2}))?$/);
+      if(mm)return `${String(Number(mm[1])).padStart(2,'0')}:${String(Number(mm[2]||0)).padStart(2,'0')}`;
+      return z;
+    };
+    a=norm(a); b=norm(b);
+    if(a&&b)return `${a}〜${b}`;
+    if(a)return a;
+    if(b)return b;
+    return '';
+  }
   function mapNameByNumber(num){
     const n=normalizeNum(num);if(!n)return '';
     const txt=staffMasterText();
@@ -6116,8 +6219,9 @@ button, label {
       const name=String(x?.name||'').trim();
       if(!name || /^(△|▲|▽|▼|×|✕|✖|✗|休|ラ|公休|イベント|イベ)$/.test(name))continue;
       const position=shiftPositionForMark(mark);
+      const time=normalizeShiftTimeRange(x?.startTime,x?.endTime,x?.time||'');
       if(out.some(z=>z.date===date&&z.name===name&&z.position===position))continue;
-      out.push({date,name,number:'',position,mark,selected:true,unregistered:false,confidence:String(x?.confidence||'medium'),aiNote:String(x?.note||'')});
+      out.push({date,name,number:'',position,mark,time,selected:true,unregistered:false,confidence:String(x?.confidence||'medium'),aiNote:String(x?.note||'')});
     }
     return out;
   }
@@ -6157,26 +6261,49 @@ ${allowedText}
 1. まず表の「名前列」と「日付列」を特定してください。
 2. 対象期間の各スタッフ行について、各日付のセルを実際に確認してください。
 3. 各セルに書かれている勤務記号を1文字だけ認識してください。
-4. ${allowedText} のいずれかと完全一致したセルだけ present=true とします。
-5. △、▲、▼、×、ラ、L、イベ、イベント、休、空欄、数字、時刻、丸印、線、汚れ、罫線などは全て present=false です。
+4. ${allowedText} のいずれかと完全一致した勤務記号セルだけ present=true とします。
+5. △、▲、▼、×、ラ、L、イベ、イベント、休、空欄、丸印、線、汚れ、罫線などは勤務記号ではありません。
 6. Sを見たらmark="S"、Yなら"Y"、Oなら"O"、Kなら"K"、Fなら"F"のように、大文字1文字へ正規化してください。
-7. present=true のときだけ、そのmarkに対応するpositionを付けてください。${positionRules}
-8. 名前は画像の名前欄から正確に読み取ってください。似た漢字を勝手に直さず、画像に見える文字を優先してください。
-9. 読みにくい名前は無理に推測せず confidence="low" にしてください。ただし勤務記号が明確なら出勤として返して構いません。
-10. 判定に迷う勤務記号はpresent=falseにしてください。
-11. 対象期間外の日付は返さないでください。
-12. 同じ名前・同じ日付・同じmarkを重複させないでください。
-13. 画像全体を一度見ただけで終わらず、最後に「名前行→各日付セル」を再確認して、見落としがないか自己チェックしてください。
-14. JSON以外の文章は返さないでください。
+7. 勤務時間は勤務記号とは別に、対象期間の【すべてのpresent=trueのセル】について読み取ってください。各スタッフ行を上から下まで漏れなく確認し、各日付の黄色セル内にある開始・終了時刻を対応づけてください。画像2以降の「時間欄拡大」画像はスタッフ行を分割して拡大したものなので、各帯を必ず確認してください。例えば上段9・下段14は9:00〜14:00、上段9.5・下段17は9:30〜17:00、10・14は10:00〜14:00です。名前欄の番号、日付、人数、売上など他の場所の数字は勤務時間として使わないでください。
+8. 時刻の小数は「.5=30分」として扱います。9.5は09:30、9は09:00、17は17:00です。画像に時間がない場合はstartTime/endTimeを空文字にしてください。開始だけ、終了だけでも、見えている方は必ず返してください。時間を推測して補完してはいけません。
+9. present=true のときだけ、そのmarkに対応するpositionを付けてください。${positionRules}
+10. 名前は画像の名前欄から正確に読み取ってください。似た漢字を勝手に直さず、画像に見える文字を優先してください。
+11. 読みにくい名前は無理に推測せず confidence="low" にしてください。ただし勤務記号が明確なら出勤として返して構いません。
+12. 判定に迷う勤務記号はpresent=falseにしてください。
+13. 時間の数字が読めない場合は、その時間だけ空欄にし、他の項目を推測しないでください。
+14. 対象期間外の日付は返さないでください。
+15. 同じ名前・同じ日付・同じmarkを重複させないでください。
+16. 画像全体を一度見ただけで終わらず、最後に【各スタッフ行→各日付セル】を上から下まで再確認し、present=trueなのに時間を空欄にしていないか、時間が実際に見えるセルを見落としていないか自己チェックしてください。
+17. JSON以外の文章は返さないでください。
+
+【時間欄の重要ルール】
+・L は「ラスト」を意味し、退勤・終了時刻として扱ってください。
+・L は出勤記号ではありません。
+・開始時刻が数字で、終了時刻が L の場合は、終了時刻は「L」として保持してください。
+・▲や×など休み記号がある場合は、時間やLが書いてあっても休みを優先します。
 
 【返却形式】
 {"entries":[
- {"date":"YYYY-MM-DD","name":"加藤","mark":"S","present":true,"position":"板場","confidence":"high","note":"名前欄とセルのSを確認"}
+ {"date":"YYYY-MM-DD","name":"加藤","mark":"S","present":true,"position":"板場","startTime":"9.5","endTime":"17","time":"09:30〜17:00","confidence":"high","note":"勤務記号と黄色セルの時間を確認"}
 ]}
+
+【時間の必須ルール】
+present=true のセルで黄色セル内に時間が1つでも実際に見える場合、その見えている時間を必ず返してください。
+・開始だけなら startTime に入れ、endTime は空文字。
+・終了だけなら endTime に入れ、startTime は空文字。
+・終了がLなら endTime="L"。
+・開始9と終了Lなら startTime="9", endTime="L", time="09:00〜L"。
+・開始9だけなら startTime="9", endTime="", time="09:00"。
+・Lだけなら startTime="", endTime="L", time="L"。
+・両方ある場合だけ time="HH:MM〜HH:MM"。
+・時間が実際に見えない場合だけ空文字にしてください。推測で時間を作らないでください。
 
 重要：present=falseのセルは返さなくて構いません。present=trueだけ返してください。numberという項目は絶対に作らないでください。`;
       const url=`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`;
-      const body={contents:[{role:'user',parts:[{text:prompt},{inline_data:{mime_type:img.mime,data:img.data}}]}],generationConfig:{temperature:0,responseMimeType:'application/json'}};
+      const timeParts=[{text:'【画像1：シフト表全体】名前・日付・勤務記号の対応はこちらを基準にしてください。'},{inline_data:{mime_type:img.mime,data:img.data}}];
+      const bands=Array.isArray(img.zoomBands)&&img.zoomBands.length?img.zoomBands:[img.zoomData||img.data];
+      bands.forEach((b,i)=>{timeParts.push({text:`【画像${i+2}：時間欄拡大 ${i+1}/${bands.length}】この横帯に写っているスタッフ行について、黄色セル内の開始・終了時間を必ず確認してください。前後の帯と重複している行も再確認してください。`});timeParts.push({inline_data:{mime_type:img.mime,data:b}})});
+      const body={contents:[{role:'user',parts:[{text:prompt},...timeParts]}],generationConfig:{temperature:0,responseMimeType:'application/json'}};
       const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':key},body:JSON.stringify(body)});
       const raw=await res.text();let data;try{data=JSON.parse(raw)}catch(_){throw new Error('Geminiから正しい応答を受け取れませんでした。')}
       if(!res.ok)throw new Error(data?.error?.message||`Gemini APIエラー（${res.status}）`);
@@ -6193,31 +6320,37 @@ ${allowedText}
         if(x?.present!==true)continue;
         if(!date)continue;
         const pos=shiftPositionForMark(mark);
+        const time=normalizeShiftTimeRange('', '', x?.time||normalizeShiftTimeRange(x?.startTime,x?.endTime,''));
         // AIがpositionを間違えて返しても、アプリ側でmarkから強制確定。
-        safeEntries.push({...x,date,name,mark,number:'',position:pos,present:true});
+        safeEntries.push({...x,date,name,mark,number:'',position:pos,time,present:true});
       }
       // 同一人物・同一日・同一記号を重複排除
       const uniq=[];const seen=new Set();
       for(const x of safeEntries){const k=`${x.date}|${aiNameNorm(x.name)}|${x.mark}`;if(seen.has(k))continue;seen.add(k);uniq.push(x)}
       const next=buildPending(uniq);
       if(!next.length)throw new Error('対象期間の出勤者を読み取れませんでした。写真全体が写っているか、対象月・前半/後半が合っているか確認してください。');
-      // 位置から決めたポジションを最終強制適用
-      next.forEach(x=>{x.number='';x.position=shiftPositionForMark(x.mark)});
-      window.dispatchEvent(new CustomEvent('shift-ai-pending',{detail:{items:next,photoData:aiPhotoData,photoName:aiFile.name}}));
+      // 位置から決めたポジションを最終強制適用。時間も正規化して保存する。
+      next.forEach(x=>{x.number='';x.position=shiftPositionForMark(x.mark);x.time=normalizeShiftTimeRange(x.startTime,x.endTime,x.time)});
+      const pendingDetail={items:next,photoData:aiPhotoData,photoName:aiFile.name};
+      if(typeof window.__showShiftAiReview==='function'){
+        window.__showShiftAiReview({detail:pendingDetail});
+      }else{
+        window.dispatchEvent(new CustomEvent('shift-ai-pending',{detail:pendingDetail}));
+      }
       const uniqueDates=[...new Set(next.map(x=>x.date))].length;
       const low=next.filter(x=>x.confidence==='low').length;
       const posSummary=[...new Set(next.map(x=>`${x.mark}→${x.position}`))].join('、');
       if($('shiftGeminiAiResult')){
         $('shiftGeminiAiResult').hidden=false;
-        $('shiftGeminiAiResult').textContent=`AI読み取り完了：${uniqueDates}日・${next.length}件\nポジション：${posSummary}${low?`\n⚠️ 名前の確信度が低い項目：${low}件`:''}\n※登録前の確認画面で名前・勤務記号・ポジションを確認してください。`;
+        $('shiftGeminiAiResult').textContent=`AI読み取り完了：${uniqueDates}日・${next.length}件\nポジション：${posSummary}${low?`\n⚠️ 名前の確信度が低い項目：${low}件`:''}\n※登録前の確認画面で名前・勤務記号・時間・ポジションを確認してください。`;
       }
-      setAiStatus('AI読み取り完了。名前・勤務記号・ポジションを確認してから登録してください。','ok');
+      setAiStatus('AI読み取り完了。名前・勤務記号・時間・ポジションを確認してから登録してください。','ok');
     }catch(e){console.error(e);setAiStatus('AI読み取りに失敗しました。\n'+(e?.message||String(e)),'err')}
     finally{if(b){b.disabled=false;b.textContent='🤖 AIで出勤者を読み取る'}}
   }
 
   function hookPending(){
-    window.addEventListener('shift-ai-pending',e=>{
+    const handlePending=e=>{
       let items=e.detail?.items||[];if(!items.length)return;
       // 常に最新のAI結果を使う。前回の読み取り結果を保持しない。
       window.__shiftGeminiPending=items;
@@ -6225,15 +6358,23 @@ ${allowedText}
       if(!card||!date||!box||!count)return;
       const dates=[...new Set(items.map(x=>x.date))].sort();date.value=dates[0];
       const render=()=>{
-        const d=date.value;const rows=items.map((x,i)=>({...x,i})).filter(x=>x.date===d);
+        const d=date.value;const rows=sortShiftAiRowsLocal(items.map((x,i)=>({...x,i})).filter(x=>x.date===d));
         count.textContent=`${rows.filter(x=>x.selected!==false).length}人`;
-        box.innerHTML=rows.map(x=>`<div class="shiftReviewName" style="display:grid;grid-template-columns:28px minmax(0,1fr) 105px;align-items:center;gap:8px">
+        box.innerHTML=rows.map(x=>{
+          const parts=String(x.time||'').split('〜');
+          const st=parts[0]||'';const et=parts[1]||'';
+          return `<div class="shiftReviewName" style="display:grid;grid-template-columns:28px minmax(0,1fr) 58px 58px 105px;align-items:center;gap:6px">
           <input type="checkbox" data-gsr="${x.i}" ${x.selected!==false?'checked':''}>
           <input type="text" data-gn="${x.i}" value="${esc(x.name)}" placeholder="名前" style="width:100%;box-sizing:border-box;border:1px solid #ddd;border-radius:10px;padding:10px;font-weight:700">
+          <input type="text" inputmode="decimal" data-gst="${x.i}" value="${esc(st)}" placeholder="開始" style="width:100%;box-sizing:border-box;border:1px solid #ddd;border-radius:10px;padding:9px;font-weight:700;text-align:center">
+          <input type="text" inputmode="decimal" data-get="${x.i}" value="${esc(et)}" placeholder="終了" style="width:100%;box-sizing:border-box;border:1px solid #ddd;border-radius:10px;padding:9px;font-weight:700;text-align:center">
           <div style="display:flex;flex-direction:column;gap:3px"><b style="font-size:13px;text-align:center">${esc(x.mark||'')}</b><input type="text" data-gp="${x.i}" value="${esc(x.position||shiftPositionForMark(x.mark))}" placeholder="ポジション" style="width:100%;box-sizing:border-box;border:1px solid #ddd;border-radius:10px;padding:9px;font-weight:700"></div>
-        </div>`).join('');
+        </div>`;
+        }).join('');
         box.querySelectorAll('[data-gsr]').forEach(c=>c.onchange=()=>{items[Number(c.dataset.gsr)].selected=c.checked;render()});
         box.querySelectorAll('[data-gn]').forEach(c=>c.onchange=()=>{items[Number(c.dataset.gn)].name=c.value.trim();render()});
+        box.querySelectorAll('[data-gst]').forEach(c=>c.onchange=()=>{const i=Number(c.dataset.gst),v=normalizeShiftTime(c.value),parts=String(items[i].time||'').split('〜');items[i].time=normalizeShiftTimeRange(v,parts[1]||'');render()});
+        box.querySelectorAll('[data-get]').forEach(c=>c.onchange=()=>{const i=Number(c.dataset.get),v=normalizeShiftTime(c.value),parts=String(items[i].time||'').split('〜');items[i].time=normalizeShiftTimeRange(parts[0]||'',v);render()});
         box.querySelectorAll('[data-gp]').forEach(c=>c.onchange=()=>{const i=Number(c.dataset.gp);items[i].position=c.value.trim();render()});
       };
       date.onchange=render;render();card.hidden=false;card.scrollIntoView({behavior:'smooth',block:'start'});
@@ -6244,7 +6385,7 @@ ${allowedText}
         const old=save.__shiftAiSaveHandler;if(old)save.removeEventListener('click',old,true);
         const handler=async e=>{
           e.preventDefault();e.stopImmediatePropagation();
-          const chosen=items.filter(x=>x.selected!==false&&x.date&&x.name&&!String(x.name).startsWith('未登録')&&x.name!=='番号不明').map(x=>({...x,number:'',position:shiftPositionForMark(x.mark)||x.position||''}));
+          const chosen=items.filter(x=>x.selected!==false&&x.date&&x.name&&!String(x.name).startsWith('未登録')&&x.name!=='番号不明').map(x=>({...x,number:'',position:shiftPositionForMark(x.mark)||x.position||'',time:normalizeShiftTimeRange('', '', x.time)}));
           if(!chosen.length){alert('登録する出勤者がありません。');return}
           const ym=$('shiftTargetMonth').value,p=$('shiftPeriod').value||'second';
           const [from,to]=p==='first'?[1,15]:[16,new Date(Number(ym.slice(0,4)),Number(ym.slice(5,7)),0).getDate()];
@@ -6254,14 +6395,16 @@ ${allowedText}
             if(!window.__fb)throw new Error('Firebaseが準備できていません。');
             const fb=window.__fb,live=await fb.get(fb.ref(fb.db,'shift/schedules')),cur=live.val()||{},u={};
             Object.entries(cur).forEach(([id,x])=>{if(x?.date&&String(x.date).startsWith(ym+'-')){const d=Number(String(x.date).slice(-2));if(d>=from&&d<=to)u[`shift/schedules/${id}`]=null}});
-            chosen.forEach(x=>{const id=fb.push(fb.ref(fb.db,'shift/schedules')).key;u[`shift/schedules/${id}`]={date:x.date,name:x.name,number:'',position:shiftPositionForMark(x.mark)||x.position||'',mark:String(x.mark||'').toUpperCase(),time:'',period:p,source:'gemini-ai',confidence:x.confidence||'medium',createdAt:Date.now()}});
+            chosen.forEach(x=>{const id=fb.push(fb.ref(fb.db,'shift/schedules')).key;u[`shift/schedules/${id}`]={date:x.date,name:x.name,number:'',position:shiftPositionForMark(x.mark)||x.position||'',mark:String(x.mark||'').toUpperCase(),time:normalizeShiftTimeRange('', '', x.time||normalizeShiftTimeRange(x.startTime,x.endTime,'')),period:p,source:'gemini-ai',confidence:x.confidence||'medium',createdAt:Date.now()}});
             u[`shift/periodMeta/${ym}-${p}`]={yearMonth:ym,period:p,label,updatedAt:Date.now(),count:chosen.length,source:'gemini-ai',photoData:aiPhotoData||'',photoName:aiFile?.name||''};
             await fb.update(fb.ref(fb.db),u);card.hidden=true;setAiStatus('AI読み取り結果を保存しました。','ok');alert(`AI読み取り結果をシフトに登録しました。\n${chosen.length}件`);
           }catch(err){alert('シフト登録に失敗しました。\n'+(err?.message||err))}
         };
         save.__shiftAiSaveHandler=handler;save.addEventListener('click',handler,true);
       }
-    });
+    };
+    window.__showShiftAiReview=handlePending;
+    window.addEventListener('shift-ai-pending',handlePending);
   }
   function init(){injectUi();initAllowedShiftMarksUI();hookPending();}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
@@ -6360,3 +6503,125 @@ ${allowedText}
 })();
 </script>
 </body></html>
+
+
+<style id="shiftMobileReadabilityOnly">
+/* シフト「別の日を見る」のスマホ表示だけを改善。機能・データ処理は変更しない */
+@media (max-width:600px){
+  #shiftPage .shiftAttendanceGrid{
+    grid-template-columns:1fr !important;
+    gap:8px !important;
+  }
+  #shiftPage .shiftAttendanceName{
+    display:grid !important;
+    grid-template-columns:34px minmax(110px,1fr) auto !important;
+    grid-template-areas:
+      "no name time"
+      "no name position" !important;
+    align-items:center !important;
+    column-gap:8px !important;
+    row-gap:2px !important;
+    min-height:58px !important;
+    padding:9px 10px !important;
+    font-size:17px !important;
+    line-height:1.25 !important;
+    overflow:hidden !important;
+  }
+  #shiftPage .shiftAttendanceName .shiftAttendanceNo{
+    grid-area:no !important;
+  }
+  #shiftPage .shiftAttendanceName b{
+    grid-area:name !important;
+    min-width:0 !important;
+    overflow-wrap:anywhere !important;
+    word-break:break-word !important;
+  }
+  #shiftPage .shiftAttendanceName span:not(.shiftAttendanceNo){
+    min-width:0 !important;
+    white-space:normal !important;
+    overflow-wrap:anywhere !important;
+  }
+  #shiftPage .shiftAttendanceName span[style*="font-size:.9em"]{
+    grid-area:time !important;
+    font-size:16px !important;
+    font-weight:800 !important;
+    white-space:nowrap !important;
+    text-align:right !important;
+  }
+  #shiftPage .shiftAttendanceName span[style*="font-size:.85em"]{
+    grid-area:position !important;
+    font-size:14px !important;
+    font-weight:700 !important;
+    color:#555 !important;
+    text-align:right !important;
+  }
+  #shiftPage #shiftDaySummary{
+    font-size:18px !important;
+    padding:12px 14px !important;
+  }
+}
+</style>
+
+
+<script id="shiftPositionFixedOrder">
+(function(){
+  const POSITION_ORDER = ['板場','焼場','コンロ','揚場','ホール'];
+  function normalizePosition(v){
+    return String(v||'').trim().replace(/\s+/g,'');
+  }
+  window.sortShiftDisplayByPosition = function(items){
+    const rank={};
+    POSITION_ORDER.forEach((p,i)=>rank[p]=i);
+    return [...items].sort((a,b)=>{
+      const ap=normalizePosition(a?.position), bp=normalizePosition(b?.position);
+      const ar=rank[ap]===undefined?999:rank[ap];
+      const br=rank[bp]===undefined?999:rank[bp];
+      if(ar!==br)return ar-br;
+      const an=String(a?.name||'').trim(), bn=String(b?.name||'').trim();
+      return an.localeCompare(bn,'ja');
+    });
+  };
+})();
+</script>
+
+
+
+<style id="shiftMemoSavedItemFinal">
+#shiftPage .shiftMemoListBig .shiftMemoSavedItem{
+  height:auto !important;
+  min-height:0 !important;
+  max-height:none !important;
+  padding:10px 12px !important;
+  margin-top:8px !important;
+  box-sizing:border-box !important;
+  display:block !important;
+}
+#shiftPage .shiftMemoListBig .shiftMemoSavedItem .shiftMemoMeta{margin:0 0 2px 0 !important;padding:0 !important;line-height:1.2 !important;}
+#shiftPage .shiftMemoListBig .shiftMemoSavedItem .shiftMemoItemText{margin:0 !important;padding:0 !important;line-height:1.35 !important;}
+#shiftPage .shiftMemoListBig .shiftMemoSavedItem .shiftMemoItemActions{margin-top:8px !important;}
+</style>
+
+
+<style id="shiftMemoNoDateCompactFinal">
+#shiftMemoList.shiftMemoListBig{
+  height:auto !important;
+  min-height:0 !important;
+  max-height:none !important;
+}
+#shiftMemoList.shiftMemoListBig .shiftMemoSavedItem{
+  height:auto !important;
+  min-height:0 !important;
+  max-height:none !important;
+  padding:8px 10px !important;
+  margin-top:6px !important;
+  box-sizing:border-box !important;
+}
+#shiftMemoList.shiftMemoListBig .shiftMemoSavedItem .shiftMemoItemText{
+  margin:0 !important;
+  padding:0 !important;
+  line-height:1.35 !important;
+}
+#shiftMemoList.shiftMemoListBig .shiftMemoSavedItem .shiftMemoItemActions{
+  margin-top:6px !important;
+}
+</style>
