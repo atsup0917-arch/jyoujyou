@@ -1051,6 +1051,14 @@ input,select,textarea{
 }
 </style>
 
+<style id="shoppingStoreTagQuickAdd">
+#shoppingPage .storeQuickAddButton{
+  width:100%;margin:0 0 10px;padding:14px 16px;border:0;border-radius:14px;
+  background:#e9edf3;color:#2f6fe4;font-weight:800;font-size:17px;
+}
+#shoppingPage .storeQuickAddButton:active{transform:scale(.99)}
+#shoppingPage .selectedStoreHint{color:#2f6fe4}
+</style>
 
 <style id="lightBackgroundOnlyFinal">
 /* 背景だけを薄く色付け。既存の機能・デザイン・JavaScriptは変更しない */
@@ -1074,54 +1082,6 @@ body{
 <div id="shoppingPage" class="page">
 
 <h1>🛒 買い物リスト</h1>
-<div class="card" id="barcodeShoppingCard">
-  <h2>📷 バーコードで買い物</h2>
-  <div class="small">商品バーコードを読み取ると、登録済みの商品は単価を表示します。未登録でも商品情報を検索し、見つかれば商品名を自動入力します。価格はこの店で実際に買った単価を入力します。</div>
-  <button type="button" id="openBarcodeScanner">📷 バーコードを読み取る</button>
-</div>
-
-<div id="barcodeModal" class="shoppingItemModal" hidden>
-  <div class="shoppingItemModalBox">
-    <div class="shoppingItemModalHeader">
-      <h2 id="barcodeModalTitle">📷 バーコード読み取り</h2>
-      <button type="button" class="shoppingModalClose" id="barcodeModalClose">×</button>
-    </div>
-    <div id="barcodeScannerWrap" style="background:#111;border-radius:16px;overflow:hidden;position:relative">
-      <video id="barcodeVideo" playsinline muted autoplay style="display:block;width:100%;max-height:55dvh;object-fit:cover"></video>
-      <div id="barcodeScanGuide"></div>
-    </div>
-    <div id="barcodeCameraTools">
-      <button type="button" class="gray" id="barcodeTorchBtn">🔦 ライト</button>
-      <button type="button" class="gray" id="barcodeFocusBtn">🎯 ピント</button>
-    </div>
-    <input id="barcodeZoomRange" type="range" min="1" max="1" step="0.1" value="1" aria-label="カメラズーム">
-    <div id="barcodeZoomLabel">ズーム 1.0×</div>
-    <div id="barcodeStatus" class="small" style="font-size:15px;margin-top:10px">バーコードを枠いっぱいに入れてください。近づけすぎず、ピントが合う距離で止めてください。</div>
-    <div class="small" style="margin-top:7px;line-height:1.5">
-      💡 コツ：バーコードとスマホを平行にして、影や反射を避けてください。小さすぎる場合は少し近づけます。
-    </div>
-    <div id="barcodeResult" hidden style="margin-top:12px">
-      <div class="purchaseBox">
-        <div id="barcodeProductState" style="font-size:18px;font-weight:800;margin-bottom:10px"></div>
-        <label>商品名</label><input id="barcodeProductName" type="text">
-        <label>買う場所</label><select id="barcodeStoreSelect"></select>
-        <label>単価</label><input id="barcodePrice" type="number" min="0" step="0.01" inputmode="decimal" placeholder="例：175">
-        <div class="purchaseQtyWrap" style="margin-top:10px">
-          <span class="purchaseQtyLabel">個数</span>
-          <button type="button" class="gray purchaseQtyBtn" id="barcodeQtyMinus">−</button>
-          <input class="purchaseQtyValue" id="barcodeQty" type="number" min="1" step="1" inputmode="numeric" value="1">
-          <button type="button" class="purchaseQtyBtn" id="barcodeQtyPlus">＋</button>
-        </div>
-        <div class="purchaseTotal"><span>今回合計</span><strong id="barcodeTotal">¥0</strong></div>
-      </div>
-      <div class="shoppingModalActions">
-        <button type="button" class="gray" id="barcodeRescan">もう一度読み取る</button>
-        <button type="button" id="barcodeAdd">買い物に追加</button>
-      </div>
-    </div>
-  </div>
-</div>
-
 <div class="card">
 <h2>表示する場所</h2><div class="filters" id="filters"></div>
 </div>
@@ -1133,15 +1093,16 @@ body{
 <button class="gray" id="uncheckAll">チェックを全て外す</button>
 </div>
 
-<div class="card">
-<h2>買う物を追加</h2>
-<label>買う場所</label><select id="storeSelect"></select>
+<div class="card" id="shoppingAddCard">
+<h2 id="shoppingAddTitle">買う物を追加</h2>
+<div id="selectedStoreHint" class="small" style="display:none;margin:-4px 0 10px;font-weight:800"></div>
+<div id="shoppingAddStorePicker"><label>買う場所</label><select id="storeSelect"></select></div>
 <label>商品</label><input id="productSearch" placeholder="商品名・ふりがなで検索" autocomplete="off">
 <div id="productSuggestions" style="display:none;background:#fff;border:1px solid #ccc;border-radius:10px;margin:-4px 0 8px;padding:4px;max-height:220px;overflow:auto"></div>
 <select id="productSelect"></select>
 <label>数量</label><select id="itemQty"></select>
 <label>自由入力</label><input id="freeProduct" placeholder="商品リストにない物を入力">
-<label>数量・メモ</label><input id="memo" placeholder="例：2袋 / 大サイズ">
+<label>メモ</label><input id="memo" placeholder="例：大サイズ / 特売">
 <button id="addItem">＋ 買う物に追加</button>
 </div>
 
@@ -1151,7 +1112,7 @@ body{
 <button id="addStore">＋ 買う場所を追加</button><div id="storeManage"></div>
 <h2 class="settingsHeading">商品の管理</h2>
 <label>商品を登録する場所</label><select id="regStore"></select>
-<label>新しい商品</label><input id="newProduct" placeholder="例：玉子"><label>ふりがな（検索用）</label><input id="newProductKana" placeholder="例：たまご"><label>バーコード（任意）</label><input id="newProductBarcode" inputmode="numeric" placeholder="例：4901234567890"><label>価格の種類</label><select id="newProductPriceMode"><option value="pack">商品単価</option><option value="gram">g単価</option></select><label>価格</label><input id="newProductPrice" type="number" min="0" step="0.01" inputmode="decimal" placeholder="例：175"><label>商品写真</label><div class="productRegUpload"><label for="newProductPhoto" class="productRegUploadLabel" title="写真を選択" aria-label="写真を選択">📷</label><input id="newProductPhoto" type="file" accept="image/*,.heic,.heif,.jpg,.jpeg,.png,.webp"><span class="small" style="margin:0">写真を選択</span></div><div id="newProductPhotoPreview" class="productRegPhotoPreview" hidden><img id="newProductPhotoImg" alt="商品写真"></div><div class="small">登録した価格・写真は、買い物リストにも自動反映されます。</div>
+<label>新しい商品</label><input id="newProduct" placeholder="例：玉子"><label>ふりがな（検索用）</label><input id="newProductKana" placeholder="例：たまご"><label>価格の種類</label><select id="newProductPriceMode"><option value="pack">商品単価</option><option value="gram">g単価</option></select><label>価格</label><input id="newProductPrice" type="number" min="0" step="0.01" inputmode="decimal" placeholder="例：175"><label>商品写真</label><div class="productRegUpload"><label for="newProductPhoto" class="productRegUploadLabel" title="写真を選択" aria-label="写真を選択">📷</label><input id="newProductPhoto" type="file" accept="image/*,.heic,.heif,.jpg,.jpeg,.png,.webp"><span class="small" style="margin:0">写真を選択</span></div><div id="newProductPhotoPreview" class="productRegPhotoPreview" hidden><img id="newProductPhotoImg" alt="商品写真"></div><div class="small">登録した価格・写真は、買い物リストにも自動反映されます。</div>
 <button id="addProduct">＋ 商品を登録</button><div id="productManage"></div>
 <div class="small">買う場所を削除すると、その場所に登録した商品も削除します。すでに買い物リストへ追加した品は残ります。</div>
 </div></details></div>
@@ -1539,8 +1500,6 @@ body{
 
 </div>
 
-<script src="https://unpkg.com/@zxing/browser@0.2.1"></script>
-<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
@@ -1663,415 +1622,63 @@ document.querySelectorAll("[data-pmode]").forEach(i=>i.onchange=()=>update(ref(d
    }catch(err){console.error(err);alert("写真の削除に失敗しました。");}
  });
 }
+function updateShoppingAddView(){
+ const card=$("shoppingAddCard"),title=$("shoppingAddTitle"),picker=$("shoppingAddStorePicker"),hint=$("selectedStoreHint");
+ if(!card||!title||!picker||!hint)return;
+ if(filter!=="ALL" && stores[filter]){
+   title.textContent=`＋ ${stores[filter].name} に買う物を追加`;
+   picker.style.display="none";
+   hint.style.display="block";
+   hint.className="small selectedStoreHint";
+   hint.textContent=`買う場所：${stores[filter].name}`;
+   $("storeSelect").value=filter;
+ }else{
+   title.textContent="買う物を追加";
+   picker.style.display="block";
+   hint.style.display="none";
+ }
+}
+function openShoppingStore(id){
+ filter=id;
+ if(stores[id])$("storeSelect").value=id;
+ $("productSearch").value="";
+ renderProducts();
+ renderList();
+ renderFilters();
+ updateShoppingAddView();
+ const card=$("shoppingAddCard");
+ if(card)requestAnimationFrame(()=>card.scrollIntoView({behavior:"smooth",block:"start"}));
+}
 function renderFilters(){
  const counts={};
- vals(items).forEach(([,x])=>{if(x.storeId)counts[x.storeId]=(counts[x.storeId]||0)+1});
+ // タグの数字は「登録商品数」ではなく、現在まだ買う必要がある未購入の買い物数を表示
+ vals(items).forEach(([,x])=>{
+   if(x.done)return;
+   if(x.storeId)counts[x.storeId]=(counts[x.storeId]||0)+1;
+ });
  const used=new Set(vals(items).map(([,x])=>x.storeId).filter(Boolean));
  const ids=[...new Set([...Object.keys(stores),...used])];
- const total=vals(items).length;
+ const total=vals(items).filter(([,x])=>!x.done).length;
  $("filters").innerHTML=`<button data-f="ALL" class="${filter==="ALL"?"active":""} ${total?"has-items":""}">全部${total?` <span class="count">${total}</span>`:""}</button>`+
  ids.map(id=>`<button data-f="${id}" class="${filter===id?"active":""} ${counts[id]?"has-items":""}">${esc(storeName(id))}${counts[id]?` <span class="count">${counts[id]}</span>`:""}</button>`).join("");
- document.querySelectorAll("[data-f]").forEach(b=>b.onclick=()=>{filter=b.dataset.f;renderList();renderFilters()});
+ document.querySelectorAll("[data-f]").forEach(b=>b.onclick=()=>{
+   const id=b.dataset.f;
+   // 買う場所タグは「表示の切り替え」だけ。追加画面へは移動しない。
+   filter=id;
+   if(id!=="ALL" && stores[id])$("storeSelect").value=id;
+   renderProducts();
+   renderList();
+   renderFilters();
+   updateShoppingAddView();
+ });
+ updateShoppingAddView();
 }
+
 let editingItemId=null;
 let shoppingModalItemId=null;
 let shoppingPendingPhoto=null;
 let shoppingPurchases=[];
 
-
-/* ===== バーコード買い物機能（最大強化版） ===== */
-let barcodeControls=null, barcodeReader=null, html5Barcode=null;
-let barcodeMatchedProduct=null, barcodeCurrentCode="", barcodeBusy=false;
-let barcodeTorchOn=false, barcodeCameraTrack=null, barcodeZoomMin=1, barcodeZoomMax=1;
-let barcodeFocusBusy=false;
-
-function populateBarcodeStores(selectedId=""){
-  const sel=$("barcodeStoreSelect"); if(!sel)return;
-  sel.innerHTML='<option value="">買う場所を選択</option>'+
-    vals(stores).sort((a,b)=>(a[1].name||"").localeCompare(b[1].name||"ja"))
-      .map(([id,s])=>`<option value="${id}">${esc(s.name)}</option>`).join("");
-  if(selectedId && stores[selectedId]) sel.value=selectedId;
-}
-
-function updateBarcodeTotal(){
-  const p=Math.max(0,Number($("barcodePrice")?.value)||0);
-  const q=Math.max(1,Number($("barcodeQty")?.value)||1);
-  if($("barcodeTotal"))$("barcodeTotal").textContent=yen(p*q);
-}
-
-function findProductByBarcode(code){
-  const c=String(code||"").trim();
-  for(const [sid,plist] of vals(products)){
-    for(const [pid,p] of vals(plist||{})){
-      if(String(p.barcode||"").trim()===c)return {storeId:sid,id:pid,p};
-    }
-  }
-  return null;
-}
-
-function stopBarcodeCamera(){
-  barcodeBusy=false;
-  try{barcodeControls?.stop?.();}catch(e){}
-  barcodeControls=null;
-  try{barcodeReader?.reset?.();}catch(e){}
-  barcodeReader=null;
-  if(html5Barcode){
-    try{html5Barcode.stop().catch(()=>{});}catch(e){}
-    try{html5Barcode.clear();}catch(e){}
-    html5Barcode=null;
-  }
-  barcodeTorchOn=false;
-  barcodeCameraTrack=null; barcodeZoomMin=1; barcodeZoomMax=1;
-  const zr=$("barcodeZoomRange"); if(zr){zr.min="1";zr.max="1";zr.value="1";zr.disabled=true;}
-  const zl=$("barcodeZoomLabel"); if(zl)zl.textContent="ズーム 1.0×";
-  const v=$("barcodeVideo");
-  if(v){
-    try{v.pause();}catch(e){}
-    v.srcObject=null;
-  }
-  const wrap=$("barcodeScannerWrap");
-  if(wrap){
-    const h=wrap.querySelector("#html5BarcodeReader");
-    if(h)h.remove();
-  }
-}
-
-function resetBarcodeResult(){
-  stopBarcodeCamera();
-  barcodeMatchedProduct=null; barcodeCurrentCode="";
-  $("barcodeResult").hidden=true;
-  $("barcodeScannerWrap").style.display="";
-  $("barcodeStatus").textContent="カメラを起動しています…";
-  $("barcodeProductState").textContent="";
-  $("barcodeProductName").value="";
-  $("barcodePrice").value="";
-  $("barcodeQty").value="1";
-  populateBarcodeStores("");
-  updateBarcodeTotal();
-}
-
-function barcodeSuccess(code){
-  if(barcodeBusy)return;
-  const value=String(code||"").trim();
-  if(!value)return;
-  barcodeBusy=true;
-  showBarcodeResult(value);
-}
-
-const BARCODE_CACHE_KEY="kariya_barcode_product_cache_v1";
-function getBarcodeCache(){
-  try{return JSON.parse(localStorage.getItem(BARCODE_CACHE_KEY)||"{}")||{};}catch(e){return {};}
-}
-function saveBarcodeCache(code,info){
-  if(!code||!info?.name)return;
-  try{
-    const c=getBarcodeCache(); c[String(code).trim()]=info;
-    const keys=Object.keys(c); if(keys.length>5000)delete c[keys[0]];
-    localStorage.setItem(BARCODE_CACHE_KEY,JSON.stringify(c));
-  }catch(e){}
-}
-async function lookupBarcodeProduct(code){
-  const key=String(code||"").trim();
-  if(!key)return null;
-  const cached=getBarcodeCache()[key];
-  if(cached?.name)return cached;
-  const controller=new AbortController();
-  const timer=setTimeout(()=>controller.abort(),2500);
-  try{
-    const r=await fetch(
-      `https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(key)}.json?fields=product_name_ja,product_name,brands,quantity,image_front_small_url,image_front_url`,
-      {headers:{accept:"application/json"},signal:controller.signal,cache:"force-cache"}
-    );
-    if(!r.ok)return null;
-    const data=await r.json();
-    if(data.status!==1||!data.product)return null;
-    const p=data.product;
-    const info={
-      name:(p.product_name_ja||p.product_name||"").trim(),
-      brand:(p.brands||"").trim(),
-      quantity:(p.quantity||"").trim(),
-      image:p.image_front_small_url||p.image_front_url||""
-    };
-    if(info.name)saveBarcodeCache(key,info);
-    return info;
-  }catch(err){console.debug("product lookup",err);return null;}
-  finally{clearTimeout(timer);}
-}
-
-async function showBarcodeResult(code){
-  const found=findProductByBarcode(code);
-  barcodeCurrentCode=String(code||"").trim();
-  barcodeMatchedProduct=found;
-  stopBarcodeCamera();
-  $("barcodeScannerWrap").style.display="none";
-  $("barcodeResult").hidden=false;
-
-  if(found){
-    $("barcodeProductState").textContent="✅ アプリに登録済みの商品";
-    $("barcodeProductName").value=found.p?.name||"";
-    $("barcodePrice").value=Number(found.p?.price||0)||"";
-    populateBarcodeStores(found.storeId);
-    $("barcodeStatus").textContent=`バーコード：${barcodeCurrentCode}`;
-    updateBarcodeTotal();
-    return;
-  }
-
-  // ネット検索を待たず、読み取り直後に入力画面を表示。
-  const cached=getBarcodeCache()[barcodeCurrentCode];
-  $("barcodeProductState").textContent=cached?.name
-    ?"🆕 未登録の商品（保存済み情報）":"🆕 未登録の商品";
-  $("barcodeProductName").value=cached?.name||"";
-  $("barcodePrice").value="";
-  populateBarcodeStores("");
-  $("barcodeStatus").textContent=cached?.name
-    ?`バーコード：${barcodeCurrentCode} ／ 商品情報を端末から即表示`
-    :`バーコード：${barcodeCurrentCode} ／ 商品名を入力できます。商品情報を検索中…`;
-  updateBarcodeTotal();
-
-  // 外部検索は裏で実行。ユーザーを待たせない。
-  if(!cached?.name){
-    const info=await lookupBarcodeProduct(barcodeCurrentCode);
-    if(barcodeCurrentCode!==String(code||"").trim())return;
-    if(info?.name){
-      $("barcodeProductState").textContent="🆕 未登録の商品（商品名を自動取得）";
-      $("barcodeProductName").value=info.name;
-      $("barcodeStatus").textContent=
-        `バーコード：${barcodeCurrentCode}`+
-        (info.brand?` ／ ${info.brand}`:"")+
-        (info.quantity?` ／ ${info.quantity}`:"");
-    }else{
-      $("barcodeStatus").textContent=
-        `バーコード：${barcodeCurrentCode} ／ 商品情報を取得できませんでした。商品名を入力してください。`;
-    }
-  }
-}
-async function configureBarcodeTrack(track){
-  barcodeCameraTrack=track||null; if(!track)return;
-  try{
-    const caps=track.getCapabilities?.()||{}, advanced={};
-    if(Array.isArray(caps.focusMode)&&caps.focusMode.includes("continuous"))advanced.focusMode="continuous";
-    if(Array.isArray(caps.exposureMode)&&caps.exposureMode.includes("continuous"))advanced.exposureMode="continuous";
-    if(Object.keys(advanced).length)await track.applyConstraints({advanced:[advanced]});
-    const zr=$("barcodeZoomRange"),zl=$("barcodeZoomLabel");
-    if(caps.zoom&&Number.isFinite(caps.zoom.max)){
-      barcodeZoomMin=Number(caps.zoom.min||1); barcodeZoomMax=Number(caps.zoom.max||1);
-      const z=Math.min(barcodeZoomMax,Math.max(barcodeZoomMin,Math.min(1.5,barcodeZoomMax)));
-      zr.min=String(barcodeZoomMin); zr.max=String(barcodeZoomMax); zr.step="0.1"; zr.value=String(z); zr.disabled=false; zl.textContent=`ズーム ${z.toFixed(1)}×`;
-      await track.applyConstraints({advanced:[{zoom:z}]});
-    }
-    zr.oninput=async()=>{if(!barcodeCameraTrack)return;const z=Number(zr.value)||1;try{await barcodeCameraTrack.applyConstraints({advanced:[{zoom:z}]});zl.textContent=`ズーム ${z.toFixed(1)}×`;}catch(e){}};
-  }catch(e){console.debug("track setup",e);}
-}
-async function toggleBarcodeTorch(){
-  if(!barcodeCameraTrack)return;
-  try{const caps=barcodeCameraTrack.getCapabilities?.()||{};if(!caps.torch){alert("このブラウザではライト操作に対応していません。明るい場所でお試しください。");return;}barcodeTorchOn=!barcodeTorchOn;await barcodeCameraTrack.applyConstraints({advanced:[{torch:barcodeTorchOn}]});$("barcodeTorchBtn").textContent=barcodeTorchOn?"🔦 ライトOFF":"🔦 ライトON";}catch(e){barcodeTorchOn=false;}
-}
-async function refocusBarcodeCamera(){
-  if(barcodeFocusBusy||!barcodeCameraTrack)return; barcodeFocusBusy=true;
-  try{const caps=barcodeCameraTrack.getCapabilities?.()||{};if(Array.isArray(caps.focusMode)){if(caps.focusMode.includes("continuous"))await barcodeCameraTrack.applyConstraints({advanced:[{focusMode:"continuous"}]});if(caps.focusMode.includes("single-shot")){await barcodeCameraTrack.applyConstraints({advanced:[{focusMode:"single-shot"}]});await new Promise(r=>setTimeout(r,180));if(caps.focusMode.includes("continuous"))await barcodeCameraTrack.applyConstraints({advanced:[{focusMode:"continuous"}]});}}}catch(e){}finally{barcodeFocusBusy=false;}
-}
-
-async function startBarcodeCamera(){
-  resetBarcodeResult();
-  barcodeBusy=false;
-
-  const wrap=$("barcodeScannerWrap");
-  const video=$("barcodeVideo");
-  const status=$("barcodeStatus");
-
-  status.textContent="背面カメラを起動しています…許可が出たら「許可」を押してください。";
-
-  // まず iPhone/Safari の標準 BarcodeDetector を使える場合は利用。
-  // EAN/JANを中心に絞り、無駄な形式の探索を減らして速度を確保。
-  if("BarcodeDetector" in window){
-    try{
-      const formats=BarcodeDetector.getSupportedFormats
-        ? await BarcodeDetector.getSupportedFormats()
-        : [];
-      const wanted=["ean_13","ean_8","upc_a","upc_e","code_128"];
-      const usable=wanted.filter(x=>!formats.length||formats.includes(x));
-      const detector=new BarcodeDetector({formats:usable.length?usable:formats});
-      const stream=await navigator.mediaDevices.getUserMedia({
-        audio:false,
-        video:{
-          facingMode:{ideal:"environment"},
-          width:{ideal:1920},
-          height:{ideal:1080},
-          frameRate:{ideal:30,max:30}
-        }
-      });
-      video.srcObject=stream;
-      await video.play();
-      barcodeBusy=false;
-      status.textContent="バーコードを画面いっぱいに近づけてください。自動で読み取ります。";
-
-      const track=stream.getVideoTracks()[0];
-      await configureBarcodeTrack(track);
-
-      barcodeControls={stop:()=>{
-        try{stream.getTracks().forEach(t=>t.stop());}catch(e){}
-      }};
-
-      const scan=async()=>{
-        if(!barcodeControls||barcodeBusy)return;
-        try{
-          const results=await detector.detect(video);
-          if(results?.length){
-            const value=results[0].rawValue;
-            if(value){barcodeSuccess(value);return;}
-          }
-        }catch(e){console.debug("native barcode detect",e);}
-        requestAnimationFrame(scan);
-      };
-      requestAnimationFrame(scan);
-      return;
-    }catch(e){
-      console.debug("native detector failed, fallback",e);
-      stopBarcodeCamera();
-    }
-  }
-
-  // iPhone Safariで強い実績のあるhtml5-qrcodeをフォールバックとして使用。
-  if(window.Html5Qrcode){
-    try{
-      const readerId="html5BarcodeReader";
-      const reader=document.createElement("div");
-      reader.id=readerId;
-      reader.style.cssText="width:100%;min-height:240px;background:#111;border-radius:16px;overflow:hidden";
-      wrap.insertBefore(reader,video);
-      video.style.display="none";
-
-      html5Barcode=new Html5Qrcode(readerId,{verbose:false});
-      const formats=[
-        Html5QrcodeSupportedFormats.EAN_13,
-        Html5QrcodeSupportedFormats.EAN_8,
-        Html5QrcodeSupportedFormats.UPC_A,
-        Html5QrcodeSupportedFormats.UPC_E,
-        Html5QrcodeSupportedFormats.CODE_128
-      ];
-
-      await html5Barcode.start(
-        {facingMode:"environment"},
-        {
-          fps:20,
-          qrbox:function(viewfinderWidth,viewfinderHeight){
-            // 横長のJANバーコードを優先。画面幅の約90%を使用。
-            const w=Math.floor(Math.min(viewfinderWidth*0.94,820));
-            const h=Math.floor(Math.min(Math.max(w*0.30,140),300));
-            return {width:w,height:h};
-          },
-          aspectRatio:1.7777778,
-          formatsToSupport:formats,
-          disableFlip:true
-        },
-        decodedText=>barcodeSuccess(decodedText),
-        ()=>{}
-      );
-      barcodeBusy=false;
-      status.textContent="バーコードを横長の枠いっぱいに入れてください。";
-      return;
-    }catch(e){
-      console.error("html5-qrcode start",e);
-      stopBarcodeCamera();
-    }
-  }
-
-  // 最後のフォールバック：ZXing
-  if(window.ZXingBrowser){
-    try{
-      const hints=new Map();
-      if(window.ZXing?.DecodeHintType && window.ZXing?.BarcodeFormat){
-        hints.set(ZXing.DecodeHintType.TRY_HARDER,true);
-        hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS,[
-          ZXing.BarcodeFormat.EAN_13,ZXing.BarcodeFormat.EAN_8,
-          ZXing.BarcodeFormat.UPC_A,ZXing.BarcodeFormat.UPC_E,
-          ZXing.BarcodeFormat.CODE_128
-        ]);
-      }
-      barcodeReader=new ZXingBrowser.BrowserMultiFormatReader(hints);
-      barcodeControls=await barcodeReader.decodeFromConstraints(
-        {audio:false,video:{facingMode:{ideal:"environment"},width:{ideal:1920},height:{ideal:1080},frameRate:{ideal:30,max:30}}},
-        video,
-        (result)=>{if(result)barcodeSuccess(result.getText());}
-      );
-      try{await configureBarcodeTrack(video.srcObject?.getVideoTracks?.()[0]);}catch(e){}
-      barcodeBusy=false;
-      status.textContent="バーコードを横長の枠いっぱいに入れてください。";
-      return;
-    }catch(e){
-      console.error("ZXing start",e);
-      stopBarcodeCamera();
-    }
-  }
-
-  status.textContent="カメラを起動できませんでした。iPhoneのカメラ許可とHTTPS接続を確認してください。";
-}
-
-async function closeBarcodeModal(){
-  stopBarcodeCamera();
-  $("barcodeModal").hidden=true;
-  document.body.style.overflow="";
-}
-
-$("barcodeTorchBtn").onclick=toggleBarcodeTorch;
-$("barcodeFocusBtn").onclick=refocusBarcodeCamera;
-
-$("openBarcodeScanner").onclick=async()=>{
-  $("barcodeModal").hidden=false;
-  document.body.style.overflow="hidden";
-  await startBarcodeCamera();
-};
-$("barcodeModalClose").onclick=closeBarcodeModal;
-$("barcodeModal").addEventListener("click",e=>{if(e.target===$("barcodeModal"))closeBarcodeModal();});
-$("barcodeRescan").onclick=startBarcodeCamera;
-$("barcodePrice").oninput=updateBarcodeTotal;
-$("barcodeQty").oninput=()=>{
-  $("barcodeQty").value=Math.max(1,Number($("barcodeQty").value)||1);
-  updateBarcodeTotal();
-};
-$("barcodeQtyMinus").onclick=()=>{
-  $("barcodeQty").value=Math.max(1,(Number($("barcodeQty").value)||1)-1);
-  updateBarcodeTotal();
-};
-$("barcodeQtyPlus").onclick=()=>{
-  $("barcodeQty").value=(Number($("barcodeQty").value)||1)+1;
-  updateBarcodeTotal();
-};
-$("barcodeAdd").onclick=async()=>{
-  const name=$("barcodeProductName").value.trim();
-  const storeId=$("barcodeStoreSelect").value;
-  const price=Math.max(0,Number($("barcodePrice").value)||0);
-  const qty=Math.max(1,Number($("barcodeQty").value)||1);
-  if(!name)return alert("商品名を入力してください。");
-  if(!storeId)return alert("買う場所を選択してください。");
-  if(price<=0)return alert("単価を入力してください。");
-
-  try{
-    let productId=barcodeMatchedProduct?.id||null;
-    if(!barcodeMatchedProduct){
-      const newRef=push(ref(db,`products/${storeId}`));
-      productId=newRef.key;
-      await set(newRef,{name,kana:"",price,priceMode:"pack",barcode:barcodeCurrentCode});
-    }else{
-      await update(ref(db,`products/${storeId}/${productId}`),{
-        name,price,barcode:barcodeCurrentCode
-      });
-    }
-
-    const itemRef=push(itemsRef);
-    await set(itemRef,{
-      storeId,storeName:stores[storeId]?.name||"",name,memo:"",
-      quantity:qty,done:false,createdAt:Date.now(),productId,
-      unitPrice:price,priceMode:"pack",price:price*qty,barcode:barcodeCurrentCode
-    });
-
-    alert(barcodeMatchedProduct?"買い物に追加しました。":"商品を登録して、買い物に追加しました。");
-    await closeBarcodeModal();
-  }catch(err){
-    console.error(err);
-    alert("登録・追加に失敗しました。");
-  }
-};
 
 function yen(v){
 const n=Number(v||0);
@@ -2079,10 +1686,22 @@ return "¥"+Math.round(n).toLocaleString("ja-JP");
 }
 
 function renderShoppingTotals(){}
+function renderStoreQuickAddButton(){
+ const list=$("list");
+ if(!list)return;
+ const old=$("storeQuickAddButton"); if(old)old.remove();
+ if(filter==="ALL"||!stores[filter])return;
+ const btn=document.createElement("button");
+ btn.type="button";btn.id="storeQuickAddButton";btn.className="storeQuickAddButton";
+ btn.textContent=`＋ ${stores[filter].name} に買う物を追加`;
+ btn.onclick=()=>{const card=$("shoppingAddCard");if(card)card.scrollIntoView({behavior:"smooth",block:"start"});};
+ list.parentNode.insertBefore(btn,list);
+}
+
 
 function renderList(){
 const arr=vals(items).map(([id,x])=>({id,...x})).filter(x=>filter==="ALL"||x.storeId===filter);
-if(!arr.length){$("list").innerHTML='<div class="empty">買う物はまだありません。</div>';renderShoppingTotals();return}
+if(!arr.length){$("list").innerHTML='<div class="empty">買う物はまだありません。</div>';renderStoreQuickAddButton();renderShoppingTotals();return}
 const groups={};arr.forEach(x=>{const k=x.storeId||"OTHER";if(!groups[k])groups[k]=[];groups[k].push(x);});
 $("list").innerHTML=Object.entries(groups).map(([sid,a])=>{
 const storeTotal=a.reduce((sum,x)=>sum+Number(x.price||0),0);
@@ -2111,6 +1730,7 @@ await update(ref(db,"items/"+id),{name,memo});
 editingItemId=null;
 renderList();
 });
+renderStoreQuickAddButton();
 renderShoppingTotals();
 }
 
@@ -2310,7 +1930,7 @@ function updateShoppingBadge(){
  $("tabShopping").innerHTML=`🛒 買い物${remaining?` <span class="count">${remaining}</span>`:""}`;
 }
 $("itemQty").innerHTML=Array.from({length:20},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join("");
-$("storeSelect").onchange=()=>{ $("productSearch").value=""; renderProducts(); };
+$("storeSelect").onchange=()=>{ $("productSearch").value=""; filter=$("storeSelect").value||"ALL"; renderProducts(); renderList(); renderFilters(); updateShoppingAddView(); };
 $("regStore").onchange=renderProductManage;
 $("productSearch").oninput=renderProducts;
 $("productSearch").onkeyup=renderProducts;
@@ -2323,15 +1943,15 @@ document.addEventListener("click",e=>{
 
 $("addStore").onclick=async()=>{const name=$("newStore").value.trim();if(!name)return;await push(storesRef,{name});$("newStore").value=""};
 $("addProduct").onclick=async()=>{
- const sid=$("regStore").value,name=$("newProduct").value.trim(),kana=$("newProductKana").value.trim(),barcode=$("newProductBarcode")?.value.trim()||"";
+ const sid=$("regStore").value,name=$("newProduct").value.trim(),kana=$("newProductKana").value.trim();
  const rawPrice=$("newProductPrice").value.trim();
  const price=rawPrice===""?0:Math.max(0,Number(rawPrice)||0);
  if(!sid||!name)return;
  let photo=null;
  const file=$("newProductPhoto").files?.[0];
  if(file){try{photo=await resizeShoppingPhoto(file);}catch(err){console.error(err);return alert("写真の読み込みに失敗しました。");}}
- const priceMode=$("newProductPriceMode").value||"pack"; await push(ref(db,"products/"+sid),{name,kana,price,priceMode,photo,barcode});
- $("newProduct").value="";$("newProductKana").value="";if($("newProductBarcode"))$("newProductBarcode").value="";$("newProductPrice").value="";$("newProductPriceMode").value="pack";$("newProductPhoto").value="";
+ const priceMode=$("newProductPriceMode").value||"pack"; await push(ref(db,"products/"+sid),{name,kana,price,priceMode,photo});
+ $("newProduct").value="";$("newProductKana").value="";$("newProductPrice").value="";$("newProductPriceMode").value="pack";$("newProductPhoto").value="";
  $("newProductPhotoPreview").hidden=true;
 };
 $("newProductPhoto").addEventListener("change",async e=>{
