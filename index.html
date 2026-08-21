@@ -908,10 +908,14 @@ html.recipeModalLocked, body.recipeModalLocked{
 }
 </style>
 
+<style id="shiftModeStyle">
+.shiftModeBtn{margin:0!important;font-size:17px;font-weight:800;padding:12px 8px!important;border:2px solid #ddd;background:#fff;color:#333;border-radius:12px}
+.shiftModeBtn.active{border-color:#e78ab0;background:#fff0f6;color:#b12f67}
+</style>
 <style id="shiftTodayEditStyle">
 #shiftTodayEditCard{margin-top:12px}
 .shiftTodayEditList{display:grid;grid-template-columns:1fr;gap:8px;margin-top:10px}
-.shiftTodayEditRow{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto;gap:8px;align-items:center}
+.shiftTodayEditRow{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1fr) auto;gap:8px;align-items:center}
 .shiftTodayEditRow input{margin:0!important;padding:11px 10px!important;font-size:17px!important}
 .shiftTodayEditRow button{width:auto!important;margin:0!important;padding:10px 12px!important}
 .shiftTodayEditActions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
@@ -1300,6 +1304,13 @@ body{
 <div id="shiftPage" class="page" hidden>
 <h1>👥 シフト</h1>
 
+<div class="card" style="padding:10px;margin-bottom:10px">
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+    <button type="button" id="shiftModeLunch" class="shiftModeBtn">☀️ ランチ</button>
+    <button type="button" id="shiftModeDinner" class="shiftModeBtn active">🌙 ディナー</button>
+  </div>
+</div>
+
 <div class="card shiftHero">
   <div class="shiftHeroTitle">
     <div>
@@ -1318,7 +1329,7 @@ body{
 
 <div class="card" id="shiftTodayEditCard" hidden>
   <div class="shiftSectionTitle">✏️ 今日の出勤者を編集</div>
-  <div class="shiftHint">今日の出勤者欄だけを手直しします。AIの元データや他の日のシフトは変更しません。名前・ポジションを変更、追加、削除できます。</div>
+  <div class="shiftHint">今日の出勤者欄だけを手直しします。AIの元データや他の日のシフトは変更しません。名前・時間を変更、追加、削除できます。</div>
   <div id="shiftTodayEditList" class="shiftTodayEditList"></div>
   <div class="shiftTodayEditActions">
     <button type="button" class="gray" id="shiftTodayEditAdd">＋ 出勤者を追加</button>
@@ -3399,6 +3410,13 @@ function renderNonVegProductManager(){
     }
   }
 
+  function updateShiftModeButtons(){
+    const lunch=$('shiftModeLunch'), dinner=$('shiftModeDinner');
+    const isLunch=shiftType()==='lunch';
+    lunch?.classList.toggle('active',isLunch); dinner?.classList.toggle('active',!isLunch);
+    renderShiftRegisteredPeriods(); renderTodayQuick(); renderDay();
+  }
+
   function bind(){
     if(ready||!window.__fb?.db)return false;
     ready=true;
@@ -4715,6 +4733,20 @@ button, label {
   const periodRange=()=>{const v=$('shiftPeriod')?.value||'second';const [ys,ms]=targetYM().split('-').map(Number);const last=new Date(ys,ms,0).getDate();return v==='first'?[1,Math.min(15,last)]:[16,last]};
   const periodKey=()=>`${targetYM()}-${$('shiftPeriod')?.value||'second'}`;
   const periodText=(ym,p)=>{const [y,m]=ym.split('-').map(Number);return `${y}年${m}月${p==='first'?'前半（1〜15日）':'後半（16日〜月末）'}`};
+  const shiftType=()=>document.body.dataset.shiftMode==='lunch'?'lunch':'dinner';
+  const shiftTypeLabel=()=>shiftType()==='lunch'?'ランチ':'ディナー';
+  const shiftIsCurrentType=x=>{const t=String(x?.shiftType||'dinner');return t===shiftType()};
+
+  function updateShiftModeButtons(){
+    const lunch=$('shiftModeLunch'), dinner=$('shiftModeDinner');
+    const isLunch=shiftType()==='lunch';
+    lunch?.classList.toggle('active',isLunch);
+    dinner?.classList.toggle('active',!isLunch);
+    updateShiftUploadTargetLabel();
+    renderShiftRegisteredPeriods();
+    renderDay();
+  }
+
   const dateLabel=date=>{const d=new Date(date+'T00:00:00');return `${d.getMonth()+1}/${d.getDate()}（${['日','月','火','水','木','金','土'][d.getDay()]}）`};
   const norm=s=>String(s??'').replace(/[\s　]/g,'').replace(/[「」『』（）()]/g,'').toLowerCase();
   let schedules={},memos={},staff=[],staffMap={},pending=[],selectedFile=null;
@@ -4862,27 +4894,50 @@ button, label {
 
     // 15本＝前半、16本＝後半。余分な帯が混ざった場合は最も規則的な15/16本を採用。
     function chooseRuns(runs){
-      if(runs.length===15||runs.length===16)return runs;
-      let best=null,bestScore=Infinity;
-      for(const n of [16,15]){
-        if(runs.length<n)continue;
-        for(let s=0;s<=runs.length-n;s++){
-          const a=runs.slice(s,s+n);
-          const centers=a.map(x=>(x[0]+x[1])/2);
-          const gaps=centers.slice(1).map((v,i)=>v-centers[i]);
-          const med=gaps.slice().sort((x,y)=>x-y)[Math.floor(gaps.length/2)]||1;
-          const score=gaps.reduce((z,g)=>z+Math.abs(g-med),0)/Math.max(1,gaps.length);
-          if(score<bestScore){bestScore=score;best=a;}
-        }
+      // 対象期間を最優先。前半は左から1〜15日、
+      // 後半は右側の16日〜月末を使う。
+      // 等間隔スコアだけで選ぶと隣の日付も規則的な列として
+      // 誤採用することがあるため、期間と列順を直接対応させる。
+      const ym=targetYM();
+      const [yy,mm]=ym.split('-').map(Number);
+      const selectedPeriod=$('shiftPeriod')?.value||'second';
+      const lastDay=new Date(yy,mm,0).getDate();
+      const expected=selectedPeriod==='first'?Math.min(15,lastDay):Math.max(0,lastDay-15);
+      if(!expected)return runs;
+
+      if(runs.length<expected){
+        throw new Error(`日付列を正しく検出できませんでした（必要${expected}列／検出${runs.length}列）。写真をもう少し正面から撮ってください。`);
       }
-      return best||runs;
+
+      // 1〜15日＝左から必要本数。
+      // 16日〜月末＝右から必要本数。
+      const selected=selectedPeriod==='first'
+        ? runs.slice(0,expected)
+        : runs.slice(runs.length-expected);
+
+      // 選択した列の間隔が明らかに崩れている場合だけ停止。
+      const centers=selected.map(r=>(r[0]+r[1])/2);
+      const gaps=centers.slice(1).map((v,i)=>v-centers[i]);
+      if(gaps.length){
+        const sorted=gaps.slice().sort((a,b)=>a-b);
+        const med=sorted[Math.floor(sorted.length/2)]||1;
+        const bad=gaps.some(g=>g<med*0.55 || g>med*1.45);
+        if(bad) throw new Error('日付列の間隔を正しく確認できませんでした。写真を少し真上から撮り直してください。');
+      }
+      return selected;
     }
     yellowRuns=chooseRuns(yellowRuns);
     const count=yellowRuns.length;
-    if(count!==15&&count!==16) throw new Error(`日付列を正しく検出できませんでした（${count}本）。`);
-
     const target=$('shiftPeriod')?.value||'second';
-    const startDay=count===16?16:1;
+    const ymCheck=targetYM();
+    const [yyCheck,mmCheck]=ymCheck.split('-').map(Number);
+    const lastDayCheck=new Date(yyCheck,mmCheck,0).getDate();
+    const expectedCount=target==='first'?Math.min(15,lastDayCheck):Math.max(0,lastDayCheck-15);
+    if(count!==expectedCount) throw new Error(`日付列を正しく検出できませんでした（検出${count}本／対象${expectedCount}日）。`);
+
+    // 日付番号は「検出本数」ではなく、画面で選択した前半/後半から確定。
+    // これで余計な黄色帯を拾った場合に隣の日へずれることを防ぎます。
+    const startDay=target==='first'?1:16;
     const dates=yellowRuns.map((r,i)=>({date:startDay+i,y0:r[0],y1:r[1]}));
 
     // ② スタッフ行は「名前欄の横罫線」から検出。
@@ -5210,13 +5265,13 @@ button, label {
     try{
       const liveSnap=await fb().get(ref('shift/schedules'));
       const current=liveSnap.val()||{};
-      const ids=Object.entries(current).filter(([,x])=>inPeriod(x?.date)).map(([id])=>id);
-      const hasMeta=!!(window.__shiftPeriodMeta||{})[`${ym}-${p}`];
+      const ids=Object.entries(current).filter(([,x])=>inPeriod(x?.date)&&shiftIsCurrentType(x)).map(([id])=>id);
+      const hasMeta=!!(window.__shiftPeriodMeta||{})[`${shiftType()}-${ym}-${p}`];
       if(!ids.length&&!hasMeta){alert(`${label}には登録されているシフトがありません。`);return}
       if(!confirm(`${label}の登録シフトをすべて削除します。\n\n対象：${ids.length}件\n\nこの操作は元に戻せません。よろしいですか？`))return;
       const updates={};
       ids.forEach(id=>{updates[`shift/schedules/${id}`]=null});
-      updates[`shift/periodMeta/${ym}-${p}`]=null;
+      updates[`shift/periodMeta/${shiftType()}-${ym}-${p}`]=null;
       await fb().update(fb().ref(fb().db),updates);
       pending=[];
       if($('shiftReviewCard'))$('shiftReviewCard').hidden=true;
@@ -5298,9 +5353,9 @@ button, label {
       // 画面側のschedulesは直前のonValue更新前の可能性があるため、保存直前にFirebaseから再取得して期間を確実に置換する。
       const liveSnap=await fb().get(ref('shift/schedules'));
       const current=liveSnap.val()||{}; const u={};
-      Object.entries(current).forEach(([id,x])=>{if(inPeriod(x?.date))u[`shift/schedules/${id}`]=null});
-      chosen.forEach(x=>{const id=fb().push(ref('shift/schedules')).key;u[`shift/schedules/${id}`]={date:x.date,name:x.name,position:x.position||shiftPositionForMark(x.mark),time:normalizeShiftTimeRange(x.startTime,x.endTime,x.time),period:($('shiftPeriod')?.value||'second'),source:'photo-attendance',createdAt:Date.now()}});
-      u[`shift/periodMeta/${periodKey()}`]={yearMonth:ym,period:p,label,updatedAt:Date.now(),count:chosen.length};
+      Object.entries(current).forEach(([id,x])=>{if(inPeriod(x?.date)&&shiftIsCurrentType(x))u[`shift/schedules/${id}`]=null});
+      chosen.forEach(x=>{const id=fb().push(ref('shift/schedules')).key;u[`shift/schedules/${id}`]={date:x.date,name:x.name,position:x.position||shiftPositionForMark(x.mark),time:normalizeShiftTimeRange(x.startTime,x.endTime,x.time),period:p,shiftType:shiftType(),source:'photo-attendance',createdAt:Date.now()}});
+      u[`shift/periodMeta/${shiftType()}-${periodKey()}`]={yearMonth:ym,period:p,shiftType:shiftType(),label,updatedAt:Date.now(),count:chosen.length};
       await fb().update(fb().ref(fb().db),u);
       pending=[];$('shiftReviewCard').hidden=true;alert(`${label}を登録しました。\n${chosen.length}件`);renderShiftRegisteredPeriods();renderDay();
     }catch(e){console.error(e);alert('登録に失敗しました。\n'+(e?.message||String(e)))}
@@ -5318,7 +5373,7 @@ button, label {
 
 function renderDay(){
     const date=$('shiftViewDate')?.value||today(); const list=$('shiftDayList'),sum=$('shiftDaySummary');if(!list||!sum)return;
-    const rows=window.sortShiftDisplayByPosition(Object.values(schedules).filter(x=>x?.date===date&&x?.name));
+    const rows=window.sortShiftDisplayByPosition(Object.values(schedules).filter(x=>x?.date===date&&x?.name&&shiftIsCurrentType(x)));
     const byName={};
     rows.forEach(x=>{
       const name=String(x.name).trim(); if(!name)return;
@@ -5327,14 +5382,14 @@ function renderDay(){
     });
     const names=window.sortShiftDisplayByPosition(Object.values(byName));
     sum.textContent=names.length?`${dateLabel(date)}　出勤 ${names.length}人`:'この日のシフトはありません。';
-    list.innerHTML=names.length?`<div class="shiftAttendanceGrid">${names.map((x,i)=>`<div class="shiftAttendanceName"><span class="shiftAttendanceNo">${i+1}</span><b>${esc(x.name)}</b>${displayShiftTime(x.time)?`　<span style="font-size:.9em;font-weight:800;color:#222">${esc(displayShiftTime(x.time))}</span>`:''}${x.position?`　<span style="font-size:.85em;font-weight:700;color:#555">${esc(x.position)}</span>`:''}</div>`).join('')}</div>`:'';
+    list.innerHTML=names.length?`<div class="shiftAttendanceGrid">${names.map((x,i)=>`<div class="shiftAttendanceName"><span class="shiftAttendanceNo">${i+1}</span><b>${esc(x.name)}</b>${displayShiftTime(x.time)?`　<span style="font-size:.9em;font-weight:800;color:#222">${esc(displayShiftTime(x.time))}</span>`:''}${shiftType()==='dinner'&&x.position?`　<span style="font-size:.85em;font-weight:700;color:#555">${esc(x.position)}</span>`:''}</div>`).join('')}</div>`:'';
     renderTodayQuick();
     renderMemos();
   }
 
   function todayRowsForEdit(){
     const date=today();
-    return Object.values(schedules||{}).filter(x=>x?.date===date&&String(x?.name||'').trim());
+    return Object.values(schedules||{}).filter(x=>x?.date===date&&String(x?.name||'').trim()&&shiftIsCurrentType(x));
   }
   function openTodayEditor(){
     const card=$('shiftTodayEditCard'), box=$('shiftTodayEditList');
@@ -5348,19 +5403,20 @@ function renderDay(){
       seen.add(key);
       const same=rows.filter(r=>String(r.name||'').trim()===key);
       const pos=String(same.find(r=>String(r.position||'').trim())?.position||'').trim();
-      grouped.push({name:key,position:pos});
+      const time=String(same.find(r=>String(r.time||'').trim())?.time||'').trim();
+       grouped.push({name:key,position:pos,time});
     });
     box.innerHTML='';
     if(!grouped.length){
       box.innerHTML='<div class="small">本日の登録シフトがありません。必要なら「＋ 出勤者を追加」から登録できます。</div>';
-    }else grouped.forEach(x=>addTodayEditRow(x.name,x.position));
+    }else grouped.forEach(x=>addTodayEditRow(x.name,x.position,x.time));
     card.hidden=false;
     card.scrollIntoView({behavior:'smooth',block:'start'});
   }
-  function addTodayEditRow(name='',position=''){
+  function addTodayEditRow(name='',position='',time=''){
     const box=$('shiftTodayEditList');if(!box)return;
     const row=document.createElement('div');row.className='shiftTodayEditRow';
-    row.innerHTML=`<input class="shiftTodayEditName" value="${esc(name)}" placeholder="名前"><input class="shiftTodayEditPosition" value="${esc(position)}" placeholder="ポジション"><button type="button" class="danger shiftTodayEditRemove">削除</button>`;
+    row.innerHTML=`<input class="shiftTodayEditName" value="${esc(name)}" placeholder="名前"><input class="shiftTodayEditPosition" value="${esc(position)}" placeholder="ポジション" ${shiftType()==='lunch'?'style="display:none"':''}><input class="shiftTodayEditTime" value="${esc(time)}" placeholder="時間 例：11:00〜15:00"><button type="button" class="danger shiftTodayEditRemove">削除</button>`;
     row.querySelector('.shiftTodayEditRemove')?.addEventListener('click',()=>row.remove());
     box.appendChild(row);
   }
@@ -5372,7 +5428,8 @@ function renderDay(){
     const box=$('shiftTodayEditList');if(!box)return;
     const rows=[...box.querySelectorAll('.shiftTodayEditRow')].map(r=>({
       name:r.querySelector('.shiftTodayEditName')?.value.trim()||'',
-      position:r.querySelector('.shiftTodayEditPosition')?.value.trim()||''
+      position:r.querySelector('.shiftTodayEditPosition')?.value.trim()||'',
+       time:r.querySelector('.shiftTodayEditTime')?.value.trim()||''
     })).filter(x=>x.name);
     if(!rows.length && !confirm('今日の出勤者をすべて削除します。よろしいですか？'))return;
     if(!confirm('今日の出勤者表示をこの内容に変更します。よろしいですか？'))return;
@@ -5382,7 +5439,7 @@ function renderDay(){
       const current=liveSnap.val()||{};
       const updates={};
       Object.entries(current).forEach(([id,x])=>{
-        if(x?.date===date)updates[`shift/schedules/${id}`]=null;
+        if(x?.date===date&&shiftIsCurrentType(x))updates[`shift/schedules/${id}`]=null;
       });
       rows.forEach(x=>{
         const id=fb().push(ref('shift/schedules')).key;
@@ -5391,8 +5448,9 @@ function renderDay(){
           name:x.name,
           number:'',
           position:x.position,
-          time:'',
+          time:x.time,
           period:'manual-today',
+          shiftType:shiftType(),
           source:'manual-today-edit',
           createdAt:Date.now()
         };
@@ -5413,7 +5471,7 @@ function renderDay(){
     const label=$('shiftTodayDateLabel'),sum=$('shiftTodayQuickSummary'),list=$('shiftTodayQuickList'),memoBox=$('shiftTodayQuickMemo');
     if(!sum||!list)return;
     if(label){const d=new Date(date+'T00:00:00');label.textContent=`${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日（${['日','月','火','水','木','金','土'][d.getDay()]}）`; }
-    const rows=Object.values(schedules).filter(x=>x?.date===date&&x?.name);
+    const rows=Object.values(schedules).filter(x=>x?.date===date&&x?.name&&shiftIsCurrentType(x));
     const byName={};
     rows.forEach(x=>{
       const name=String(x.name).trim(); if(!name)return;
@@ -5433,8 +5491,8 @@ function renderDay(){
     // ポジションを確定してから並び替える。これまでポジション設定前に並び替えていたため、順番が反映されなかった。
     const names=window.sortShiftDisplayByPosition(Object.values(byName));
     sum.textContent=names.length?`出勤 ${names.length}人`:'本日のシフトはまだ登録されていません。';
-    list.innerHTML=names.length?names.map(x=>`<div class="shiftHeroName"><span class="shiftHeroMain"><b>${esc(x.name)}</b>${x.time?`<span class="shiftHeroTime">${esc(x.time)}</span>`:''}</span>${x.position?`<span class="shiftHeroPosition">${esc(x.position)}</span>`:''}</div>`).join(''):'';
-    const ma=Object.values(memos).filter(x=>x?.date===date).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+    list.innerHTML=names.length?names.map(x=>`<div class="shiftHeroName"><span class="shiftHeroMain"><b>${esc(x.name)}</b>${x.time?`<span class="shiftHeroTime">${esc(x.time)}</span>`:''}</span>${shiftType()==='dinner'&&x.position?`<span class="shiftHeroPosition">${esc(x.position)}</span>`:''}</div>`).join(''):'';
+    const ma=Object.values(memos).filter(x=>x?.date===date && shiftMemoScopedKey(x)).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
     if(memoBox){memoBox.hidden=!ma.length;memoBox.textContent=ma.length?`📝 引き継ぎ\n${ma.map(x=>x.text).join('\n\n')}`:'';}
   }
 
@@ -5444,7 +5502,7 @@ function renderDay(){
     const base=new Date((selected||today())+'T00:00:00');
     const y=base.getFullYear(), m=base.getMonth();
     const first=new Date(y,m,1), last=new Date(y,m+1,0);
-    const memoDates=new Set(Object.values(memos||{}).filter(x=>x?.date&&String(x.text||'').trim()).map(x=>x.date));
+    const memoDates=new Set(Object.values(memos||{}).filter(x=>x?.date&&String(x.text||'').trim()&&shiftMemoScopedKey(x)).map(x=>x.date));
     const monthLabel=`${y}年${m+1}月`;
     let html=`<div class="shiftMemoCalendarHead"><button type="button" class="gray" id="shiftMemoPrevMonth">‹</button><div class="shiftMemoCalendarTitle">${monthLabel}</div><button type="button" class="gray" id="shiftMemoNextMonth">›</button></div>`;
     html+='<div class="shiftMemoCalendarWeek"><div>日</div><div>月</div><div>火</div><div>水</div><div>木</div><div>金</div><div>土</div></div>';
@@ -5473,11 +5531,16 @@ function renderDay(){
     });
   }
   let shiftMemoEditingId=null;
+  // カレンダー・引き継ぎメモもランチ／ディナーごとに完全分離
+  function shiftMemoScopedKey(x){
+    return String(x?.serviceType||'dinner')===shiftType();
+  }
+
 
   function renderMemos(){
     const date=$('shiftMemoDate')?.value||$('shiftViewDate')?.value||today(), box=$('shiftMemoList');if(!box)return;
     const a=Object.entries(memos||{})
-      .filter(([,x])=>x?.date===date)
+      .filter(([,x])=>x?.date===date && shiftMemoScopedKey(x))
       .sort(([,a],[,b])=>(b.createdAt||0)-(a.createdAt||0));
     const selectedBox=$('shiftMemoSelected');
     if(selectedBox){selectedBox.hidden=true;selectedBox.innerHTML='';}
@@ -5522,7 +5585,7 @@ function renderDay(){
       if(!id||!nextText){alert('引き継ぎメモを入力してください。');return}
       const current=memos?.[id];
       if(!current)return;
-      const next={...current,text:nextText,updatedAt:Date.now()};
+      const next={...current,text:nextText,serviceType:current.serviceType||shiftServiceType(),updatedAt:Date.now()};
       try{
         if(String(id).startsWith('local-')){
           const raw=JSON.parse(localStorage.getItem('karuya_shift_memos_v1')||'[]');
@@ -5571,7 +5634,7 @@ function renderDay(){
   async function saveMemo(){
     const date=$('shiftMemoDate')?.value||today(), text=$('shiftMemoText')?.value.trim();
     if(!text){alert('引き継ぎメモを入力してください。');return}
-    const item={date,text,createdAt:Date.now()};
+    const item={date,text,serviceType:shiftServiceType(),createdAt:Date.now()};
     try{
       if(fb()) await fb().push(ref('shift/memos'),item);
       else throw new Error('Firebaseが準備されていません。');
@@ -5583,7 +5646,7 @@ function renderDay(){
   function periodRegistered(ym,p){
     const [y,m]=ym.split('-').map(Number); const last=new Date(y,m,0).getDate(); const from=p==='first'?1:16, to=p==='first'?Math.min(15,last):last;
     const prefix=`${ym}-`;
-    return Object.values(schedules||{}).some(x=>{if(!x?.date||!String(x.date).startsWith(prefix))return false;const n=Number(String(x.date).slice(-2));return n>=from&&n<=to&&x?.name});
+    return Object.values(schedules||{}).some(x=>{if(!shiftIsCurrentType(x)||!x?.date||!String(x.date).startsWith(prefix))return false;const n=Number(String(x.date).slice(-2));return n>=from&&n<=to&&x?.name});
   }
   function renderShiftRegisteredPeriods(){
     const box=$('shiftRegisteredPeriods'); if(!box)return;
@@ -5591,18 +5654,36 @@ function renderDay(){
     const next=new Date(d.getFullYear(),d.getMonth()+1,1); const ymNext=`${next.getFullYear()}-${String(next.getMonth()+1).padStart(2,'0')}`;
     const metas=window.__shiftPeriodMeta||{};
     const items=[[ymNow,'first'],[ymNow,'second'],[ymNext,'first']];
-    box.innerHTML=items.map(([ym,p])=>{const reg=periodRegistered(ym,p);const meta=metas[`${ym}-${p}`];const state=reg?`登録済み${meta?.updatedAt?`・更新 ${new Date(meta.updatedAt).toLocaleDateString('ja-JP')}`:''}`:'未登録';return `<div class="shiftRegisteredPeriod ${reg?'registered':'empty'}"><div class="periodName">${esc(periodText(ym,p))}</div><div class="periodState">${reg?'✅ ':'⚪ '}${esc(state)}</div></div>`}).join('');
+    box.innerHTML=items.map(([ym,p])=>{const reg=periodRegistered(ym,p);const meta=metas[`${shiftType()}-${ym}-${p}`]||metas[`${ym}-${p}`];const state=reg?`登録済み${meta?.updatedAt?`・更新 ${new Date(meta.updatedAt).toLocaleDateString('ja-JP')}`:''}`:'未登録';return `<div class="shiftRegisteredPeriod ${reg?'registered':'empty'}"><div class="periodName">${esc(periodText(ym,p))}</div><div class="periodState">${reg?'✅ ':'⚪ '}${esc(state)}</div></div>`}).join('');
     updateShiftUploadTargetLabel();
   }
   function updateShiftUploadTargetLabel(){
-    const e=$('shiftUploadTargetLabel'); if(!e)return; const ym=targetYM(),p=$('shiftPeriod')?.value||'second'; e.textContent=`📌 今から登録するシフト：${periodText(ym,p)}`;
+    const e=$('shiftUploadTargetLabel'); if(!e)return; const ym=targetYM(),p=$('shiftPeriod')?.value||'second'; e.textContent=`📌 ${shiftTypeLabel()}：${periodText(ym,p)}`;
   }
 
   function bind(){
     if(window.__shiftStandaloneBound)return;window.__shiftStandaloneBound=true;
-    const d=today(); if($('shiftViewDate'))$('shiftViewDate').value=d;if($('shiftMemoDate'))$('shiftMemoDate').value=d;if($('shiftTargetMonth'))$('shiftTargetMonth').value=targetYM(); updateShiftUploadTargetLabel();
+    const d=today(); document.body.dataset.shiftMode='dinner'; if($('shiftViewDate'))$('shiftViewDate').value=d;if($('shiftMemoDate'))$('shiftMemoDate').value=d;if($('shiftTargetMonth'))$('shiftTargetMonth').value=targetYM(); updateShiftModeButtons(); updateShiftUploadTargetLabel();
     $('shiftStaffMasterSave')?.addEventListener('click',saveStaff);
     $('shiftStaffMasterLoad')?.addEventListener('click',loadStaff);
+    $('shiftModeLunch')?.addEventListener('click',()=>{
+      document.body.dataset.shiftMode='lunch';
+      pending=[];
+      if($('shiftReviewCard'))$('shiftReviewCard').hidden=true;
+      updateShiftModeButtons();
+      renderMemoCalendar();
+      renderMemos();
+      renderTodayQuick();
+    });
+    $('shiftModeDinner')?.addEventListener('click',()=>{
+      document.body.dataset.shiftMode='dinner';
+      pending=[];
+      if($('shiftReviewCard'))$('shiftReviewCard').hidden=true;
+      updateShiftModeButtons();
+      renderMemoCalendar();
+      renderMemos();
+      renderTodayQuick();
+    });
     $('shiftPeriod')?.addEventListener('change',updateShiftUploadTargetLabel);
     $('shiftTargetMonth')?.addEventListener('change',updateShiftUploadTargetLabel);
     $('shiftPhotoChoose')?.addEventListener('click',()=>{$('shiftPhotoInput')?.click()});
@@ -5956,7 +6037,19 @@ ${allowedText}
 
 【読み取り手順】
 1. まず表の「名前列」と「日付列」を特定してください。
-2. 対象期間の各スタッフ行について、各日付のセルを実際に確認してください。
+   【日付の最重要ルール】
+   日付は必ず表の上部に印刷されている「日付」行の数字そのものを読んで確定してください。
+   「黄色セルを左から何本数えたか」だけで日付を決めてはいけません。
+   このシフト表は、1日につき「白いセル＋黄色いセル」の2列で1日を構成し、黄色いセルはその日の右側です。
+   日付数字はその2列の上にあります。必ず「日付数字 → その直下の白＋黄色2列 → スタッフの勤務記号・時間」の縦位置を合わせてください。
+   特に後半は「15日の隣＝16日」と推測せず、画像上部に実際に見える16、17、18…31の数字を1つずつ確認してください。
+   例えば画像の「16」の直下にある白＋黄色2列だけを16日として扱い、17日のセルを16日として扱ってはいけません。
+   隣の日付の黄色セルが近くにあっても、日付数字の真下の2列から外れたセルをその日付に割り当てないでください。
+   対象期間：${targetInfo()} に含まれる日付数字だけを使用し、対象期間外の日付は絶対に返さないでください。
+【隣の日付対策】
+1人の勤務セルを見つけたら、そのセルから真上へ線を引き、最初に当たる「日付」行の数字をその勤務の日付としてください。左隣・右隣の黄色セルの日付を使ってはいけません。
+さらにcolumnIndexを必ず返してください。後半なら16日列=0、17日列=1、18日列=2…31日列=15です。
+2. 対象期間の各スタッフ行について、上部の日付数字とその直下のセルを縦に照合し、各日付のセルを実際に確認してください。
 3. 各セルに書かれている勤務記号を1文字だけ認識してください。
 4. ${allowedText} のいずれかと完全一致した勤務記号セルだけ present=true とします。
 5. △、▲、▼、×、ラ、L、イベ、イベント、休、空欄、丸印、線、汚れ、罫線などは勤務記号ではありません。
@@ -5971,7 +6064,8 @@ ${allowedText}
 14. 対象期間外の日付は返さないでください。
 15. 同じ名前・同じ日付・同じmarkを重複させないでください。
 16. 画像全体を一度見ただけで終わらず、最後に【各スタッフ行→各日付セル】を上から下まで再確認し、present=trueなのに時間を空欄にしていないか、時間が実際に見えるセルを見落としていないか自己チェックしてください。
-17. JSON以外の文章は返さないでください。
+17. 最後にもう一度、返却する各entryの日付が「そのentryの勤務記号・時間が書かれている黄色セルの真上の日付数字」と一致しているかを確認してください。黄色セルの位置が16日の真下ならdateは16、17日の真下なら17です。隣の列へ1日ずらしてはいけません。
+18. JSON以外の文章は返さないでください。
 
 【時間欄の重要ルール】
 ・L は「ラスト」を意味し、退勤・終了時刻として扱ってください。
@@ -5981,8 +6075,9 @@ ${allowedText}
 
 【返却形式】
 {"entries":[
- {"date":"YYYY-MM-DD","name":"加藤","mark":"S","present":true,"position":"板場","startTime":"9.5","endTime":"17","time":"09:30〜17:00","confidence":"high","note":"勤務記号と黄色セルの時間を確認"}
+ {"columnIndex":0,"date":"YYYY-MM-DD","name":"加藤","mark":"S","present":true,"position":"板場","startTime":"9.5","endTime":"17","time":"09:30〜17:00","confidence":"high","note":"勤務記号と黄色セルの時間を確認"}
 ]}
+columnIndexは対象期間の最初の日付を0とする画像上の列番号です。前半なら0=1日、1=2日…、後半なら0=16日、1=17日…。必ず表上部の日付数字とその真下の黄色セルを縦に対応させてください。
 
 【時間の必須ルール】
 present=true のセルで黄色セル内に時間が1つでも実際に見える場合、その見えている時間を必ず返してください。
@@ -6011,7 +6106,20 @@ present=true のセルで黄色セル内に時間が1つでも実際に見える
       for(const x of entries){
         const mark=String(x?.mark??x?.symbol??'').trim().toUpperCase();
         const name=String(x?.name??'').trim();
-        const date=normalizeDate(x?.date);
+        let date=normalizeDate(x?.date);
+        // AIの自由記述dateより、表の列位置(columnIndex)を優先して日付を確定。
+        // これにより隣の日付を1日ずらして返す誤認を抑止する。
+        const ci=Number(x?.columnIndex);
+        if(Number.isInteger(ci) && ci>=0){
+          const ym=targetYM();
+          const [yy,mm]=ym.split('-').map(Number);
+          const lastDay=new Date(Number(yy),Number(mm),0).getDate();
+          const period=$('shiftPeriod')?.value||'second';
+          const day=period==='first'?(1+ci):(16+ci);
+          if(day>=1 && day<=lastDay){
+            date=`${yy}-${String(mm).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+          }
+        }
         if(!isAllowedShiftMark(mark))continue;
         if(!name || /^(△|▲|▽|▼|×|✕|✖|✗|休|ラ|公休|イベント|イベ)$/.test(name))continue;
         if(x?.present!==true)continue;
@@ -6065,7 +6173,7 @@ present=true のセルで黄色セル内に時間が1つでも実際に見える
           <input type="text" data-gn="${x.i}" value="${esc(x.name)}" placeholder="名前" style="width:100%;box-sizing:border-box;border:1px solid #ddd;border-radius:10px;padding:10px;font-weight:700">
           <input type="text" inputmode="decimal" data-gst="${x.i}" value="${esc(st)}" placeholder="開始" style="width:100%;box-sizing:border-box;border:1px solid #ddd;border-radius:10px;padding:9px;font-weight:700;text-align:center">
           <input type="text" inputmode="decimal" data-get="${x.i}" value="${esc(et)}" placeholder="終了" style="width:100%;box-sizing:border-box;border:1px solid #ddd;border-radius:10px;padding:9px;font-weight:700;text-align:center">
-          <div style="display:flex;flex-direction:column;gap:3px"><b style="font-size:13px;text-align:center">${esc(x.mark||'')}</b><input type="text" data-gp="${x.i}" value="${esc(x.position||shiftPositionForMark(x.mark))}" placeholder="ポジション" style="width:100%;box-sizing:border-box;border:1px solid #ddd;border-radius:10px;padding:9px;font-weight:700"></div>
+          <div style="display:flex;flex-direction:column;gap:3px"><b style="font-size:13px;text-align:center">${esc(x.mark||'')}</b>${(document.body.dataset.shiftMode==='lunch')?'':'<input type="text" data-gp="'+x.i+'" value="'+esc(x.position||shiftPositionForMark(x.mark))+'" placeholder="ポジション" style="width:100%;box-sizing:border-box;border:1px solid #ddd;border-radius:10px;padding:9px;font-weight:700">'}</div>
         </div>`;
         }).join('');
         box.querySelectorAll('[data-gsr]').forEach(c=>c.onchange=()=>{items[Number(c.dataset.gsr)].selected=c.checked;render()});
@@ -6091,9 +6199,10 @@ present=true のセルで黄色セル内に時間が1つでも実際に見える
           try{
             if(!window.__fb)throw new Error('Firebaseが準備できていません。');
             const fb=window.__fb,live=await fb.get(fb.ref(fb.db,'shift/schedules')),cur=live.val()||{},u={};
-            Object.entries(cur).forEach(([id,x])=>{if(x?.date&&String(x.date).startsWith(ym+'-')){const d=Number(String(x.date).slice(-2));if(d>=from&&d<=to)u[`shift/schedules/${id}`]=null}});
-            chosen.forEach(x=>{const id=fb.push(fb.ref(fb.db,'shift/schedules')).key;u[`shift/schedules/${id}`]={date:x.date,name:x.name,number:'',position:shiftPositionForMark(x.mark)||x.position||'',mark:String(x.mark||'').toUpperCase(),time:normalizeShiftTimeRange('', '', x.time||normalizeShiftTimeRange(x.startTime,x.endTime,'')),period:p,source:'gemini-ai',confidence:x.confidence||'medium',createdAt:Date.now()}});
-            u[`shift/periodMeta/${ym}-${p}`]={yearMonth:ym,period:p,label,updatedAt:Date.now(),count:chosen.length,source:'gemini-ai',photoData:aiPhotoData||'',photoName:aiFile?.name||''};
+            const currentService=document.body.dataset.shiftMode==='lunch'?'lunch':'dinner';
+            Object.entries(cur).forEach(([id,x])=>{const itemService=String(x?.shiftType||'dinner');if(itemService===currentService&&x?.date&&String(x.date).startsWith(ym+'-')){const d=Number(String(x.date).slice(-2));if(d>=from&&d<=to)u[`shift/schedules/${id}`]=null}});
+            chosen.forEach(x=>{const id=fb.push(fb.ref(fb.db,'shift/schedules')).key;u[`shift/schedules/${id}`]={date:x.date,name:x.name,number:'',position:shiftPositionForMark(x.mark)||x.position||'',mark:String(x.mark||'').toUpperCase(),time:normalizeShiftTimeRange('', '', x.time||normalizeShiftTimeRange(x.startTime,x.endTime,'')),period:p,shiftType:currentService,source:'gemini-ai',confidence:x.confidence||'medium',createdAt:Date.now()}});
+            u[`shift/periodMeta/${currentService}-${ym}-${p}`]={yearMonth:ym,period:p,shiftType:currentService,label,updatedAt:Date.now(),count:chosen.length,source:'gemini-ai',photoData:aiPhotoData||'',photoName:aiFile?.name||''};
             await fb.update(fb.ref(fb.db),u);card.hidden=true;setAiStatus('AI読み取り結果を保存しました。','ok');alert(`AI読み取り結果をシフトに登録しました。\n${chosen.length}件`);
           }catch(err){alert('シフト登録に失敗しました。\n'+(err?.message||err))}
         };
@@ -6415,3 +6524,5 @@ present=true のセルで黄色セル内に時間が1つでも実際に見える
   .masterBottomActions{grid-template-columns:1fr 1fr}
 }
 </style>
+
+
