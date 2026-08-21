@@ -5790,17 +5790,20 @@ function renderDay(){
     rows.forEach(x=>{
       const name=String(x.name).trim(); if(!name)return;
       const num=Number(x.number);
-      if(!byName[name] || (Number.isFinite(num)&&num<Number(byName[name].number||Infinity))) byName[name]={name,number:Number.isFinite(num)?num:9999};
-    });
-    const names=window.sortShiftDisplayByPosition(Object.values(byName));
-    // 同名スタッフが複数行ある場合でもポジションと登録済み時間を拾う
-    names.forEach(n=>{
-      const same=rows.filter(r=>String(r.name||'').trim()===n.name);
+      const same=rows.filter(r=>String(r.name||'').trim()===name);
+      const mark=String(same.find(r=>String(r.mark||'').trim())?.mark||'').trim().toUpperCase();
+      const position=String(same.find(r=>String(r.position||'').trim())?.position||'').trim()||shiftPositionForMark(mark);
       const picked=same.find(r=>String(r.time||'').trim())||same.find(r=>String(r.position||'').trim())||same[0];
-      n.mark=String(same.find(r=>String(r.mark||'').trim())?.mark||'').trim().toUpperCase();
-      n.position=String(same.find(r=>String(r.position||'').trim())?.position||'').trim()||shiftPositionForMark(n.mark);
-      n.time=displayShiftTime(picked?.time||'');
+      if(!byName[name] || (Number.isFinite(num)&&num<Number(byName[name].number||Infinity))){
+        byName[name]={name,number:Number.isFinite(num)?num:9999,position,mark,time:displayShiftTime(picked?.time||'')};
+      }else{
+        if(!String(byName[name].position||'').trim()&&position)byName[name].position=position;
+        if(!String(byName[name].mark||'').trim()&&mark)byName[name].mark=mark;
+        if(!String(byName[name].time||'').trim()&&picked?.time)byName[name].time=displayShiftTime(picked.time);
+      }
     });
+    // ポジションを確定してから並び替える。これまでポジション設定前に並び替えていたため、順番が反映されなかった。
+    const names=window.sortShiftDisplayByPosition(Object.values(byName));
     sum.textContent=names.length?`出勤 ${names.length}人`:'本日のシフトはまだ登録されていません。';
     list.innerHTML=names.length?names.map(x=>`<div class="shiftHeroName"><span class="shiftHeroMain"><b>${esc(x.name)}</b>${x.time?`<span class="shiftHeroTime">${esc(x.time)}</span>`:''}</span>${x.position?`<span class="shiftHeroPosition">${esc(x.position)}</span>`:''}</div>`).join(''):'';
     const ma=Object.values(memos).filter(x=>x?.date===date).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
