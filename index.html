@@ -2007,11 +2007,14 @@ function normalizeVegSearch(s){
 function vegProductOptions(){
  const q=normalizeVegSearch($("vegProductSearch")?.value||"");
  const all=vals(vegProducts).sort((a,b)=>(a[1].order??9999)-(b[1].order??9999)||(a[1].name||"").localeCompare(b[1].name||"ja"));
- const ps=q?all.filter(([id,p])=>{
+ // 今回の発注リストに追加済みの商品は、選択候補から一時的に外す
+ const selectedNames=new Set((vegOrder||[]).map(x=>normalizeVegSearch(x.name)));
+ const available=all.filter(([id,p])=>!selectedNames.has(normalizeVegSearch(p.name)));
+ const ps=q?available.filter(([id,p])=>{
    const name=normalizeVegSearch(p.name);
    const kana=normalizeVegSearch(p.kana||p.furigana||p.reading||"");
    return name.includes(q)||kana.includes(q);
- }):all;
+ }):available;
  $("vegProductSelect").innerHTML=`<option value="">${q?"検索結果を選択":"品目を選択"}</option>`+
    ps.map(([id,p])=>`<option value="${id}">${esc(p.name)}</option>`).join("");
  const box=$("vegProductSuggestions");
@@ -2156,7 +2159,12 @@ $("addVegProduct").onclick=async()=>{
 
 function renderVegOrder(){
  $("vegOrderItems").innerHTML=vegOrder.length?vegOrder.map((x,i)=>`<div class="orderItem"><span><b>${esc(x.name)}</b>　${esc(x.qty)}${esc(x.unit)}</span><button data-vegremove="${i}">削除</button></div>`).join(""):'<div class="small">まだ商品を追加していません。</div>';
- document.querySelectorAll("[data-vegremove]").forEach(b=>b.onclick=()=>{vegOrder.splice(Number(b.dataset.vegremove),1);renderVegOrder()});
+ document.querySelectorAll("[data-vegremove]").forEach(b=>b.onclick=()=>{
+   vegOrder.splice(Number(b.dataset.vegremove),1);
+   renderVegOrder();
+   vegProductOptions();
+ });
+ vegProductOptions();
 }
 renderVegOrder();
 
