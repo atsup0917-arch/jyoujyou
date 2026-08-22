@@ -5868,52 +5868,7 @@ function renderDay(){
         const zoomUrl=z.toDataURL('image/jpeg',0.94);
         bands.push(zoomUrl.split(',')[1]);
       }
-      // 日付ずれ防止用：各日を「名前列＋その日だけの白/黄色2列」に切り出す。
-      // AIには全体画像だけでなく、この日付固定バンドも同じ1回のリクエストで渡す。
-      // こうすることで隣の日付セルを見て別の日として解釈する余地を大幅に減らす。
-      const dateBands=[];
-      try{
-        const pixel=c.getContext('2d',{willReadFrequently:true}).getImageData(0,0,c.width,c.height).data;
-        const yellow=(r,g,b)=>r>155&&g>145&&b<190&&r-b>45&&g-b>35&&(Math.max(r,g,b)-Math.min(r,g,b))>55;
-        const span=Math.floor(c.height*0.87);
-        const score=new Uint32Array(c.width);
-        for(let y=Math.floor(c.height*.10);y<Math.floor(c.height*.97);y++){
-          let ii=y*c.width*4;
-          for(let x=0;x<c.width;x++,ii+=4)if(yellow(pixel[ii],pixel[ii+1],pixel[ii+2]))score[x]++;
-        }
-        const threshold=Math.max(8,Math.floor(span*.14));
-        const xs=[];for(let x=0;x<c.width;x++)if(score[x]>=threshold)xs.push(x);
-        const runs=[];if(xs.length){let a=xs[0],p=xs[0];for(let i=1;i<xs.length;i++){const x=xs[i];if(x-p>5){if(p-a>=5)runs.push([a,p]);a=x}p=x}if(p-a>=5)runs.push([a,p])}
-        const merged=[];for(const r of runs){if(merged.length&&r[0]-merged[merged.length-1][1]<=7)merged[merged.length-1][1]=r[1];else merged.push([...r])}
-        const ym=targetYM(),[yy,mm]=ym.split('-').map(Number),period=$('shiftPeriod')?.value||'second';
-        const last=new Date(yy,mm,0).getDate(),expected=period==='first'?Math.min(15,last):Math.max(0,last-15);
-        let selected=period==='first'?merged.slice(0,expected):merged.slice(Math.max(0,merged.length-expected));
-        if(selected.length===expected&&expected>0){
-          const firstY=selected[0][0];
-          const nameRight=Math.max(40,firstY-4);
-          const widths=selected.map(r=>r[1]-r[0]+1);
-          const yellowWidth=widths.slice().sort((a,b)=>a-b)[Math.floor(widths.length/2)]||26;
-          const centers=selected.map(r=>(r[0]+r[1])/2);
-          const gaps=centers.slice(1).map((v,i)=>v-centers[i]).filter(v=>v>10);
-          const gap=gaps.slice().sort((a,b)=>a-b)[Math.floor(gaps.length/2)]||60;
-          for(let di=0;di<selected.length;di++){
-            const r=selected[di];
-            const pairLeft=di===0?Math.max(nameRight+1,Math.round(r[0]-(gap-yellowWidth))):selected[di-1][1]+1;
-            const pairRight=r[1]+2;
-            const pairW=Math.max(20,pairRight-pairLeft+1);
-            const outW=nameRight+pairW+8;
-            const out=document.createElement('canvas');
-            const scale=Math.min(2.2,3000/Math.max(outW,c.height));
-            out.width=Math.max(1,Math.round(outW*scale));out.height=Math.max(1,Math.round(c.height*scale));
-            const octx=out.getContext('2d');octx.imageSmoothingEnabled=true;octx.imageSmoothingQuality='high';
-            octx.fillStyle='#fff';octx.fillRect(0,0,out.width,out.height);
-            octx.drawImage(c,0,0,nameRight,c.height,0,0,Math.round(nameRight*scale),out.height);
-            octx.drawImage(c,pairLeft,0,pairW,c.height,Math.round((nameRight+4)*scale),0,Math.round(pairW*scale),out.height);
-            dateBands.push({day:period==='first'?1+di:16+di,data:out.toDataURL('image/jpeg',0.92).split(',')[1]});
-          }
-        }
-      }catch(_){ /* 固定日付バンド生成に失敗しても従来の全体画像で継続 */ }
-      return {mime:'image/jpeg',data:dataUrl.split(',')[1],dataUrl,zoomData:bands[0],zoomBands:bands,dateBands};
+      return {mime:'image/jpeg',data:dataUrl.split(',')[1],dataUrl,zoomData:bands[0],zoomBands:bands};
     }catch(e){
       const dataUrl=await new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result);r.onerror=reject;r.readAsDataURL(file)});
       const m=String(dataUrl).match(/^data:([^;]+);base64,(.*)$/s);if(!m)throw new Error('画像データを読み取れませんでした。');
@@ -6091,19 +6046,7 @@ ${allowedText}
 
 【読み取り手順】
 1. まず表の「名前列」と「日付列」を特定してください。
-   【日付の最重要ルール】
-   日付は必ず表の上部に印刷されている「日付」行の数字そのものを読んで確定してください。
-   「黄色セルを左から何本数えたか」だけで日付を決めてはいけません。
-   このシフト表は、1日につき「白いセル＋黄色いセル」の2列で1日を構成し、黄色いセルはその日の右側です。
-   日付数字はその2列の上にあります。必ず「日付数字 → その直下の白＋黄色2列 → スタッフの勤務記号・時間」の縦位置を合わせてください。
-   特に後半は「15日の隣＝16日」と推測せず、画像上部に実際に見える16、17、18…31の数字を1つずつ確認してください。
-   例えば画像の「16」の直下にある白＋黄色2列だけを16日として扱い、17日のセルを16日として扱ってはいけません。
-   隣の日付の黄色セルが近くにあっても、日付数字の真下の2列から外れたセルをその日付に割り当てないでください。
-   対象期間：${targetInfo()} に含まれる日付数字だけを使用し、対象期間外の日付は絶対に返さないでください。
-【隣の日付対策】
-1人の勤務セルを見つけたら、そのセルから真上へ線を引き、最初に当たる「日付」行の数字をその勤務の日付としてください。左隣・右隣の黄色セルの日付を使ってはいけません。
-さらにcolumnIndexを必ず返してください。後半なら16日列=0、17日列=1、18日列=2…31日列=15です。
-2. 対象期間の各スタッフ行について、上部の日付数字とその直下のセルを縦に照合し、各日付のセルを実際に確認してください。
+2. 対象期間の各スタッフ行について、各日付のセルを実際に確認してください。
 3. 各セルに書かれている勤務記号を1文字だけ認識してください。
 4. ${allowedText} のいずれかと完全一致した勤務記号セルだけ present=true とします。
 5. △、▲、▼、×、ラ、L、イベ、イベント、休、空欄、丸印、線、汚れ、罫線などは勤務記号ではありません。
@@ -6118,11 +6061,7 @@ ${allowedText}
 14. 対象期間外の日付は返さないでください。
 15. 同じ名前・同じ日付・同じmarkを重複させないでください。
 16. 画像全体を一度見ただけで終わらず、最後に【各スタッフ行→各日付セル】を上から下まで再確認し、present=trueなのに時間を空欄にしていないか、時間が実際に見えるセルを見落としていないか自己チェックしてください。
-17. 最後にもう一度、返却する各entryの日付が「そのentryの勤務記号・時間が書かれている黄色セルの真上の日付数字」と一致しているかを確認してください。黄色セルの位置が16日の真下ならdateは16、17日の真下なら17です。隣の列へ1日ずらしてはいけません。
-18. 各entryについてrowIndexとcolumnIndexを必ず画像上の実位置から決定してください。日付文字列からrowIndex/columnIndexを作ってはいけません。
-19. 1回目の読み取りだけで確定せず、返却直前に「勤務セル→黄色セル→その真上の日付→スタッフ行」の順で全entryを再照合してください。
-20. 迷うセルは推測で埋めず返却しないでください。誤った日付・誤った隣接セルを返すより、未確定として省く方を優先してください。
-21. JSON以外の文章は返さないでください。
+17. JSON以外の文章は返さないでください。
 
 【時間欄の重要ルール】
 ・L は「ラスト」を意味し、退勤・終了時刻として扱ってください。
@@ -6132,11 +6071,8 @@ ${allowedText}
 
 【返却形式】
 {"entries":[
- {"rowIndex":0,"columnIndex":0,"date":"YYYY-MM-DD","name":"加藤","mark":"S","present":true,"position":"板場","startTime":"9.5","endTime":"17","time":"09:30〜17:00","confidence":"high","note":"勤務記号と黄色セルの時間を確認"}
+ {"date":"YYYY-MM-DD","name":"加藤","mark":"S","present":true,"position":"板場","startTime":"9.5","endTime":"17","time":"09:30〜17:00","confidence":"high","note":"勤務記号と黄色セルの時間を確認"}
 ]}
-rowIndexはスタッフ表の最初のスタッフ行を0として上から数えた行番号です。行番号を推測せず、名前欄と同じ横位置のスタッフ行を基準にしてください。
-columnIndexは対象期間の最初の日付を0とする画像上の「1日単位」の列番号です。前半なら0=1日、1=2日…、後半なら0=16日、1=17日…。必ず表上部の日付数字と、その真下の「白セル＋黄色セル」の中心を縦に対応させてください。
-【絶対禁止】columnIndexを日付の数字から逆算してはいけません。勤務セルの横位置を実際に確認して決めてください。columnIndexが確信できないentryは返さず、dateだけを根拠にして返してはいけません。
 
 【時間の必須ルール】
 present=true のセルで黄色セル内に時間が1つでも実際に見える場合、その見えている時間を必ず返してください。
@@ -6150,76 +6086,22 @@ present=true のセルで黄色セル内に時間が1つでも実際に見える
 ・時間が実際に見えない場合だけ空文字にしてください。推測で時間を作らないでください。
 
 重要：present=falseのセルは返さなくて構いません。present=trueだけ返してください。numberという項目は絶対に作らないでください。`;
-      // 【重要】1回の読み取りで確定させます。
-      // 以前の「1回目→2回目監査」はAPIを2回消費するため、無料枠/RPM制限に
-      // 到達しやすく、今回のような quota exceeded を発生させていました。
-      // 今回は最初から「最終確定モード」で1回だけGeminiへ送ります。
       const url=`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`;
-      const timeParts=[{text:'【画像1：シフト表全体】スタッフ名・表全体の位置関係を確認する基準画像です。日付の確定には後続の「日付固定画像」を優先してください。'},{inline_data:{mime_type:img.mime,data:img.data}}];
-      const dateBands=Array.isArray(img.dateBands)&&img.dateBands.length?img.dateBands:[];
-      if(dateBands.length){
-        dateBands.forEach((b,i)=>{
-          timeParts.push({text:`【日付固定画像 ${i+1}/${dateBands.length}：${targetYM()}-${String(b.day).padStart(2,'0')} 専用】この画像には「名前列」と「${b.day}日の白＋黄色2列」だけを配置しています。この画像の勤務記号・時間は${b.day}日としてのみ判定してください。隣の日付のセルはこの画像には含まれていません。`});
-          timeParts.push({inline_data:{mime_type:img.mime,data:b.data}});
-        });
-      }
+      const timeParts=[{text:'【画像1：シフト表全体】名前・日付・勤務記号の対応はこちらを基準にしてください。'},{inline_data:{mime_type:img.mime,data:img.data}}];
       const bands=Array.isArray(img.zoomBands)&&img.zoomBands.length?img.zoomBands:[img.zoomData||img.data];
-      bands.forEach((b,i)=>{timeParts.push({text:`【時間欄拡大画像 ${i+1}/${bands.length}】この横帯は時間確認専用です。日付は上記の日付固定画像を優先し、黄色セル内の開始・終了時間だけを確認してください。`});timeParts.push({inline_data:{mime_type:img.mime,data:b}})});
-
-      const finalPrompt=`${prompt}
-
-【最終確定モード：この1回の読み取りで登録用データを完成させる】
-・これは下書きではありません。返すJSONをそのまま登録前確認画面へ渡す最終結果です。
-・対象期間の全スタッフ行×全日付セルを、画像上の物理的位置で確認してください。
-・各勤務セルは「スタッフ行 → 白＋黄色の2列 → その真上の日付数字」の縦位置を必ず対応させてください。
-・日付文字列を先に推測してはいけません。勤務記号または勤務時間が実際に入っているセルの横位置を先に確定してください。
-・隣の日付のセル、隣の黄色セル、隣のスタッフ行から情報を持ってきてはいけません。
-・columnIndexは必須です。前半は0=1日、1=2日…、後半は0=16日、1=17日…ですが、この数字だけから推測せず、必ず画像上の列位置を確認してから返してください。
-・rowIndexも必須です。スタッフ行の物理的位置を確認して、隣のスタッフの名前を混ぜないでください。
-・勤務記号が明確でないセルは出勤として返さないでください。
-・時間は黄色セル内に実際に見える数字だけを使ってください。隣のセル・別スタッフ・日付・番号の数字を時間に流用しないでください。
-・9.5は09:30、9は09:00です。見えない時間を推測して補完してはいけません。
-・最後に返却予定の各entryについて、【勤務セルの物理位置→黄色セル→真上の日付→スタッフ行】をもう一度内部確認し、1日でもズレているentryは修正してから返してください。
-・迷う場合は推測せず、そのentryを返さないでください。
-・日付固定画像がある場合、dateとcolumnIndexはその画像のラベルに完全固定してください。別の日付固定画像の勤務セルを混ぜてはいけません。
-・日付固定画像の1枚に写る「名前列＋当日2列」だけを、その日の判定範囲としてください。
-・JSON以外は返さないでください。`;
-
-      const body={contents:[{role:'user',parts:[{text:finalPrompt},...timeParts]}],generationConfig:{temperature:0,responseMimeType:'application/json'}};
+      bands.forEach((b,i)=>{timeParts.push({text:`【画像${i+2}：時間欄拡大 ${i+1}/${bands.length}】この横帯に写っているスタッフ行について、黄色セル内の開始・終了時間を必ず確認してください。前後の帯と重複している行も再確認してください。`});timeParts.push({inline_data:{mime_type:img.mime,data:b}})});
+      const body={contents:[{role:'user',parts:[{text:prompt},...timeParts]}],generationConfig:{temperature:0,responseMimeType:'application/json'}};
       const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':key},body:JSON.stringify(body)});
       const raw=await res.text();let data;try{data=JSON.parse(raw)}catch(_){throw new Error('Geminiから正しい応答を受け取れませんでした。')}
-      if(!res.ok){
-        if(res.status===429){
-          throw new Error('Gemini APIの利用上限に達しています。少し待ってから再度実行してください。今回の読み取り処理はAPI制限で停止しており、画像の読み取り精度によるエラーではありません。');
-        }
-        throw new Error(data?.error?.message||`Gemini APIエラー（${res.status}）`);
-      }
-      const responseText=(data?.candidates||[]).flatMap(c=>c?.content?.parts||[]).map(p=>p?.text||'').join('').trim();
-      if(!responseText)throw new Error('AIの読み取り結果が空でした。写真全体が写っているか確認してください。');
-      const obj=JSON.parse(cleanJsonText(responseText));
-      const entries=Array.isArray(obj?.entries)?obj.entries:[];
-
+      if(!res.ok)throw new Error(data?.error?.message||`Gemini APIエラー（${res.status}）`);
+      const text=(data?.candidates||[]).flatMap(c=>c?.content?.parts||[]).map(p=>p?.text||'').join('').trim();
+      if(!text)throw new Error('AIの読み取り結果が空でした。写真全体が写っているか確認してください。');
+      const obj=JSON.parse(cleanJsonText(text));const entries=Array.isArray(obj.entries)?obj.entries:[];
       const safeEntries=[];
       for(const x of entries){
         const mark=String(x?.mark??x?.symbol??'').trim().toUpperCase();
         const name=String(x?.name??'').trim();
-        // 最終結果ではAIのdate文字列を一切信用しない。
-        // 必ず画像上のcolumnIndexから対象日を確定する。
-        let date='';
-        const ci=Number(x?.columnIndex);
-        if(!Number.isInteger(ci)||ci<0)continue;
-        const ym=targetYM();
-        const [yy,mm]=ym.split('-').map(Number);
-        const lastDay=new Date(Number(yy),Number(mm),0).getDate();
-        const period=$('shiftPeriod')?.value||'second';
-        const expectedCols=period==='first'?Math.min(15,lastDay):Math.max(0,lastDay-15);
-        if(ci>=expectedCols)continue;
-        const day=period==='first'?(1+ci):(16+ci);
-        if(day>=1 && day<=lastDay){
-          date=`${yy}-${String(mm).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
-        }else continue;
-        const ri=Number(x?.rowIndex);
-        if(!Number.isInteger(ri)||ri<0||ri>25)continue;
+        const date=normalizeDate(x?.date);
         if(!isAllowedShiftMark(mark))continue;
         if(!name || /^(△|▲|▽|▼|×|✕|✖|✗|休|ラ|公休|イベント|イベ)$/.test(name))continue;
         if(x?.present!==true)continue;
