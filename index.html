@@ -6457,16 +6457,17 @@ ${positionRules}
       const expectedRows=Number(img.rowCount)||0;
       // 行番号は画像の幾何学検出を正とする。AIのstaffRowsは名前補助としてのみ使用。
       // 同じrowIndexで両バッチに名前が返った場合だけ、名前の不一致をエラーにする。
+      // 8日ブロックごとに同じスタッフ行を別画像としてAIへ送るため、
+      // バッチごとに名前の読み方が微妙に変わることがあります。
+      // スタッフ行そのものは画像側のstaffBandsで確定しているので、
+      // 名前の不一致だけで全結果を破棄しません。
+      // 最初に正常に読めた名前を、そのrowIndexの名前として採用します。
       const nameByRow=new Map();
-      let staffNameMismatch=false;
       for(const r of staffRows){
         const ri=Number(r?.ri),name=String(r?.name||'').trim();
         if(!Number.isInteger(ri)||!name)continue;
-        const prev=nameByRow.get(ri);
-        if(!prev)nameByRow.set(ri,name);
-        else if(aiNameNorm(prev)!==aiNameNorm(name))staffNameMismatch=true;
+        if(!nameByRow.has(ri))nameByRow.set(ri,name);
       }
-      if(staffNameMismatch)throw new Error('同じスタッフ行でバッチ間の名前が一致しません。結果を確定しません。');
       const checkedMap=nameByRow;
 
 
