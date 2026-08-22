@@ -4964,7 +4964,7 @@ button, label {
     // ここでは罫線から1スタッフ区間をそのまま取り、
     // 固定のスタッフ番号 10,12,14…60 を上から順番に割り当てます。
     const staffRows=[];
-    const maxStaff=26; // 10～60（2刻み）の26名。表の同じ形式に対応。
+    const maxStaff=Math.max(1,boundaries.length-1);
     for(let g=0;g<Math.min(maxStaff,boundaries.length-1);g++){
       const a=boundaries[g], b=boundaries[g+1];
       if(!Number.isFinite(a)||!Number.isFinite(b)||b-a<20)continue;
@@ -5972,184 +5972,272 @@ function renderDay(){
   }
 
   async function prepareShiftAiImage(file){
-    // 【最終方式】
-    // Geminiへ送る画像は「1枚だけ」。
-    // 元写真をそのまま大量分割して送るのではなく、
-    // 「名前欄＋対象期間の全日付」をスタッフ1行ずつ拡大した縦長確認表を1枚作る。
-    // これによりiPhone/Safariで大量inline_dataによるLoad failedを起こさない。
+    // 【将来対応の基準】
+    // ・人数は写真ごとに可変。固定人数は使わない。
+    // ・1人＝名前セル1区間（この表ではExcel上2行結合）。
+    // ・1日＝「白い勤務記号列＋黄色い時間列」の2列セット。
+    // ・日付はAIに推測させず、アプリ側で列番号→日付を確定する。
+    // ・AIへは16日分を一度に見せず、前半8日/後半8日に分割する。
+    //   特に中央付近の隣日付混同を防ぐため、各画像は8日分だけにする。
     const bmp=await createImageBitmap(file);
-    const max=2600, scale=Math.min(1,max/Math.max(bmp.width,bmp.height));
+    const max=3000, scale=Math.min(1,max/Math.max(bmp.width,bmp.height));
     const c=document.createElement('canvas');
     c.width=Math.max(1,Math.round(bmp.width*scale));
     c.height=Math.max(1,Math.round(bmp.height*scale));
     const ctx=c.getContext('2d',{willReadFrequently:true});
     ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
-    ctx.drawImage(bmp,0,0,c.width,c.height);
-    if(bmp.close)bmp.close();
+    ctx.drawImage(bmp,0,0,c.width,c.height);if(bmp.close)bmp.close();
 
     const W=c.width,H=c.height,data=ctx.getImageData(0,0,W,H).data;
-    const yellow=(r,g,b)=>r>155&&g>145&&b<190&&r-b>45&&g-b>35&&(Math.max(r,g,b)-Math.min(r,g,b))>55;
+    const yellow=(r,g,b)=>{
+      const mx=Math.max(r,g,b),mn=Math.min(r,g,b);
+      return r>155&&g>145&&b<190&&r-b>45&&g-b>35&&(mx-mn)>55;
+    };
+    const dark=(r,g,b)=>r<130&&g<130&&b<130;
+    const makeRuns=(vals,gap=4)=>{
+      const out=[];if(!vals.length)return out;
+      let a=vals[0],p=a;
+      for(let i=1;i<vals.length;i++){
+        const x=vals[i];if(x-p>gap){out.push([a,p]);a=x;}p=x;
+      }
+      out.push([a,p]);return out;
+    };
 
-    // 対象期間の黄色列を画像処理で確定。
+    // ① 黄色の時間列を検出。黄色列は「各日の右側列」なので、
+    //    これを基準に白い勤務記号列との2列セットを作る。
     const y0=Math.floor(H*.10),y1=Math.floor(H*.97),span=y1-y0;
     const score=new Uint32Array(W);
     for(let y=y0;y<y1;y++){
       let pp=y*W*4;
       for(let x=0;x<W;x++,pp+=4)if(yellow(data[pp],data[pp+1],data[pp+2]))score[x]++;
     }
-    const threshold=Math.max(12,Math.floor(span*.20));
-    const xs=[];for(let x=0;x<W;x++)if(score[x]>=threshold)xs.push(x);
-    const makeRuns=(vals,gap=4)=>{
-      const out=[];if(!vals.length)return out;
-      let a=vals[0],p=a;
-      for(let i=1;i<vals.length;i++){
-        const x=vals[i];
-        if(x-p>gap){out.push([a,p]);a=x}
-        p=x;
-      }
-      out.push([a,p]);return out;
-    };
-    let runs=makeRuns(xs,4).filter(([a,b])=>b-a>=5);
+    let threshold=Math.max(10,Math.floor(span*.18));
+    let xs=[];for(let x=0;x<W;x++)if(score[x]>=threshold)xs.push(x);
+    let yellowRuns=makeRuns(xs,4).filter(([a,b])=>b-a>=5);
     const merged=[];
-    for(const r of runs){
+    for(const r of yellowRuns){
       if(merged.length&&r[0]-merged[merged.length-1][1]<=6)merged[merged.length-1][1]=r[1];
       else merged.push([...r]);
     }
-    runs=merged;
+    yellowRuns=merged;
+    if(yellowRuns.length<10){
+      threshold=Math.max(7,Math.floor(span*.12));xs=[];
+      for(let x=0;x<W;x++)if(score[x]>=threshold)xs.push(x);
+      yellowRuns=makeRuns(xs,5).filter(([a,b])=>b-a>=5);
+    }
+    if(yellowRuns.length<10)throw new Error('日付の黄色列を十分に検出できませんでした。表全体が写った写真を選んでください。');
 
     const ym=targetYM(), p=$('shiftPeriod')?.value||'second';
     const [yy,mm]=ym.split('-').map(Number);
     if(!yy||!mm)throw new Error('対象年月を取得できませんでした。');
     const last=new Date(yy,mm,0).getDate();
     const expected=p==='first'?Math.min(15,last):Math.max(0,last-15);
-    if(runs.length<expected)throw new Error(`日付列を確定できませんでした（必要${expected}列／検出${runs.length}列）。`);
-    const selected=p==='first'?runs.slice(0,expected):runs.slice(runs.length-expected);
+    if(yellowRuns.length<expected)throw new Error(`日付列を確定できませんでした（必要${expected}列／検出${yellowRuns.length}列）。`);
+    const selected=p==='first'?yellowRuns.slice(0,expected):yellowRuns.slice(yellowRuns.length-expected);
+    if(selected.length!==expected)throw new Error(`対象期間の列数が一致しません（${selected.length}/${expected}）。`);
+
     const centers=selected.map(r=>(r[0]+r[1])/2);
     const gaps=centers.slice(1).map((v,i)=>v-centers[i]);
     if(gaps.length){
       const sorted=[...gaps].sort((a,b)=>a-b),med=sorted[Math.floor(sorted.length/2)]||1;
-      if(gaps.some(g=>g<med*.55||g>med*1.45))throw new Error('日付列の間隔を確定できませんでした。写真を正面から撮ってください。');
+      if(gaps.some(g=>g<med*.55||g>med*1.45))throw new Error('日付列の間隔を正しく確認できませんでした。写真を正面から撮ってください。');
     }
 
-    // 元画像は確認用として保存。AIには別途作った「1枚の確認シート」だけ送る。
-    const originalDataUrl=c.toDataURL('image/jpeg',.86);
-    const dayStart=p==='first'?1:16;
+    // 黄色列と黄色列の間は、その日付の白い勤務記号列。
+    // 「前日の黄色列の右端～当日の黄色列の左端」を厳密に1セットとする。
+    const yellowWidths=selected.map(r=>r[1]-r[0]+1);
+    const medYellowW=[...yellowWidths].sort((a,b)=>a-b)[Math.floor(yellowWidths.length/2)]||30;
+    const datePairs=selected.map((r,i)=>{
+      const symbolLeft=i===0?Math.max(0,r[0]-medYellowW-2):selected[i-1][1]+1;
+      const symbolRight=Math.max(symbolLeft,r[0]-1);
+      const timeLeft=r[0],timeRight=r[1];
+      return {
+        date:p==='first'?1+i:16+i,
+        columnIndex:i+1,
+        symbolLeft,symbolRight,timeLeft,timeRight,
+        left:symbolLeft,right:timeRight
+      };
+    });
 
-    // シフト表のスタッフ欄はテンプレート上「10行目〜61行目」の52行。
-    // まず水平罫線から実際の表領域を探し、失敗した場合も固定比率で52行に分割する。
-    const STAFF_ROWS=52;
-    let tableTop=Math.floor(H*.18),tableBottom=Math.floor(H*.97);
-
-    try{
-      const stepX=Math.max(1,Math.floor(W/1000));
-      const lineYs=[];
-      let runStart=-1,lastY=-1;
-      const lineThreshold=Math.max(20,Math.floor((W/stepX)*.18));
-      for(let y=Math.floor(H*.10);y<Math.floor(H*.99);y++){
-        let n=0;
-        for(let x=0;x<W;x+=stepX){
-          const pp=(y*W+x)*4,r=data[pp],g=data[pp+1],b=data[pp+2];
-          const chroma=Math.max(r,g,b)-Math.min(r,g,b);
-          if(chroma<24&&r>=65&&r<225)n++;
-        }
-        if(n>=lineThreshold){if(runStart<0)runStart=y;lastY=y}
-        else if(runStart>=0){
-          lineYs.push(Math.round((runStart+lastY)/2));runStart=-1;
-        }
-      }
-      if(runStart>=0)lineYs.push(Math.round((runStart+lastY)/2));
-      const clean=[];
-      for(const y of lineYs)if(!clean.length||y-clean[clean.length-1]>=3)clean.push(y);
-      if(clean.length>=STAFF_ROWS+8){
-        // スタッフ開始は表上部の8行程度を除いた位置。
-        const candidateTop=clean[Math.max(0,8)];
-        const candidateBottom=clean[Math.min(clean.length-1,8+STAFF_ROWS)];
-        if(candidateBottom>candidateTop+STAFF_ROWS*4){
-          tableTop=candidateTop+1;
-          tableBottom=candidateBottom-1;
-        }
-      }
-    }catch(_){}
-
-    const rowH=Math.max(10,(tableBottom-tableTop)/STAFF_ROWS);
-    const nameRight=Math.max(1,selected[0][0]-2);
-    const periodLeft=selected[0][0];
-    const periodRight=selected[selected.length-1][1]+1;
-    if(periodRight<=periodLeft)throw new Error('対象期間の列範囲を確定できませんでした。');
-
-    // 1枚の確認シート。
-    // 横は「名前＋対象期間」、縦は52スタッフ行。
-    const sheetNameW=560;
-    const sheetPeriodW=1800;
-    const labelH=30;
-    const outRowH=150;
-    const pad=14;
-    const sheet=document.createElement('canvas');
-    sheet.width=sheetNameW+sheetPeriodW+pad*3;
-    sheet.height=pad+labelH+STAFF_ROWS*outRowH+pad;
-    const q=sheet.getContext('2d');
-    q.fillStyle='#fff';q.fillRect(0,0,sheet.width,sheet.height);
-
-    // ヘッダー
-    q.fillStyle='#fff7b8';q.fillRect(pad,pad,sheet.width-pad*2,labelH);
-    q.fillStyle='#8b0000';q.font='800 18px sans-serif';q.textBaseline='middle';
-    q.fillText(`上々 シフト確認画像　対象：${ym} ${p==='first'?'前半':'後半'}　列1=${dayStart}日`,pad+8,pad+labelH/2);
-
-    for(let ri=0;ri<STAFF_ROWS;ri++){
-      const sy=tableTop+ri*rowH;
-      const ey=Math.min(tableBottom,sy+rowH);
-      const srcH=Math.max(1,ey-sy);
-      const oy=pad+labelH+ri*outRowH;
-
-      q.fillStyle=ri%2?'#fafafa':'#f2f2f2';
-      q.fillRect(pad,oy,sheet.width-pad*2,outRowH-4);
-
-      q.fillStyle='#b00000';q.font='800 16px sans-serif';q.textBaseline='top';
-      q.fillText(`スタッフ行 ${ri+1}（表10行目〜）`,pad+7,oy+5);
-
-      const nameScale=Math.min((sheetNameW-22)/nameRight,(outRowH-labelH-10)/srcH);
-      const nameDW=Math.max(1,Math.round(nameRight*nameScale));
-      const nameDH=Math.max(1,Math.round(srcH*nameScale));
-      q.drawImage(c,0,sy,nameRight,srcH,pad+8,oy+labelH,nameDW,nameDH);
-
-      const px=pad+sheetNameW+pad;
-      const py=oy+labelH;
-      const periodScale=Math.min((sheetPeriodW-10)/Math.max(1,periodRight-periodLeft),(outRowH-labelH-10)/srcH);
-      const periodDW=Math.max(1,Math.round((periodRight-periodLeft)*periodScale));
-      const periodDH=Math.max(1,Math.round(srcH*periodScale));
-      q.drawImage(c,periodLeft,sy,periodRight-periodLeft,srcH,px,py,periodDW,periodDH);
-
-      // 各列を赤線で完全に区切る。AIは日付数字を読まず、この列番号だけを見る。
-      q.save();
-      for(let ci=0;ci<selected.length;ci++){
-        const [x0,x1]=selected[ci];
-        const lx=px+(x0-periodLeft)*periodScale;
-        const rx=px+(x1-periodLeft)*periodScale;
-        const cx=(lx+rx)/2;
-        q.strokeStyle='rgba(210,0,0,.80)';
-        q.lineWidth=2;
-        q.beginPath();q.moveTo(lx,py);q.lineTo(lx,py+periodDH);q.stroke();
-        q.fillStyle='rgba(255,255,0,.95)';
-        q.fillRect(Math.max(px,cx-26),py+2,52,22);
-        q.fillStyle='#9b0000';
-        q.font='800 13px sans-serif';
-        q.textAlign='center';q.textBaseline='top';
-        q.fillText(`列${ci+1}`,cx,py+5);
-      }
-      q.restore();
-      q.textAlign='left';
+    // ② スタッフ区間を自動検出。名前欄の横罫線を使うが、人数は固定しない。
+    const nameRight=Math.max(40,datePairs[0].left-3);
+    const staffStart=Math.floor(H*.12);
+    const neutralLine=(r,g,b)=>{const mx=Math.max(r,g,b),mn=Math.min(r,g,b);return mx<225&&(mx-mn)<24&&r>70;};
+    const lineScore=new Uint16Array(H);
+    for(let y=staffStart;y<Math.floor(H*.99);y++){
+      let n=0;for(let x=2;x<nameRight;x++){const i=(y*W+x)*4;if(neutralLine(data[i],data[i+1],data[i+2]))n++;}
+      lineScore[y]=n;
     }
+    const lineThreshold=Math.max(35,Math.floor(Math.min(nameRight-2,140)*.45));
+    const lineYs=[];for(let y=staffStart;y<H;y++)if(lineScore[y]>=lineThreshold)lineYs.push(y);
+    let hRuns=makeRuns(lineYs,2).map(r=>Math.round((r[0]+r[1])/2));
+    hRuns=hRuns.filter((y,i)=>i===0||y-hRuns[i-1]>=15);
+    if(hRuns.length<4)throw new Error('スタッフ欄の横罫線を検出できませんでした。');
 
-    const readingData=sheet.toDataURL('image/jpeg',.82).split(',')[1];
-    return {
-      mime:'image/jpeg',
-      data:readingData,
-      dataUrl:originalDataUrl,
-      days:expected,
-      dayStart,
-      rowCount:STAFF_ROWS,
-      payloadKB:Math.round(readingData.length*.75/1024)
+    let staffTop=-1;
+    for(let y=staffStart;y<H;y++){
+      let n=0;for(let x=selected[0][0];x<=selected[0][1];x++){const i=(y*W+x)*4;if(yellow(data[i],data[i+1],data[i+2]))n++;}
+      if(n>Math.max(8,(selected[0][1]-selected[0][0])*.35)){staffTop=y;break;}
+    }
+    if(staffTop<0)throw new Error('スタッフ欄の開始位置を確定できませんでした。');
+    let startIndex=0,best=Infinity;hRuns.forEach((y,i)=>{const d=Math.abs(y-staffTop);if(d<best){best=d;startIndex=i;}});
+    let boundaries=hRuns.slice(startIndex);
+    if(boundaries.length>=3){
+      const ds=boundaries.slice(1).map((v,i)=>v-boundaries[i]).filter(v=>v>25&&v<100);
+      if(ds.length>=2){
+        const pitch=[...ds].sort((a,b)=>a-b)[Math.floor(ds.length/2)],ext=[];
+        for(let i=1;i<boundaries.length;i++){
+          const gap=boundaries[i]-boundaries[i-1];
+          if(gap>pitch*1.55&&gap<pitch*2.5){const n=Math.round(gap/pitch);for(let k=1;k<n;k++)ext.push(Math.round(boundaries[i-1]+gap*k/n));}
+        }
+        boundaries=[...boundaries,...ext].sort((a,b)=>a-b);
+      }
+    }
+    boundaries=boundaries.filter((y,i)=>i===0||y-boundaries[i-1]>=15);
+
+    const staffBands=[];
+    const nameTextLeft=Math.max(10,Math.floor(nameRight*.22));
+    const nameTextRight=Math.max(nameTextLeft+20,nameRight-Math.floor(nameRight*.10));
+
+    // 名前欄の罫線・Excelの行番号・縦罫線を「名前」と誤認しない。
+    // 文字は短い線分の集合、罫線は長い連続線になるため、
+    // 長い水平/垂直連続線に含まれる黒画素を除外して文字インクだけを数える。
+    const textInkScore=(top,bottom)=>{
+      let score=0;
+      const xL=nameTextLeft,xR=nameTextRight;
+      for(let y=top;y<bottom;y++){
+        for(let x=xL;x<xR;x++){
+          const q=(y*W+x)*4;
+          if(!dark(data[q],data[q+1],data[q+2]))continue;
+          let hr=1,vr=1;
+          for(let xx=x-1;xx>=xL;xx--){const z=(y*W+xx)*4;if(!dark(data[z],data[z+1],data[z+2]))break;hr++;if(hr>18)break;}
+          for(let xx=x+1;xx<xR;xx++){const z=(y*W+xx)*4;if(!dark(data[z],data[z+1],data[z+2]))break;hr++;if(hr>18)break;}
+          for(let yy=y-1;yy>=top;yy--){const z=(yy*W+x)*4;if(!dark(data[z],data[z+1],data[z+2]))break;vr++;if(vr>18)break;}
+          for(let yy=y+1;yy<bottom;yy++){const z=(yy*W+x)*4;if(!dark(data[z],data[z+1],data[z+2]))break;vr++;if(vr>18)break;}
+          if(hr>=18||vr>=18)continue;
+          score++;
+        }
+      }
+      return score;
     };
+
+    for(let i=0;i<boundaries.length-1;i++){
+      const top=boundaries[i]+6,bottom=boundaries[i+1]-6;if(bottom<=top)continue;
+      const ink=textInkScore(top,bottom);
+      // 実際の名前は十分な文字インクを持つ。空白行・罫線だけの帯は除外。
+      if(ink>=28)staffBands.push({top:boundaries[i]+1,bottom:boundaries[i+1]-1,boundaryIndex:i,ink});
+    }
+
+    // 最後に空白帯が残った場合は「名前文字がある連続区間」の終端で切る。
+    // 途中に空白スタッフを許容するため、先頭から最初の有効帯を採用し、
+    // 末尾だけは名前インクが無くなった時点で終了する。
+    while(staffBands.length){
+      const last=staffBands[staffBands.length-1];
+      if(last.ink>=28)break;
+      staffBands.pop();
+    }
+    if(!staffBands.length)throw new Error('スタッフ名を検出できませんでした。名前欄が見える写真を選んでください。');
+    const STAFF_COUNT=staffBands.length;
+
+    // ③ 日付を8日ずつ2ブロックに分ける。
+    //    各スタッフ画像は「名前＋8日分の2列セット」だけを含む。
+    //    24〜28日が別の列へ滑ることを防ぐため、16日分を一枚に詰め込まない。
+    const DATE_BLOCK=8;
+    const GROUP_SIZE=7;
+    const sheetNameW=520,dayW=190,labelH=52,outRowH=155,pad=14;
+    const imageBatches=[];
+
+    for(let blockStart=0;blockStart<expected;blockStart+=DATE_BLOCK){
+      const blockEnd=Math.min(expected,blockStart+DATE_BLOCK);
+      const blockPairs=datePairs.slice(blockStart,blockEnd);
+      const batchImages=[];
+      for(let groupStart=0;groupStart<STAFF_COUNT;groupStart+=GROUP_SIZE){
+        const groupEnd=Math.min(STAFF_COUNT,groupStart+GROUP_SIZE),groupCount=groupEnd-groupStart;
+        const sheet=document.createElement('canvas');
+        sheet.width=sheetNameW+blockPairs.length*dayW+pad*3;
+        sheet.height=pad+labelH+groupCount*outRowH+pad;
+        const q=sheet.getContext('2d');q.fillStyle='#fff';q.fillRect(0,0,sheet.width,sheet.height);
+        q.fillStyle='#fff7b8';q.fillRect(pad,pad,sheet.width-pad*2,labelH);
+        q.fillStyle='#8b0000';q.font='800 18px sans-serif';q.textBaseline='middle';q.textAlign='left';
+        q.fillText(`上々 シフト確認　スタッフ${groupStart+1}〜${groupEnd}　${ym} ${blockPairs[0].date}〜${blockPairs[blockPairs.length-1].date}日`,pad+8,pad+labelH/2);
+
+        for(let local=0;local<groupCount;local++){
+          const ri=groupStart+local,band=staffBands[ri],sy=band.top,ey=band.bottom,srcH=Math.max(1,ey-sy),oy=pad+labelH+local*outRowH;
+          q.fillStyle=ri%2?'#fafafa':'#f2f2f2';q.fillRect(pad,oy,sheet.width-pad*2,outRowH-4);
+          q.fillStyle='#b00000';q.font='800 16px sans-serif';q.textBaseline='top';q.textAlign='left';q.fillText(`スタッフ${ri+1}`,pad+7,oy+5);
+          const nameScale=Math.min((sheetNameW-22)/nameRight,(outRowH-labelH-10)/srcH);
+          const nameDW=Math.max(1,Math.round(nameRight*nameScale)),nameDH=Math.max(1,Math.round(srcH*nameScale));
+          q.drawImage(c,0,sy,nameRight,srcH,pad+8,oy+labelH,nameDW,nameDH);
+
+          const periodX=pad+sheetNameW+pad;
+          blockPairs.forEach((d,localDay)=>{
+            const dx=periodX+localDay*dayW,srcW=d.right-d.left+1,drawH=Math.max(1,outRowH-labelH-10);
+            // 2列セットを一切変形せず、その日だけ切り出す。
+            q.drawImage(c,d.left,sy,srcW,srcH,dx,oy+labelH,dayW,drawH);
+            q.strokeStyle='#c00000';q.lineWidth=3;q.strokeRect(dx,oy+labelH,dayW,drawH);
+            // ヘッダーは画像の上に重ねず、専用領域に表示して元セルを隠さない。
+            q.fillStyle='#fff3a0';q.fillRect(dx+2,oy+labelH+2,dayW-4,28);
+            q.fillStyle='#7d0000';q.font='900 16px sans-serif';q.textAlign='center';q.textBaseline='middle';
+            q.fillText(`列${d.columnIndex} ＝ ${d.date}日`,dx+dayW/2,oy+labelH+16);
+            // 白＝勤務記号、黄色＝時間を明示。
+            q.fillStyle='#111';q.font='700 12px sans-serif';q.textAlign='left';q.fillText('白：勤務記号',dx+8,oy+labelH+drawH-17);
+            q.textAlign='right';q.fillText('黄：時間',dx+dayW-8,oy+labelH+drawH-17);
+          });
+        }
+        const dataUrl=sheet.toDataURL('image/jpeg',.92);
+        batchImages.push({mime:'image/jpeg',data:dataUrl.split(',')[1],rows:`${groupStart+1}-${groupEnd}`,columns:`${blockPairs[0].columnIndex}-${blockPairs[blockPairs.length-1].columnIndex}`,dates:`${blockPairs[0].date}-${blockPairs[blockPairs.length-1].date}`});
+      }
+      imageBatches.push({startColumn:blockPairs[0].columnIndex,endColumn:blockPairs[blockPairs.length-1].columnIndex,startDay:blockPairs[0].date,endDay:blockPairs[blockPairs.length-1].date,days:blockPairs.length,images:batchImages});
+    }
+
+    // 今日の列だけは、通常の8日ブロックとは別に「1日専用の拡大確認」を行う。
+    // 今日だけ未検出になるケースを将来も防ぐため、今日の日付が対象期間内なら必ず作成する。
+    let todayVerification=null;
+    try{
+      const now=new Date();
+      const todayY=now.getFullYear(),todayM=now.getMonth()+1,todayD=now.getDate();
+      if(todayY===yy && todayM===mm){
+        const td=datePairs.find(d=>d.date===todayD);
+        if(td){
+          const vImages=[];
+          const vDayW=360,vNameW=600,vRowH=210,vLabelH=58,vPad=16;
+          for(let groupStart=0;groupStart<STAFF_COUNT;groupStart+=GROUP_SIZE){
+            const groupEnd=Math.min(STAFF_COUNT,groupStart+GROUP_SIZE),groupCount=groupEnd-groupStart;
+            const sheet=document.createElement('canvas');
+            sheet.width=vNameW+vDayW+vPad*3;
+            sheet.height=vPad+vLabelH+groupCount*vRowH+vPad;
+            const q=sheet.getContext('2d');
+            q.fillStyle='#fff';q.fillRect(0,0,sheet.width,sheet.height);
+            q.fillStyle='#fff3a0';q.fillRect(vPad,vPad,sheet.width-vPad*2,vLabelH);
+            q.fillStyle='#8b0000';q.font='900 20px sans-serif';q.textBaseline='middle';q.textAlign='left';
+            q.fillText(`今日確認　${ym}年${todayD}日　スタッフ${groupStart+1}〜${groupEnd}`,vPad+8,vPad+vLabelH/2);
+            for(let local=0;local<groupCount;local++){
+              const ri=groupStart+local,band=staffBands[ri],sy=band.top,ey=band.bottom,srcH=Math.max(1,ey-sy),oy=vPad+vLabelH+local*vRowH;
+              q.fillStyle=ri%2?'#fafafa':'#f2f2f2';q.fillRect(vPad,oy,sheet.width-vPad*2,vRowH-4);
+              q.fillStyle='#b00000';q.font='900 17px sans-serif';q.textBaseline='top';q.textAlign='left';q.fillText(`スタッフ${ri+1}`,vPad+7,oy+5);
+              const nameScale=Math.min((vNameW-24)/nameRight,(vRowH-vLabelH-12)/srcH);
+              const nameDW=Math.max(1,Math.round(nameRight*nameScale)),nameDH=Math.max(1,Math.round(srcH*nameScale));
+              q.drawImage(c,0,sy,nameRight,srcH,vPad+8,oy+vLabelH,nameDW,nameDH);
+              const dx=vPad+vNameW+vPad,srcW=td.right-td.left+1,drawH=Math.max(1,vRowH-vLabelH-10);
+              q.drawImage(c,td.left,sy,srcW,srcH,dx,oy+vLabelH,vDayW,drawH);
+              q.strokeStyle='#c00000';q.lineWidth=4;q.strokeRect(dx,oy+vLabelH,vDayW,drawH);
+              q.fillStyle='#fff3a0';q.fillRect(dx+3,oy+vLabelH+3,vDayW-6,32);
+              q.fillStyle='#7d0000';q.font='900 18px sans-serif';q.textAlign='center';q.textBaseline='middle';
+              q.fillText(`列${td.columnIndex} ＝ ${td.date}日（今日）`,dx+vDayW/2,oy+vLabelH+19);
+              q.fillStyle='#111';q.font='800 14px sans-serif';q.textAlign='left';q.fillText('白：勤務記号',dx+10,oy+vLabelH+drawH-19);
+              q.textAlign='right';q.fillText('黄：時間',dx+vDayW-10,oy+vLabelH+drawH-19);
+            }
+            const du=sheet.toDataURL('image/jpeg',.94);
+            vImages.push({mime:'image/jpeg',data:du.split(',')[1],rows:`${groupStart+1}-${groupEnd}`,columns:String(td.columnIndex),dates:String(td.date)});
+          }
+          todayVerification={date:todayD,columnIndex:td.columnIndex,images:vImages};
+        }
+      }
+    }catch(_){ todayVerification=null; }
+
+    const originalDataUrl=c.toDataURL('image/jpeg',.90);
+    const payloadKB=Math.round(imageBatches.reduce((n,b)=>n+b.images.reduce((m,x)=>m+x.data.length,0),0)*.75/1024);
+    return {mime:'image/jpeg',dataUrl:originalDataUrl,batches:imageBatches,todayVerification,days:expected,dayStart:p==='first'?1:16,rowCount:STAFF_COUNT,payloadKB,datePairs};
   }
 
   async function runGeminiRead(){
@@ -6173,8 +6261,15 @@ function renderDay(){
       localStorage.setItem(LOCK_KEY,String(Date.now()));
 
       const img=await prepareShiftAiImage(aiFile);
+      if(!img || !Array.isArray(img.batches) || !img.batches.length || !Number.isInteger(Number(img.rowCount))){
+        throw new Error('AI確認画像の作成結果が不正です。ページを再読み込みして、写真を選び直してください。');
+      }
+      const totalImages=img.batches.reduce((n,b)=>n+(Array.isArray(b.images)?b.images.length:0),0);
+      if(totalImages<1){
+        throw new Error('AI確認画像を1枚も作成できませんでした。写真全体が写っているか確認してください。');
+      }
       aiPhotoData=img.dataUrl;
-      setAiStatus(`AIへ送信準備完了（画像1枚・約${img.payloadKB||0}KB）。全スタッフを確認中…`,'');
+      setAiStatus(`AIへ送信準備完了（確認画像${totalImages}枚・${img.batches.length}日付ブロック・スタッフ${img.rowCount}人・約${img.payloadKB||0}KB）。全スタッフを確認中…`,'');
 
       const allowed=getAllowedShiftMarks();
       const allowedText=allowed.join('、');
@@ -6182,198 +6277,198 @@ function renderDay(){
       const target=targetInfo();
       const masterText=staffMasterText();
 
-      const prompt=`あなたは飲食店のシフト表を読む専門の画像認識AIです。
+      const promptBase=`あなたは飲食店のシフト表を読む専門の画像認識AIです。
 
-【今回の最重要目的】
+【最重要目的】
 1. 出勤者を1人でも見落とさない。
-2. 隣の日付の勤務記号を混ぜない。
+2. 隣の日付の勤務記号を絶対に混ぜない。
 3. 表に存在するスタッフ行を全員確認する。
 4. 見えないものを推測しない。
 
 対象期間：${target}
 
-【画像の使い方】
-- 「画像1：全体シフト表」は表全体の位置関係を確認するために使います。
-- 「スタッフ行確認画像」は最重要です。各画像に「スタッフ行 N」が表示されています。
-- 各スタッフ行は「名前欄＋対象期間の全日付列」を大きく切り出しています。
-- スタッフ行確認画像を1枚目から最後まで、必ず全画像・全行を確認してください。
-- スタッフ行を飛ばしてはいけません。
-- 勤務が1日もないスタッフもstaffRowsに必ず記録してください。
+【画像の構造】
+- 1人＝名前欄1区間（この表ではExcel上2行結合）。
+- 1日＝「白い勤務記号列＋黄色い時間列」の2列セット。
+- 各画像には名前欄と、今回のバッチで指定された日付だけが入っています。
+- 画像上部に「列N＝○日」と明記されています。このラベルが唯一の日付対応です。
 
-【日付】
-- アプリが列を固定し、赤線と「列N」のラベルを付けています。
-- 元画像にある日付数字は読んで日付を決めてはいけません。
-- 列1=対象期間の最初の日、列2=その翌日、という対応はアプリ側で確定済みです。
-- 必ず赤線で囲まれた列の番号をcolumnIndexとして返してください。
-- 列境界をまたいで見える文字は、その文字の中心が入っている列だけを採用してください。
-- 隣の列から勤務記号を持ってきてはいけません。
-- 不明確な場合はpresent=falseにしてください。
+【日付の絶対ルール】
+- 元画像の小さい日付数字を読んで日付を決めてはいけません。
+- 「列N＝○日」の赤枠だけを基準にしてください。
+- 文字の中心が入っている赤枠の列Nだけを採用してください。
+- 隣の赤枠・隣の日付から勤務記号や時間を補完してはいけません。
+- 白列＝勤務記号、黄色列＝同じ日の時間です。別の日の黄色列を時間として使ってはいけません。
 
 【出勤として認める勤務記号】
 ${allowedText}
 これ以外の文字・記号・数字は絶対に出勤にしません。
 
-現在のポジション対応：
-${positionRules}
-
 【スタッフ名】
 スタッフ名は必ず、そのスタッフ行の左側の名前欄から読み取ってください。
 別の行の名前を使ってはいけません。
-旧スタッフ番号マスターがある場合は、名前表記確認の補助としてだけ使えます。画像に存在しない名前を追加してはいけません。
-${masterText?`\n旧スタッフマスター（名前確認の補助）：\n${masterText}\n`:''}
+画像に存在しない名前を追加してはいけません。
+${masterText?`\n旧スタッフマスター（名前確認の補助のみ）：\n${masterText}\n`:''}
 
 【読み取り手順】
-1. スタッフ行確認画像の「スタッフ行1」から最後の行まで順番に処理する。
-2. 各スタッフ行について、名前を最初に確認する。
-3. その後、列1から列${img.days}までを左から右へ1列ずつ確認する。
-4. 各セルに ${allowedText} のいずれかが明確に見えた場合だけpresent=trueのentriesを作る。
+1. 今回のバッチに含まれる全画像を確認する。
+2. スタッフ行を上から最後まで1人ずつ確認する。
+3. 各スタッフについて、今回のバッチの列を左から右へ1列ずつ確認する。
+4. 勤務記号が明確に ${allowedText} のいずれかならpresent=true。
 5. △、▲、▼、×、ラ、L、イベ、イベント、休、空欄、丸印、線、汚れ、罫線、数字だけの時間は出勤ではない。
-6. 勤務記号がある場合、その文字の中心が入っている「列N」をcolumnIndexにする。
-7. 時間は同じスタッフ・同じ列のセルだけから読む。別の日付や別スタッフから時間を補完しない。
-8. 9.5は09:30、9は09:00、17は17:00。
-9. 時間が見えない場合は空文字。推測禁止。
-10. 全スタッフ行を読み終えたら、全体画像と照合して見落としがないか再確認する。
-11. staffRowsには、確認した全スタッフ行を必ず1行ずつ返す。出勤がない行もpresent=falseで返す。
-12. 各staffRowsのcheckedColumnsは、実際に確認した対象列数を返す。正常なら${img.days}。
-13. entriesは出勤セルだけ返す。
-14. JSON以外は返さない。
+6. 時間は同じスタッフ・同じ列の黄色セルだけから読む。見えない場合は空文字。推測禁止。
+7. 全スタッフを読み終えたら、同じ画像をもう一度見て中央列の取り違えがないか確認する。
+8. staffRowsには今回確認した全スタッフを必ず1行ずつ返す。出勤がないスタッフもpresent=falseで返す。
+9. checkedColumnsは今回のバッチで実際に確認した列数を返す。
+10. entriesは出勤セルだけ返す。
+11. JSON以外は返さない。
+
+【ポジション】
+${positionRules}
 
 【返却形式】
 {
   "staffRows":[
-    {"rowIndex":1,"name":"加藤","present":true,"checkedColumns":16,"note":"全列確認済み"},
-    {"rowIndex":2,"name":"近藤","present":false,"checkedColumns":16,"note":"全列確認済み"}
+    {"rowIndex":1,"name":"スタッフ名","present":true,"checkedColumns":8,"note":"全8列確認済み"}
   ],
   "entries":[
-    {"rowIndex":1,"columnIndex":1,"name":"加藤","mark":"S","present":true,"startTime":"9.5","endTime":"17","time":"09:30〜17:00","confidence":"high","note":"行1・列1を確認"}
+    {"rowIndex":1,"columnIndex":1,"name":"スタッフ名","mark":"S","present":true,"startTime":"9.5","endTime":"17","time":"09:30〜17:00","confidence":"high","note":"列1を確認"}
   ]
 }
 
 重要：
-- staffRowsは「AIが確認できたスタッフ行」の全員分です。出勤者だけではありません。
-- rowIndexは画像の「スタッフ行 N」と完全一致させてください。
-- columnIndexは画像の「列N」と完全一致させてください。
-- numberとdateは作らないでください。`;
+- rowIndexは画像の「スタッフN」と完全一致。
+- columnIndexは元の対象期間全体に対する列番号（例：24日が9列目ならcolumnIndex=9）。
+- numberとdateは返さない。日付はアプリ側で列番号から確定する。`;
 
-      // Geminiへ送る画像はこの1枚だけ。
-      // 複数画像・候補画像の大量送信は行わない。
-      const parts=[
-        {text:'【画像1：全スタッフ確認シート】この1枚だけを判定材料にしてください。52スタッフ行を上から下まで確認します。各行は「名前欄＋対象期間の全日付列」が拡大されています。'},
-        {inline_data:{mime_type:img.mime,data:img.data}}
-      ];
-
+      // 16日分を一度に送らず、8日ずつ2バッチに分ける。
+      // これにより中央付近の24〜28日を別の日と混同しにくくする。
       const responseJsonSchema={
         type:"object",
         properties:{
-          staffRows:{
-            type:"array",
-            items:{
-              type:"object",
-              properties:{
-                rowIndex:{type:"integer"},
-                name:{type:"string"},
-                present:{type:"boolean"},
-                checkedColumns:{type:"integer"},
-                note:{type:"string"}
-              },
-              required:["rowIndex","name","present","checkedColumns"]
-            }
-          },
-          entries:{
-            type:"array",
-            items:{
-              type:"object",
-              properties:{
-                rowIndex:{type:"integer"},
-                columnIndex:{type:"integer"},
-                name:{type:"string"},
-                mark:{type:"string"},
-                present:{type:"boolean"},
-                startTime:{type:"string"},
-                endTime:{type:"string"},
-                time:{type:"string"},
-                confidence:{type:"string"},
-                note:{type:"string"}
-              },
-              required:["rowIndex","columnIndex","name","mark","present"]
-            }
-          }
+          staffRows:{type:"array",items:{type:"object",properties:{rowIndex:{type:"integer"},name:{type:"string"},present:{type:"boolean"},checkedColumns:{type:"integer"},note:{type:"string"}},required:["rowIndex","name","present","checkedColumns"]}},
+          entries:{type:"array",items:{type:"object",properties:{rowIndex:{type:"integer"},columnIndex:{type:"integer"},name:{type:"string"},mark:{type:"string"},present:{type:"boolean"},startTime:{type:"string"},endTime:{type:"string"},time:{type:"string"},confidence:{type:"string"},note:{type:"string"}},required:["rowIndex","columnIndex","name","mark","present"]}}
         },
         required:["staffRows","entries"]
       };
 
-      const body={
-        contents:[{role:'user',parts:[{text:prompt},...parts]}],
-        generationConfig:{
-          responseMimeType:'application/json',
-          responseJsonSchema
-        }
-      };
-
-      // ここが今回の重要修正。
-      // Google側で特定モデルが「high demand」になっても、ユーザーに再操作を要求せず、
-      // 同じ写真・同じプロンプトを別の安定モデルへ自動切替して1回の操作で完了を狙う。
-      let data=null, text='', usedModel='';
-      const retryableStatus=new Set([429,500,502,503,504]);
+      let allEntries=[];
+      let allStaffRows=[];
       const modelErrors=[];
-      for(const model of MODELS){
-        const url=`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
-        try{
-          setAiStatus(`AI読み取り中…（${model}）`,'');
-          const res=await fetch(url,{
-            method:'POST',
-            headers:{'Content-Type':'application/json','x-goog-api-key':key},
-            body:JSON.stringify(body)
-          });
-          const raw=await res.text();
-          let parsed=null;
-          try{parsed=JSON.parse(raw)}catch(_){parsed=null}
-          if(!res.ok){
-            const msg=parsed?.error?.message||`Gemini APIエラー（${res.status}）`;
-            modelErrors.push(`${model}: HTTP ${res.status}`);
-            // 混雑・一時障害だけは次のモデルへ自動切替。
-            if(retryableStatus.has(res.status)) continue;
-            throw new Error(msg);
+      const retryableStatus=new Set([429,500,502,503,504]);
+
+      for(const batch of img.batches){
+        const parts=[{text:`【今回のバッチ】列${batch.startColumn}〜${batch.endColumn}（${batch.startDay}〜${batch.endDay}日）だけを確認してください。今回のバッチは${batch.days}列です。スタッフ1〜${img.rowCount}を全員確認してください。`}];
+        for(const im of batch.images){
+          parts.push({text:`【スタッフ行確認画像：スタッフ${im.rows}／列${im.columns}／${im.dates}日】この画像だけでなく、このバッチ内の全画像と照合してください。`});
+          parts.push({inline_data:{mime_type:im.mime,data:im.data}});
+        }
+        const batchPrompt=promptBase.replace(/checkedColumns":8/g,`checkedColumns":${batch.days}`).replace(/全8列確認済み/g,`全${batch.days}列確認済み`)+`\n\n【今回のバッチ限定】\n- 対象列は列${batch.startColumn}〜列${batch.endColumn}のみ。\n- このバッチの画像内の左から1番目は全体の列${batch.startColumn}、2番目は列${batch.startColumn+1}…です。\n- checkedColumnsは必ず${batch.days}。\n- 列番号は元の対象期間全体に対するグローバル列番号で返してください。\n- それ以外の列については一切entriesを作らない。\n- バッチ境界をまたいで文字・時間・勤務記号を補完しない。`;
+        const body={contents:[{role:'user',parts:[{text:batchPrompt},...parts]}],generationConfig:{responseMimeType:'application/json',responseJsonSchema}};
+
+        let parsed=null,candidateText='';
+        for(const model of MODELS){
+          const url=`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
+          try{
+            setAiStatus(`AI読み取り中… ${batch.startDay}〜${batch.endDay}日（${model}）`,'');
+            const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':key},body:JSON.stringify(body)});
+            const raw=await res.text();let j=null;try{j=JSON.parse(raw)}catch(_){j=null}
+            if(!res.ok){modelErrors.push(`${batch.startDay}〜${batch.endDay}日 ${model}: HTTP ${res.status}`);if(retryableStatus.has(res.status))continue;throw new Error(j?.error?.message||`Gemini APIエラー（${res.status}）`)}
+            const ct=(j?.candidates||[]).flatMap(c=>c?.content?.parts||[]).map(x=>x?.text||'').join('').trim();
+            if(!ct){modelErrors.push(`${batch.startDay}〜${batch.endDay}日 ${model}: 応答が空`);continue}
+            parsed=j;candidateText=ct;break;
+          }catch(err){modelErrors.push(`${batch.startDay}〜${batch.endDay}日 ${model}: ${err?.message||String(err)}`);continue}
+        }
+        if(!parsed||!candidateText)throw new Error(`AI通信に失敗しました。${batch.startDay}〜${batch.endDay}日の読み取りを完了できませんでした。\n${modelErrors.join(' / ')}`);
+
+        const obj=JSON.parse(cleanJsonText(candidateText));
+        const batchEntries=Array.isArray(obj.entries)?obj.entries:[];
+        const batchRows=Array.isArray(obj.staffRows)?obj.staffRows:[];
+        const expectedRows=Number(img.rowCount)||0;
+        // staffRows は「全員を返せたか」を判定するためには使わない。
+        // Geminiが空欄のスタッフ行を1人飛ばすだけで全結果を破棄するのは、
+        // 人数可変のシフト表では不安定だからです。行の正解は画像側のstaffBandsで確定し、
+        // 実際の出勤セルはentriesのrowIndexで受け取ります。
+        const checkedMap=new Map();
+        for(const r of batchRows){
+          const ri=Number(r?.rowIndex),name=String(r?.name||'').trim(),cols=Number(r?.checkedColumns);
+          if(Number.isInteger(ri)&&ri>=1&&ri<=expectedRows&&name){
+            checkedMap.set(ri,{ri,name,cols,present:r?.present===true,batchStart:batch.startColumn,batchEnd:batch.endColumn});
           }
-          const candidateText=(parsed?.candidates||[]).flatMap(c=>c?.content?.parts||[]).map(p=>p?.text||'').join('').trim();
-          if(!candidateText){
-            modelErrors.push(`${model}: 応答が空`);
-            continue;
-          }
-          data=parsed;text=candidateText;usedModel=model;break;
-        }catch(err){
-          // Safariの「Load failed」等の一時的ネットワーク失敗も、次モデルを試す。
-          modelErrors.push(`${model}: ${err?.message||String(err)}`);
-          continue;
+        }
+        allStaffRows.push(...checkedMap.values());
+        for(const x of batchEntries){
+          const ri=Number(x?.rowIndex);
+          if(!Number.isInteger(ri)||ri<1||ri>expectedRows)continue;
+          const name=String(x?.name||'').trim();
+          if(!name)continue;
+          allEntries.push({...x,__batchStart:batch.startColumn,__batchEnd:batch.endColumn});
         }
       }
-      if(!data||!text){
-        throw new Error(`AI通信に失敗しました。自動で3つのGeminiモデルを試しましたが、現在すべて混雑または一時利用不可です。\n${modelErrors.join(' / ')}`);
+
+      // 今日の列だけは専用拡大画像で再確認する。
+      // 通常8日ブロックで今日の勤務記号を取[削除済み]ぼしても、今日だけはこの結果を優先する。
+      if(img.todayVerification?.images?.length){
+        const tv=img.todayVerification;
+        const parts=[{text:`【今日だけの再確認】対象は${target}の${tv.date}日（元の全体列${tv.columnIndex}）だけです。スタッフ1〜${img.rowCount}を全員確認してください。`}];
+        for(const im of tv.images){
+          parts.push({text:`【今日専用拡大画像：スタッフ${im.rows}／列${im.columns}／${im.dates}日】この画像の白い勤務記号列を1人ずつ拡大して確認してください。黄色列は同じ日の時間だけです。`});
+          parts.push({inline_data:{mime_type:im.mime,data:im.data}});
+        }
+        const todayPrompt=promptBase.replace(/checkedColumns":8/g,'checkedColumns":1').replace(/全8列確認済み/g,'全1列確認済み')+`\n\n【今日専用の絶対ルール】\n- 今回は${tv.date}日だけを確認する。\n- 列番号は${tv.columnIndex}だけ。\n- 各スタッフの白い勤務記号セルを必ず拡大して確認する。\n- ${allowedText}の文字が見えたらpresent=true。特に小さいS/Y/O/K/Fを見落とさない。\n- 空欄・L・数字だけ・▲・×は出勤ではない。\n- 8日ブロックの結果より、この今日専用画像の結果を優先する。\n- 今日のentriesは、確認できた出勤者を漏れなく返す。\n- JSON以外は返さない。`;
+        const body={contents:[{role:'user',parts:[{text:todayPrompt},...parts]}],generationConfig:{responseMimeType:'application/json',responseJsonSchema}};
+        let parsedToday=null,candidateToday='';
+        for(const model of MODELS){
+          const url=`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
+          try{
+            setAiStatus(`今日 ${tv.date}日の再確認中…（${model}）`,'');
+            const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':key},body:JSON.stringify(body)});
+            const raw=await res.text();let j=null;try{j=JSON.parse(raw)}catch(_){j=null}
+            if(!res.ok){if(retryableStatus.has(res.status))continue;throw new Error(j?.error?.message||`Gemini APIエラー（${res.status}）`)}
+            const ct=(j?.candidates||[]).flatMap(c=>c?.content?.parts||[]).map(x=>x?.text||'').join('').trim();
+            if(!ct)continue;
+            parsedToday=j;candidateToday=ct;break;
+          }catch(err){console.warn('today verification',model,err)}
+        }
+        if(parsedToday&&candidateToday){
+          try{
+            const obj=JSON.parse(cleanJsonText(candidateToday));
+            const verifyEntries=Array.isArray(obj.entries)?obj.entries:[];
+            const verified=[];
+            for(const x of verifyEntries){
+              const ri=Number(x?.rowIndex),ci=Number(x?.columnIndex);
+              const mark=String(x?.mark??x?.symbol??'').trim().toUpperCase();
+              if(!Number.isInteger(ri)||ri<1||ri>img.rowCount)continue;
+              if(ci!==tv.columnIndex||x?.present!==true||!isAllowedShiftMark(mark))continue;
+              const name=String(x?.name||'').trim();if(!name)continue;
+              verified.push({...x,__batchStart:tv.columnIndex,__batchEnd:tv.columnIndex});
+            }
+            // 今日分だけ通常結果を置き換える。再確認が空だった場合は元結果を保持してデータ消失を防ぐ。
+            if(verified.length){
+              allEntries=allEntries.filter(x=>Number(x?.columnIndex)!==tv.columnIndex);
+              allEntries.push(...verified);
+            }
+          }catch(err){console.warn('today verification parse',err)}
+        }
       }
 
-      const obj=JSON.parse(cleanJsonText(text));
-      const entries=Array.isArray(obj.entries)?obj.entries:[];
-      const staffRows=Array.isArray(obj.staffRows)?obj.staffRows:[];
-
-      // 「全スタッフ行を確認した」とAIが返しているかを厳密に検証。
+      const entries=allEntries;
+      const staffRows=allStaffRows;
       const expectedRows=Number(img.rowCount)||0;
-      const checkedMap=new Map();
+      // 行番号は画像の幾何学検出を正とする。AIのstaffRowsは名前補助としてのみ使用。
+      // 同じrowIndexで両バッチに名前が返った場合だけ、名前の不一致をエラーにする。
+      const nameByRow=new Map();
+      let staffNameMismatch=false;
       for(const r of staffRows){
-        const ri=Number(r?.rowIndex);
-        const name=String(r?.name||'').trim();
-        const cols=Number(r?.checkedColumns);
-        if(Number.isInteger(ri)&&ri>=1&&ri<=expectedRows&&name){
-          checkedMap.set(ri,{ri,name,cols,present:r?.present===true});
-        }
+        const ri=Number(r?.ri),name=String(r?.name||'').trim();
+        if(!Number.isInteger(ri)||!name)continue;
+        const prev=nameByRow.get(ri);
+        if(!prev)nameByRow.set(ri,name);
+        else if(aiNameNorm(prev)!==aiNameNorm(name))staffNameMismatch=true;
       }
-      if(expectedRows<15)throw new Error(`スタッフ行検出数が不足しています（${expectedRows}行）。結果を保存しません。`);
-      if(checkedMap.size!==expectedRows){
-        throw new Error(`スタッフ行の確認が不完全です（${checkedMap.size}/${expectedRows}行）。1人でも確認できない場合は結果を確定しません。`);
-      }
-      const badChecked=[...checkedMap.values()].filter(x=>x.cols!==img.days);
-      if(badChecked.length){
-        throw new Error(`全列確認が完了していません（${badChecked.length}行）。結果を確定しません。`);
-      }
+      if(staffNameMismatch)throw new Error('同じスタッフ行でバッチ間の名前が一致しません。結果を確定しません。');
+      const checkedMap=nameByRow;
+
 
       const [yy,mm]=targetYM().split('-').map(Number);
       const p=$('shiftPeriod')?.value||'second';
@@ -6391,9 +6486,13 @@ ${masterText?`\n旧スタッフマスター（名前確認の補助）：\n${mas
         if(x?.present!==true)continue;
         if(!Number.isInteger(ri)||ri<1||ri>expectedRows)continue;
         if(!Number.isInteger(ci)||ci<1||ci>img.days)continue;
+        if(Number.isInteger(x?.__batchStart)&&Number.isInteger(x?.__batchEnd)&&(ci<x.__batchStart||ci>x.__batchEnd))continue;
 
+        // 名前は同じrowIndexのstaffRowsを優先し、AIがその行を返さなかった場合はentriesの名前を使用。
         const row=checkedMap.get(ri);
-        if(!row||!row.name)continue;
+        const entryName=String(x?.name||'').trim();
+        const resolvedName=row?.name||entryName;
+        if(!resolvedName)continue;
         const day=dayStart+ci-1;
         if(day<1||day>lastDay)continue;
 
@@ -6403,7 +6502,7 @@ ${masterText?`\n旧スタッフマスター（名前確認の補助）：\n${mas
         safeEntries.push({
           ...x,
           date,
-          name:row.name,
+          name:resolvedName,
           mark,
           number:'',
           position:pos,
@@ -6442,20 +6541,20 @@ ${masterText?`\n旧スタッフマスター（名前確認の補助）：\n${mas
         $('shiftGeminiAiResult').hidden=false;
         $('shiftGeminiAiResult').textContent=
           `AI読み取り完了：${uniqueDates}日・${next.length}件\n`+
-          `スタッフ行：${expectedRows}行すべて確認済み\n`+
+          `スタッフ行：${expectedRows}区間を画像から確定\n`+
           `日付はアプリ側で列番号から確定：${dayStart}〜${dayStart+img.days-1}日\n`+
           `ポジション：${posSummary}`+
           (low?`\n⚠️ 名前の確信度が低い項目：${low}件`:'')+
           `\n※登録前の確認画面で名前・勤務記号・時間・ポジションを確認してください。`;
       }
 
-      setAiStatus(`AI読み取り完了。${expectedRows}人のスタッフ行を全件確認しました。日付は固定列から確定しています。`,'ok');
+      setAiStatus(`AI読み取り完了。スタッフ${expectedRows}区間を画像から確定し、出勤セルを読み取りました。日付は固定列から確定しています。`,'ok');
 
     }catch(e){
       console.error(e);
       let msg=e?.message||String(e);
       if(/Load failed/i.test(msg)){
-        msg='Gemini APIへ接続できませんでした（Safariの通信/CORS、通信状態、またはAPIキー制限の可能性）。\n※画像は1枚だけ送信しています。';
+        msg='Gemini APIへ接続できませんでした（Safariの通信/CORS、通信状態、またはAPIキー制限の可能性）。\n※スタッフ確認画像は4枚を1回のAPI通信で送信しています。';
       }
       setAiStatus('AI読み取りに失敗しました。\n'+msg,'err');
     }finally{
@@ -6833,5 +6932,4 @@ ${masterText?`\n旧スタッフマスター（名前確認の補助）：\n${mas
   .masterBottomActions{grid-template-columns:1fr 1fr}
 }
 </style>
-
 
