@@ -6139,6 +6139,91 @@ function renderDay(){
       }
     }catch(e){console.warn('rowSheets生成をスキップ:',e)}
 
+    // 出勤候補セルを画像処理で先に全件抽出する。
+    // AIに「出勤者を探させる」のではなく、空欄を大量に読ませない。
+    // 各日付は黄色列の中心間の中点で左右を厳密に分離するため、隣日付の混入を防ぐ。
+    const candidateCards=[];
+    try{
+      const rowList=rowRanges.slice();
+      const centers2=centers.slice();
+      const dayBounds=centers2.map((cx,i)=>{
+        const left=i===0 ? Math.max(0,Math.round(cx-(centers2[1]-cx)/2)) : Math.round((centers2[i-1]+cx)/2);
+        const right=i===centers2.length-1 ? Math.min(W,Math.round(cx+(cx-centers2[i-1])/2)) : Math.round((cx+centers2[i+1])/2);
+        return [left,right];
+      });
+      // 行ごとに「その日のセル内に文字らしい画素があるか」を超低い閾値で判定。
+      // 文字が薄くても拾うため、最終的な出勤/休み判定はAIに任せる。
+      for(let ri=0;ri<rowList.length;ri++){
+        const [ry0,ry1]=rowList[ri], rh=ry1-ry0;
+        for(let ci=0;ci<dayBounds.length;ci++){
+          const [bx0,bx1]=dayBounds[ci];
+          const ix0=Math.max(bx0+3,Math.round(bx0+(bx1-bx0)*.08));
+          const ix1=Math.min(bx1-3,Math.round(bx1-(bx1-bx0)*.08));
+          const iy0=Math.max(ry0+2,Math.round(ry0+rh*.10));
+          const iy1=Math.min(ry1-2,Math.round(ry1-rh*.10));
+          if(ix1<=ix0||iy1<=iy0)continue;
+          let ink=0, nonYellow=0, total=0;
+          let darkMinX=99999,darkMaxX=-1,darkMinY=99999,darkMaxY=-1;
+          for(let y=iy0;y<iy1;y++){
+            let pp=(y*W+ix0)*4;
+            for(let x=ix0;x<ix1;x++,pp+=4){
+              const r=data[pp],g=data[pp+1],b=data[pp+2];
+              const min=Math.min(r,g,b),max=Math.max(r,g,b);
+              // 黒/灰/文字色。黄色背景そのものは除外。
+              const isYellow=r>145&&g>135&&b<215&&r-b>28&&g-b>18;
+              const lum=.299*r+.587*g+.114*b;
+              const dark=(lum<205 && max-min<70);
+              if(!isYellow)nonYellow++;
+              if(dark&&!isYellow){ink++;darkMinX=Math.min(darkMinX,x);darkMaxX=Math.max(darkMaxX,x);darkMinY=Math.min(darkMinY,y);darkMaxY=Math.max(darkMaxY,y);}
+              total++;
+            }
+          }
+          // とても緩い候補条件。さらに「文字の連結成分」が少しでもあれば候補にする。
+          // 薄い印刷文字を密度だけで落とさない。
+          const density=total?ink/total:0;
+          const grayRatio=total?nonYellow/total:0;
+          const bw=darkMaxX>=0?darkMaxX-darkMinX+1:0,bh=darkMaxY>=0?darkMaxY-darkMinY+1:0;
+          const shapeCandidate=ink>=5 && bw>=2 && bh>=3 && bw<((ix1-ix0)*.82) && bh<((iy1-iy0)*.82);
+
+          // 画像処理側の出勤判定も候補抽出に使う。
+          // 白セル・黄色セルのどちらかに勤務記号がある場合は、
+          // 文字の濃さに関係なく必ずAI確認対象にする。
+          let localAttendance=false;
+          try{
+            const top2=Math.max(0,ry0+4), bottom2=Math.min(H,ry1-4);
+            const wl=ci===0?Math.max(0,Math.round(bx0-(centers2[1]-centers2[0])/2)):Math.max(0,Math.round(centers2[ci-1]+3));
+            const wr=Math.max(wl+8,bx0-2);
+            if(wr-wl>=8&&bottom2-top2>=8){
+              const wc=document.createElement('canvas');wc.width=wr-wl;wc.height=bottom2-top2;
+              wc.getContext('2d').drawImage(c,wl,top2,wc.width,wc.height,0,0,wc.width,wc.height);
+              const wa=detectAttendanceInk(wc);
+              const yc=document.createElement('canvas');yc.width=Math.max(8,bx1-bx0-4);yc.height=bottom2-top2;
+              yc.getContext('2d').drawImage(c,bx0+2,top2,yc.width,yc.height,0,0,yc.width,yc.height);
+              const ya=detectAttendanceInk(yc);
+              localAttendance=!!(wa?.ok||ya?.ok);
+            }
+          }catch(_){ }
+
+          if(density>=0.002 || grayRatio>=0.045 || shapeCandidate || localAttendance){
+            const card=document.createElement('canvas');
+            const cardW=620,cardH=150,pad=8,nameW=210,cellW=380;
+            card.width=cardW;card.height=cardH;
+            const q=card.getContext('2d');q.fillStyle='#fff';q.fillRect(0,0,cardW,cardH);
+            q.fillStyle='#b00000';q.font='800 18px sans-serif';q.textBaseline='top';
+            q.fillText(`行${ri+1}・列${ci+1}（${dayStart+ci}日）`,pad,6);
+            q.fillStyle='#333';q.font='600 14px sans-serif';q.fillText(`画像処理候補 ink=${density.toFixed(3)}`,pad,30);
+            // 名前欄＋その日だけのセルを大きく表示。
+            const ns=Math.min((nameW-8)/Math.max(1,nameRight),(cardH-55)/Math.max(1,rh));
+            q.drawImage(c,0,ry0,nameRight,rh,pad,50,Math.max(1,Math.round(nameRight*ns)),Math.max(1,Math.round(rh*ns)));
+            const cs=Math.min((cellW-8)/Math.max(1,bx1-bx0),(cardH-55)/Math.max(1,rh));
+            q.drawImage(c,bx0,ry0,bx1-bx0,rh,pad+nameW,50,Math.max(1,Math.round((bx1-bx0)*cs)),Math.max(1,Math.round(rh*cs)));
+            q.strokeStyle='#d00000';q.lineWidth=3;q.strokeRect(pad+nameW,48,cellW-4,cardH-52);
+            candidateCards.push({rowIndex:ri+1,columnIndex:ci+1,data:q.canvas.toDataURL('image/jpeg',.96).split(',')[1]});
+          }
+        }
+      }
+    }catch(e){console.warn('candidateCards生成をスキップ:',e)}
+
     // 時間確認用の拡大帯も従来どおり生成。ただしAPIは1回だけ。
     const bands=[];
     const bandTop=Math.floor(c.height*0.18),bandBottom=Math.floor(c.height*0.97),bandCount=5;
@@ -6152,7 +6237,7 @@ function renderDay(){
       zctx.drawImage(annotated,0,y0b,c.width,cropH,0,0,z.width,z.height);
       bands.push(z.toDataURL('image/jpeg',.94).split(',')[1]);
     }
-    return {mime:'image/jpeg',data:annotated.toDataURL('image/jpeg',.92).split(',')[1],dataUrl:c.toDataURL('image/jpeg',.90),zoomBands:bands,rowSheets,days:expected,dayStart};
+    return {mime:'image/jpeg',data:annotated.toDataURL('image/jpeg',.92).split(',')[1],dataUrl:c.toDataURL('image/jpeg',.90),zoomBands:bands,rowSheets,candidateCards,days:expected,dayStart};
   }
 
   async function runGeminiRead(){
@@ -6211,7 +6296,11 @@ ${allowedText}
 現在のポジション対応：${positionRules}
 
 【読み取り手順：この順番を必ず守る】
-1. 【スタッフ行確認画像】を1枚目から最後まで順番に確認する。
+1. まず【画像処理で検出した候補セル一覧】を候補1から最後まで、1件も飛ばさず確認する。
+2. 候補画像の赤枠内にS/Y/O/K/Fのいずれかが明確に見える場合は、必ずentriesに1件返す。
+3. 候補画像に時間だけが見える場合や休み記号だけの場合はentriesに入れない。
+4. 候補のrowIndexとcolumnIndexは画像ラベルの値をそのまま使用し、変更しない。
+5. その後【スタッフ行確認画像】を1枚目から最後まで順番に確認する。
 2. 各画像の「スタッフ行 N」を1行ずつ処理し、名前欄を先に読む。
 3. 行を飛ばしてはいけない。勤務が無い行もstaffRowsに必ず記録する。
 4. 各スタッフ行について、列1から列${img.days}までを左から右へ1列ずつ確認する。
@@ -6252,6 +6341,12 @@ numberとdateは絶対に作らないでください。`;
         {text:'【画像1：全体シフト表】赤線と黄色ラベルの列番号がアプリ側で確定済みです。全体構造・行順・時間確認に使ってください。'},
         {inline_data:{mime_type:img.mime,data:img.data}}
       ];
+      const candidateCards=Array.isArray(img.candidateCards)?img.candidateCards:[];
+      parts.push({text:`【画像処理で検出した候補セル一覧 ${candidateCards.length}件】これはアプリが全スタッフ行×全日付セルを機械的に走査し、文字らしい画素を検出したセルです。候補を1件ずつ必ず確認してください。候補でないセルを推測で追加してはいけません。`});
+      candidateCards.forEach((cc,i)=>{
+        parts.push({text:`【候補${i+1}/${candidateCards.length}】行${cc.rowIndex}・列${cc.columnIndex}。この候補セルだけを判定してください。赤枠内に勤務記号が明確にあればpresent=true、時間だけならpresent=false。`});
+        parts.push({inline_data:{mime_type:img.mime,data:cc.data}});
+      });
       const rowSheets=Array.isArray(img.rowSheets)?img.rowSheets:[];
       rowSheets.forEach((rs,i)=>{
         parts.push({text:`【スタッフ行確認画像 ${i+1}/${rowSheets.length}】この画像は表のスタッフ行を切り出した確認用です。左側が名前欄、右側が対象期間の全日付列です。ここを主判定材料にして、表示されている全スタッフ行を1行ずつ確認してください。`});
@@ -6271,6 +6366,10 @@ numberとdateは絶対に作らないでください。`;
       const obj=JSON.parse(cleanJsonText(text));
       const entries=Array.isArray(obj.entries)?obj.entries:[];
       const staffRows=Array.isArray(obj.staffRows)?obj.staffRows:[];
+      const candidateCards=Array.isArray(img.candidateCards)?img.candidateCards:[];
+      // 候補セルのうち、AIが有効な勤務記号を返したものを必ず保持する。
+      // 候補を全く返していない場合は成功扱いにしない。
+      if(candidateCards.length && entries.length===0) throw new Error('画像処理で候補セルを検出しましたが、AIが候補を1件も判定できませんでした。結果を確定せず停止しました。');
       // AIが行ごとの全件確認を返しているか確認。少なすぎる場合は「成功」と扱わない。
       const checkedRows=staffRows.filter(r=>String(r?.name||'').trim() && Number.isFinite(Number(r?.rowIndex)));
       if(rowSheets.length && checkedRows.length<3){
@@ -6294,7 +6393,13 @@ numberとdateは絶対に作らないでください。`;
         const date=`${yy}-${String(mm).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
         const pos=shiftPositionForMark(mark);
         const time=normalizeShiftTimeRange('', '', x?.time||normalizeShiftTimeRange(x?.startTime,x?.endTime,''));
-        safeEntries.push({...x,date,name,mark,number:'',position:pos,time,present:true,columnIndex:ci});
+        // 名前はAIのOCRだけに任せず、行番号→スタッフマスターでも照合。
+        // 登録済みの行番号がある場合は、その正式名称を優先する。
+        const ri=Number(x?.rowIndex);
+        const masterNumber=Number.isInteger(ri)&&ri>0 ? String(10+(ri-1)*2) : '';
+        const masterName=masterNumber && staffMap?.[masterNumber] ? String(staffMap[masterNumber]).trim() : '';
+        const finalName=masterName || matchStaffName(name, knownNames) || name;
+        safeEntries.push({...x,date, name:finalName, mark, number:masterNumber, position:pos,time,present:true,columnIndex:ci,rowIndex:ri});
       }
       const uniq=[];const seen=new Set();
       for(const x of safeEntries){
