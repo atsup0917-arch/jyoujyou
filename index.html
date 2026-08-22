@@ -5739,6 +5739,15 @@ function renderDay(){
   const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
   const KEY_STORE='karuya_shift_gemini_api_key_v1';
   const MODEL='gemini-3.6-flash';
+
+  // AI読み取り側は別IIFEのため、対象月取得関数をここでも定義する。
+  // 未入力時は現在年月を使用し、既存のシフト対象月の仕様を維持する。
+  const targetYM=()=>{
+    const v=$('shiftTargetMonth')?.value;
+    if(v&&/^\\d{4}-\\d{2}$/.test(v)) return v;
+    const d=new Date();
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+  };
   let aiFile=null, aiPhotoData='';
 
   function getKey(){return String(localStorage.getItem(KEY_STORE)||'').trim()}
