@@ -5868,7 +5868,52 @@ function renderDay(){
         const zoomUrl=z.toDataURL('image/jpeg',0.94);
         bands.push(zoomUrl.split(',')[1]);
       }
-      return {mime:'image/jpeg',data:dataUrl.split(',')[1],dataUrl,zoomData:bands[0],zoomBands:bands};
+      // 日付ずれ防止用：各日を「名前列＋その日だけの白/黄色2列」に切り出す。
+      // AIには全体画像だけでなく、この日付固定バンドも同じ1回のリクエストで渡す。
+      // こうすることで隣の日付セルを見て別の日として解釈する余地を大幅に減らす。
+      const dateBands=[];
+      try{
+        const pixel=c.getContext('2d',{willReadFrequently:true}).getImageData(0,0,c.width,c.height).data;
+        const yellow=(r,g,b)=>r>155&&g>145&&b<190&&r-b>45&&g-b>35&&(Math.max(r,g,b)-Math.min(r,g,b))>55;
+        const span=Math.floor(c.height*0.87);
+        const score=new Uint32Array(c.width);
+        for(let y=Math.floor(c.height*.10);y<Math.floor(c.height*.97);y++){
+          let ii=y*c.width*4;
+          for(let x=0;x<c.width;x++,ii+=4)if(yellow(pixel[ii],pixel[ii+1],pixel[ii+2]))score[x]++;
+        }
+        const threshold=Math.max(8,Math.floor(span*.14));
+        const xs=[];for(let x=0;x<c.width;x++)if(score[x]>=threshold)xs.push(x);
+        const runs=[];if(xs.length){let a=xs[0],p=xs[0];for(let i=1;i<xs.length;i++){const x=xs[i];if(x-p>5){if(p-a>=5)runs.push([a,p]);a=x}p=x}if(p-a>=5)runs.push([a,p])}
+        const merged=[];for(const r of runs){if(merged.length&&r[0]-merged[merged.length-1][1]<=7)merged[merged.length-1][1]=r[1];else merged.push([...r])}
+        const ym=targetYM(),[yy,mm]=ym.split('-').map(Number),period=$('shiftPeriod')?.value||'second';
+        const last=new Date(yy,mm,0).getDate(),expected=period==='first'?Math.min(15,last):Math.max(0,last-15);
+        let selected=period==='first'?merged.slice(0,expected):merged.slice(Math.max(0,merged.length-expected));
+        if(selected.length===expected&&expected>0){
+          const firstY=selected[0][0];
+          const nameRight=Math.max(40,firstY-4);
+          const widths=selected.map(r=>r[1]-r[0]+1);
+          const yellowWidth=widths.slice().sort((a,b)=>a-b)[Math.floor(widths.length/2)]||26;
+          const centers=selected.map(r=>(r[0]+r[1])/2);
+          const gaps=centers.slice(1).map((v,i)=>v-centers[i]).filter(v=>v>10);
+          const gap=gaps.slice().sort((a,b)=>a-b)[Math.floor(gaps.length/2)]||60;
+          for(let di=0;di<selected.length;di++){
+            const r=selected[di];
+            const pairLeft=di===0?Math.max(nameRight+1,Math.round(r[0]-(gap-yellowWidth))):selected[di-1][1]+1;
+            const pairRight=r[1]+2;
+            const pairW=Math.max(20,pairRight-pairLeft+1);
+            const outW=nameRight+pairW+8;
+            const out=document.createElement('canvas');
+            const scale=Math.min(2.2,3000/Math.max(outW,c.height));
+            out.width=Math.max(1,Math.round(outW*scale));out.height=Math.max(1,Math.round(c.height*scale));
+            const octx=out.getContext('2d');octx.imageSmoothingEnabled=true;octx.imageSmoothingQuality='high';
+            octx.fillStyle='#fff';octx.fillRect(0,0,out.width,out.height);
+            octx.drawImage(c,0,0,nameRight,c.height,0,0,Math.round(nameRight*scale),out.height);
+            octx.drawImage(c,pairLeft,0,pairW,c.height,Math.round((nameRight+4)*scale),0,Math.round(pairW*scale),out.height);
+            dateBands.push({day:period==='first'?1+di:16+di,data:out.toDataURL('image/jpeg',0.92).split(',')[1]});
+          }
+        }
+      }catch(_){ /* 固定日付バンド生成に失敗しても従来の全体画像で継続 */ }
+      return {mime:'image/jpeg',data:dataUrl.split(',')[1],dataUrl,zoomData:bands[0],zoomBands:bands,dateBands};
     }catch(e){
       const dataUrl=await new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result);r.onerror=reject;r.readAsDataURL(file)});
       const m=String(dataUrl).match(/^data:([^;]+);base64,(.*)$/s);if(!m)throw new Error('画像データを読み取れませんでした。');
@@ -6110,9 +6155,16 @@ present=true のセルで黄色セル内に時間が1つでも実際に見える
       // 到達しやすく、今回のような quota exceeded を発生させていました。
       // 今回は最初から「最終確定モード」で1回だけGeminiへ送ります。
       const url=`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`;
-      const timeParts=[{text:'【画像1：シフト表全体】名前・日付・勤務記号の対応はこちらを基準にしてください。'},{inline_data:{mime_type:img.mime,data:img.data}}];
+      const timeParts=[{text:'【画像1：シフト表全体】スタッフ名・表全体の位置関係を確認する基準画像です。日付の確定には後続の「日付固定画像」を優先してください。'},{inline_data:{mime_type:img.mime,data:img.data}}];
+      const dateBands=Array.isArray(img.dateBands)&&img.dateBands.length?img.dateBands:[];
+      if(dateBands.length){
+        dateBands.forEach((b,i)=>{
+          timeParts.push({text:`【日付固定画像 ${i+1}/${dateBands.length}：${targetYM()}-${String(b.day).padStart(2,'0')} 専用】この画像には「名前列」と「${b.day}日の白＋黄色2列」だけを配置しています。この画像の勤務記号・時間は${b.day}日としてのみ判定してください。隣の日付のセルはこの画像には含まれていません。`});
+          timeParts.push({inline_data:{mime_type:img.mime,data:b.data}});
+        });
+      }
       const bands=Array.isArray(img.zoomBands)&&img.zoomBands.length?img.zoomBands:[img.zoomData||img.data];
-      bands.forEach((b,i)=>{timeParts.push({text:`【画像${i+2}：時間欄拡大 ${i+1}/${bands.length}】この横帯に写っているスタッフ行について、黄色セル内の開始・終了時間を必ず確認してください。前後の帯と重複している行も再確認してください。`});timeParts.push({inline_data:{mime_type:img.mime,data:b}})});
+      bands.forEach((b,i)=>{timeParts.push({text:`【時間欄拡大画像 ${i+1}/${bands.length}】この横帯は時間確認専用です。日付は上記の日付固定画像を優先し、黄色セル内の開始・終了時間だけを確認してください。`});timeParts.push({inline_data:{mime_type:img.mime,data:b}})});
 
       const finalPrompt=`${prompt}
 
@@ -6129,6 +6181,8 @@ present=true のセルで黄色セル内に時間が1つでも実際に見える
 ・9.5は09:30、9は09:00です。見えない時間を推測して補完してはいけません。
 ・最後に返却予定の各entryについて、【勤務セルの物理位置→黄色セル→真上の日付→スタッフ行】をもう一度内部確認し、1日でもズレているentryは修正してから返してください。
 ・迷う場合は推測せず、そのentryを返さないでください。
+・日付固定画像がある場合、dateとcolumnIndexはその画像のラベルに完全固定してください。別の日付固定画像の勤務セルを混ぜてはいけません。
+・日付固定画像の1枚に写る「名前列＋当日2列」だけを、その日の判定範囲としてください。
 ・JSON以外は返さないでください。`;
 
       const body={contents:[{role:'user',parts:[{text:finalPrompt},...timeParts]}],generationConfig:{temperature:0,responseMimeType:'application/json'}};
