@@ -6074,7 +6074,10 @@ ${allowedText}
 15. 同じ名前・同じ日付・同じmarkを重複させないでください。
 16. 画像全体を一度見ただけで終わらず、最後に【各スタッフ行→各日付セル】を上から下まで再確認し、present=trueなのに時間を空欄にしていないか、時間が実際に見えるセルを見落としていないか自己チェックしてください。
 17. 最後にもう一度、返却する各entryの日付が「そのentryの勤務記号・時間が書かれている黄色セルの真上の日付数字」と一致しているかを確認してください。黄色セルの位置が16日の真下ならdateは16、17日の真下なら17です。隣の列へ1日ずらしてはいけません。
-18. JSON以外の文章は返さないでください。
+18. 各entryについてrowIndexとcolumnIndexを必ず画像上の実位置から決定してください。日付文字列からrowIndex/columnIndexを作ってはいけません。
+19. 1回目の読み取りだけで確定せず、返却直前に「勤務セル→黄色セル→その真上の日付→スタッフ行」の順で全entryを再照合してください。
+20. 迷うセルは推測で埋めず返却しないでください。誤った日付・誤った隣接セルを返すより、未確定として省く方を優先してください。
+21. JSON以外の文章は返さないでください。
 
 【時間欄の重要ルール】
 ・L は「ラスト」を意味し、退勤・終了時刻として扱ってください。
@@ -6084,9 +6087,11 @@ ${allowedText}
 
 【返却形式】
 {"entries":[
- {"columnIndex":0,"date":"YYYY-MM-DD","name":"加藤","mark":"S","present":true,"position":"板場","startTime":"9.5","endTime":"17","time":"09:30〜17:00","confidence":"high","note":"勤務記号と黄色セルの時間を確認"}
+ {"rowIndex":0,"columnIndex":0,"date":"YYYY-MM-DD","name":"加藤","mark":"S","present":true,"position":"板場","startTime":"9.5","endTime":"17","time":"09:30〜17:00","confidence":"high","note":"勤務記号と黄色セルの時間を確認"}
 ]}
-columnIndexは対象期間の最初の日付を0とする画像上の列番号です。前半なら0=1日、1=2日…、後半なら0=16日、1=17日…。必ず表上部の日付数字とその真下の黄色セルを縦に対応させてください。
+rowIndexはスタッフ表の最初のスタッフ行を0として上から数えた行番号です。行番号を推測せず、名前欄と同じ横位置のスタッフ行を基準にしてください。
+columnIndexは対象期間の最初の日付を0とする画像上の「1日単位」の列番号です。前半なら0=1日、1=2日…、後半なら0=16日、1=17日…。必ず表上部の日付数字と、その真下の「白セル＋黄色セル」の中心を縦に対応させてください。
+【絶対禁止】columnIndexを日付の数字から逆算してはいけません。勤務セルの横位置を実際に確認して決めてください。columnIndexが確信できないentryは返さず、dateだけを根拠にして返してはいけません。
 
 【時間の必須ルール】
 present=true のセルで黄色セル内に時間が1つでも実際に見える場合、その見えている時間を必ず返してください。
@@ -6104,31 +6109,102 @@ present=true のセルで黄色セル内に時間が1つでも実際に見える
       const timeParts=[{text:'【画像1：シフト表全体】名前・日付・勤務記号の対応はこちらを基準にしてください。'},{inline_data:{mime_type:img.mime,data:img.data}}];
       const bands=Array.isArray(img.zoomBands)&&img.zoomBands.length?img.zoomBands:[img.zoomData||img.data];
       bands.forEach((b,i)=>{timeParts.push({text:`【画像${i+2}：時間欄拡大 ${i+1}/${bands.length}】この横帯に写っているスタッフ行について、黄色セル内の開始・終了時間を必ず確認してください。前後の帯と重複している行も再確認してください。`});timeParts.push({inline_data:{mime_type:img.mime,data:b}})});
-      const body={contents:[{role:'user',parts:[{text:prompt},...timeParts]}],generationConfig:{temperature:0,responseMimeType:'application/json'}};
-      const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':key},body:JSON.stringify(body)});
-      const raw=await res.text();let data;try{data=JSON.parse(raw)}catch(_){throw new Error('Geminiから正しい応答を受け取れませんでした。')}
-      if(!res.ok)throw new Error(data?.error?.message||`Gemini APIエラー（${res.status}）`);
-      const text=(data?.candidates||[]).flatMap(c=>c?.content?.parts||[]).map(p=>p?.text||'').join('').trim();
-      if(!text)throw new Error('AIの読み取り結果が空でした。写真全体が写っているか確認してください。');
-      const obj=JSON.parse(cleanJsonText(text));const entries=Array.isArray(obj.entries)?obj.entries:[];
+      // 1回目：全体から候補を抽出。
+      const callGemini=async(parts)=>{
+        const body={contents:[{role:'user',parts}],generationConfig:{temperature:0,responseMimeType:'application/json'}};
+        const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':key},body:JSON.stringify(body)});
+        const raw=await res.text();let data;try{data=JSON.parse(raw)}catch(_){throw new Error('Geminiから正しい応答を受け取れませんでした。')}
+        if(!res.ok)throw new Error(data?.error?.message||`Gemini APIエラー（${res.status}）`);
+        const responseText=(data?.candidates||[]).flatMap(c=>c?.content?.parts||[]).map(p=>p?.text||'').join('').trim();
+        if(!responseText)throw new Error('AIの読み取り結果が空でした。写真全体が写っているか確認してください。');
+        return JSON.parse(cleanJsonText(responseText));
+      };
+
+      const firstObj=await callGemini([{text:prompt},...timeParts]);
+      const firstEntries=Array.isArray(firstObj?.entries)?firstObj.entries:[];
+
+      // 2回目：同じクリックの中で自動監査。
+      // 1回目のdateは信用せず、画像上の「スタッフ行→日付列→黄色セル」を再確認して
+      // 隣の日付・隣セル・時間の取り違えを修正する。
+      let obj=firstObj;
+      try{
+        setAiStatus('AIが読み取り結果をもう一度セル単位で照合しています…','');
+        const auditPrompt=`あなたはシフト表の最終検査担当です。
+以下の「1回目の読み取り結果」は下書きであり、絶対にそのまま信用してはいけません。
+元画像と時間欄拡大画像を実際に見て、各entryをセル単位で再確認し、誤りを修正してください。
+
+【最重要：日付】
+・日付文字列を根拠にせず、画像上の勤務記号・時間が入っている黄色セルの横位置を確認する。
+・その黄色セルと同じ日付の白＋黄色2列を上へたどり、日付数字の真下にある列だけを採用する。
+・隣の日付の黄色セルを絶対に採用しない。
+・後半ならcolumnIndex=0は16日、1は17日…ですが、数字から逆算せず、画像上の位置を先に確定する。
+・前半/後半の対象外セルは返さない。
+・columnIndexが画像上で確定できないentryは削除する。
+・rowIndexも画像上のスタッフ行から再確認する。
+
+【勤務記号】
+${allowedText} の完全一致だけを出勤とする。△、▲、×、ラ、L、イベ、空欄、罫線などは除外。
+markは画像に見える1文字を返す。
+
+【時間】
+黄色セル内に実際に見える開始・終了だけを返す。隣のセル、別スタッフ、日付、番号などの数字を時間に使わない。
+9.5=09:30、9=09:00。推測は禁止。
+
+【名前】
+名前欄を画像で確認し、隣のスタッフ行の名前を混ぜない。
+
+【全件監査】
+下書きにない出勤セルも見落とさないよう、対象期間の全スタッフ行×全日付セルを再確認する。
+最終結果は「画像上で確認できたものだけ」の完全な確定リストにする。
+迷うものは推測せず省く。
+
+【1回目の下書き】
+${JSON.stringify(firstEntries)}
+
+【返却形式】
+{"entries":[
+ {"rowIndex":0,"columnIndex":0,"date":"YYYY-MM-DD","name":"加藤","mark":"S","present":true,"position":"板場","startTime":"9.5","endTime":"17","time":"09:30〜17:00","confidence":"high","note":"最終照合済み"}
+]}
+JSON以外は返さないでください。`;
+
+        const auditParts=[
+          {text:auditPrompt},
+          {text:'【監査用画像1：シフト表全体】この画像を基準に、各セルの物理的位置を確認してください。'},
+          {inline_data:{mime_type:img.mime,data:img.data}}
+        ];
+        bands.forEach((b,i)=>{
+          auditParts.push({text:`【監査用画像${i+2}：時間欄拡大 ${i+1}/${bands.length}】元画像と照合し、時間とセル位置を再確認してください。`});
+          auditParts.push({inline_data:{mime_type:img.mime,data:b}});
+        });
+        const audited=await callGemini(auditParts);
+        if(Array.isArray(audited?.entries)) obj=audited;
+      }catch(auditErr){
+        console.warn('AI最終監査を使用できなかったため1回目の結果を使用します。',auditErr);
+      }
+
+      const entries=Array.isArray(obj?.entries)?obj.entries:[];
+
       const safeEntries=[];
       for(const x of entries){
         const mark=String(x?.mark??x?.symbol??'').trim().toUpperCase();
         const name=String(x?.name??'').trim();
-        let date=normalizeDate(x?.date);
-        // AIの自由記述dateより、表の列位置(columnIndex)を優先して日付を確定。
-        // これにより隣の日付を1日ずらして返す誤認を抑止する。
+        // 最終結果ではAIのdate文字列を一切信用しない。
+        // 必ず画像上のcolumnIndexから対象日を確定する。
+        let date='';
         const ci=Number(x?.columnIndex);
-        if(Number.isInteger(ci) && ci>=0){
-          const ym=targetYM();
-          const [yy,mm]=ym.split('-').map(Number);
-          const lastDay=new Date(Number(yy),Number(mm),0).getDate();
-          const period=$('shiftPeriod')?.value||'second';
-          const day=period==='first'?(1+ci):(16+ci);
-          if(day>=1 && day<=lastDay){
-            date=`${yy}-${String(mm).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
-          }
-        }
+        if(!Number.isInteger(ci)||ci<0)continue;
+        const ym=targetYM();
+        const [yy,mm]=ym.split('-').map(Number);
+        const lastDay=new Date(Number(yy),Number(mm),0).getDate();
+        const period=$('shiftPeriod')?.value||'second';
+        const expectedCols=period==='first'?Math.min(15,lastDay):Math.max(0,lastDay-15);
+        if(ci>=expectedCols)continue;
+        const day=period==='first'?(1+ci):(16+ci);
+        if(day>=1 && day<=lastDay){
+          date=`${yy}-${String(mm).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+        }else continue;
+        const ri=Number(x?.rowIndex);
+        if(!Number.isInteger(ri)||ri<0||ri>25)continue;
         if(!isAllowedShiftMark(mark))continue;
         if(!name || /^(△|▲|▽|▼|×|✕|✖|✗|休|ラ|公休|イベント|イベ)$/.test(name))continue;
         if(x?.present!==true)continue;
