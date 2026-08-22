@@ -6012,128 +6012,232 @@ function renderDay(){
     }
     return out;
   }
+
+  async function prepareShiftAiImage(file){
+    const bmp=await createImageBitmap(file);
+    const max=3000, scale=Math.min(1,max/Math.max(bmp.width,bmp.height));
+    const c=document.createElement('canvas');
+    c.width=Math.max(1,Math.round(bmp.width*scale));
+    c.height=Math.max(1,Math.round(bmp.height*scale));
+    const ctx=c.getContext('2d',{willReadFrequently:true});
+    ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
+    ctx.drawImage(bmp,0,0,c.width,c.height);
+    if(bmp.close)bmp.close();
+
+    const W=c.width,H=c.height, data=ctx.getImageData(0,0,W,H).data;
+    const yellow=(r,g,b)=>r>155&&g>145&&b<190&&r-b>45&&g-b>35&&(Math.max(r,g,b)-Math.min(r,g,b))>55;
+    const y0=Math.floor(H*0.10),y1=Math.floor(H*0.97),span=y1-y0;
+    const score=new Uint32Array(W);
+    for(let y=y0;y<y1;y++){
+      let p=(y*W)*4;
+      for(let x=0;x<W;x++,p+=4) if(yellow(data[p],data[p+1],data[p+2])) score[x]++;
+    }
+    let threshold=Math.max(12,Math.floor(span*0.22)), xs=[];
+    for(let x=0;x<W;x++) if(score[x]>=threshold) xs.push(x);
+    const makeRuns=(vals,gap=4)=>{
+      const out=[];if(!vals.length)return out;
+      let a=vals[0],p=a;
+      for(let i=1;i<vals.length;i++){const x=vals[i];if(x-p>gap){out.push([a,p]);a=x;}p=x}
+      out.push([a,p]);return out;
+    };
+    let runs=makeRuns(xs,4).filter(([a,b])=>b-a>=5);
+    const merged=[];
+    for(const r of runs){
+      if(merged.length&&r[0]-merged[merged.length-1][1]<=6)merged[merged.length-1][1]=r[1];
+      else merged.push([...r]);
+    }
+    runs=merged;
+    const ym=targetYM(), p=$('shiftPeriod')?.value||'second';
+    const [yy,mm]=ym.split('-').map(Number);
+    const last=new Date(yy,mm,0).getDate();
+    const expected=p==='first'?Math.min(15,last):Math.max(0,last-15);
+    if(runs.length<expected) throw new Error(`日付列を確定できませんでした（必要${expected}列／検出${runs.length}列）。`);
+    const selected=p==='first'?runs.slice(0,expected):runs.slice(runs.length-expected);
+    if(selected.length!==expected) throw new Error('対象期間の日付列を確定できませんでした。');
+    const centers=selected.map(r=>(r[0]+r[1])/2);
+    const gaps=centers.slice(1).map((v,i)=>v-centers[i]);
+    if(gaps.length){
+      const sorted=[...gaps].sort((a,b)=>a-b),med=sorted[Math.floor(sorted.length/2)]||1;
+      if(gaps.some(g=>g<med*.55||g>med*1.45)) throw new Error('日付列の間隔を確定できませんでした。写真を正面から撮ってください。');
+    }
+
+    // AIには「日付番号」そのものを読ませず、アプリが確定した列番号を画像上に表示する。
+    const annotated=document.createElement('canvas');
+    annotated.width=c.width; annotated.height=c.height;
+    const actx=annotated.getContext('2d');
+    actx.drawImage(c,0,0);
+    const dayStart=p==='first'?1:16;
+    actx.save();
+    actx.font=`800 ${Math.max(18,Math.round(W/70))}px -apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif`;
+    actx.textAlign='center'; actx.textBaseline='top';
+    for(let i=0;i<selected.length;i++){
+      const [x0,x1]=selected[i], cx=(x0+x1)/2, day=dayStart+i;
+      actx.fillStyle='rgba(255,0,0,.88)';
+      actx.fillRect(Math.max(0,x0-2),0,4,H);
+      actx.fillStyle='rgba(255,255,0,.95)';
+      actx.fillRect(Math.max(0,cx-32),2,64,34);
+      actx.fillStyle='#b00000';
+      actx.fillText(`列${i+1} = ${day}日`,cx,8);
+    }
+    actx.restore();
+
+    // 時間確認用の拡大帯も従来どおり生成。ただしAPIは1回だけ。
+    const bands=[];
+    const bandTop=Math.floor(c.height*0.18),bandBottom=Math.floor(c.height*0.97),bandCount=5;
+    const bandSpan=(bandBottom-bandTop)/bandCount,overlap=.12;
+    for(let bi=0;bi<bandCount;bi++){
+      const y0b=Math.max(0,Math.floor(bandTop+bi*bandSpan-bandSpan*overlap));
+      const y1b=Math.min(c.height,Math.floor(bandTop+(bi+1)*bandSpan+bandSpan*overlap));
+      const cropH=Math.max(1,y1b-y0b), zScale=Math.min(2.5,3000/Math.max(c.width,cropH));
+      const z=document.createElement('canvas');z.width=Math.max(1,Math.round(c.width*zScale));z.height=Math.max(1,Math.round(cropH*zScale));
+      const zctx=z.getContext('2d');zctx.imageSmoothingEnabled=true;zctx.imageSmoothingQuality='high';
+      zctx.drawImage(annotated,0,y0b,c.width,cropH,0,0,z.width,z.height);
+      bands.push(z.toDataURL('image/jpeg',.94).split(',')[1]);
+    }
+    return {mime:'image/jpeg',data:annotated.toDataURL('image/jpeg',.92).split(',')[1],dataUrl:c.toDataURL('image/jpeg',.90),zoomBands:bands,days:expected,dayStart};
+  }
+
   async function runGeminiRead(){
     const key=getKey();if(!key){alert('先にGemini APIキーを保存してください。');return}
     if(!aiFile){alert('先に「AI読み取り用の写真を選ぶ」で写真を選んでください。');return}
+    // 連打・短時間の再送を防止。1回の読み取りにつきAPIは必ず1リクエスト。
+    const LOCK_KEY='karuya_shift_gemini_last_request_v1';
+    const now=Date.now(),last=Number(localStorage.getItem(LOCK_KEY)||0);
+    if(last && now-last<60000){
+      const sec=Math.ceil((60000-(now-last))/1000);
+      setAiStatus(`前回のAI読み取りから60秒未満です。\nあと約${sec}秒待ってから実行してください。`,'warn');
+      return;
+    }
     const b=$('shiftGeminiRead');if(b){b.disabled=true;b.textContent='🤖 AIが読み取り中…'}
-    setAiStatus('写真をAIに送信し、表の行・日付・勤務記号を順番に確認しています…','');
+    setAiStatus('表の列位置を先に固定し、日付をAIに推測させず読み取っています…','');
     try{
-      const img=await fileToBase64Image(aiFile);aiPhotoData=img.dataUrl;
+      localStorage.setItem(LOCK_KEY,String(Date.now()));
+      const img=await prepareShiftAiImage(aiFile);aiPhotoData=img.dataUrl;
       const allowed=getAllowedShiftMarks();
       const allowedText=allowed.join('、');
       const positionRules=allowed.map(k=>`${k}=${shiftPositionForMark(k)}`).join('、');
-      // 既に登録されている名前を「候補」として渡す。番号は一切渡さない。
       let knownNames=[];
       try{
         if(fb()){
           const snap=await fb().get(ref('shift/schedules'));const v=snap.val()||{};
           knownNames=[...new Set(Object.values(v).map(x=>String(x?.name||'').trim()).filter(x=>x&&x.length>=2))].slice(0,80);
         }
-      }catch(_){ }
+      }catch(_){}
       const knownText=knownNames.length?`\n既存登録名（表記確認の補助。画像にない名前を勝手に追加しない）：${knownNames.join('、')}\n`:'';
-      const prompt=`あなたは飲食店のシフト表を読む専門の画像認識AIです。推測ではなく、画像上の表を上から下・左から右へ一つずつ確認してください。
+      const target=targetInfo();
+      const prompt=`あなたは飲食店のシフト表を読む専門の画像認識AIです。今回の最重要目的は「隣の日付を混ぜないこと」です。
 
-対象期間：${targetInfo()}
+対象期間：${target}
+この画像にはアプリ側で確定した日付列が赤線と黄色ラベルで表示されています。
+「列1=対象期間の最初の日」「列2=その翌日」…という対応はアプリ側が確定済みです。
+画像上の元の日付数字は読まないでください。日付を推測・再計算・補正してはいけません。
+必ず赤線で囲まれた「列N」の列だけを見て、columnIndex=Nとして返してください。
 ${knownText}
-【最重要：スタッフ番号は禁止】
-スタッフ番号・行番号・社員番号は絶対に読み取らず、JSONにも入れないでください。名前欄に実際に印刷されている「名前」だけを読み取ります。
+
+【最重要】
+- JSONのdateは作らないでください。date項目は禁止です。
+- 必ず columnIndex を1〜${img.days}の整数で返してください。
+- columnIndex は「赤線で区切られた列」の番号です。
+- 隣の列にある勤務記号を現在の列のものとして扱ってはいけません。
+- 勤務記号が列境界をまたいで見える場合は、その文字の中心が入っている列だけを採用してください。
+- 列が不明確な場合はpresent=falseにしてください。
+- 列番号は画像の赤い「列N」ラベルだけを基準にしてください。
 
 【出勤として認める勤務記号】
 ${allowedText}
-これ以外の文字・記号は絶対に出勤にしません。
+これ以外は絶対に出勤にしません。
 現在のポジション対応：${positionRules}
-ポジション名を画像から推測してはいけません。必ず勤務記号から決めます。
 
 【読み取り手順】
-1. まず表の「名前列」と「日付列」を特定してください。
-2. 対象期間の各スタッフ行について、各日付のセルを実際に確認してください。
-3. 各セルに書かれている勤務記号を1文字だけ認識してください。
-4. ${allowedText} のいずれかと完全一致した勤務記号セルだけ present=true とします。
-5. △、▲、▼、×、ラ、L、イベ、イベント、休、空欄、丸印、線、汚れ、罫線などは勤務記号ではありません。
-6. Sを見たらmark="S"、Yなら"Y"、Oなら"O"、Kなら"K"、Fなら"F"のように、大文字1文字へ正規化してください。
-7. 勤務時間は勤務記号とは別に、対象期間の【すべてのpresent=trueのセル】について読み取ってください。各スタッフ行を上から下まで漏れなく確認し、各日付の黄色セル内にある開始・終了時刻を対応づけてください。画像2以降の「時間欄拡大」画像はスタッフ行を分割して拡大したものなので、各帯を必ず確認してください。例えば上段9・下段14は9:00〜14:00、上段9.5・下段17は9:30〜17:00、10・14は10:00〜14:00です。名前欄の番号、日付、人数、売上など他の場所の数字は勤務時間として使わないでください。
-8. 時刻の小数は「.5=30分」として扱います。9.5は09:30、9は09:00、17は17:00です。画像に時間がない場合はstartTime/endTimeを空文字にしてください。開始だけ、終了だけでも、見えている方は必ず返してください。時間を推測して補完してはいけません。
-9. present=true のときだけ、そのmarkに対応するpositionを付けてください。${positionRules}
-10. 名前は画像の名前欄から正確に読み取ってください。似た漢字を勝手に直さず、画像に見える文字を優先してください。
-11. 読みにくい名前は無理に推測せず confidence="low" にしてください。ただし勤務記号が明確なら出勤として返して構いません。
-12. 判定に迷う勤務記号はpresent=falseにしてください。
-13. 時間の数字が読めない場合は、その時間だけ空欄にし、他の項目を推測しないでください。
-14. 対象期間外の日付は返さないでください。
-15. 同じ名前・同じ日付・同じmarkを重複させないでください。
-16. 画像全体を一度見ただけで終わらず、最後に【各スタッフ行→各日付セル】を上から下まで再確認し、present=trueなのに時間を空欄にしていないか、時間が実際に見えるセルを見落としていないか自己チェックしてください。
-17. JSON以外の文章は返さないでください。
+1. スタッフの名前行を上から下へ確認。
+2. 各スタッフについて、列1から列${img.days}まで1列ずつ確認。
+3. その列の勤務セルに ${allowedText} の1文字が明確にある場合だけpresent=true。
+4. 勤務記号がない、△、▲、▼、×、ラ、L、イベ、イベント、休、空欄、丸印、線、汚れ、罫線は出勤にしない。
+5. 勤務記号が見えたら、その中心位置が入っている赤線内の列番号をcolumnIndexにする。
+6. 名前は画像の名前欄から読み取る。読みにくい名前は無理に推測せずconfidence="low"。
+7. ポジションは勤務記号から決める。画像からポジション名を推測しない。
+8. 各present=trueについて、その同じ列の黄色セル内に実際に見える時間だけを読み取る。
+9. 時間は9.5→09:30、9→09:00、17→17:00。Lは終了時刻L。
+10. 時間が見えなければ空欄。推測禁止。
+11. 最後に全スタッフ×全列をもう一度確認し、隣列へのずれと見落としを確認する。
+12. JSON以外は返さない。
 
-【時間欄の重要ルール】
-・L は「ラスト」を意味し、退勤・終了時刻として扱ってください。
-・L は出勤記号ではありません。
-・開始時刻が数字で、終了時刻が L の場合は、終了時刻は「L」として保持してください。
-・▲や×など休み記号がある場合は、時間やLが書いてあっても休みを優先します。
+【時間】
+開始9と終了L → startTime="9", endTime="L", time="09:00〜L"
+開始9だけ → startTime="9", endTime="", time="09:00"
+Lだけ → startTime="", endTime="L", time="L"
+両方ある → time="HH:MM〜HH:MM"
+見えない場合 → 空文字
 
 【返却形式】
 {"entries":[
- {"date":"YYYY-MM-DD","name":"加藤","mark":"S","present":true,"position":"板場","startTime":"9.5","endTime":"17","time":"09:30〜17:00","confidence":"high","note":"勤務記号と黄色セルの時間を確認"}
+ {"columnIndex":1,"name":"加藤","mark":"S","present":true,"position":"板場","startTime":"9.5","endTime":"17","time":"09:30〜17:00","confidence":"high","note":"列1の勤務セルを確認"}
 ]}
+present=falseは返さなくて構いません。
+numberとdateは絶対に作らないでください。`;
 
-【時間の必須ルール】
-present=true のセルで黄色セル内に時間が1つでも実際に見える場合、その見えている時間を必ず返してください。
-・開始だけなら startTime に入れ、endTime は空文字。
-・終了だけなら endTime に入れ、startTime は空文字。
-・終了がLなら endTime="L"。
-・開始9と終了Lなら startTime="9", endTime="L", time="09:00〜L"。
-・開始9だけなら startTime="9", endTime="", time="09:00"。
-・Lだけなら startTime="", endTime="L", time="L"。
-・両方ある場合だけ time="HH:MM〜HH:MM"。
-・時間が実際に見えない場合だけ空文字にしてください。推測で時間を作らないでください。
-
-重要：present=falseのセルは返さなくて構いません。present=trueだけ返してください。numberという項目は絶対に作らないでください。`;
       const url=`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`;
-      const timeParts=[{text:'【画像1：シフト表全体】名前・日付・勤務記号の対応はこちらを基準にしてください。'},{inline_data:{mime_type:img.mime,data:img.data}}];
-      const bands=Array.isArray(img.zoomBands)&&img.zoomBands.length?img.zoomBands:[img.zoomData||img.data];
-      bands.forEach((b,i)=>{timeParts.push({text:`【画像${i+2}：時間欄拡大 ${i+1}/${bands.length}】この横帯に写っているスタッフ行について、黄色セル内の開始・終了時間を必ず確認してください。前後の帯と重複している行も再確認してください。`});timeParts.push({inline_data:{mime_type:img.mime,data:b}})});
-      const body={contents:[{role:'user',parts:[{text:prompt},...timeParts]}],generationConfig:{temperature:0,responseMimeType:'application/json'}};
+      const parts=[
+        {text:'【画像1：列番号を固定したシフト表】赤線と黄色ラベルの列番号がアプリ側で確定済みです。元の日付数字ではなく列番号だけを使ってください。'},
+        {inline_data:{mime_type:img.mime,data:img.data}}
+      ];
+      const bands=Array.isArray(img.zoomBands)?img.zoomBands:[];
+      bands.forEach((b,i)=>{
+        parts.push({text:`【画像${i+2}：列番号付き時間欄拡大 ${i+1}/${bands.length}】同じ赤線・列番号を基準に、黄色セルの時間だけ確認してください。`});
+        parts.push({inline_data:{mime_type:img.mime,data:b}});
+      });
+      const body={contents:[{role:'user',parts:[{text:prompt},...parts]}],generationConfig:{temperature:0,responseMimeType:'application/json'}};
       const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':key},body:JSON.stringify(body)});
       const raw=await res.text();let data;try{data=JSON.parse(raw)}catch(_){throw new Error('Geminiから正しい応答を受け取れませんでした。')}
       if(!res.ok)throw new Error(data?.error?.message||`Gemini APIエラー（${res.status}）`);
       const text=(data?.candidates||[]).flatMap(c=>c?.content?.parts||[]).map(p=>p?.text||'').join('').trim();
       if(!text)throw new Error('AIの読み取り結果が空でした。写真全体が写っているか確認してください。');
       const obj=JSON.parse(cleanJsonText(text));const entries=Array.isArray(obj.entries)?obj.entries:[];
+      const [yy,mm]=targetYM().split('-').map(Number);
+      const p=$('shiftPeriod')?.value||'second';
+      const dayStart=p==='first'?1:16;
       const safeEntries=[];
       for(const x of entries){
         const mark=String(x?.mark??x?.symbol??'').trim().toUpperCase();
         const name=String(x?.name??'').trim();
-        const date=normalizeDate(x?.date);
+        const ci=Number(x?.columnIndex);
         if(!isAllowedShiftMark(mark))continue;
         if(!name || /^(△|▲|▽|▼|×|✕|✖|✗|休|ラ|公休|イベント|イベ)$/.test(name))continue;
         if(x?.present!==true)continue;
-        if(!date)continue;
+        if(!Number.isInteger(ci)||ci<1||ci>img.days)continue;
+        const day=dayStart+ci-1;
+        const lastDay=new Date(yy,mm,0).getDate();
+        if(day<1||day>lastDay)continue;
+        const date=`${yy}-${String(mm).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
         const pos=shiftPositionForMark(mark);
         const time=normalizeShiftTimeRange('', '', x?.time||normalizeShiftTimeRange(x?.startTime,x?.endTime,''));
-        // AIがpositionを間違えて返しても、アプリ側でmarkから強制確定。
-        safeEntries.push({...x,date,name,mark,number:'',position:pos,time,present:true});
+        safeEntries.push({...x,date,name,mark,number:'',position:pos,time,present:true,columnIndex:ci});
       }
-      // 同一人物・同一日・同一記号を重複排除
       const uniq=[];const seen=new Set();
-      for(const x of safeEntries){const k=`${x.date}|${aiNameNorm(x.name)}|${x.mark}`;if(seen.has(k))continue;seen.add(k);uniq.push(x)}
+      for(const x of safeEntries){
+        const k=`${x.date}|${aiNameNorm(x.name)}|${x.mark}`;
+        if(seen.has(k))continue;seen.add(k);uniq.push(x);
+      }
       const next=buildPending(uniq);
-      if(!next.length)throw new Error('対象期間の出勤者を読み取れませんでした。写真全体が写っているか、対象月・前半/後半が合っているか確認してください。');
-      // 位置から決めたポジションを最終強制適用。時間も正規化して保存する。
+      if(!next.length)throw new Error('対象期間の出勤者を読み取れませんでした。列番号付き画像を確認してください。');
       next.forEach(x=>{x.number='';x.position=shiftPositionForMark(x.mark);x.time=normalizeShiftTimeRange(x.startTime,x.endTime,x.time)});
       const pendingDetail={items:next,photoData:aiPhotoData,photoName:aiFile.name};
-      if(typeof window.__showShiftAiReview==='function'){
-        window.__showShiftAiReview({detail:pendingDetail});
-      }else{
-        window.dispatchEvent(new CustomEvent('shift-ai-pending',{detail:pendingDetail}));
-      }
+      if(typeof window.__showShiftAiReview==='function')window.__showShiftAiReview({detail:pendingDetail});
+      else window.dispatchEvent(new CustomEvent('shift-ai-pending',{detail:pendingDetail}));
       const uniqueDates=[...new Set(next.map(x=>x.date))].length;
       const low=next.filter(x=>x.confidence==='low').length;
       const posSummary=[...new Set(next.map(x=>`${x.mark}→${x.position}`))].join('、');
       if($('shiftGeminiAiResult')){
         $('shiftGeminiAiResult').hidden=false;
-        $('shiftGeminiAiResult').textContent=`AI読み取り完了：${uniqueDates}日・${next.length}件\nポジション：${posSummary}${low?`\n⚠️ 名前の確信度が低い項目：${low}件`:''}\n※登録前の確認画面で名前・勤務記号・時間・ポジションを確認してください。`;
+        $('shiftGeminiAiResult').textContent=`AI読み取り完了：${uniqueDates}日・${next.length}件\n日付はアプリ側で列番号から確定：${dayStart}〜${dayStart+img.days-1}日\nポジション：${posSummary}${low?`\n⚠️ 名前の確信度が低い項目：${low}件`:''}\n※登録前の確認画面で名前・勤務記号・時間・ポジションを確認してください。`;
       }
-      setAiStatus('AI読み取り完了。名前・勤務記号・時間・ポジションを確認してから登録してください。','ok');
-    }catch(e){console.error(e);setAiStatus('AI読み取りに失敗しました。\n'+(e?.message||String(e)),'err')}
-    finally{if(b){b.disabled=false;b.textContent='🤖 AIで出勤者を読み取る'}}
+      setAiStatus('AI読み取り完了。日付はAIの推測ではなく、固定した列番号から確定しています。','ok');
+    }catch(e){
+      console.error(e);
+      setAiStatus('AI読み取りに失敗しました。\n'+(e?.message||String(e)),'err');
+    }finally{
+      if(b){b.disabled=false;b.textContent='🤖 AIで出勤者を読み取る'}
+    }
   }
 
   function hookPending(){
