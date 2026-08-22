@@ -1385,50 +1385,6 @@ body{
   <button type="button" class="gray" id="shiftOcrStart" style="margin-top:10px">🔎 出勤者を読み取る</button>
   <div id="shiftOcrStatus" class="shiftStatus" style="margin-top:10px">写真を選択してください。</div>
   <div id="shiftPhotoPreview" class="shiftPreview" hidden style="margin-top:10px"></div>
-  <div id="shiftGeminiAiBox" style="margin-top:12px;padding:14px;border:1px solid #d8e2f5;border-radius:16px;background:#f7faff">
-    <div class="aiTitle">🤖 AIでシフト表を読み取る</div>
-    <div class="aiHint">シフト表の写真をGemini AIに読み込ませ、表の行・日付・名前・勤務記号を確認します。S/Y/O/K/Fなど登録した文字だけを出勤とし、ポジションは勤務記号から自動確定します。スタッフ番号は使用しません。写真はAI読み取り後に自動保存せず、確認して登録した時だけシフトを保存します。</div>
-    <div id="shiftGeminiKeyRow" style="display:grid;grid-template-columns:1fr auto;gap:8px;align-items:end;margin-top:10px">
-      <div><label style="margin-top:8px">Gemini APIキー</label><input id="shiftGeminiApiKey" type="password" autocomplete="off" placeholder="AIza..."></div>
-      <button type="button" class="gray" id="shiftGeminiKeySave">キーを保存</button>
-    </div>
-    <div id="shiftGeminiKeyStatus" style="font-size:13px;margin-top:6px;color:#176b32"></div>
-    <div id="shiftAiPhotoBox" style="margin-top:12px">
-      <div class="aiPhotoActions" style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-        <button type="button" class="gray" id="shiftAiPhotoChoose">📷 AI読み取り用の写真を選ぶ</button>
-        <button type="button" class="danger" id="shiftAiPhotoDelete">❌ 写真を削除</button>
-      </div>
-      <input id="shiftAiPhotoInput" type="file" accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp,.heic,.heif" style="display:none">
-      <div id="shiftAiPhotoName" class="aiHint" style="margin-top:7px">AI読み取り用の写真はまだありません。</div>
-      <div id="shiftAiPhotoPreview" hidden style="margin-top:10px;max-height:300px;overflow:auto;border:1px solid #ddd;border-radius:14px;background:#fff;padding:7px"></div>
-    </div>
-    <button type="button" id="shiftGeminiRead" style="margin-top:10px">🤖 AIで出勤者を読み取る</button>
-    <div id="shiftGeminiAiStatus" class="shiftStatus" style="margin-top:10px">Gemini APIキーと写真を用意してください。</div>
-  <div id="shiftAiSettingsVisible" class="card" style="margin-top:14px;padding:14px;border:1px solid #d8e2f5;border-radius:16px;background:#fff">
-    <div style="font-size:20px;font-weight:800;margin-bottom:8px">⚙️ AI読み取り設定</div>
-    <div class="aiHint" style="margin-bottom:10px">
-      初期設定：S＝板場、Y＝焼場、O＝ホール、K＝コンロ、F＝揚場。<br>
-      ここで登録したアルファベットだけを出勤として読み取ります。△・ラ・数字・×などは出勤にしません。番号はAI読み取りに使用しません。
-    </div>
-
-    <label style="margin-top:8px;font-weight:700;display:block">出勤として読み込むアルファベット</label>
-    <input id="shiftAllowedMarksInput" type="text" value="S、Y、O、K、F"
-      placeholder="例：S、Y、O、K、F" autocomplete="off"
-      style="width:100%;box-sizing:border-box;margin-top:6px">
-    <button type="button" class="gray" id="shiftAllowedMarksSave" style="margin-top:8px">💾 出勤判定文字を保存</button>
-    <div id="shiftAllowedMarksStatus" class="shiftStatus" style="margin-top:8px"></div>
-
-    <div style="font-size:18px;font-weight:800;margin-top:18px">📍 ポジション設定</div>
-    <div class="aiHint" style="margin-top:5px">
-      AIが読み取った記号から自動でポジションを決めます。下の名前を変更して保存できます。
-    </div>
-    <div id="shiftPositionMapEditor" style="margin-top:10px"></div>
-    <button type="button" class="gray" id="shiftPositionMapSave" style="margin-top:8px">💾 ポジション設定を保存</button>
-    <div id="shiftPositionMapStatus" class="shiftStatus" style="margin-top:8px"></div>
-  </div>
-
-    <div id="shiftGeminiAiResult" class="shiftAiResult" hidden></div>
-  </div>
   <button type="button" class="danger" id="shiftDeletePeriod" style="margin-top:10px">🗑️ この期間の登録シフトを削除</button>
   <div class="shiftHint" style="margin-top:6px">※古い登録結果を消してから再読み取りしたい時に使います。対象期間だけを削除します。</div>
 </details>
@@ -6366,10 +6322,10 @@ numberとdateは絶対に作らないでください。`;
       const obj=JSON.parse(cleanJsonText(text));
       const entries=Array.isArray(obj.entries)?obj.entries:[];
       const staffRows=Array.isArray(obj.staffRows)?obj.staffRows:[];
-      const candidateCards=Array.isArray(img.candidateCards)?img.candidateCards:[];
+      const detectedCandidateCards=Array.isArray(img.candidateCards)?img.candidateCards:[];
       // 候補セルのうち、AIが有効な勤務記号を返したものを必ず保持する。
       // 候補を全く返していない場合は成功扱いにしない。
-      if(candidateCards.length && entries.length===0) throw new Error('画像処理で候補セルを検出しましたが、AIが候補を1件も判定できませんでした。結果を確定せず停止しました。');
+      if(detectedCandidateCards.length && entries.length===0) throw new Error('画像処理で候補セルを検出しましたが、AIが候補を1件も判定できませんでした。結果を確定せず停止しました。');
       // AIが行ごとの全件確認を返しているか確認。少なすぎる場合は「成功」と扱わない。
       const checkedRows=staffRows.filter(r=>String(r?.name||'').trim() && Number.isFinite(Number(r?.rowIndex)));
       if(rowSheets.length && checkedRows.length<3){
