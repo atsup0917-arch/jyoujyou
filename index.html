@@ -1382,16 +1382,14 @@ body{
   <div style="margin-top:12px"><button type="button" id="shiftPhotoChoose">📷 この期間の写真を選ぶ</button></div>
   <input id="shiftPhotoInput" type="file" accept="image/*,.heic,.heif,.jpg,.jpeg,.png,.webp" style="display:none">
   <div id="shiftPhotoFileName" class="shiftHint" style="margin-top:8px">写真はまだ選択されていません。</div>
-  <button type="button" class="gray" id="shiftOcrStart" style="margin-top:10px">🔎 出勤者を読み取る</button>
-  <div id="shiftOcrStatus" class="shiftStatus" style="margin-top:10px">写真を選択してください。</div>
   <div id="shiftPhotoPreview" class="shiftPreview" hidden style="margin-top:10px"></div>
   <button type="button" class="danger" id="shiftDeletePeriod" style="margin-top:10px">🗑️ この期間の登録シフトを削除</button>
   <div class="shiftHint" style="margin-top:6px">※古い登録結果を消してから再読み取りしたい時に使います。対象期間だけを削除します。</div>
 </details>
 
 <div class="card" id="shiftReviewCard" hidden>
-  <div class="shiftSectionTitle">✅ 登録前の確認</div>
-  <div class="shiftHint">日付を選ぶと、その日の出勤者だけを確認できます。AIが写真から名前と勤務記号を読み取ります。登録前に名前・勤務記号・ポジションを確認して修正できます。</div>
+  <div class="shiftSectionTitle">🤖 AI読み取り結果の確認</div>
+  <div class="shiftHint">AIが写真から読み取った出勤者だけを確認します。名前・開始時間・終了時間・勤務記号・ポジションを登録前に確認できます。</div>
   <div class="shiftReviewDateBar" style="margin-top:10px">
     <div><label>確認する日</label><input id="shiftReviewDate" type="date"></div>
     <div class="shiftStatus" id="shiftReviewCount">0人</div>
@@ -5643,8 +5641,7 @@ function renderDay(){
     $('shiftPeriod')?.addEventListener('change',updateShiftUploadTargetLabel);
     $('shiftTargetMonth')?.addEventListener('change',updateShiftUploadTargetLabel);
     $('shiftPhotoChoose')?.addEventListener('click',()=>{$('shiftPhotoInput')?.click()});
-    $('shiftPhotoInput')?.addEventListener('change',e=>{selectedFile=e.target.files?.[0]||null;if(selectedFile){showPreview(selectedFile);if($('shiftPhotoFileName'))$('shiftPhotoFileName').textContent=`選択中：${selectedFile.name}`;setStatus('写真を選択しました。「🔎 読み取る」を押してください。','ok')}});
-    $('shiftOcrStart')?.addEventListener('click',runOCR);
+    $('shiftPhotoInput')?.addEventListener('change',e=>{selectedFile=e.target.files?.[0]||null;if(selectedFile){showPreview(selectedFile);if($('shiftPhotoFileName'))$('shiftPhotoFileName').textContent=`選択中：${selectedFile.name}`;setStatus('写真を選択しました。下の「🤖 AIで出勤者を読み取る」を押してください。','ok')}});
     $('shiftDeletePeriod')?.addEventListener('click',deleteShiftPeriod);
     $('shiftReviewDate')?.addEventListener('change',renderReview);
     $('shiftSave')?.addEventListener('click',saveShift);
