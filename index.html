@@ -5310,7 +5310,7 @@ button, label {
       const liveSnap=await fb().get(ref('shift/schedules'));
       const current=liveSnap.val()||{}; const u={};
       Object.entries(current).forEach(([id,x])=>{if(inPeriod(x?.date)&&shiftIsCurrentType(x))u[`shift/schedules/${id}`]=null});
-      chosen.forEach(x=>{const id=fb().push(ref('shift/schedules')).key;u[`shift/schedules/${id}`]={date:x.date,name:x.name,position:x.position||shiftPositionForMark(x.mark),time:normalizeShiftTimeRange(x.startTime,x.endTime,x.time),period:p,shiftType:shiftType(),source:'photo-attendance',createdAt:Date.now()}});
+      chosen.forEach(x=>{const id=fb().push(ref('shift/schedules')).key;u[`shift/schedules/${id}`]={date:x.date,name:x.name,position:x.position||shiftPositionForMark(x.mark),time:normalizeShiftTimeRange(x.startTime,x.endTime,x.time||''),period:p,shiftType:shiftType(),source:'photo-attendance',createdAt:Date.now()}});
       u[`shift/periodMeta/${shiftType()}-${periodKey()}`]={yearMonth:ym,period:p,shiftType:shiftType(),label,updatedAt:Date.now(),count:chosen.length};
       await fb().update(fb().ref(fb().db),u);
       pending=[];$('shiftReviewCard').hidden=true;alert(`${label}を登録しました。\n${chosen.length}件`);renderShiftRegisteredPeriods();renderDay();
@@ -5919,14 +5919,14 @@ function renderDay(){
     if(mi<0||mi>59)return '';
     return `${String(h).padStart(2,'0')}:${String(mi).padStart(2,'0')}`;
   }
-  function normalizeShiftTimeRange(start,end,time){
-    const clean=v=>String(v??'').trim();
-    let a=clean(start),b=clean(end),t=clean(time);
-    if(!a&&!b&&t){
-      const z=t.replace(/\s+/g,'').replace(/[〜～至\-—–]/g,'~');
-      if(/^L$/i.test(z)){b='L';}
-      else if(/L$/i.test(z)&&z.length>1){a=z.slice(0,-1);b='L';}
-      else {const parts=z.split('~').map(x=>x.trim());if(parts.length>=2){a=parts[0];b=parts[1];}else a=z;}
+  function normalizeShiftTimeRange(startTime,endTime,time){
+      const s=String(startTime||'').trim(),e=String(endTime||'').trim(),t=String(time||'').trim();
+      // 時間表示だけの修正：AIがstartTime/endTimeを読めている場合はそれを優先。
+      // 例：17 + L → 17〜L
+      if(s&&e)return `${s}〜${e}`;
+      if(s)return s;
+      if(e)return e;
+      return t;
     }
     const norm=v=>{
       const z=clean(v); if(!z)return '';
@@ -6338,8 +6338,8 @@ ${masterText?`\n旧スタッフマスター（名前確認の補助のみ）：\
 3. 各スタッフについて、今回のバッチの列を左から右へ1列ずつ確認する。
 4. 勤務記号が明確に ${allowedText} のいずれかならpresent=true。
 5. △、▲、▼、×、ラ、L、イベ、イベント、休、空欄、丸印、線、汚れ、罫線、数字だけの時間は出勤ではない。
-6. 時間は同じスタッフ・同じ列の黄色セルだけから読む。見えない場合は空文字。推測禁止。
-7. 全スタッフを読み終えたら、同じ画像をもう一度見て中央列の取り違えがないか確認する。
+6. 時間は必ず同じスタッフ・同じ列の「黄色い時間セル」から読む。この表は1人がExcel上2行で構成されるため、黄色セルの上段にある数字が入り時間、下段にある数字またはLが終わり時間です。上段と下段の両方を確認してください。例：「17」と「L」なら startTime="17", endTime="L", time="17:00〜L"。Lは「ラストまで」の終了時刻として扱い、出勤判定の勤務記号ではありません。時間が見えない場合だけ空文字にし、推測禁止。
+7. 全スタッフを読み終えたら、同じ画像をもう一度見て中央列の取り違えと、黄色セルの上段・下段の時間取[削除済み]ぼしがないか確認する。
 8. staffRowsには今回確認した全スタッフを必ず1行ずつ返す。出勤がないスタッフもpresent=falseで返す。
 9. checkedColumnsは今回のバッチで実際に確認した列数を返す。
 10. entriesは出勤セルだけ返す。
@@ -6369,7 +6369,7 @@ ${positionRules}
         type:"object",
         properties:{
           staffRows:{type:"array",items:{type:"object",properties:{rowIndex:{type:"integer"},name:{type:"string"},present:{type:"boolean"},checkedColumns:{type:"integer"},note:{type:"string"}},required:["rowIndex","name","present","checkedColumns"]}},
-          entries:{type:"array",items:{type:"object",properties:{rowIndex:{type:"integer"},columnIndex:{type:"integer"},name:{type:"string"},mark:{type:"string"},present:{type:"boolean"},startTime:{type:"string"},endTime:{type:"string"},time:{type:"string"},confidence:{type:"string"},note:{type:"string"}},required:["rowIndex","columnIndex","name","mark","present"]}}
+          entries:{type:"array",items:{type:"object",properties:{rowIndex:{type:"integer"},columnIndex:{type:"integer"},name:{type:"string"},mark:{type:"string"},present:{type:"boolean"},startTime:{type:"string"},endTime:{type:"string"},time:{type:"string"},confidence:{type:"string"},note:{type:"string"}},required:["rowIndex","columnIndex","name","mark","present","startTime","endTime","time"]}}
         },
         required:["staffRows","entries"]
       };
@@ -6532,7 +6532,7 @@ ${positionRules}
 
         const date=`${yy}-${String(mm).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
         const pos=shiftPositionForMark(mark);
-        const time=normalizeShiftTimeRange('', '', x?.time||normalizeShiftTimeRange(x?.startTime,x?.endTime,''));
+        const time=normalizeShiftTimeRange(x?.startTime,x?.endTime,x?.time||'');
         safeEntries.push({
           ...x,
           date,
@@ -6643,7 +6643,7 @@ ${positionRules}
             const fb=window.__fb,live=await fb.get(fb.ref(fb.db,'shift/schedules')),cur=live.val()||{},u={};
             const currentService=document.body.dataset.shiftMode==='lunch'?'lunch':'dinner';
             Object.entries(cur).forEach(([id,x])=>{const itemService=String(x?.shiftType||'dinner');if(itemService===currentService&&x?.date&&String(x.date).startsWith(ym+'-')){const d=Number(String(x.date).slice(-2));if(d>=from&&d<=to)u[`shift/schedules/${id}`]=null}});
-            chosen.forEach(x=>{const id=fb.push(fb.ref(fb.db,'shift/schedules')).key;u[`shift/schedules/${id}`]={date:x.date,name:x.name,number:'',position:shiftPositionForMark(x.mark)||x.position||'',mark:String(x.mark||'').toUpperCase(),time:normalizeShiftTimeRange('', '', x.time||normalizeShiftTimeRange(x.startTime,x.endTime,'')),period:p,shiftType:currentService,source:'gemini-ai',confidence:x.confidence||'medium',createdAt:Date.now()}});
+            chosen.forEach(x=>{const id=fb.push(fb.ref(fb.db,'shift/schedules')).key;u[`shift/schedules/${id}`]={date:x.date,name:x.name,number:'',position:shiftPositionForMark(x.mark)||x.position||'',mark:String(x.mark||'').toUpperCase(),time:normalizeShiftTimeRange(x.startTime,x.endTime,x.time||''),period:p,shiftType:currentService,source:'gemini-ai',confidence:x.confidence||'medium',createdAt:Date.now()}});
             u[`shift/periodMeta/${currentService}-${ym}-${p}`]={yearMonth:ym,period:p,shiftType:currentService,label,updatedAt:Date.now(),count:chosen.length,source:'gemini-ai',photoData:aiPhotoData||'',photoName:aiFile?.name||''};
             await fb.update(fb.ref(fb.db),u);card.hidden=true;setAiStatus('AI読み取り結果を保存しました。','ok');alert(`AI読み取り結果をシフトに登録しました。\n${chosen.length}件`);
           }catch(err){alert('シフト登録に失敗しました。\n'+(err?.message||err))}
