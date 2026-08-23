@@ -1076,13 +1076,8 @@ body{
 </style>
 
 
-<style id="aiReadTimeOnly">
-/* AI読み取り以外の必要な管理UIは維持。
-   旧手動OCRの実行ボタン・ステータスだけ非表示。 */
-#shiftOcrStart,
-#shiftOcrStatus {
-  display:none !important;
-}
+<style id="aiReadOnlyManualOcrHide">
+#shiftOcrStart,#shiftOcrStatus{display:none!important;}
 </style>
 </head>
 <body><div class="wrap">
@@ -1394,6 +1389,46 @@ body{
   <button type="button" class="gray" id="shiftOcrStart" style="margin-top:10px">🔎 出勤者を読み取る</button>
   <div id="shiftOcrStatus" class="shiftStatus" style="margin-top:10px">写真を選択してください。</div>
   <div id="shiftPhotoPreview" class="shiftPreview" hidden style="margin-top:10px"></div>
+  <div id="shiftGeminiAiBox">
+    <div class="aiTitle">🤖 AIでシフト表を読み取る</div>
+    <div class="aiHint">シフト表の写真をGemini AIに読み込ませ、表の行・日付・名前・勤務記号・時間を確認します。登録した文字だけを出勤として読み込みます。写真はAI読み取り後に自動保存せず、確認して登録した時だけシフトを保存します。</div>
+    <div id="shiftGeminiKeyRow">
+      <div><label style="margin-top:8px">Gemini APIキー</label><input id="shiftGeminiApiKey" type="password" autocomplete="off" placeholder="AIza..."></div>
+      <button type="button" class="gray" id="shiftGeminiKeySave">キーを保存</button>
+    </div>
+    <div id="shiftGeminiKeyStatus"></div>
+    <div id="shiftAiPhotoBox">
+      <div class="aiPhotoActions">
+        <button type="button" class="gray" id="shiftAiPhotoChoose">📷 AI読み取り用の写真を選ぶ</button>
+        <button type="button" class="danger" id="shiftAiPhotoDelete">❌ 写真を削除</button>
+      </div>
+      <input id="shiftAiPhotoInput" type="file" accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp,.heic,.heif" style="display:none">
+      <div id="shiftAiPhotoName" class="aiHint" style="margin-top:7px">AI読み取り用の写真はまだありません。</div>
+      <div id="shiftAiPhotoPreview" hidden></div>
+    </div>
+    <button type="button" id="shiftGeminiRead" style="margin-top:10px">🤖 AIで出勤者を読み取る</button>
+    <div id="shiftGeminiAiStatus" class="shiftStatus" style="margin-top:10px">Gemini APIキーと写真を用意してください。</div>
+    <div id="shiftGeminiAiResult" class="shiftAiResult" hidden></div>
+    <details open class="card" style="margin-top:12px" id="shiftAllowedMarksSettings">
+      <summary style="cursor:pointer;font-weight:800;font-size:18px">⚙️ AI出勤判定文字・初期設定</summary>
+      <div style="padding-top:12px">
+        <div class="aiHint">登録したアルファベットだけを「出勤」として読み込みます。その他の文字・記号はすべて出勤扱いにしません。</div>
+        <label style="margin-top:10px">出勤として読み込むアルファベット</label>
+        <input id="shiftAllowedMarksInput" type="text" value="S、Y、O、K、F" placeholder="例：S、Y、O、K、F" autocomplete="off">
+        <button type="button" class="gray" id="shiftAllowedMarksSave" style="margin-top:8px">💾 出勤判定文字を保存</button>
+        <div id="shiftAllowedMarksStatus" class="shiftStatus" style="margin-top:8px"></div>
+      </div>
+    </details>
+    <details open class="card" style="margin-top:12px" id="shiftPositionSettings">
+      <summary style="cursor:pointer;font-weight:800;font-size:18px">⚙️ ポジション初期設定・変更（AI読み取り）</summary>
+      <div style="padding-top:12px">
+        <div class="aiHint">AIが読み取ったアルファベットを、ここで設定したポジション名に変換します。初期設定は S=板場、Y=焼場、O=ホール、K=コンロ、F=揚場 です。</div>
+        <div id="shiftPositionMapEditor" style="margin-top:10px"></div>
+        <button type="button" class="gray" id="shiftPositionMapSave" style="margin-top:8px">💾 ポジション設定を保存</button>
+        <div id="shiftPositionMapStatus" class="shiftStatus" style="margin-top:8px"></div>
+      </div>
+    </details>
+  </div>
   <button type="button" class="danger" id="shiftDeletePeriod" style="margin-top:10px">🗑️ この期間の登録シフトを削除</button>
   <div class="shiftHint" style="margin-top:6px">※古い登録結果を消してから再読み取りしたい時に使います。対象期間だけを削除します。</div>
 </details>
@@ -5930,7 +5965,7 @@ function renderDay(){
   }
   function normalizeShiftTimeRange(startTime,endTime,time){
       const s=String(startTime||'').trim(),e=String(endTime||'').trim(),t=String(time||'').trim();
-      // 時間表示だけを修正。AIが読んだ入り/終わり時間を優先。
+      // 表示だけ修正：AIが読んだ入り/終わり時間を優先。
       if(s&&e)return `${s}〜${e}`;
       if(s)return s;
       if(e)return e;
