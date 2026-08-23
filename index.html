@@ -1383,48 +1383,6 @@ body{
   <input id="shiftPhotoInput" type="file" accept="image/*,.heic,.heif,.jpg,.jpeg,.png,.webp" style="display:none">
   <div id="shiftPhotoFileName" class="shiftHint" style="margin-top:8px">写真はまだ選択されていません。</div>
   <div id="shiftPhotoPreview" class="shiftPreview" hidden style="margin-top:10px"></div>
-
-  <div id="shiftGeminiAiBox">
-    <div class="aiTitle">🤖 AIでシフト表を読み取る</div>
-    <div class="aiHint">シフト表の写真をGemini AIに読み込ませ、表の行・日付・名前・勤務記号・時間を確認します。S/Y/O/K/Fなど登録した文字だけを出勤とし、ポジションは勤務記号から自動確定します。スタッフ番号は使用しません。写真はAI読み取り後に自動保存せず、確認して登録した時だけシフトを保存します。</div>
-    <div id="shiftGeminiKeyRow">
-      <div><label style="margin-top:8px">Gemini APIキー</label><input id="shiftGeminiApiKey" type="password" autocomplete="off" placeholder="AIza..."></div>
-      <button type="button" class="gray" id="shiftGeminiKeySave">キーを保存</button>
-    </div>
-    <div id="shiftGeminiKeyStatus"></div>
-    <div id="shiftAiPhotoBox">
-      <div class="aiPhotoActions">
-        <button type="button" class="gray" id="shiftAiPhotoChoose">📷 AI読み取り用の写真を選ぶ</button>
-        <button type="button" class="danger" id="shiftAiPhotoDelete">❌ 写真を削除</button>
-      </div>
-      <input id="shiftAiPhotoInput" type="file" accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp,.heic,.heif" style="display:none">
-      <div id="shiftAiPhotoName" class="aiHint" style="margin-top:7px">AI読み取り用の写真はまだありません。</div>
-      <div id="shiftAiPhotoPreview" hidden></div>
-    </div>
-    <button type="button" id="shiftGeminiRead" style="margin-top:10px">🤖 AIで出勤者を読み取る</button>
-    <div id="shiftGeminiAiStatus" class="shiftStatus" style="margin-top:10px">Gemini APIキーと写真を用意してください。</div>
-    <div id="shiftGeminiAiResult" class="shiftAiResult" hidden></div>
-    <details open class="card" style="margin-top:12px" id="shiftAllowedMarksSettings">
-      <summary style="cursor:pointer;font-weight:800;font-size:18px">⚙️ AI出勤判定文字・初期設定</summary>
-      <div style="padding-top:12px">
-        <div class="aiHint">登録したアルファベットだけを「出勤」として読み込みます。その他の文字・記号はすべて出勤扱いにしません。</div>
-        <label style="margin-top:10px">出勤として読み込むアルファベット</label>
-        <input id="shiftAllowedMarksInput" type="text" value="S、Y、O、K、F" placeholder="例：S、Y、O、K、F" autocomplete="off">
-        <button type="button" class="gray" id="shiftAllowedMarksSave" style="margin-top:8px">💾 出勤判定文字を保存</button>
-        <div id="shiftAllowedMarksStatus" class="shiftStatus" style="margin-top:8px"></div>
-      </div>
-    </details>
-    <details open class="card" style="margin-top:12px" id="shiftPositionSettings">
-      <summary style="cursor:pointer;font-weight:800;font-size:18px">⚙️ ポジション初期設定・変更（AI読み取り）</summary>
-      <div style="padding-top:12px">
-        <div class="aiHint">AIが読み取ったアルファベットを、ここで設定したポジション名に変換します。初期設定は S=板場、Y=焼場、O=ホール、K=コンロ、F=揚場 です。</div>
-        <div id="shiftPositionMapEditor" style="margin-top:10px"></div>
-        <button type="button" class="gray" id="shiftPositionMapSave" style="margin-top:8px">💾 ポジション設定を保存</button>
-        <div id="shiftPositionMapStatus" class="shiftStatus" style="margin-top:8px"></div>
-      </div>
-    </details>
-  </div>
-
   <button type="button" class="danger" id="shiftDeletePeriod" style="margin-top:10px">🗑️ この期間の登録シフトを削除</button>
   <div class="shiftHint" style="margin-top:6px">※古い登録結果を消してから再読み取りしたい時に使います。対象期間だけを削除します。</div>
 </details>
@@ -5958,14 +5916,14 @@ function renderDay(){
     if(mi<0||mi>59)return '';
     return `${String(h).padStart(2,'0')}:${String(mi).padStart(2,'0')}`;
   }
-  function normalizeShiftTimeRange(start,end,time){
-    const clean=v=>String(v??'').trim();
-    let a=clean(start),b=clean(end),t=clean(time);
-    if(!a&&!b&&t){
-      const z=t.replace(/\s+/g,'').replace(/[〜～至\-—–]/g,'~');
-      if(/^L$/i.test(z)){b='L';}
-      else if(/L$/i.test(z)&&z.length>1){a=z.slice(0,-1);b='L';}
-      else {const parts=z.split('~').map(x=>x.trim());if(parts.length>=2){a=parts[0];b=parts[1];}else a=z;}
+  function normalizeShiftTimeRange(startTime,endTime,time){
+      const s=String(startTime||'').trim(),e=String(endTime||'').trim(),t=String(time||'').trim();
+      // 時間表示だけを修正。AIが読んだstartTime/endTimeを優先する。
+      // 例：17 + L → 17〜L、L単独 → L。
+      if(s&&e)return `${s}〜${e}`;
+      if(s)return s;
+      if(e)return e;
+      return t;
     }
     const norm=v=>{
       const z=clean(v); if(!z)return '';
@@ -6355,11 +6313,15 @@ function renderDay(){
 - 画像上部に「列N＝○日」と明記されています。このラベルが唯一の日付対応です。
 
 【日付の絶対ルール】
-- 元画像の小さい日付数字を読んで日付を決めてはいけません。
-- 「列N＝○日」の赤枠だけを基準にしてください。
-- 文字の中心が入っている赤枠の列Nだけを採用してください。
+- 元画像の小さい日付数字を単独で読んで日付を決めてはいけません。
+- 各セルの上にある「列N＝○日」の赤枠ラベルを必ず確認してください。
+- そのセルの中央が入っている赤枠の列Nだけを採用してください。
+- さらに○日を対象年月のカレンダーと照合し、曜日も確認してください。
+- 例：2026年8月23日は日曜日。23日のセルを22日や24日のセルとして扱ってはいけません。
+- 「日曜日だから前後の列を読む」のような曜日からの推測は禁止です。実際の赤枠ラベルを優先してください。
 - 隣の赤枠・隣の日付から勤務記号や時間を補完してはいけません。
 - 白列＝勤務記号、黄色列＝同じ日の時間です。別の日の黄色列を時間として使ってはいけません。
+- 1つの勤務記号は必ず、その直上に表示された列N＝○日のラベルと同じ列として返してください。
 
 【出勤として認める勤務記号】
 ${allowedText}
@@ -6393,7 +6355,7 @@ ${positionRules}
     {"rowIndex":1,"name":"スタッフ名","present":true,"checkedColumns":8,"note":"全8列確認済み"}
   ],
   "entries":[
-    {"rowIndex":1,"columnIndex":1,"name":"スタッフ名","mark":"S","present":true,"startTime":"9.5","endTime":"17","time":"09:30〜17:00","confidence":"high","note":"列1を確認"}
+    {"rowIndex":1,"columnIndex":1,"name":"スタッフ名","mark":"S","present":true,"startTime":"9.5","endTime":"17","time":"09:30〜17:00","dayCheck":"8月23日（日）","confidence":"high","note":"赤枠ラベル列1＝23日を確認"}
   ]
 }
 
@@ -6408,7 +6370,7 @@ ${positionRules}
         type:"object",
         properties:{
           staffRows:{type:"array",items:{type:"object",properties:{rowIndex:{type:"integer"},name:{type:"string"},present:{type:"boolean"},checkedColumns:{type:"integer"},note:{type:"string"}},required:["rowIndex","name","present","checkedColumns"]}},
-          entries:{type:"array",items:{type:"object",properties:{rowIndex:{type:"integer"},columnIndex:{type:"integer"},name:{type:"string"},mark:{type:"string"},present:{type:"boolean"},startTime:{type:"string"},endTime:{type:"string"},time:{type:"string"},confidence:{type:"string"},note:{type:"string"}},required:["rowIndex","columnIndex","name","mark","present"]}}
+          entries:{type:"array",items:{type:"object",properties:{rowIndex:{type:"integer"},columnIndex:{type:"integer"},name:{type:"string"},mark:{type:"string"},present:{type:"boolean"},startTime:{type:"string"},endTime:{type:"string"},time:{type:"string"},dayCheck:{type:"string"},confidence:{type:"string"},note:{type:"string"}},required:["rowIndex","columnIndex","name","mark","present"]}}
         },
         required:["staffRows","entries"]
       };
