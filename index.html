@@ -6099,9 +6099,12 @@ function renderDay(){
     const nameTextLeft=Math.max(10,Math.floor(nameRight*.22));
     const nameTextRight=Math.max(nameTextLeft+20,nameRight-Math.floor(nameRight*.10));
 
-    // 名前欄の罫線・Excelの行番号・縦罫線を「名前」と誤認しない。
-    // 文字は短い線分の集合、罫線は長い連続線になるため、
-    // 長い水平/垂直連続線に含まれる黒画素を除外して文字インクだけを数える。
+    // 重要：人数を「名前の文字量」だけで決めない。
+    // 短い名前（例：2文字）や下段の小さい名前は文字インク量が少なく、
+    // 以前の方式ではそこから下のスタッフ行そのものを消してしまっていた。
+    // まず罫線から全スタッフ区間を作り、その後「名前または勤務記号」がある
+    // 最後の区間までをスタッフ行として保持する。途中に空欄スタッフがあっても
+    // rowIndexを詰めないので、上下のスタッフが別人になることも防ぐ。
     const textInkScore=(top,bottom)=>{
       let score=0;
       const xL=nameTextLeft,xR=nameTextRight;
@@ -6121,22 +6124,41 @@ function renderDay(){
       return score;
     };
 
+    const scheduleInkScore=(top,bottom)=>{
+      let score=0;
+      // 白い勤務記号列だけを調べる。黄色の時間列は人数判定に使わない。
+      for(const d of datePairs){
+        const xL=Math.min(W-1,d.symbolLeft+6),xR=Math.max(xL+1,Math.min(W,d.symbolRight-5));
+        for(let y=top;y<bottom;y++){
+          for(let x=xL;x<xR;x++){
+            const q=(y*W+x)*4;
+            if(dark(data[q],data[q+1],data[q+2]))score++;
+          }
+        }
+      }
+      return score;
+    };
+
+    const rowCandidates=[];
     for(let i=0;i<boundaries.length-1;i++){
       const top=boundaries[i]+6,bottom=boundaries[i+1]-6;if(bottom<=top)continue;
-      const ink=textInkScore(top,bottom);
-      // 実際の名前は十分な文字インクを持つ。空白行・罫線だけの帯は除外。
-      if(ink>=28)staffBands.push({top:boundaries[i]+1,bottom:boundaries[i+1]-1,boundaryIndex:i,ink});
+      const nameInk=textInkScore(top,bottom);
+      const shiftInk=scheduleInkScore(top,bottom);
+      rowCandidates.push({top:boundaries[i]+1,bottom:boundaries[i+1]-1,boundaryIndex:i,nameInk,shiftInk});
     }
 
-    // 最後に空白帯が残った場合は「名前文字がある連続区間」の終端で切る。
-    // 途中に空白スタッフを許容するため、先頭から最初の有効帯を採用し、
-    // 末尾だけは名前インクが無くなった時点で終了する。
-    while(staffBands.length){
-      const last=staffBands[staffBands.length-1];
-      if(last.ink>=28)break;
-      staffBands.pop();
+    // 名前が短くても、勤務記号があればスタッフ行として残す。
+    // 末尾だけは名前/勤務記号の両方が無い行をテンプレート空行として除外。
+    let lastActive=-1;
+    rowCandidates.forEach((r,i)=>{
+      if(r.nameInk>=10 || r.shiftInk>=20)lastActive=i;
+    });
+    if(lastActive<0)throw new Error('スタッフ行を検出できませんでした。表全体が写った写真を選んでください。');
+
+    for(let i=0;i<=lastActive;i++){
+      const r=rowCandidates[i];
+      staffBands.push({top:r.top,bottom:r.bottom,boundaryIndex:r.boundaryIndex,ink:r.nameInk,shiftInk:r.shiftInk});
     }
-    if(!staffBands.length)throw new Error('スタッフ名を検出できませんでした。名前欄が見える写真を選んでください。');
     const STAFF_COUNT=staffBands.length;
 
     // ③ 日付を8日ずつ2ブロックに分ける。
@@ -6443,10 +6465,21 @@ ${positionRules}
               const name=String(x?.name||'').trim();if(!name)continue;
               verified.push({...x,__batchStart:tv.columnIndex,__batchEnd:tv.columnIndex});
             }
-            // 今日分だけ通常結果を置き換える。再確認が空だった場合は元結果を保持してデータ消失を防ぐ。
+            // 今日の再確認は「上書き」しない。
+            // 再確認AIが1人でも見落とすと通常8日ブロックで拾った人まで消えるため、
+            // 以前の方式のように「今日の結果だけ全置換」はしない。
+            // rowIndexを基準に通常結果へ追加し、重複は後段で整理する。
+            // また、同じrowIndexで既に取得できている名前を優先して名前揺れを防ぐ。
             if(verified.length){
-              allEntries=allEntries.filter(x=>Number(x?.columnIndex)!==tv.columnIndex);
-              allEntries.push(...verified);
+              const rowNameByIndex=new Map();
+              for(const r of allStaffRows){
+                const ri=Number(r?.ri),name=String(r?.name||'').trim();
+                if(Number.isInteger(ri)&&name&&!rowNameByIndex.has(ri))rowNameByIndex.set(ri,name);
+              }
+              allEntries.push(...verified.map(x=>({
+                ...x,
+                name:rowNameByIndex.get(Number(x?.rowIndex))||String(x?.name||'').trim()
+              })).filter(x=>String(x.name||'').trim()));
             }
           }catch(err){console.warn('today verification parse',err)}
         }
