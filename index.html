@@ -1075,6 +1075,36 @@ body{
 }
 </style>
 
+
+<style id="aiReadOnlyShiftUi">
+/* AI読み取り専用：手動の「シフト表を入れ替える」UIだけ非表示。
+   AI読み取りのHTML・JS・API処理には変更を加えない。 */
+.shiftUpdateCard > summary,
+.shiftUpdateCard > .shiftHint,
+.shiftUpdateCard > .shiftPeriodRow,
+.shiftUpdateCard > #shiftUploadTargetLabel,
+.shiftUpdateCard > div:has(> #shiftPhotoChoose),
+.shiftUpdateCard > #shiftPhotoInput,
+.shiftUpdateCard > #shiftPhotoFileName,
+.shiftUpdateCard > #shiftOcrStart,
+.shiftUpdateCard > #shiftOcrStatus,
+.shiftUpdateCard > #shiftDeletePeriod,
+.shiftUpdateCard > #shiftPhotoPreview {
+  /* shiftPhotoPreview はAIボックスの挿入先なので表示はJS側に任せる */
+}
+.shiftUpdateCard > summary,
+.shiftUpdateCard > .shiftHint,
+.shiftUpdateCard > .shiftPeriodRow,
+.shiftUpdateCard > #shiftUploadTargetLabel,
+.shiftUpdateCard > div:has(> #shiftPhotoChoose),
+.shiftUpdateCard > #shiftPhotoInput,
+.shiftUpdateCard > #shiftPhotoFileName,
+.shiftUpdateCard > #shiftOcrStart,
+.shiftUpdateCard > #shiftOcrStatus,
+.shiftUpdateCard > #shiftDeletePeriod {
+  display:none !important;
+}
+</style>
 </head>
 <body><div class="wrap">
 <div class="navtabs navtabs3 navtabs4">
@@ -5922,7 +5952,6 @@ function renderDay(){
   function normalizeShiftTimeRange(startTime,endTime,time){
       const s=String(startTime||'').trim(),e=String(endTime||'').trim(),t=String(time||'').trim();
       // 時間表示だけを修正。AIが読んだstartTime/endTimeを優先する。
-      // 例：17 + L → 17〜L、L単独 → L。
       if(s&&e)return `${s}〜${e}`;
       if(s)return s;
       if(e)return e;
