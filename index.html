@@ -5963,13 +5963,14 @@ function renderDay(){
     if(mi<0||mi>59)return '';
     return `${String(h).padStart(2,'0')}:${String(mi).padStart(2,'0')}`;
   }
-  function normalizeShiftTimeRange(startTime,endTime,time){
-      const s=String(startTime||'').trim(),e=String(endTime||'').trim(),t=String(time||'').trim();
-      // 表示だけ修正：AIが読んだ入り/終わり時間を優先。
-      if(s&&e)return `${s}〜${e}`;
-      if(s)return s;
-      if(e)return e;
-      return t;
+  function normalizeShiftTimeRange(start,end,time){
+    const clean=v=>String(v??'').trim();
+    let a=clean(start),b=clean(end),t=clean(time);
+    if(!a&&!b&&t){
+      const z=t.replace(/\s+/g,'').replace(/[〜～至\-—–]/g,'~');
+      if(/^L$/i.test(z)){b='L';}
+      else if(/L$/i.test(z)&&z.length>1){a=z.slice(0,-1);b='L';}
+      else {const parts=z.split('~').map(x=>x.trim());if(parts.length>=2){a=parts[0];b=parts[1];}else a=z;}
     }
     const norm=v=>{
       const z=clean(v); if(!z)return '';
