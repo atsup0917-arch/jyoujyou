@@ -6205,55 +6205,94 @@ function renderDay(){
     }
     const STAFF_COUNT=staffBands.length;
 
-    // ③ 日付を8日ずつ2ブロックに分ける。
-    //    各スタッフ画像は「名前＋8日分の2列セット」だけを含む。
-    //    24〜28日が別の列へ滑ることを防ぐため、16日分を一枚に詰め込まない。
-    const DATE_BLOCK=8;
+    // ③ 日付は「1日＝1枚」の確認画像にする。
+    //    元表は1日2列（白=勤務記号、黄=時間）なので、
+    //    複数日を横並びにした画像をAIへ渡すと隣日付の取り違えが起きる。
+    //    そこでAIには1枚につき1日だけを渡し、日付とcolumnIndexは
+    //    アプリ側で完全固定する。人数は固定しない。
+    const DATE_BLOCK=4;
     const GROUP_SIZE=7;
-    const sheetNameW=520,dayW=190,labelH=52,outRowH=155,pad=14;
+    const sheetNameW=520,dayW=430,labelH=64,outRowH=155,pad=14;
     const imageBatches=[];
 
     for(let blockStart=0;blockStart<expected;blockStart+=DATE_BLOCK){
       const blockEnd=Math.min(expected,blockStart+DATE_BLOCK);
       const blockPairs=datePairs.slice(blockStart,blockEnd);
       const batchImages=[];
-      for(let groupStart=0;groupStart<STAFF_COUNT;groupStart+=GROUP_SIZE){
-        const groupEnd=Math.min(STAFF_COUNT,groupStart+GROUP_SIZE),groupCount=groupEnd-groupStart;
-        const sheet=document.createElement('canvas');
-        sheet.width=sheetNameW+blockPairs.length*dayW+pad*3;
-        sheet.height=pad+labelH+groupCount*outRowH+pad;
-        const q=sheet.getContext('2d');q.fillStyle='#fff';q.fillRect(0,0,sheet.width,sheet.height);
-        q.fillStyle='#fff7b8';q.fillRect(pad,pad,sheet.width-pad*2,labelH);
-        q.fillStyle='#8b0000';q.font='800 18px sans-serif';q.textBaseline='middle';q.textAlign='left';
-        q.fillText(`上々 シフト確認　スタッフ${groupStart+1}〜${groupEnd}　${ym} ${blockPairs[0].date}〜${blockPairs[blockPairs.length-1].date}日`,pad+8,pad+labelH/2);
 
-        for(let local=0;local<groupCount;local++){
-          const ri=groupStart+local,band=staffBands[ri],sy=band.top,ey=band.bottom,srcH=Math.max(1,ey-sy),oy=pad+labelH+local*outRowH;
-          q.fillStyle=ri%2?'#fafafa':'#f2f2f2';q.fillRect(pad,oy,sheet.width-pad*2,outRowH-4);
-          q.fillStyle='#b00000';q.font='800 16px sans-serif';q.textBaseline='top';q.textAlign='left';q.fillText(`スタッフ${ri+1}`,pad+7,oy+5);
-          const nameScale=Math.min((sheetNameW-22)/nameRight,(outRowH-labelH-10)/srcH);
-          const nameDW=Math.max(1,Math.round(nameRight*nameScale)),nameDH=Math.max(1,Math.round(srcH*nameScale));
-          q.drawImage(c,0,sy,nameRight,srcH,pad+8,oy+labelH,nameDW,nameDH);
+      for(const d of blockPairs){
+        for(let groupStart=0;groupStart<STAFF_COUNT;groupStart+=GROUP_SIZE){
+          const groupEnd=Math.min(STAFF_COUNT,groupStart+GROUP_SIZE),groupCount=groupEnd-groupStart;
+          const sheet=document.createElement('canvas');
+          sheet.width=sheetNameW+dayW+pad*3;
+          sheet.height=pad+labelH+groupCount*outRowH+pad;
+          const q=sheet.getContext('2d');
+          q.fillStyle='#fff';q.fillRect(0,0,sheet.width,sheet.height);
 
-          const periodX=pad+sheetNameW+pad;
-          blockPairs.forEach((d,localDay)=>{
-            const dx=periodX+localDay*dayW,srcW=d.right-d.left+1,drawH=Math.max(1,outRowH-labelH-10);
-            // 2列セットを一切変形せず、その日だけ切り出す。
+          q.fillStyle='#fff3a0';q.fillRect(pad,pad,sheet.width-pad*2,labelH);
+          q.fillStyle='#8b0000';q.font='900 20px sans-serif';
+          q.textBaseline='middle';q.textAlign='left';
+          q.fillText(`【この画像は ${d.date}日だけ】　列${d.columnIndex}　スタッフ${groupStart+1}〜${groupEnd}`,
+            pad+8,pad+labelH/2);
+
+          for(let local=0;local<groupCount;local++){
+            const ri=groupStart+local,band=staffBands[ri],sy=band.top,ey=band.bottom;
+            const srcH=Math.max(1,ey-sy),oy=pad+labelH+local*outRowH;
+
+            q.fillStyle=ri%2?'#fafafa':'#f2f2f2';
+            q.fillRect(pad,oy,sheet.width-pad*2,outRowH-4);
+
+            q.fillStyle='#b00000';q.font='800 16px sans-serif';
+            q.textBaseline='top';q.textAlign='left';
+            q.fillText(`スタッフ${ri+1}`,pad+7,oy+5);
+
+            const nameScale=Math.min((sheetNameW-22)/nameRight,(outRowH-labelH-10)/srcH);
+            const nameDW=Math.max(1,Math.round(nameRight*nameScale));
+            const nameDH=Math.max(1,Math.round(srcH*nameScale));
+            q.drawImage(c,0,sy,nameRight,srcH,pad+8,oy+labelH,nameDW,nameDH);
+
+            const dx=pad+sheetNameW+pad;
+            const srcW=d.right-d.left+1;
+            const drawH=Math.max(1,outRowH-labelH-10);
+
+            // このスタッフ・この1日だけを切り出す。
             q.drawImage(c,d.left,sy,srcW,srcH,dx,oy+labelH,dayW,drawH);
-            q.strokeStyle='#c00000';q.lineWidth=3;q.strokeRect(dx,oy+labelH,dayW,drawH);
-            // ヘッダーは画像の上に重ねず、専用領域に表示して元セルを隠さない。
-            q.fillStyle='#fff3a0';q.fillRect(dx+2,oy+labelH+2,dayW-4,28);
-            q.fillStyle='#7d0000';q.font='900 16px sans-serif';q.textAlign='center';q.textBaseline='middle';
-            q.fillText(`列${d.columnIndex} ＝ ${d.date}日`,dx+dayW/2,oy+labelH+16);
-            // 白＝勤務記号、黄色＝時間を明示。
-            q.fillStyle='#111';q.font='700 12px sans-serif';q.textAlign='left';q.fillText('白：勤務記号',dx+8,oy+labelH+drawH-17);
-            q.textAlign='right';q.fillText('黄：時間',dx+dayW-8,oy+labelH+drawH-17);
+            q.strokeStyle='#c00000';q.lineWidth=4;
+            q.strokeRect(dx,oy+labelH,dayW,drawH);
+
+            q.fillStyle='#fff3a0';q.fillRect(dx+3,oy+labelH+3,dayW-6,34);
+            q.fillStyle='#7d0000';q.font='900 18px sans-serif';
+            q.textAlign='center';q.textBaseline='middle';
+            q.fillText(`列${d.columnIndex} ＝ ${d.date}日【この画像はこの日だけ】`,
+              dx+dayW/2,oy+labelH+20);
+
+            q.fillStyle='#111';q.font='800 14px sans-serif';
+            q.textAlign='left';
+            q.fillText('左側＝名前　　白＝勤務記号　　黄色＝時間',
+              dx+10,oy+labelH+drawH-19);
+          }
+
+          const dataUrl=sheet.toDataURL('image/jpeg',.94);
+          batchImages.push({
+            mime:'image/jpeg',
+            data:dataUrl.split(',')[1],
+            rows:`${groupStart+1}-${groupEnd}`,
+            columns:String(d.columnIndex),
+            dates:String(d.date),
+            fixedColumn:d.columnIndex,
+            fixedDate:d.date
           });
         }
-        const dataUrl=sheet.toDataURL('image/jpeg',.92);
-        batchImages.push({mime:'image/jpeg',data:dataUrl.split(',')[1],rows:`${groupStart+1}-${groupEnd}`,columns:`${blockPairs[0].columnIndex}-${blockPairs[blockPairs.length-1].columnIndex}`,dates:`${blockPairs[0].date}-${blockPairs[blockPairs.length-1].date}`});
       }
-      imageBatches.push({startColumn:blockPairs[0].columnIndex,endColumn:blockPairs[blockPairs.length-1].columnIndex,startDay:blockPairs[0].date,endDay:blockPairs[blockPairs.length-1].date,days:blockPairs.length,images:batchImages});
+
+      imageBatches.push({
+        startColumn:blockPairs[0].columnIndex,
+        endColumn:blockPairs[blockPairs.length-1].columnIndex,
+        startDay:blockPairs[0].date,
+        endDay:blockPairs[blockPairs.length-1].date,
+        days:blockPairs.length,
+        images:batchImages
+      });
     }
 
     // 今日の列だけは、通常の8日ブロックとは別に「1日専用の拡大確認」を行う。
@@ -6335,7 +6374,7 @@ function renderDay(){
         throw new Error('AI確認画像を1枚も作成できませんでした。写真全体が写っているか確認してください。');
       }
       aiPhotoData=img.dataUrl;
-      setAiStatus(`AIへ送信準備完了（確認画像${totalImages}枚・${img.batches.length}日付ブロック・スタッフ${img.rowCount}人・約${img.payloadKB||0}KB）。全スタッフを確認中…`,'');
+      setAiStatus(`AIへ送信準備完了（1日1画像・確認画像${totalImages}枚・${img.batches.length}ブロック・スタッフ${img.rowCount}人）。日付を固定して確認中…`,'');
 
       const allowed=getAllowedShiftMarks();
       const allowedText=allowed.join('、');
@@ -6356,7 +6395,7 @@ function renderDay(){
 【画像の構造】
 - 1人＝名前欄1区間（この表ではExcel上2行結合）。
 - 1日＝「白い勤務記号列＋黄色い時間列」の2列セット。
-- 各画像には名前欄と、今回のバッチで指定された日付だけが入っています。
+- 各確認画像には名前欄と、1日分の2列セットだけが入っています。
 - 画像上部に「列N＝○日」と明記されています。このラベルが唯一の日付対応です。
 
 【日付の絶対ルール】
@@ -6377,15 +6416,15 @@ ${allowedText}
 ${masterText?`\n旧スタッフマスター（名前確認の補助のみ）：\n${masterText}\n`:''}
 
 【読み取り手順】
-1. 今回のバッチに含まれる全画像を確認する。
-2. スタッフ行を上から最後まで1人ずつ確認する。
-3. 各スタッフについて、今回のバッチの列を左から右へ1列ずつ確認する。
+1. 今回のバッチに含まれる画像を1枚ずつ確認する。
+2. 各画像は1日だけなので、その画像の固定日だけを確認する。
+3. スタッフ行を上から最後まで1人ずつ確認する。
 4. 勤務記号が明確に ${allowedText} のいずれかならpresent=true。
 5. △、▲、▼、×、ラ、L、イベ、イベント、休、空欄、丸印、線、汚れ、罫線、数字だけの時間は出勤ではない。
 6. 時間は同じスタッフ・同じ列の黄色セルだけから読む。見えない場合は空文字。推測禁止。
 7. 全スタッフを読み終えたら、同じ画像をもう一度見て中央列の取り違えがないか確認する。
 8. staffRowsには今回確認した全スタッフを必ず1行ずつ返す。出勤がないスタッフもpresent=falseで返す。
-9. checkedColumnsは今回のバッチで実際に確認した列数を返す。
+9. checkedColumnsは各画像につき1を返す。
 10. entriesは出勤セルだけ返す。
 11. JSON以外は返さない。
 
@@ -6404,7 +6443,7 @@ ${positionRules}
 
 重要：
 - rowIndexは画像の「スタッフN」と完全一致。
-- columnIndexは元の対象期間全体に対する列番号（例：24日が9列目ならcolumnIndex=9）。
+- columnIndexはAIが計算しない。画像上部に固定表示された「列N」のNをそのまま返す。
 - numberとdateは返さない。日付はアプリ側で列番号から確定する。`;
 
       // 16日分を一度に送らず、8日ずつ2バッチに分ける。
@@ -6424,12 +6463,12 @@ ${positionRules}
       const retryableStatus=new Set([429,500,502,503,504]);
 
       for(const batch of img.batches){
-        const parts=[{text:`【今回のバッチ】列${batch.startColumn}〜${batch.endColumn}（${batch.startDay}〜${batch.endDay}日）だけを確認してください。今回のバッチは${batch.days}列です。スタッフ1〜${img.rowCount}を全員確認してください。`}];
+        const parts=[{text:`【今回のバッチ】${batch.startDay}〜${batch.endDay}日の確認です。1枚の画像には1日だけが入っています。スタッフ1〜${img.rowCount}を全員確認してください。`}];
         for(const im of batch.images){
-          parts.push({text:`【スタッフ行確認画像：スタッフ${im.rows}／列${im.columns}／${im.dates}日】この画像だけでなく、このバッチ内の全画像と照合してください。`});
+          parts.push({text:`【絶対固定】この画像は ${im.dates}日（全体列${im.columns}）だけです。スタッフ${im.rows}を確認してください。この画像から${im.dates}日以外の勤務記号・時間を読み取ってはいけません。`});
           parts.push({inline_data:{mime_type:im.mime,data:im.data}});
         }
-        const batchPrompt=promptBase.replace(/checkedColumns":8/g,`checkedColumns":${batch.days}`).replace(/全8列確認済み/g,`全${batch.days}列確認済み`)+`\n\n【今回のバッチ限定】\n- 対象列は列${batch.startColumn}〜列${batch.endColumn}のみ。\n- このバッチの画像内の左から1番目は全体の列${batch.startColumn}、2番目は列${batch.startColumn+1}…です。\n- checkedColumnsは必ず${batch.days}。\n- 列番号は元の対象期間全体に対するグローバル列番号で返してください。\n- それ以外の列については一切entriesを作らない。\n- バッチ境界をまたいで文字・時間・勤務記号を補完しない。`;
+        const batchPrompt=promptBase.replace(/checkedColumns":8/g,`checkedColumns":1`).replace(/全8列確認済み/g,'全1列確認済み')+`\n\n【今回のバッチ限定・最重要】\n- 各画像は1日分だけです。画像ごとに見出しで「○日・全体列N」が固定されています。\n- columnIndexはAIが推測せず、画像見出しの固定値をそのまま返してください。\n- 画像に「28日・列13」と書いてあれば、その画像のentriesは必ずcolumnIndex=13です。\n- 画像に「29日・列14」と書いてあれば、その画像のentriesは必ずcolumnIndex=14です。\n- 28日と29日、その他の隣接日を絶対に混ぜないでください。\n- 時間も必ずその画像の黄色列だけから読み、別画像・別日の時間を使わないでください。\n- checkedColumnsは各画像につき1です。\n- 各スタッフ画像に出勤記号が見える場合は、その画像の固定columnIndexでentriesを返してください。\n- JSON以外は返さない。`;
         const body={contents:[{role:'user',parts:[{text:batchPrompt},...parts]}],generationConfig:{responseMimeType:'application/json',responseJsonSchema}};
 
         let parsed=null,candidateText='';
