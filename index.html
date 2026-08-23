@@ -5921,8 +5921,8 @@ function renderDay(){
   }
   function normalizeShiftTimeRange(startTime,endTime,time){
       const s=String(startTime||'').trim(),e=String(endTime||'').trim(),t=String(time||'').trim();
-      // 表示専用：AIが読んだstartTime/endTimeを優先する。
-      // 例：17 + L → 17〜L。L単独はLのまま。
+      // 時間表示だけを修正。AIが読んだstartTime/endTimeを優先する。
+      // 例：17 + L → 17〜L、L単独 → L。
       if(s&&e)return `${s}〜${e}`;
       if(s)return s;
       if(e)return e;
