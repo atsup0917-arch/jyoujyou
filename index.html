@@ -4808,7 +4808,7 @@ button, label {
   }
   async function saveStaff(){
     const ta=$('shiftStaffMasterText'); const next=staffFromText(ta?.value);
-    if(!Object.keys(next).length){alert('番号と名前を1つ以上入力してください。\n例：9.10 加藤');return;}
+    // 空欄で保存した場合はスタッフマスターを空にする（意図した全削除に対応）。
     staffMap=next;
     staff=Object.entries(staffMap).sort((a,b)=>Number(a[0])-Number(b[0])).map(([,name])=>name);
     localStorage.setItem(localKey(),JSON.stringify(staff));
@@ -4859,31 +4859,8 @@ button, label {
         const raw=localStorage.getItem(localKey());
         if(raw){const a=JSON.parse(raw);if(Array.isArray(a))a.forEach((name,i)=>{if(String(name||'').trim())staffMap[String(10+i*2)]=String(name).trim();});}
       }
-      // 既存のスタッフマスターを消さず、確定済み26名のうち未登録だけを追加する。
-      // 既存の番号・名前・Firebaseデータは上書きしない。
-      const existingNames=new Set(Object.values(staffMap||{}).map(v=>String(v||'').trim()).filter(Boolean));
-      let changed=false;
-      const usedNumbers=new Set(Object.keys(staffMap||{}).map(n=>String(n)));
-      let nextNumber=10;
-      for(const name of DEFAULT_SHIFT_STAFF_NAMES){
-        if(existingNames.has(name)) continue;
-        while(usedNumbers.has(String(nextNumber))) nextNumber+=2;
-        staffMap[String(nextNumber)]=name;
-        usedNumbers.add(String(nextNumber));
-        existingNames.add(name);
-        nextNumber+=2;
-        changed=true;
-      }
-      if(changed){
-        try{
-          localStorage.setItem('karuya_shift_staff_map_v1',JSON.stringify(staffMap));
-          if(fb()){
-            const obj={};
-            Object.entries(staffMap).forEach(([number,name])=>obj[number]={name,number});
-            await fb().set(ref('shift/staffMap'),obj);
-          }
-        }catch(e){console.warn('staff master merge',e)}
-      }
+      // スタッフマスターはユーザーが保存した内容をそのまま使用する。
+      // 自動で既定スタッフを追加しないため、削除したスタッフが勝手に復活しない。
       staff=Object.entries(staffMap).sort((a,b)=>Number(a[0])-Number(b[0])).map(([,name])=>name);
     }catch(e){console.warn('staff load',e)}
     renderStaff();
@@ -5597,13 +5574,8 @@ function renderDay(){
   function getEditableStaffNames(date){
     const out=[];
     const add=v=>{const n=String(v||'').trim();if(n&&!out.includes(n)&&out.length<30)out.push(n)};
-    // シフト表の固定順を最優先。AIの名前認識結果では順番を作らない。
-    try{
-      const canonical=window.__canonicalShiftNames||[];
-      canonical.forEach(add);
-    }catch(_){}
-    ['[削除済み]','[削除済み]','[削除済み]','[削除済み]','[削除済み]','[削除済み]','[削除済み]','[削除済み]','[削除済み]','[削除済み]','[削除済み]','[削除済み]','[削除済み]','[削除済み]','[削除済み]','[削除済み]','[削除済み]','[削除済み]','[削除済み]','[削除済み]','[削除済み]','[削除済み]','[削除済み]','[削除済み]','[削除済み]','[削除済み]'].forEach(add);
-    try{Object.values(staffMap||{}).forEach(add)}catch(_){}
+    // 登録済みスタッフマスターを基準にする。削除したスタッフは追加候補にも戻さない。
+    try{Object.entries(staffMap||{}).sort((a,b)=>Number(a[0])-Number(b[0])).forEach(([,name])=>add(name))}catch(_){}
     // 選択日の既存スタッフ（ヘルプ枠など）も失わない。
     Object.values(schedules||{}).filter(x=>x?.date===date&&String(x?.name||'').trim()&&shiftIsCurrentType(x)).forEach(x=>add(x.name));
     return out.slice(0,30);
