@@ -1113,6 +1113,11 @@ body{
 .shiftTodayEditStaffSelect,.shiftTodayEditFreeName{flex:1;min-width:0;min-height:44px;font-size:16px}
 .shiftTodayEditAddRow button,.shiftTodayEditFreeRow button{white-space:nowrap;min-height:44px}
 </style>
+
+<style id="shiftScrollAnchorFix">
+#shiftPage{overflow-anchor:none!important;}
+body{overflow-anchor:none!important;}
+</style>
 </head>
 <body><div class="wrap">
 <div class="navtabs navtabs3 navtabs4">
@@ -1465,9 +1470,9 @@ body{
 14 [削除済み]"></textarea>
     <div class="shiftQuickBtns">
       <button type="button" id="shiftStaffMasterSave">💾 番号と名前を保存</button>
-      <button type="button" class="gray" id="shiftStaffMasterLoad">登録済みを表示</button>
+      
     </div>
-    <div id="shiftStaffMasterStatus" class="shiftStatus" style="margin-top:8px"></div>
+    <div id="shiftStaffMasterStatus" class="shiftStatus" style="display:none"></div>
   </div>
 </details>
 
@@ -4794,17 +4799,11 @@ button, label {
     const st=$('shiftStaffMasterStatus');
     const n=Object.keys(staffMap||{}).length;
     if(st) st.textContent=n?`✅ ${n}番号登録済み`:'スタッフ番号と名前がまだ登録されていません。';
-    let list=$('shiftStaffMasterRegisteredList');
-    if(!list){
-      list=document.createElement('div');
-      list.id='shiftStaffMasterRegisteredList';
-      list.className='shiftStaffMasterRegisteredList';
-      st?.insertAdjacentElement('afterend',list);
-    }
-    const rows=Object.entries(staffMap||{}).sort((a,b)=>Number(a[0])-Number(b[0]));
-    list.innerHTML=rows.length
-      ? `<div class="small" style="margin-top:8px;font-weight:800">📋 登録済みスタッフ</div>${rows.map(([num,name])=>`<div class="shiftStaffMasterRegisteredRow"><span>${esc(num)}</span><b>${esc(name)}</b></div>`).join('')}`
-      : '';
+    // 登録済みスタッフ一覧は表示しない。
+    // スタッフマスターの入力欄そのものが登録内容の管理画面なので、
+    // 「登録済みスタッフを表示」とその下の一覧は作成しない。
+    const oldList=$('shiftStaffMasterRegisteredList');
+    if(oldList)oldList.remove();
   }
   async function saveStaff(){
     const ta=$('shiftStaffMasterText'); const next=staffFromText(ta?.value);
@@ -6183,6 +6182,7 @@ function renderDay(){
           <div><label style="margin-top:0">📆 登録する期間</label><select id="shiftPeriod"><option value="first">前半（1〜15日）</option><option value="second" selected>後半（16日〜月末）</option></select></div>
         </div>
         <div id="shiftUploadTargetLabel" class="shiftStatus" style="margin-top:8px"></div>
+        <button type="button" class="danger" id="shiftDeletePeriod" style="margin-top:8px">🗑️ この指定期間の登録を削除</button>
         <div id="shiftGeminiKeyRow">
           <div><label style="margin-top:8px">Gemini APIキー</label><input id="shiftGeminiApiKey" type="password" autocomplete="off" placeholder="AIza..."></div>
           <button type="button" class="gray" id="shiftGeminiKeySave">キーを保存</button>
@@ -6754,7 +6754,7 @@ function renderDay(){
 
     const b=$('shiftGeminiRead');
     if(b){b.disabled=true;b.textContent='🤖 AIがシフト表を確認中…'}
-    setAiStatus('日付と既知スタッフ名はアプリで固定し、AIは各交差セルの出勤記号と時間だけを確認しています…','');
+    setAiStatus('日付とスタッフ名はアプリで固定し、AIは出勤表示・時間・ポジションだけを確認しています…','');
 
     try{
       localStorage.setItem(LOCK_KEY,String(Date.now()));
@@ -6781,11 +6781,10 @@ function renderDay(){
       const responseJsonSchema={
         type:'object',
         properties:{
-          staffRows:{type:'array',items:{type:'object',properties:{rowIndex:{type:'integer'},name:{type:'string'},checked:{type:'boolean'}},required:['rowIndex','name','checked']}},
-          entries:{type:'array',items:{type:'object',properties:{rowIndex:{type:'integer'},day:{type:'integer'},mark:{type:'string'},present:{type:'boolean'},startTime:{type:'string'},endTime:{type:'string'},time:{type:'string'},confidence:{type:'string'}},required:['rowIndex','day','mark','present','startTime','endTime','time']}},
+          entries:{type:'array',items:{type:'object',properties:{rowIndex:{type:'integer'},day:{type:'integer'},mark:{type:'string'},present:{type:'boolean'},position:{type:'string'},startTime:{type:'string'},endTime:{type:'string'},time:{type:'string'},confidence:{type:'string'}},required:['rowIndex','day','mark','present','position','startTime','endTime','time']}},
           dayChecks:{type:'array',items:{type:'object',properties:{day:{type:'integer'},headcount:{type:'integer'},entryCount:{type:'integer'},ok:{type:'boolean'}},required:['day','headcount','entryCount','ok']}}
         },
-        required:['staffRows','entries','dayChecks']
+        required:['entries','dayChecks']
       };
 
       const prompt=`あなたは飲食店のシフト表を読む画像認識AIです。
@@ -6803,21 +6802,26 @@ function renderDay(){
 - 画像内の小さい日付文字を根拠に日付を変更・補正してはいけません。
 - 元画像の黄色列は時間側、白い列は勤務記号側です。
 
-【スタッフ行】
+【スタッフ行・名前はAIで読み取らない】
+- スタッフ名はこのAI処理では一切OCRしません。
+- 名前はアプリに登録済みのスタッフマスターをそのまま使用します。
+- AIが返すのは「rowIndex（上から何人目か）」だけです。
 - rowIndex=1は表の最初のスタッフ、rowIndex=2は次のスタッフ、という上から順番の固定番号です。
-- 空欄のスタッフ行も飛ばさず、上から順番を維持する。
-- 同じ名前を別の行に移動させない。
-- ヘルプなど下段の名前も、画像に実際に存在する場合はその行番号のまま読む。
-- 「スタッフ行」は名前の文字だけで人数を決めず、横罫線で区切られた行を上から順番に確認する。
-- 既知のスタッフ名はアプリ側でrowIndexに固定しています。AIは既知スタッフの名前を変更・入れ替え・補正してはいけません。
-- 既知スタッフ：${getCanonicalShiftNames().map((n,i)=>`行${i+1}=${n}`).join('、')}
-- rowIndexは必ず「上から何人目か」を表し、名前を別のrowIndexへ移動させない。
-- 26人を超える下段ヘルプ枠は、画像に実際の名前がある場合だけAIが名前を返してよい。ただしrowIndexは画像上の位置から固定する。
+- 空欄のスタッフ行も飛ばさず、横罫線で区切られた行を上から順番に確認する。
+- 名前の文字を読んで人数・順番・名前を判断してはいけません。
+- rowIndexを別のスタッフへ移動させてはいけません。
+- 登録済みスタッフ：${getCanonicalShiftNames().map((n,i)=>`行${i+1}=${n}`).join('、')}
+- AIのname項目は返却しません。名前の補正・推測・入れ替えは禁止です。
 
-【勤務記号】
-出勤として認めるのは ${allowedText} のみ。
-${allowedText} 以外の数字、L、△、▲、×、○、線、記号、空欄は出勤ではない。
-勤務記号は白い側のセルだけを見る。
+【出勤表示・ポジション】
+- AIが読み取るのは、各「スタッフ×日」の交差セルにある出勤記号だけです。
+- 出勤として認める記号は ${allowedText} のみ。
+- ${allowedText} 以外の数字、L、△、▲、×、○、線、記号、空欄は出勤ではない。
+- 出勤記号は白い側のセルだけを見る。
+- 読み取った記号からポジションも判定して返してください。
+- ポジションは ${positionRules} の対応を基本とし、記号とポジションを同じ交差セルから判断する。
+- 出勤していないセルはentriesに返さない。
+- 名前からポジションを推測してはいけません。
 
 【時間】
 - 時間は同じスタッフ・同じ日の黄色側セルだけを見る。
@@ -6835,23 +6839,24 @@ ${allowedText} 以外の数字、L、△、▲、×、○、線、記号、空�
 日ごとの出勤者数が現人数と一致するか、最後に必ず確認してください。
 
 【読み取り手順】
-1. AIが見る画像は確認シートのみ。元画像の位置関係を再解釈しない。既知スタッフ名は画像OCRしない。
-2. 各確認シートの「行N」「N日」を住所として固定する。
+1. AIが見る画像は確認シートのみ。元画像の位置関係を再解釈しない。スタッフ名はOCRしない。
+2. 各確認シートの「行N」「N日」を住所として固定し、行NはアプリのスタッフマスターのN番目の名前に対応させる。
 3. 1つの枠は1人×1日の2列セットなので、隣の枠へ文字を移さない。
 4. 対象期間の日数をアプリ側の固定順序で扱う。
 5. スタッフを上から1行ずつ確認する。
 6. 各スタッフについて対象日を左から順番に確認する。
 7. 各日の2列セットの白側に ${allowedText} があるかだけを見る。
-8. あればentriesに1件だけ返す。
-9. 同じ交点について別の日の記号や時間を混ぜない。
+8. あればentriesに1件だけ返す。名前は返さず、rowIndexだけ返す。
+9. 同じ交点について別の日の記号・時間・ポジションを混ぜない。
 10. 時間は同じ交点の黄色側だけから読む。
-11. 【第2回独立チェック】最初の読み取り結果をいったん忘れ、各日の全スタッフ（最大30行）を上からもう一度確認してください。特に、最後のスタッフ行、下段ヘルプ、記号が小さいセル、隣接セルに記号があるセル、土日付近を重点的に再確認してください。
-12. 各日の出勤人数をentriesから数え、画像上部の「現人数」と照合してください。dayChecksにその日・画像の現人数・entryCount・一致判定を返してください。
-13. 【人数不足レスキュー】現人数 > entryCount の日は「読み落としがある」と判断してください。第1回と第2回で一致しなかった候補も含め、その日だけ全30スタッフ行の交差セルをもう一度確認してください。許可記号（${allowedText}）が1文字でも確認できるセルは、隣のセルと混同せずrowIndex×dayを固定してentriesへ追加してください。人数を合わせるために架空の出勤者を作ってはいけません。
-14. 現人数 = entryCount になった日を合格とし、現人数 > entryCount のままなら、見落としの可能性が高い行をconfidence=lowで返しても構いませんが、そのセルを勝手に別の日へ移動してはいけません。
-15. staffRowsには確認した全スタッフをrowIndex順に返す。既知スタッフのnameは上記固定名と完全一致させる。
-16. entriesには最終的に確認できた出勤セルだけ返す。
-17. JSON以外は返さない。
+11. ポジションは同じ交点の出勤記号から判定し、entriesのpositionに返す。
+12. 【第2回独立チェック】最初の読み取り結果をいったん忘れ、各日の全スタッフ（最大30行）を上からもう一度確認してください。特に、最後のスタッフ行、下段ヘルプ、記号が小さいセル、隣接セルに記号があるセル、土日付近を重点的に再確認してください。
+13. 各日の出勤人数をentriesから数え、画像上部の「現人数」と照合してください。dayChecksにその日・画像の現人数・entryCount・一致判定を返してください。
+14. 【人数不足レスキュー】現人数 > entryCount の日は「読み落としがある」と判断してください。第1回と第2回で一致しなかった候補も含め、その日だけ全30スタッフ行の交差セルをもう一度確認してください。許可記号（${allowedText}）が1文字でも確認できるセルは、隣のセルと混同せずrowIndex×dayを固定してentriesへ追加してください。人数を合わせるために架空の出勤者を作ってはいけません。
+15. 現人数 = entryCount になった日を合格とし、現人数 > entryCount のままなら、見落としの可能性が高い行をconfidence=lowで返しても構いませんが、そのセルを勝手に別の日へ移動してはいけません。
+16. スタッフ名は返却せず、entriesのrowIndexだけを返す。名前はアプリ側で固定する。
+17. entriesには最終的に確認できた出勤セルだけ返し、positionも返す。
+18. JSON以外は返さない。
 
 【日付番号】
 ${dateList.map((d,i)=>`${i+1}番目の日セット=${d}日`).join('\n')}
@@ -6861,8 +6866,8 @@ ${positionRules}
 
 【返却形式】
 {
-  "staffRows":[{"rowIndex":1,"name":"[削除済み]","checked":true}],
-  "entries":[{"rowIndex":1,"day":25,"mark":"S","present":true,"startTime":"10","endTime":"L","time":"10:00〜L","confidence":"high"}]
+  "entries":[{"rowIndex":1,"day":25,"mark":"S","present":true,"position":"板場","startTime":"10","endTime":"L","time":"10:00〜L","confidence":"high"}],
+  "dayChecks":[{"day":25,"headcount":1,"entryCount":1,"ok":true}]
 }
 
 注意：dayは必ず対象日の実日付（例25）を返す。画像の小さい日付文字を読み直して別の日に変更しない。`;
@@ -6888,21 +6893,11 @@ ${positionRules}
       if(!candidate)throw new Error('AIから読み取り結果が返りませんでした。');
       const obj=JSON.parse(cleanJsonText(candidate));
 
-      const rows=Array.isArray(obj.staffRows)?obj.staffRows:[];
+      // ★重要：スタッフ名はAI結果を一切使わず、アプリのスタッフマスターだけを使用。
+      // rowIndex（上から何人目）→登録済みスタッフ名を固定する。
       const rowNames=new Map();
       const canonicalNames=getCanonicalShiftNames();
-      // ★重要：既知のスタッフはAIの名前回答を一切採用しない。
-      // rowIndex（上から何人目）→スタッフ名をアプリ側で固定する。
-      // これで「中島を読まない→石川として登録」「石川を別日に入れる」系の
-      // 名前OCR・類似文字・過去保存値による誤紐付けを根本的に遮断する。
       canonicalNames.forEach((name,i)=>rowNames.set(i+1,name));
-      // 26人を超える将来のヘルプ枠だけは、AIが実際に読んだ名前を利用可能。
-      for(const r of rows){
-        const ri=Number(r?.rowIndex),name=String(r?.name||'').trim();
-        if(Number.isInteger(ri)&&ri>=1&&ri<=img.rowCount&&!rowNames.has(ri)&&name)rowNames.set(ri,name);
-      }
-      // 中島・石川は位置固定を再度明示。過去データの入れ替わりを絶対に引き継がない。
-      if(img.rowCount>=8){rowNames.set(7,'[削除済み]');rowNames.set(8,'[削除済み]');}
 
       // entriesは「rowIndex × 実日付」で固定。AIが返した日付が対象外なら破棄。
       const rawEntries=Array.isArray(obj.entries)?obj.entries:[];
@@ -6919,8 +6914,10 @@ ${positionRules}
         const startTime=normalizeShiftTime(x?.startTime||'');
         const endTime=normalizeShiftTime(x?.endTime||'');
         const time=normalizeShiftTimeRange(startTime,endTime,x?.time||'');
+        const aiPosition=String(x?.position||'').trim();
+        const position=aiPosition||shiftPositionForMark(mark);
         entries.push({
-          date,name,mark,number:'',position:shiftPositionForMark(mark),startTime,endTime,time,
+          date,name,mark,number:'',position,startTime,endTime,time,
           present:true,rowIndex:ri,columnIndex:dateList.indexOf(day)+1,
           confidence:String(x?.confidence||'medium')
         });
@@ -6954,6 +6951,8 @@ ${positionRules}
           `AI読み取り完了：${uniqueDates}日・${next.length}件\n`+
           `日付：アプリ側で${from}〜${to}日に固定\n`+
           `1日2列・1人2行の交点を確認\n`+
+          `スタッフ名：アプリ登録名を固定\n`+
+          `読み取り：出勤表示・時間・ポジション\n`+
           `出勤人数：${summary}`+
           (badChecks.length?`\n⚠️ 人数不一致：${badChecks.map(x=>`${x.day}日`).join('、')}（再確認済み）`:'')+
           (low?`\n⚠️ 確信度が低い項目：${low}件`:'')+
@@ -7045,7 +7044,7 @@ ${positionRules}
             const fb=window.__fb,live=await fb.get(fb.ref(fb.db,'shift/schedules')),cur=live.val()||{},u={};
             const currentService=document.body.dataset.shiftMode==='lunch'?'lunch':'dinner';
             Object.entries(cur).forEach(([id,x])=>{const itemService=String(x?.shiftType||'dinner');if(itemService===currentService&&x?.date&&String(x.date).startsWith(ym+'-')){const d=Number(String(x.date).slice(-2));if(d>=from&&d<=to)u[`shift/schedules/${id}`]=null}});
-            chosen.forEach(x=>{const id=fb.push(fb.ref(fb.db,'shift/schedules')).key;const st=normalizeShiftTime(x.startTime||'');const et=normalizeShiftTime(x.endTime||'');const tm=normalizeShiftTimeRange(st,et,x.time||'');u[`shift/schedules/${id}`]={date:x.date,name:x.name,number:'',position:shiftPositionForMark(x.mark)||x.position||'',mark:String(x.mark||'').toUpperCase(),startTime:st,endTime:et,time:tm,period:p,shiftType:currentService,source:'gemini-ai',confidence:x.confidence||'medium',createdAt:Date.now()}});
+            chosen.forEach(x=>{const id=fb.push(fb.ref(fb.db,'shift/schedules')).key;const st=normalizeShiftTime(x.startTime||'');const et=normalizeShiftTime(x.endTime||'');const tm=normalizeShiftTimeRange(st,et,x.time||'');u[`shift/schedules/${id}`]={date:x.date,name:x.name,number:'',position:x.position||shiftPositionForMark(x.mark)||'',mark:String(x.mark||'').toUpperCase(),startTime:st,endTime:et,time:tm,period:p,shiftType:currentService,source:'gemini-ai',confidence:x.confidence||'medium',createdAt:Date.now()}});
             u[`shift/periodMeta/${currentService}-${ym}-${p}`]={yearMonth:ym,period:p,shiftType:currentService,label,updatedAt:Date.now(),count:chosen.length,source:'gemini-ai',photoData:aiPhotoData||'',photoName:aiFile?.name||''};
             await fb.update(fb.ref(fb.db),u);card.hidden=true;setAiStatus('AI読み取り結果を保存しました。','ok');alert(`AI読み取り結果をシフトに登録しました。\n${chosen.length}件`);
           }catch(err){alert('シフト登録に失敗しました。\n'+(err?.message||err))}
@@ -7127,49 +7126,98 @@ ${positionRules}
 
 <script id="shiftNavIndependentFix">
 (function(){
+  try{history.scrollRestoration='manual';}catch(_){}
+  let shiftScrollLockTimer=null;
+
+  function lockShiftTop(){
+    const body=document.body;
+    const se=document.scrollingElement||document.documentElement;
+    try{history.scrollRestoration='manual';}catch(_){}
+
+    // ページ切替でhidden要素の高さが変わる瞬間にSafariが以前の最下部位置を
+    // 復元するため、切替中だけbodyを固定して「0px」を基準にする。
+    const y=0;
+    body.dataset.shiftScrollLocked='1';
+    body.style.position='fixed';
+    body.style.top=`-${y}px`;
+    body.style.left='0';
+    body.style.right='0';
+    body.style.width='100%';
+
+    try{se.scrollTop=y;}catch(_){}
+    try{document.documentElement.scrollTop=y;}catch(_){}
+    try{body.scrollTop=y;}catch(_){}
+    try{window.scrollTo(0,y);}catch(_){}
+  }
+
+  function unlockShiftTop(){
+    const body=document.body;
+    if(body.dataset.shiftScrollLocked!=='1')return;
+    body.style.position='';
+    body.style.top='';
+    body.style.left='';
+    body.style.right='';
+    body.style.width='';
+    delete body.dataset.shiftScrollLocked;
+
+    const se=document.scrollingElement||document.documentElement;
+    try{se.scrollTop=0;}catch(_){}
+    try{document.documentElement.scrollTop=0;}catch(_){}
+    try{body.scrollTop=0;}catch(_){}
+    try{window.scrollTo(0,0);}catch(_){}
+  }
+
   function bindShiftNav(){
     const $=id=>document.getElementById(id);
     const pages={shopping:'shoppingPage',vegetable:'vegetablePage',prep:'prepPage',shift:'shiftPage'};
     const tabs={shopping:'tabShopping',vegetable:'tabVegetable',prep:'tabPrep',shift:'tabShift'};
+
     function show(which){
-      Object.entries(pages).forEach(([key,id])=>{const el=$(id);if(el)el.hidden=key!==which;});
-      Object.entries(tabs).forEach(([key,id])=>{const el=$(id);if(el)el.classList.toggle('active',key===which);});
+      if(which==='shift'){
+        if(shiftScrollLockTimer)clearTimeout(shiftScrollLockTimer);
+        lockShiftTop();
+      }
+
+      Object.entries(pages).forEach(([key,id])=>{
+        const el=$(id);if(el)el.hidden=key!==which;
+      });
+      Object.entries(tabs).forEach(([key,id])=>{
+        const el=$(id);if(el)el.classList.toggle('active',key===which);
+      });
+
       if(which==='shift'){
         const d=new Date();
         const iso=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-        const v=$('shiftViewDate'); if(v&&!v.value)v.value=iso;
-        const m=$('shiftMemoDate'); if(m&&!m.value)m.value=iso;
+        const v=$('shiftViewDate');if(v&&!v.value)v.value=iso;
+        const m=$('shiftMemoDate');if(m&&!m.value)m.value=iso;
         window.dispatchEvent(new CustomEvent('shift-page-opened'));
 
-        // シフトを開いた瞬間に、Safariが直前ページのスクロール位置を復元する場合があるため、
-        // スクロール位置を複数回確実に先頭へ戻す。smoothは使わない。
-        const forceShiftTop=()=>{
-          const se=document.scrollingElement||document.documentElement;
-          try{se.scrollTop=0;}catch(_){}
-          try{document.documentElement.scrollTop=0;}catch(_){}
-          try{document.body.scrollTop=0;}catch(_){}
-          try{window.scrollTo(0,0);}catch(_){}
-          try{history.scrollRestoration='manual';}catch(_){}
-        };
-        forceShiftTop();
+        // 描画・Firebase反映が終わるまで短時間だけスクロールを固定。
+        // 何度もscrollToして画面を「下→上」と動かす処理はしない。
         requestAnimationFrame(()=>{
-          forceShiftTop();
+          lockShiftTop();
           requestAnimationFrame(()=>{
-            forceShiftTop();
-            setTimeout(forceShiftTop,50);
-            setTimeout(forceShiftTop,200);
-            setTimeout(forceShiftTop,500);
+            lockShiftTop();
+            shiftScrollLockTimer=setTimeout(unlockShiftTop,120);
           });
         });
       }
     }
+
     Object.entries(tabs).forEach(([key,id])=>{
-      const el=$(id); if(!el||el.dataset.independentShiftNav==='1')return;
+      const el=$(id);
+      if(!el||el.dataset.independentShiftNav==='1')return;
       el.dataset.independentShiftNav='1';
-      el.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();show(key);},true);
+      el.addEventListener('click',function(e){
+        e.preventDefault();
+        e.stopPropagation();
+        show(key);
+      },true);
     });
   }
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bindShiftNav);else bindShiftNav();
+
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bindShiftNav);
+  else bindShiftNav();
   window.addEventListener('load',bindShiftNav);
 })();
 </script>
