@@ -875,6 +875,9 @@ html.recipeModalLocked, body.recipeModalLocked{
 /* シフト：出勤者表示・引き継ぎメモカレンダー */
 #shiftPage .shiftHeroNames{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 12px;margin-top:10px}
 #shiftPage .shiftHeroName{min-height:48px;padding:10px 12px;border:1px solid #e1e4e8;border-radius:12px;background:#fff;box-sizing:border-box;display:flex;align-items:center;font-weight:800}
+#shiftPage button.shiftNameTap{width:100%;margin:0;color:#172033;text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent}
+#shiftPage button.shiftNameTap:active{transform:scale(.99);background:#f5f8ff}
+#shiftPage .shiftAttendanceName.shiftNameTap{justify-content:flex-start;border:1px solid #e1e4e8;font-weight:inherit}
 #shiftPage .shiftAttendanceGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 12px;margin-top:10px}
 #shiftPage .shiftAttendanceName{display:flex;align-items:center;gap:8px;min-height:48px;padding:10px 12px;border:1px solid #e1e4e8;border-radius:12px;background:#fff;box-sizing:border-box}
 #shiftPage .shiftAttendanceNo{display:inline-flex;align-items:center;justify-content:center;min-width:28px;height:28px;border-radius:50%;background:#eef3ff;color:#2864d7;font-weight:800;font-size:14px}
@@ -920,9 +923,36 @@ html.recipeModalLocked, body.recipeModalLocked{
 .shiftTodayEditRow button{width:auto!important;margin:0!important;padding:10px 12px!important}
 .shiftTodayEditActions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
 .shiftTodayEditActions button{margin:0}
+.shiftOtherDayEditCard{margin-top:12px;padding:12px;border:1px solid #d8e2f5;border-radius:16px;background:#f8fbff}
+.shiftOtherDayEditList{display:grid;grid-template-columns:1fr;gap:6px;margin-top:10px;max-height:520px;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-right:3px}
+.shiftOtherDayEditRow{display:grid;grid-template-columns:36px minmax(110px,1fr) 150px 130px;gap:7px;align-items:center;padding:8px;border:1px solid #e1e5ea;border-radius:12px;background:#fff}
+.shiftOtherDayEditRow input[type="checkbox"]{width:22px;height:22px;margin:0!important}
+.shiftOtherDayEditRow input[type="text"]{margin:0!important;padding:9px!important;font-size:16px!important;min-width:0}
+.shiftOtherDayEditRow .shiftOtherDayEditName{font-weight:800}
+@media(max-width:600px){.shiftOtherDayEditRow{grid-template-columns:34px minmax(0,1fr);gap:6px}.shiftOtherDayEditRow input[type="text"]{width:100%;box-sizing:border-box}.shiftOtherDayEditRow .shiftOtherDayEditTime{grid-column:2}.shiftOtherDayEditRow .shiftOtherDayEditPosition{grid-column:2}.shiftOtherDayEditList{max-height:60vh}}
 @media(max-width:600px){
   .shiftTodayEditRow{grid-template-columns:1fr 1fr auto}
   .shiftTodayEditRow input{min-width:0}
+}
+</style>
+<style id="shiftSimpleTimeEditor">
+.shiftTimeEditor{width:100%;box-sizing:border-box;padding:8px 0}
+.shiftTimeControl{display:grid;grid-template-columns:48px minmax(180px,1fr) 72px;gap:8px;align-items:center;margin-top:7px;padding:9px 10px;border:1px solid #d9dee7;border-radius:12px;background:#fafbfd;box-sizing:border-box}
+.shiftTimeControl label{font-weight:900;font-size:14px;white-space:nowrap}
+.shiftTimeControl input[type="range"]{width:100%;height:34px;accent-color:#3478db;cursor:pointer}
+.shiftTimeValue{min-width:68px;text-align:center;font-weight:900;font-size:17px;white-space:nowrap}
+.shiftTimeLBtn{border:1px solid #bfc9d8;background:#fff;border-radius:10px;padding:8px 10px;font-weight:900;font-size:14px;white-space:nowrap;cursor:pointer}
+.shiftTimeLBtn.active{background:#eaf2ff;border-color:#3478db;color:#1857ad}
+.shiftOtherDayEditTimeWrap,.shiftTodayEditTimeWrap{grid-column:1/-1;min-width:0}
+#shiftPage .shiftOtherDayEditPosition{width:100%;min-width:190px;min-height:50px;box-sizing:border-box;padding:10px 12px;border:1px solid #cbd3df;border-radius:10px;font-size:17px;font-weight:800;background:#fff}
+#shiftPage .shiftTodayEditPosition{width:100%;min-width:0;min-height:50px;box-sizing:border-box;padding:10px 12px;border:1px solid #cbd3df;border-radius:10px;font-size:17px;font-weight:800;background:#fff;color:#172033}
+#shiftPage .shiftTodayEditRow .shiftTodayEditPosition{cursor:pointer}
+@media(max-width:600px){
+  .shiftTimeControl{grid-template-columns:46px minmax(0,1fr) 68px;gap:6px;padding:8px}
+  .shiftTimeControl input[type="range"]{height:36px}
+  .shiftTimeValue{font-size:16px;min-width:64px}
+  .shiftTimeLBtn{font-size:13px;padding:8px 6px}
+  #shiftPage .shiftOtherDayEditPosition{min-width:0;min-height:52px;font-size:17px}
 }
 </style>
 
@@ -1075,6 +1105,14 @@ body{
 }
 </style>
 
+
+<style>
+.shiftTodayEditAddBox{margin-top:12px;padding:12px;border:1px solid #ddd;border-radius:12px;background:#fff7fb}
+.shiftTodayEditAddBox label{display:block;font-weight:700;margin-bottom:8px}
+.shiftTodayEditAddRow,.shiftTodayEditFreeRow{display:flex;gap:8px;align-items:center;margin-top:7px}
+.shiftTodayEditStaffSelect,.shiftTodayEditFreeName{flex:1;min-width:0;min-height:44px;font-size:16px}
+.shiftTodayEditAddRow button,.shiftTodayEditFreeRow button{white-space:nowrap;min-height:44px}
+</style>
 </head>
 <body><div class="wrap">
 <div class="navtabs navtabs3 navtabs4">
@@ -1319,7 +1357,7 @@ body{
     </div>
     <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end">
       <button type="button" class="gray shiftTodaySmallBtn" id="shiftTodayQuickBtn">今日を表示</button>
-      <button type="button" class="gray shiftTodaySmallBtn" id="shiftTodayEditBtn">✏️ 今日の出勤者を編集</button>
+      <button type="button" class="shiftTodaySmallBtn" id="shiftTodayStaffAddBtn">＋スタッフ追加</button>
     </div>
   </div>
   <div id="shiftTodayQuickSummary" class="shiftHeroCount">読み込み中…</div>
@@ -1327,12 +1365,34 @@ body{
   <div id="shiftTodayQuickMemo" class="shiftHeroMemo" hidden></div>
 </div>
 
+<div class="card" id="shiftStaffAddCard" hidden>
+  <div class="shiftSectionTitle">➕ スタッフ追加</div>
+  <div id="shiftStaffAddDateLabel" class="shiftHint"></div>
+  <div class="shiftTodayEditAddBox">
+    <label>登録スタッフから追加</label>
+    <div id="shiftStaffAddRegisteredList" class="shiftStaffAddRegisteredList"></div>
+    <div class="shiftTodayEditAddRow" style="display:none">
+      <select id="shiftStaffAddSelect" class="shiftTodayEditStaffSelect">
+        <option value="">登録スタッフを選択</option>
+      </select>
+      <button type="button" id="shiftStaffAddRegisteredBtn">＋追加</button>
+    </div>
+    <label style="margin-top:14px">登録されていない名前を追加</label>
+    <div class="shiftTodayEditFreeRow shiftStaffAddFreeRowFixed">
+      <input type="text" id="shiftStaffAddFreeName" class="shiftTodayEditFreeName" placeholder="フリーの名前を入力">
+      <button type="button" id="shiftStaffAddFreeBtn">＋追加</button>
+    </div>
+    <div class="shiftHint" style="margin-top:8px">追加したスタッフは時間・ポジション未設定で登録されます。追加後、名前をタップして編集できます。</div>
+  </div>
+  <button type="button" class="gray" id="shiftStaffAddClose" style="margin-top:8px">閉じる</button>
+</div>
+
 <div class="card" id="shiftTodayEditCard" hidden>
   <div class="shiftSectionTitle">✏️ 今日の出勤者を編集</div>
   <div class="shiftHint">今日の出勤者欄だけを手直しします。AIの元データや他の日のシフトは変更しません。名前・時間を変更、追加、削除できます。</div>
   <div id="shiftTodayEditList" class="shiftTodayEditList"></div>
+  <div class="shiftHint" style="margin-top:10px">※スタッフの追加は編集画面では行いません。上の「＋スタッフ追加」から追加してください。</div>
   <div class="shiftTodayEditActions">
-    <button type="button" class="gray" id="shiftTodayEditAdd">＋ 出勤者を追加</button>
     <button type="button" id="shiftTodayEditSave">💾 今日の変更を保存</button>
   </div>
   <button type="button" class="gray" id="shiftTodayEditCancel" style="margin-top:8px">キャンセル</button>
@@ -1356,39 +1416,33 @@ body{
 </div>
 
 <div class="card">
-  <div class="shiftSectionTitle">📅 別の日を見る</div>
+  <div class="shiftSectionTitle">📅 別の日を見る・編集</div>
   <div class="shiftDateRow">
     <div><label>日付</label><input id="shiftViewDate" type="date"></div>
     <button type="button" class="gray" id="shiftTodayBtn">今日</button>
+    <button type="button" id="shiftOtherDayStaffAddBtnTop">＋スタッフ追加</button>
   </div>
   <div id="shiftDaySummary" class="shiftStatus" style="margin-top:10px">この日のシフトはありません。</div>
   <div id="shiftDayList" style="margin-top:10px"></div>
+  <div id="shiftOtherDayEditCard" class="shiftOtherDayEditCard" hidden>
+    <div class="shiftSectionTitle">✏️ 選択日のスタッフ編集</div>
+    <div class="shiftHint">その日の出勤者だけを表示します。足りないスタッフは「スタッフを追加」から追加できます。☑を外した人は保存時に削除されます。</div>
+    <div id="shiftOtherDayEditList" class="shiftOtherDayEditList"></div>
+    <div class="shiftTodayEditActions">
+      <button type="button" class="gray" id="shiftOtherDayEditCancel">キャンセル</button>
+      <button type="button" id="shiftOtherDayEditSave">💾 この日の変更を保存</button>
+    </div>
+  </div>
 </div>
 
 <div class="card shiftUploadStatusCard">
   <div class="shiftSectionTitle">📷 シフト登録状況</div>
-  <div class="shiftHint">今どの期間のシフトが登録されているかを確認できます。写真の入れ替えは必要な時だけ行います。</div>
+  <div class="shiftHint">現在登録されている期間を確認できます。シフトの読み取りはAIのみ使用します。</div>
   <div id="shiftRegisteredPeriods" class="shiftRegisteredPeriods" style="margin-top:12px"></div>
 </div>
 
-<details class="card shiftUpdateCard">
-  <summary>📷 シフト表を入れ替える（必要な時だけ）</summary>
-  <div class="shiftHint" style="margin-top:10px">前半の途中でも後半を登録できます。後半の途中でも次の月の前半を登録できます。</div>
-  <div class="shiftPeriodRow" style="margin-top:12px">
-    <div><label class="shiftPeriodLabel">対象月</label><input id="shiftTargetMonth" type="month"></div>
-    <div><label class="shiftPeriodLabel">対象期間</label><select id="shiftPeriod"><option value="first">前半（1〜15日）</option><option value="second" selected>後半（16日〜月末）</option></select></div>
-  </div>
-  <div id="shiftUploadTargetLabel" class="shiftUploadTargetLabel" style="margin-top:12px"></div>
-  <div style="margin-top:12px"><button type="button" id="shiftPhotoChoose">📷 この期間の写真を選ぶ</button></div>
-  <input id="shiftPhotoInput" type="file" accept="image/*,.heic,.heif,.jpg,.jpeg,.png,.webp" style="display:none">
-  <div id="shiftPhotoFileName" class="shiftHint" style="margin-top:8px">写真はまだ選択されていません。</div>
-  <div id="shiftPhotoPreview" class="shiftPreview" hidden style="margin-top:10px"></div>
-  <button type="button" class="danger" id="shiftDeletePeriod" style="margin-top:10px">🗑️ この期間の登録シフトを削除</button>
-  <div class="shiftHint" style="margin-top:6px">※古い登録結果を消してから再読み取りしたい時に使います。対象期間だけを削除します。</div>
-</details>
-
 <div class="card" id="shiftReviewCard" hidden>
-  <div class="shiftSectionTitle">🤖 AI読み取り結果の確認</div>
+  <div class="shiftSectionTitle">✅ 登録前の確認</div>
   <div class="shiftHint">日付を選ぶと、その日の出勤者だけを確認できます。AIが写真から名前と勤務記号を読み取ります。登録前に名前・勤務記号・ポジションを確認して修正できます。</div>
   <div class="shiftReviewDateBar" style="margin-top:10px">
     <div><label>確認する日</label><input id="shiftReviewDate" type="date"></div>
@@ -1401,15 +1455,14 @@ body{
   </div>
 </div>
 
-<details class="shiftStaffSettings" style="display:none">
-  <summary>⚙️ 旧スタッフ番号と名前の登録・変更</summary>
+<details class="shiftStaffSettings" open>
+  <summary>⚙️ スタッフマスター（登録・変更）</summary>
   <div class="shiftStaffQuick" style="margin-top:12px">
-    <div class="shiftHint">AI読み取りではスタッフ番号を使いません。写真からスタッフ名と勤務記号を直接読み取り、勤務記号からポジションを付けます。この番号登録は従来の手動OCR用として残しています。</div>
+    <div class="shiftHint">登録スタッフをここで管理します。今日・別日の「スタッフを追加」で選択できる名前です。フリー追加はこのマスターに登録せず、その日の出勤者として追加できます。</div>
     <textarea id="shiftStaffMasterText" class="shiftMemo" placeholder="例：
-9.10 加藤
-11.12 坂口
-13.14 竹内
-15.16 未登録"></textarea>
+10 [削除済み]
+12 [削除済み]
+14 [削除済み]"></textarea>
     <div class="shiftQuickBtns">
       <button type="button" id="shiftStaffMasterSave">💾 番号と名前を保存</button>
       <button type="button" class="gray" id="shiftStaffMasterLoad">登録済みを表示</button>
@@ -4738,7 +4791,20 @@ button, label {
   function staffFromText(v){return parseStaffMapText(v)}
   function renderStaff(){
     const ta=$('shiftStaffMasterText'); if(ta && document.activeElement!==ta) ta.value=staffMapToText(staffMap);
-    const st=$('shiftStaffMasterStatus'); const n=Object.keys(staffMap||{}).length; if(st) st.textContent=n?`✅ ${n}番号登録済み`:'スタッフ番号と名前がまだ登録されていません。';
+    const st=$('shiftStaffMasterStatus');
+    const n=Object.keys(staffMap||{}).length;
+    if(st) st.textContent=n?`✅ ${n}番号登録済み`:'スタッフ番号と名前がまだ登録されていません。';
+    let list=$('shiftStaffMasterRegisteredList');
+    if(!list){
+      list=document.createElement('div');
+      list.id='shiftStaffMasterRegisteredList';
+      list.className='shiftStaffMasterRegisteredList';
+      st?.insertAdjacentElement('afterend',list);
+    }
+    const rows=Object.entries(staffMap||{}).sort((a,b)=>Number(a[0])-Number(b[0]));
+    list.innerHTML=rows.length
+      ? `<div class="small" style="margin-top:8px;font-weight:800">📋 登録済みスタッフ</div>${rows.map(([num,name])=>`<div class="shiftStaffMasterRegisteredRow"><span>${esc(num)}</span><b>${esc(name)}</b></div>`).join('')}`
+      : '';
   }
   async function saveStaff(){
     const ta=$('shiftStaffMasterText'); const next=staffFromText(ta?.value);
@@ -4758,6 +4824,27 @@ button, label {
       $('shiftStaffMasterStatus').textContent=`✅ この端末に${Object.keys(staffMap).length}番号保存しました（共有保存は未完了）。`;
     }
   }
+  const DEFAULT_SHIFT_STAFF_NAMES=[
+    '[削除済み]','[削除済み]','[削除済み]','[削除済み]','[削除済み]','[削除済み]',
+    '[削除済み]','[削除済み]','[削除済み]','[削除済み]','[削除済み]','[削除済み]',
+    '[削除済み]','[削除済み]','[削除済み]','[削除済み]','[削除済み]','[削除済み]',
+    '[削除済み]','[削除済み]','[削除済み]','[削除済み]','[削除済み]','[削除済み]','[削除済み]','[削除済み]'
+  ];
+  function defaultShiftStaffMap(){
+    const map={};
+    DEFAULT_SHIFT_STAFF_NAMES.forEach((name,i)=>{ map[String(10+i*2)]=name; });
+    return map;
+  }
+  async function seedDefaultShiftStaffMaster(){
+    const seed=defaultShiftStaffMap();
+    staffMap=seed;
+    staff=DEFAULT_SHIFT_STAFF_NAMES.slice();
+    try{localStorage.setItem(localKey(),JSON.stringify(staff));localStorage.setItem('karuya_shift_staff_map_v1',JSON.stringify(seed));}catch(_){}
+    if(fb()){
+      const obj={};Object.entries(seed).forEach(([number,name])=>obj[number]={name,number});
+      await fb().set(ref('shift/staffMap'),obj);
+    }
+  }
   async function loadStaff(){
     try{
       const mapRaw=localStorage.getItem('karuya_shift_staff_map_v1');
@@ -4770,11 +4857,42 @@ button, label {
       }
       if(!Object.keys(staffMap).length){
         const raw=localStorage.getItem(localKey());
-        if(raw){const a=JSON.parse(raw);if(Array.isArray(a))a.forEach((name,i)=>{if(String(name||'').trim())staffMap[String(i+1)]=String(name).trim();});}
+        if(raw){const a=JSON.parse(raw);if(Array.isArray(a))a.forEach((name,i)=>{if(String(name||'').trim())staffMap[String(10+i*2)]=String(name).trim();});}
+      }
+      // 既存のスタッフマスターを消さず、確定済み26名のうち未登録だけを追加する。
+      // 既存の番号・名前・Firebaseデータは上書きしない。
+      const existingNames=new Set(Object.values(staffMap||{}).map(v=>String(v||'').trim()).filter(Boolean));
+      let changed=false;
+      const usedNumbers=new Set(Object.keys(staffMap||{}).map(n=>String(n)));
+      let nextNumber=10;
+      for(const name of DEFAULT_SHIFT_STAFF_NAMES){
+        if(existingNames.has(name)) continue;
+        while(usedNumbers.has(String(nextNumber))) nextNumber+=2;
+        staffMap[String(nextNumber)]=name;
+        usedNumbers.add(String(nextNumber));
+        existingNames.add(name);
+        nextNumber+=2;
+        changed=true;
+      }
+      if(changed){
+        try{
+          localStorage.setItem('karuya_shift_staff_map_v1',JSON.stringify(staffMap));
+          if(fb()){
+            const obj={};
+            Object.entries(staffMap).forEach(([number,name])=>obj[number]={name,number});
+            await fb().set(ref('shift/staffMap'),obj);
+          }
+        }catch(e){console.warn('staff master merge',e)}
       }
       staff=Object.entries(staffMap).sort((a,b)=>Number(a[0])-Number(b[0])).map(([,name])=>name);
     }catch(e){console.warn('staff load',e)}
     renderStaff();
+    const st=$('shiftStaffMasterStatus');
+    if(st){
+      const n=Object.keys(staffMap||{}).length;
+      st.textContent=n?`✅ 登録済みスタッフを表示しました（${n}番号）`:'登録済みスタッフはありません。';
+    }
+    try{$('shiftStaffMasterText')?.scrollIntoView({behavior:'smooth',block:'center'});}catch(_){}
   }
 
   function showPreview(file){
@@ -5308,13 +5426,45 @@ button, label {
       const liveSnap=await fb().get(ref('shift/schedules'));
       const current=liveSnap.val()||{}; const u={};
       Object.entries(current).forEach(([id,x])=>{if(inPeriod(x?.date)&&shiftIsCurrentType(x))u[`shift/schedules/${id}`]=null});
-      chosen.forEach(x=>{const id=fb().push(ref('shift/schedules')).key;u[`shift/schedules/${id}`]={date:x.date,name:x.name,position:x.position||shiftPositionForMark(x.mark),time:normalizeShiftTimeRange(x.startTime,x.endTime,x.time),period:p,shiftType:shiftType(),source:'photo-attendance',createdAt:Date.now()}});
+      chosen.forEach(x=>{
+        const id=fb().push(ref('shift/schedules')).key;
+        const normalizedTime=normalizeShiftTimeRange(x.startTime||'',x.endTime||'',x.time||'');
+        const timeParts=shiftTimeParts(normalizedTime);
+        u[`shift/schedules/${id}`]={
+          date:x.date,
+          name:x.name,
+          position:x.position||shiftPositionForMark(x.mark),
+          time:normalizedTime,
+          startTime:timeParts.start||normalizeShiftTime(x.startTime||'')||'',
+          endTime:timeParts.isL?'L':(timeParts.end||normalizeShiftTime(x.endTime||'')||''),
+          period:p,
+          shiftType:shiftType(),
+          source:'photo-attendance',
+          createdAt:Date.now()
+        };
+      });
       u[`shift/periodMeta/${shiftType()}-${periodKey()}`]={yearMonth:ym,period:p,shiftType:shiftType(),label,updatedAt:Date.now(),count:chosen.length};
       await fb().update(fb().ref(fb().db),u);
       pending=[];$('shiftReviewCard').hidden=true;alert(`${label}を登録しました。\n${chosen.length}件`);renderShiftRegisteredPeriods();renderDay();
     }catch(e){console.error(e);alert('登録に失敗しました。\n'+(e?.message||String(e)))}
   }
-  function displayShiftTime(v){
+  function shiftDisplayStartEnd(v,start,end){
+  const rawStart=String(start??'').trim();
+  const rawEnd=String(end??'').trim();
+  const rawTime=String(v??'').trim().replace(/[～~]/g,'〜').replace(/〜+/g,'〜');
+  // 「L」はラスト＝終了。入り欄には絶対に表示しない。
+  if(/^L$/i.test(rawEnd)||/^L$/i.test(rawStart)||/^L$/i.test(rawTime)){
+    const st=/^L$/i.test(rawStart)?'':(rawStart?String(normalizeShiftTime(rawStart)||rawStart):'');
+    return {start:st,end:'L'};
+  }
+  const normalized=normalizeShiftTimeRange(rawStart,rawEnd,rawTime);
+  if(!normalized)return {start:'',end:''};
+  const s=displayShiftTime(normalized);
+  const parts=s.split('〜');
+  if(parts.length>=2)return {start:String(parts[0]||'').trim(),end:String(parts[1]||'').trim()};
+  return {start:s,end:''};
+}
+function displayShiftTime(v){
   let s=String(v??'').trim();
   if(!s)return '';
   s=s.replace(/\s+/g,'');
@@ -5332,47 +5482,284 @@ function renderDay(){
     rows.forEach(x=>{
       const name=String(x.name).trim(); if(!name)return;
       const num=Number(x.number);
-      const pos=String(x.position||'').trim()||shiftPositionForMark(x.mark); const mark=String(x.mark||'').trim().toUpperCase(); const time=String(x.time||'').trim(); if(!byName[name] || (Number.isFinite(num)&&num<Number(byName[name].number||Infinity))) byName[name]={name,number:Number.isFinite(num)?num:9999,position:pos,mark,time}; else { if(!String(byName[name].position||'').trim()&&pos) byName[name].position=pos; if(!String(byName[name].mark||'').trim()&&mark) byName[name].mark=mark; if(!String(byName[name].time||'').trim()&&time) byName[name].time=time; }
+      const pos=String(x.position||'').trim()||shiftPositionForMark(x.mark); const mark=String(x.mark||'').trim().toUpperCase(); const time=normalizeShiftTimeRange(x.startTime||'',x.endTime||'',x.time||''); if(!byName[name] || (Number.isFinite(num)&&num<Number(byName[name].number||Infinity))) byName[name]={name,number:Number.isFinite(num)?num:9999,position:pos,mark,time,
+          startTime:String(x.startTime||'').trim(),endTime:String(x.endTime||'').trim()}; else { if(!String(byName[name].position||'').trim()&&pos) byName[name].position=pos; if(!String(byName[name].mark||'').trim()&&mark) byName[name].mark=mark; if(!String(byName[name].time||'').trim()&&time) byName[name].time=time; }
     });
     const names=window.sortShiftDisplayByPosition(Object.values(byName));
     sum.textContent=names.length?`${dateLabel(date)}　出勤 ${names.length}人`:'この日のシフトはありません。';
-    list.innerHTML=names.length?`<div class="shiftAttendanceGrid">${names.map((x,i)=>`<div class="shiftAttendanceName"><span class="shiftAttendanceNo">${i+1}</span><b>${esc(x.name)}</b>${displayShiftTime(x.time)?`　<span style="font-size:.9em;font-weight:800;color:#222">${esc(displayShiftTime(x.time))}</span>`:''}${shiftType()==='dinner'&&x.position?`　<span style="font-size:.85em;font-weight:700;color:#555">${esc(x.position)}</span>`:''}</div>`).join('')}</div>`:'';
+    list.innerHTML=names.length?`<div class="shiftAttendanceGrid">${names.map((x,i)=>{const te=shiftDisplayStartEnd(x.time,x.startTime,x.endTime);return `<button type="button" class="shiftAttendanceName shiftNameTap" data-shift-edit-name="${esc(x.name)}" data-shift-edit-date="${esc(date)}"><span class="shiftAttendanceNo">${i+1}</span><span class="shiftAttendancePerson"><b>${esc(x.name)}</b>${shiftType()==='dinner'&&x.position?`<span class="shiftAttendancePosition">${esc(x.position)}</span>`:''}</span><span class="shiftAttendanceTime"><span><small>開始</small><strong>${esc(te.start||'--:--')}</strong></span><span><small>終了</small><strong>${esc(te.end||'--:--')}</strong></span></span></button>`}).join('')}</div>`:'';
     renderTodayQuick();
     renderMemos();
+  }
+
+  // 編集画面専用：AI読み取り側の関数スコープに依存しない時間正規化
+  function normalizeShiftTime(v){
+    let s=String(v??'').trim().replace(/[：]/g,':').replace(/[時]/g,':').replace(/[分]/g,'').replace(/\s+/g,'');
+    if(!s)return '';
+    s=s.replace(/[０-９]/g,ch=>String.fromCharCode(ch.charCodeAt(0)-0xFEE0));
+    if(/^L$/i.test(s))return 'L';
+    let m=s.match(/^(\d{1,2}):(\d{1,2})$/);
+    if(m){const h=Number(m[1]),mi=Number(m[2]);if(h>=0&&h<=23&&mi>=0&&mi<=59)return `${String(h).padStart(2,'0')}:${String(mi).padStart(2,'0')}`;return '';}
+    if(/半$/.test(s)){const h=Number(s.replace(/半$/,''));if(h>=0&&h<=23)return `${String(h).padStart(2,'0')}:30`;}
+    const n=Number(s);
+    if(!Number.isFinite(n)||n<0||n>23.99)return '';
+    const h=Math.floor(n),frac=Math.round((n-h)*100);
+    const mi=frac===50?30:(frac===0?0:Math.round(frac*0.6));
+    return mi>=0&&mi<=59?`${String(h).padStart(2,'0')}:${String(mi).padStart(2,'0')}`:'';
+  }
+  function normalizeShiftTimeRange(start,end,time){
+    const clean=v=>String(v??'').trim();
+    let a=clean(start),b=clean(end),t=clean(time);
+    if(!a&&!b&&t){
+      const z=t.replace(/\s+/g,'').replace(/[〜～至\-—–]/g,'~');
+      if(/^L$/i.test(z))b='L';
+      else if(/L$/i.test(z)&&z.length>1){a=z.slice(0,-1);b='L';}
+      else {const parts=z.split('~').map(x=>x.trim());if(parts.length>=2){a=parts[0];b=parts[1];}else a=z;}
+    }
+    const norm=v=>{const z=clean(v);if(!z)return '';if(/^L$/i.test(z))return 'L';return normalizeShiftTime(z);};
+    a=norm(a);b=norm(b);
+    if(a&&b)return `${a}〜${b}`;
+    if(a)return a;if(b)return b;return '';
+  }
+  function editorTimeToMinutes(v){
+    let s=String(v??'').trim().replace(/[：]/g,':').replace(/[時]/g,':').replace(/[分]/g,'').replace(/[０-９]/g,ch=>String.fromCharCode(ch.charCodeAt(0)-0xFEE0));
+    if(!s||/^--:?--$/.test(s))return '';
+    if(/^L$/i.test(s))return '';
+    let m=s.match(/^(\d{1,2}):(\d{1,2})$/);
+    if(m){const h=Number(m[1]),mi=Number(m[2]);if(h<=24&&mi<=59)return Math.min(1440,h*60+mi);}
+    const n=Number(s);
+    if(Number.isFinite(n)&&n>=0&&n<=24){const h=Math.floor(n),r=Math.round((n-h)*100),mi=r===50?30:(r===0?0:Math.round(r*.6));return Math.min(1440,h*60+mi);}
+    return '';
+  }
+  function shiftTimeParts(v){
+    const s=displayShiftTime(v||''); if(!s)return {start:'',end:'',isL:false};
+    const p=s.split('〜');
+    const a=String(p[0]||'').trim(), b=String(p[1]||'').trim();
+    return {start:a,end:/^L$/i.test(b)?'':b,isL:/^L$/i.test(b)};
+  }
+  function minutesFromShiftTime(v){return editorTimeToMinutes(v);}
+  function shiftTimeLabel(n){n=Number(n);return Number.isFinite(n)?(n>=1440?'24:00':`${String(Math.floor(n/60)).padStart(2,'0')}:${String(n%60).padStart(2,'0')}`):'';}
+  function buildShiftTimeEditor(time,kind){
+    const p=shiftTimeParts(time),a=minutesFromShiftTime(p.start),b=minutesFromShiftTime(p.end);
+    const hasStart=a!=='';
+    const hasEnd=b!=='';
+    const sv=hasStart?Number(a):1020;
+    const ev=hasEnd?Number(b):(hasStart?Number(a):1200);
+    const cls=kind==='today'?'shiftTodayEditTime':'shiftOtherDayEditTime';
+    const shownStart=hasStart?shiftTimeLabel(a):'--:--';
+    const shownEnd=p.isL?'L':(hasEnd?shiftTimeLabel(b):'--:--');
+    return `<div class="shiftTimeEditor" data-shift-time-editor="1" data-has-start="${hasStart?'1':'0'}" data-has-end="${hasEnd?'1':'0'}" data-is-l="${p.isL?'1':'0'}">
+      <input type="hidden" class="${cls}" value="${esc(displayShiftTime(time||''))}">
+      <div class="shiftTimeControl"><label>開始</label><input type="range" min="480" max="1440" step="30" value="${sv}" data-shift-start><span class="shiftTimeValue" data-shift-start-value>${esc(shownStart)}</span></div>
+      <div class="shiftTimeControl"><label>終了</label><input type="range" min="480" max="1440" step="30" value="${ev}" data-shift-end ${p.isL?'disabled':''}><span class="shiftTimeValue" data-shift-end-value>${esc(shownEnd)}</span><button type="button" class="shiftTimeLBtn ${p.isL?'active':''}" data-shift-l>終了=L</button></div>
+    </div>`;
+  }
+  function bindShiftTimeEditors(root){
+    (root||document).querySelectorAll('[data-shift-time-editor]').forEach(ed=>{
+      if(ed.dataset.bound==='1')return;
+      ed.dataset.bound='1';
+      const h=ed.querySelector('.shiftTodayEditTime,.shiftOtherDayEditTime');
+      const sr=ed.querySelector('[data-shift-start]'),er=ed.querySelector('[data-shift-end]');
+      const sv=ed.querySelector('[data-shift-start-value]'),ev=ed.querySelector('[data-shift-end-value]'),lb=ed.querySelector('[data-shift-l]');
+      if(!sr||!er||!sv||!ev||!lb)return;
+      const sync=()=>{
+        let start=Number(sr.value), end=Number(er.value);
+        if(end<start){end=start;er.value=String(end)}
+        const isL=lb.classList.contains('active');
+        const a=shiftTimeLabel(start), b=isL?'L':shiftTimeLabel(end);
+        if(h)h.value=`${a}${isL?'〜L':`〜${b}`}`;
+        sv.textContent=a; ev.textContent=b;
+        ed.dataset.hasStart='1'; ed.dataset.hasEnd=isL?'0':'1'; ed.dataset.isL=isL?'1':'0';
+      };
+      sr.addEventListener('input',sync);
+      er.addEventListener('input',sync);
+      lb.addEventListener('click',()=>{
+        const active=lb.classList.toggle('active');
+        er.disabled=active;
+        sync();
+      });
+      // 初期表示は保存済みデータを最優先。空欄を勝手に勤務時間へ変換しない。
+      const existing=String(h?.value||'').trim();
+      if(existing){
+        const pp=shiftTimeParts(existing),aa=minutesFromShiftTime(pp.start),bb=minutesFromShiftTime(pp.end);
+        if(aa!=='')sr.value=String(aa);
+        if(bb!=='')er.value=String(bb);
+        lb.classList.toggle('active',pp.isL);
+        er.disabled=pp.isL;
+        sv.textContent=aa!==''?shiftTimeLabel(aa):'--:--';
+        ev.textContent=pp.isL?'L':(bb!==''?shiftTimeLabel(bb):'--:--');
+      }else{
+        sv.textContent='--:--'; ev.textContent='--:--';
+        lb.classList.remove('active'); er.disabled=false;
+      }
+    });
+  }
+  function getEditableStaffNames(date){
+    const out=[];
+    const add=v=>{const n=String(v||'').trim();if(n&&!out.includes(n)&&out.length<30)out.push(n)};
+    // シフト表の固定順を最優先。AIの名前認識結果では順番を作らない。
+    try{
+      const canonical=window.__canonicalShiftNames||[];
+      canonical.forEach(add);
+    }catch(_){}
+    ['[削除済み]','[削除済み]','[削除済み]','[削除済み]','[削除済み]','[削除済み]','[削除済み]','[削除済み]','[削除済み]','[削除済み]','[削除済み]','[削除済み]','[削除済み]','[削除済み]','[削除済み]','[削除済み]','[削除済み]','[削除済み]','[削除済み]','[削除済み]','[削除済み]','[削除済み]','[削除済み]','[削除済み]','[削除済み]','[削除済み]'].forEach(add);
+    try{Object.values(staffMap||{}).forEach(add)}catch(_){}
+    // 選択日の既存スタッフ（ヘルプ枠など）も失わない。
+    Object.values(schedules||{}).filter(x=>x?.date===date&&String(x?.name||'').trim()&&shiftIsCurrentType(x)).forEach(x=>add(x.name));
+    return out.slice(0,30);
+  }
+  function openOtherDayEditor(selectedName=''){
+    const date=$('shiftViewDate')?.value||today(),card=$('shiftOtherDayEditCard'),box=$('shiftOtherDayEditList');
+    if(!card||!box)return;
+    const target=String(selectedName||'').trim();
+    const rows=Object.values(schedules||{}).filter(x=>x?.date===date&&String(x?.name||'').trim()&&shiftIsCurrentType(x));
+    const byName={};
+    rows.forEach(x=>{
+      const n=String(x.name).trim();
+      if(!n||(target&&n!==target))return;
+      const cur=byName[n]||{};
+      if(!cur.time&&String(x.time||'').trim())cur.time=displayShiftTime(x.time);
+      if(!cur.position&&String(x.position||'').trim())cur.position=String(x.position).trim();
+      byName[n]=cur;
+    });
+    const currentNames=Object.keys(byName);
+    const posOptions=v=>`<option value="" ${!v?'selected':''}>未選択</option><option value="板場" ${v==='板場'?'selected':''}>板場</option><option value="焼場" ${v==='焼場'?'selected':''}>焼場</option><option value="コンロ" ${v==='コンロ'?'selected':''}>コンロ</option><option value="揚場" ${v==='揚場'?'selected':''}>揚場</option><option value="ホール" ${v==='ホール'?'selected':''}>ホール</option>`;
+    const makeRow=(name,v={})=>`<div class="shiftOtherDayEditRow is-selected" data-original-name="${esc(name)}">
+      <input type="checkbox" class="shiftOtherDayEditCheck" data-name="${esc(name)}" checked aria-label="${esc(name)}を出勤者にする">
+      <input type="text" class="shiftOtherDayEditName" value="${esc(name)}" readonly>
+      <div class="shiftOtherDayEditTimeWrap">${buildShiftTimeEditor(v.time||'','other')}</div>
+      <select class="shiftOtherDayEditPosition">${posOptions(v.position||'')}</select>
+    </div>`;
+    box.innerHTML=currentNames.length?currentNames.map(n=>makeRow(n,byName[n])).join(''):'<div class="small">このスタッフの登録シフトが見つかりません。</div>';
+    const rowsBox=box.querySelector('.shiftOtherDayEditRow')?.parentElement||box;
+    bindShiftTimeEditors(rowsBox);
+    rowsBox.querySelectorAll('.shiftOtherDayEditRow').forEach(row=>{
+      const check=row.querySelector('.shiftOtherDayEditCheck'),editor=row.querySelector('[data-shift-time-editor]'),pos=row.querySelector('.shiftOtherDayEditPosition');
+      const sync=()=>{
+        const on=!!check?.checked;row.classList.toggle('is-selected',on);
+        editor?.querySelectorAll('input[type="range"]').forEach(el=>el.disabled=!on);
+        const lb=editor?.querySelector('button[data-shift-l]');
+        if(lb){lb.disabled=!on;const er=editor.querySelector('[data-shift-end]');if(er)er.disabled=!on||lb.classList.contains('active');}
+        if(pos)pos.disabled=!on;
+      };
+      check?.addEventListener('change',sync);sync();
+    });
+    card.hidden=false;card.scrollIntoView({behavior:'smooth',block:'start'});
+  }
+
+  function currentDayNames(date){
+    return new Set(Object.values(schedules||{}).filter(x=>x?.date===date&&String(x?.name||'').trim()&&shiftIsCurrentType(x)).map(x=>String(x.name).trim()));
+  }
+  function openStaffAddCard(date){
+    const card=$('shiftStaffAddCard'), label=$('shiftStaffAddDateLabel'), select=$('shiftStaffAddSelect'), list=$('shiftStaffAddRegisteredList');
+    if(!card)return;
+    date=date||$('shiftViewDate')?.value||today();
+    const existing=currentDayNames(date);
+    const addable=getEditableStaffNames(date).filter(n=>!existing.has(n));
+    if(select){
+      select.innerHTML='<option value="">登録スタッフを選択</option>'+addable.map(n=>`<option value="${esc(n)}">${esc(n)}</option>`).join('');
+      select.value='';
+    }
+    if(list){
+      list.innerHTML=addable.length
+        ? addable.map(n=>`<button type="button" class="shiftStaffAddRegisteredItem" data-staff-name="${esc(n)}">${esc(n)}<span style="float:right">＋</span></button>`).join('')
+        : '<div class="shiftHint">追加できる登録スタッフはありません。</div>';
+      list.querySelectorAll('[data-staff-name]').forEach(btn=>btn.addEventListener('click',async()=>{
+        const name=btn.dataset.staffName||'';
+        btn.disabled=true;
+        const ok=await addStaffToDate(name,date);
+        if(ok){renderDay();renderTodayQuick();openStaffAddCard(date);}
+        else btn.disabled=false;
+      }));
+    }
+    if(label)label.textContent=`対象日：${dateLabel(date)}（${shiftTypeLabel()}）`;
+    card.dataset.date=date;
+    card.hidden=false;
+    card.scrollIntoView({behavior:'smooth',block:'start'});
+  }
+  async function addStaffToDate(rawName,date){
+    const name=String(rawName||'').trim();
+    date=date||$('shiftStaffAddCard')?.dataset.date||$('shiftViewDate')?.value||today();
+    if(!name){alert('スタッフ名を選択または入力してください。');return false;}
+    if(currentDayNames(date).has(name)){alert(`${name}は既に${dateLabel(date)}の出勤者に入っています。`);return false;}
+    if(!fb()){alert('Firebaseが準備できていません。');return false;}
+    try{
+      const id=fb().push(ref('shift/schedules')).key;
+      await fb().set(ref(`shift/schedules/${id}`),{
+        date,name,number:'',position:'',time:'',period:'manual-add',shiftType:shiftType(),source:'manual-staff-add',createdAt:Date.now()
+      });
+      return true;
+    }catch(e){
+      console.error(e);alert('スタッフ追加に失敗しました。\n'+(e?.message||String(e)));return false;
+    }
+  }
+  function closeStaffAddCard(){const card=$('shiftStaffAddCard');if(card)card.hidden=true;}
+  function closeOtherDayEditor(){const card=$('shiftOtherDayEditCard');if(card)card.hidden=true;}
+  async function saveOtherDayEditor(){
+    if(!fb()){alert('Firebaseが準備できていません。');return}
+    const date=$('shiftViewDate')?.value||today(),box=$('shiftOtherDayEditList');if(!box)return;
+    const row=box.querySelector('.shiftOtherDayEditRow');
+    if(!row){alert('編集するスタッフがありません。');return}
+    const originalName=String(row.dataset.originalName||row.querySelector('.shiftOtherDayEditName')?.value||'').trim();
+    const checked=!!row.querySelector('.shiftOtherDayEditCheck')?.checked;
+    const name=row.querySelector('.shiftOtherDayEditName')?.value.trim()||originalName;
+    const time=row.querySelector('.shiftOtherDayEditTime')?.value.trim()||'';
+    const position=row.querySelector('.shiftOtherDayEditPosition')?.value.trim()||'';
+    if(!confirm(`${dateLabel(date)}の「${originalName}」を変更します。\n\nよろしいですか？`))return;
+    try{
+      const liveSnap=await fb().get(ref('shift/schedules')),current=liveSnap.val()||{},updates={};
+      let found=false;
+      Object.entries(current).forEach(([id,x])=>{
+        if(x?.date===date&&shiftIsCurrentType(x)&&String(x?.name||'').trim()===originalName){
+          updates[`shift/schedules/${id}`]=null;found=true;
+        }
+      });
+      if(!found){alert(`${originalName}の登録シフトが見つかりません。`);return}
+      if(checked){
+        const id=fb().push(ref('shift/schedules')).key;
+        updates[`shift/schedules/${id}`]={date,name,number:'',position,
+          time:normalizeShiftTimeRange('', '', time),period:'manual-date-edit',
+          shiftType:shiftType(),source:'manual-date-edit',createdAt:Date.now()};
+      }
+      await fb().update(fb().ref(fb().db),updates);
+      closeOtherDayEditor();renderDay();renderTodayQuick();
+      alert(`${dateLabel(date)}の${originalName}を保存しました。`);
+    }catch(e){console.error(e);alert('保存に失敗しました。\n'+(e?.message||e))}
   }
 
   function todayRowsForEdit(){
     const date=today();
     return Object.values(schedules||{}).filter(x=>x?.date===date&&String(x?.name||'').trim()&&shiftIsCurrentType(x));
   }
-  function openTodayEditor(){
+  function openTodayEditor(selectedName=''){
     const card=$('shiftTodayEditCard'), box=$('shiftTodayEditList');
     if(!card||!box)return;
-    const rows=todayRowsForEdit();
-    const grouped=[];
-    const seen=new Set();
+    const rows=todayRowsForEdit(), target=String(selectedName||'').trim();
+    const grouped=[],seen=new Set();
     rows.forEach(x=>{
       const key=String(x.name||'').trim();
-      if(!key||seen.has(key))return;
+      if(!key||seen.has(key)||(target&&key!==target))return;
       seen.add(key);
       const same=rows.filter(r=>String(r.name||'').trim()===key);
       const pos=String(same.find(r=>String(r.position||'').trim())?.position||'').trim();
       const time=String(same.find(r=>String(r.time||'').trim())?.time||'').trim();
-       grouped.push({name:key,position:pos,time});
+      grouped.push({name:key,position:pos,time});
     });
     box.innerHTML='';
     if(!grouped.length){
-      box.innerHTML='<div class="small">本日の登録シフトがありません。必要なら「＋ 出勤者を追加」から登録できます。</div>';
-    }else grouped.forEach(x=>addTodayEditRow(x.name,x.position,x.time));
+      box.innerHTML='<div class="small">このスタッフの登録シフトが見つかりません。</div>';
+    }else{
+      const x=grouped[0];
+      const posOptions=v=>`<option value="" ${!v?'selected':''}>未選択</option><option value="板場" ${v==='板場'?'selected':''}>板場</option><option value="焼場" ${v==='焼場'?'selected':''}>焼場</option><option value="コンロ" ${v==='コンロ'?'selected':''}>コンロ</option><option value="揚場" ${v==='揚場'?'selected':''}>揚場</option><option value="ホール" ${v==='ホール'?'selected':''}>ホール</option>`;
+      box.innerHTML=`<div class="shiftTodayEditRow" data-original-name="${esc(x.name)}">
+        <input type="text" class="shiftTodayEditName" value="${esc(x.name)}" aria-label="スタッフ名">
+        <div class="shiftTodayEditTimeWrap">${buildShiftTimeEditor(x.time||'','today')}</div>
+        <select class="shiftTodayEditPosition">${posOptions(x.position||'')}</select>
+      </div>`;
+      bindShiftTimeEditors(box);
+    }
     card.hidden=false;
     card.scrollIntoView({behavior:'smooth',block:'start'});
-  }
-  function addTodayEditRow(name='',position='',time=''){
-    const box=$('shiftTodayEditList');if(!box)return;
-    const row=document.createElement('div');row.className='shiftTodayEditRow';
-    row.innerHTML=`<input class="shiftTodayEditName" value="${esc(name)}" placeholder="名前"><input class="shiftTodayEditPosition" value="${esc(position)}" placeholder="ポジション" ${shiftType()==='lunch'?'style="display:none"':''}><input class="shiftTodayEditTime" value="${esc(time)}" placeholder="時間 例：11:00〜15:00"><button type="button" class="danger shiftTodayEditRemove">削除</button>`;
-    row.querySelector('.shiftTodayEditRemove')?.addEventListener('click',()=>row.remove());
-    box.appendChild(row);
   }
   function closeTodayEditor(){
     const card=$('shiftTodayEditCard');if(card)card.hidden=true;
@@ -5380,46 +5767,35 @@ function renderDay(){
   async function saveTodayEditor(){
     if(!fb()){alert('Firebaseが準備できていません。');return}
     const box=$('shiftTodayEditList');if(!box)return;
-    const rows=[...box.querySelectorAll('.shiftTodayEditRow')].map(r=>({
-      name:r.querySelector('.shiftTodayEditName')?.value.trim()||'',
-      position:r.querySelector('.shiftTodayEditPosition')?.value.trim()||'',
-       time:r.querySelector('.shiftTodayEditTime')?.value.trim()||''
-    })).filter(x=>x.name);
-    if(!rows.length && !confirm('今日の出勤者をすべて削除します。よろしいですか？'))return;
-    if(!confirm('今日の出勤者表示をこの内容に変更します。よろしいですか？'))return;
+    const row=box.querySelector('.shiftTodayEditRow');
+    if(!row){alert('編集するスタッフがありません。');return}
+    const originalName=String(row.dataset.originalName||row.querySelector('.shiftTodayEditName')?.value||'').trim();
+    const name=row.querySelector('.shiftTodayEditName')?.value.trim()||'';
+    const position=row.querySelector('.shiftTodayEditPosition')?.value.trim()||'';
+    const time=row.querySelector('.shiftTodayEditTime')?.value.trim()||'';
+    if(!name){alert('名前を入力してください。');return}
+    if(!confirm(`${originalName===name?name:'「'+originalName+'」→「'+name+'」'}の変更を保存します。\n\nよろしいですか？`))return;
     try{
-      const date=today();
-      const liveSnap=await fb().get(ref('shift/schedules'));
-      const current=liveSnap.val()||{};
-      const updates={};
+      const date=today(), liveSnap=await fb().get(ref('shift/schedules'));
+      const current=liveSnap.val()||{}, updates={};
+      let found=false;
       Object.entries(current).forEach(([id,x])=>{
-        if(x?.date===date&&shiftIsCurrentType(x))updates[`shift/schedules/${id}`]=null;
+        if(x?.date===date&&shiftIsCurrentType(x)&&String(x?.name||'').trim()===originalName){
+          updates[`shift/schedules/${id}`]=null;found=true;
+        }
       });
-      rows.forEach(x=>{
-        const id=fb().push(ref('shift/schedules')).key;
-        updates[`shift/schedules/${id}`]={
-          date,
-          name:x.name,
-          number:'',
-          position:x.position,
-          time:x.time,
-          period:'manual-today',
-          shiftType:shiftType(),
-          source:'manual-today-edit',
-          createdAt:Date.now()
-        };
-      });
+      if(!found){alert(`${originalName}の登録シフトが見つかりません。`);return}
+      const id=fb().push(ref('shift/schedules')).key;
+      const normalizedTime=normalizeShiftTimeRange('', '', time);
+      const timeParts=shiftTimeParts(normalizedTime);
+      updates[`shift/schedules/${id}`]={date,name,number:'',position,
+        time:normalizedTime,startTime:timeParts.start||'',endTime:timeParts.isL?'L':(timeParts.end||''),period:'manual-today',
+        shiftType:shiftType(),source:'manual-today-edit',createdAt:Date.now()};
       await fb().update(fb().ref(fb().db),updates);
-      closeTodayEditor();
-      renderTodayQuick();
-      renderDay();
-      alert('今日の出勤者を保存しました。');
-    }catch(e){
-      console.error(e);
-      alert('保存に失敗しました。\n'+(e?.message||e));
-    }
+      closeTodayEditor();renderTodayQuick();renderDay();
+      alert(`${name}の変更を保存しました。`);
+    }catch(e){console.error(e);alert('保存に失敗しました。\n'+(e?.message||e));}
   }
-
   function renderTodayQuick(){
     const date=today();
     const label=$('shiftTodayDateLabel'),sum=$('shiftTodayQuickSummary'),list=$('shiftTodayQuickList'),memoBox=$('shiftTodayQuickMemo');
@@ -5433,19 +5809,23 @@ function renderDay(){
       const same=rows.filter(r=>String(r.name||'').trim()===name);
       const mark=String(same.find(r=>String(r.mark||'').trim())?.mark||'').trim().toUpperCase();
       const position=String(same.find(r=>String(r.position||'').trim())?.position||'').trim()||shiftPositionForMark(mark);
-      const picked=same.find(r=>String(r.time||'').trim())||same.find(r=>String(r.position||'').trim())||same[0];
+      const picked=same.find(r=>String(r.time||'').trim()||String(r.startTime||'').trim()||String(r.endTime||'').trim())||same.find(r=>String(r.position||'').trim())||same[0];
       if(!byName[name] || (Number.isFinite(num)&&num<Number(byName[name].number||Infinity))){
-        byName[name]={name,number:Number.isFinite(num)?num:9999,position,mark,time:displayShiftTime(picked?.time||'')};
+        byName[name]={name,number:Number.isFinite(num)?num:9999,position,mark,
+          time:normalizeShiftTimeRange(picked?.startTime||'',picked?.endTime||'',picked?.time||''),
+          startTime:String(picked?.startTime||'').trim(),endTime:String(picked?.endTime||'').trim()};
       }else{
         if(!String(byName[name].position||'').trim()&&position)byName[name].position=position;
         if(!String(byName[name].mark||'').trim()&&mark)byName[name].mark=mark;
-        if(!String(byName[name].time||'').trim()&&picked?.time)byName[name].time=displayShiftTime(picked.time);
+        if(!String(byName[name].time||'').trim()&&(picked?.time||picked?.startTime||picked?.endTime))byName[name].time=normalizeShiftTimeRange(picked?.startTime||'',picked?.endTime||'',picked?.time||'');
+        if(!String(byName[name].startTime||'').trim()&&picked?.startTime)byName[name].startTime=String(picked.startTime).trim();
+        if(!String(byName[name].endTime||'').trim()&&picked?.endTime)byName[name].endTime=String(picked.endTime).trim();
       }
     });
     // ポジションを確定してから並び替える。これまでポジション設定前に並び替えていたため、順番が反映されなかった。
     const names=window.sortShiftDisplayByPosition(Object.values(byName));
     sum.textContent=names.length?`出勤 ${names.length}人`:'本日のシフトはまだ登録されていません。';
-    list.innerHTML=names.length?names.map(x=>`<div class="shiftHeroName"><span class="shiftHeroMain"><b>${esc(x.name)}</b>${x.time?`<span class="shiftHeroTime">${esc(x.time)}</span>`:''}</span>${shiftType()==='dinner'&&x.position?`<span class="shiftHeroPosition">${esc(x.position)}</span>`:''}</div>`).join(''):'';
+    list.innerHTML=names.length?names.map((x,i)=>{const te=shiftDisplayStartEnd(x.time,x.startTime,x.endTime);return `<button type="button" class="shiftHeroName shiftNameTap" data-shift-edit-name="${esc(x.name)}" data-shift-edit-date="${esc(date)}"><span class="shiftHeroNo">${i+1}</span><span class="shiftHeroMain"><b>${esc(x.name)}</b>${shiftType()==='dinner'&&x.position?`<span class="shiftHeroPosition">${esc(x.position)}</span>`:''}</span><span class="shiftHeroTimeBox"><span><small>開始</small><strong>${esc(te.start||'--:--')}</strong></span><span><small>終了</small><strong>${esc(te.end||'--:--')}</strong></span></span></button>`}).join(''):'';
     const ma=Object.values(memos).filter(x=>x?.date===date && shiftMemoScopedKey(x)).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
     if(memoBox){memoBox.hidden=!ma.length;memoBox.textContent=ma.length?`📝 引き継ぎ\n${ma.map(x=>x.text).join('\n\n')}`:'';}
   }
@@ -5615,7 +5995,7 @@ function renderDay(){
     const e=$('shiftUploadTargetLabel'); if(!e)return; const ym=targetYM(),p=$('shiftPeriod')?.value||'second'; e.textContent=`📌 ${shiftTypeLabel()}：${periodText(ym,p)}`;
   }
 
-  function bind(){
+  function bindShiftStandalone(){
     if(window.__shiftStandaloneBound)return;window.__shiftStandaloneBound=true;
     const d=today(); document.body.dataset.shiftMode='dinner'; if($('shiftViewDate'))$('shiftViewDate').value=d;if($('shiftMemoDate'))$('shiftMemoDate').value=d;if($('shiftTargetMonth'))$('shiftTargetMonth').value=targetYM(); updateShiftModeButtons(); updateShiftUploadTargetLabel();
     $('shiftStaffMasterSave')?.addEventListener('click',saveStaff);
@@ -5639,9 +6019,20 @@ function renderDay(){
       renderTodayQuick();
     });
     $('shiftPeriod')?.addEventListener('change',updateShiftUploadTargetLabel);
-    $('shiftTargetMonth')?.addEventListener('change',updateShiftUploadTargetLabel);
+    $('shiftTargetMonth')?.addEventListener('change',()=>{updateShiftUploadTargetLabel();renderShiftRegisteredPeriods();});
+    const shiftMonthMove=(delta)=>{
+      const el=$('shiftTargetMonth'); if(!el||!el.value)return;
+      const [y,m]=el.value.split('-').map(Number);
+      const d=new Date(y,m-1+delta,1),ym=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+      el.value=ym;
+      if(el.value!==ym){const opt=document.createElement('option');opt.value=ym;opt.textContent=`${d.getFullYear()}年${d.getMonth()+1}月`;el.appendChild(opt);el.value=ym;}
+      el.dispatchEvent(new Event('change',{bubbles:true}));
+    };
+    $('shiftTargetMonthPrev')?.addEventListener('click',()=>shiftMonthMove(-1));
+    $('shiftTargetMonthNext')?.addEventListener('click',()=>shiftMonthMove(1));
     $('shiftPhotoChoose')?.addEventListener('click',()=>{$('shiftPhotoInput')?.click()});
-    $('shiftPhotoInput')?.addEventListener('change',e=>{selectedFile=e.target.files?.[0]||null;if(selectedFile){showPreview(selectedFile);if($('shiftPhotoFileName'))$('shiftPhotoFileName').textContent=`選択中：${selectedFile.name}`;setStatus('写真を選択しました。「🤖 AIで出勤者を読み取る」を押してください。','ok')}});
+    $('shiftPhotoInput')?.addEventListener('change',e=>{selectedFile=e.target.files?.[0]||null;if(selectedFile){showPreview(selectedFile);if($('shiftPhotoFileName'))$('shiftPhotoFileName').textContent=`選択中：${selectedFile.name}`;setStatus('写真を選択しました。「🔎 読み取る」を押してください。','ok')}});
+    $('shiftOcrStart')?.addEventListener('click',runOCR);
     $('shiftDeletePeriod')?.addEventListener('click',deleteShiftPeriod);
     $('shiftReviewDate')?.addEventListener('change',renderReview);
     $('shiftSave')?.addEventListener('click',saveShift);
@@ -5649,10 +6040,54 @@ function renderDay(){
     $('shiftViewDate')?.addEventListener('change',renderDay);
     $('shiftTodayBtn')?.addEventListener('click',()=>{if($('shiftViewDate'))$('shiftViewDate').value=today();renderDay()});
     $('shiftTodayQuickBtn')?.addEventListener('click',()=>{if($('shiftViewDate'))$('shiftViewDate').value=today();renderDay();$('shiftDaySummary')?.scrollIntoView({behavior:'smooth',block:'start'});});
+    $('shiftTodayStaffAddBtn')?.addEventListener('click',()=>openStaffAddCard(today()));
+    $('shiftOtherDayStaffAddBtnTop')?.addEventListener('click',()=>openStaffAddCard($('shiftViewDate')?.value||today()));
+    $('shiftStaffAddClose')?.addEventListener('click',closeStaffAddCard);
+    $('shiftStaffAddRegisteredBtn')?.addEventListener('click',async()=>{
+      const sel=$('shiftStaffAddSelect'),date=$('shiftStaffAddCard')?.dataset.date||today();
+      if(await addStaffToDate(sel?.value||'',date)){if(sel)sel.value='';renderDay();renderTodayQuick();openStaffAddCard(date);}
+    });
+    $('shiftStaffAddFreeBtn')?.addEventListener('click',async()=>{
+      const inp=$('shiftStaffAddFreeName'),date=$('shiftStaffAddCard')?.dataset.date||today();
+      if(await addStaffToDate(inp?.value||'',date)){if(inp)inp.value='';renderDay();renderTodayQuick();openStaffAddCard(date);}
+    });
+    $('shiftStaffAddFreeName')?.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();$('shiftStaffAddFreeBtn')?.click();}});
+
     $('shiftTodayEditBtn')?.addEventListener('click',openTodayEditor);
-    $('shiftTodayEditAdd')?.addEventListener('click',()=>addTodayEditRow());
     $('shiftTodayEditSave')?.addEventListener('click',saveTodayEditor);
     $('shiftTodayEditCancel')?.addEventListener('click',closeTodayEditor);
+    $('shiftOtherDayEditBtn')?.addEventListener('click',openOtherDayEditor);
+    $('shiftOtherDayEditCancel')?.addEventListener('click',closeOtherDayEditor);
+    $('shiftOtherDayEditSave')?.addEventListener('click',saveOtherDayEditor);
+
+    // 今日・別日の出勤者名をタップすると、その日の編集画面を開く。
+    // 名前は登録スタッフでもフリー追加でも、既存の編集機能でそのまま変更できる。
+    if(!document.body.dataset.shiftNameTapBound){
+      document.body.dataset.shiftNameTapBound='1';
+      document.addEventListener('click',e=>{
+        const el=e.target?.closest?.('.shiftNameTap[data-shift-edit-name], .shiftAttendanceName[data-shift-edit-name], .shiftHeroName[data-shift-edit-name]');
+        if(!el)return;
+        e.preventDefault();
+        const name=String(el.dataset.shiftEditName||'').trim();
+        const date=String(el.dataset.shiftEditDate||today()).trim()||today();
+        if(!name)return;
+        if($('shiftViewDate'))$('shiftViewDate').value=date;
+        renderDay();
+        if(date===today()){
+          openTodayEditor(name);
+          setTimeout(()=>{
+            const row=[...document.querySelectorAll('.shiftTodayEditRow')].find(r=>r.querySelector('.shiftTodayEditName')?.value.trim()===name);
+            row?.scrollIntoView({behavior:'smooth',block:'center'});
+          },80);
+        }else{
+          openOtherDayEditor(name);
+          setTimeout(()=>{
+            const row=[...document.querySelectorAll('.shiftOtherDayEditRow')].find(r=>r.querySelector('.shiftOtherDayEditName')?.value.trim()===name);
+            row?.scrollIntoView({behavior:'smooth',block:'center'});
+          },80);
+        }
+      },true);
+    }
 
     $('shiftMemoDate')?.addEventListener('change',renderMemos);
     $('shiftMemoSave')?.addEventListener('click',saveMemo);
@@ -5662,11 +6097,19 @@ function renderDay(){
   }
   function initData(){
     const start=Date.now(), timer=setInterval(()=>{
-      if(window.__fb){clearInterval(timer);dbReady=true;bind();
+      if(window.__fb){clearInterval(timer);dbReady=true;if(typeof bindShiftStandalone==='function')bindShiftStandalone();
         try{fb().onValue(ref('shift/schedules'),s=>{schedules=s.val()||{};renderShiftRegisteredPeriods();renderDay()});fb().onValue(ref('shift/memos'),s=>{memos=s.val()||{};renderMemos();renderMemoCalendar()});fb().onValue(ref('shift/periodMeta'),s=>{window.__shiftPeriodMeta=s.val()||{};renderShiftRegisteredPeriods()});fb().onValue(ref('shift/staffMap'),s=>{const v=s.val()||{};const a={};Object.entries(v).forEach(([n,x])=>{const name=String(x?.name||'').trim();if(name)a[normalizeStaffNumber(n)]=name;});if(Object.keys(a).length){staffMap=a;staff=Object.values(a);renderStaff();}});}catch(e){console.warn('shift realtime',e)}
-      }else if(Date.now()-start>15000){clearInterval(timer);bind();setStatus('Firebaseの共有接続がまだ準備できていません。写真・名前はこの端末で操作できます。','warn')}
+      }else if(Date.now()-start>15000){clearInterval(timer);if(typeof bindShiftStandalone==='function')bindShiftStandalone();setStatus('Firebaseの共有接続がまだ準備できていません。写真・名前はこの端末で操作できます。','warn')}
     },100);
   }
+  // 編集ボタンはHTMLのonclickからも呼べるよう、IIFE内で明示的に公開する。
+  window.openTodayEditor = openTodayEditor;
+  window.openOtherDayEditor = openOtherDayEditor;
+  window.closeTodayEditor = closeTodayEditor;
+  window.closeOtherDayEditor = closeOtherDayEditor;
+  window.saveTodayEditor = saveTodayEditor;
+  window.saveOtherDayEditor = saveOtherDayEditor;
+
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initData);else initData();
 })();
 </script>
@@ -5725,12 +6168,49 @@ function renderDay(){
       return String(a.name||'').localeCompare(String(b.name||''),'ja');
     });
   }
+  function initShiftTargetMonthSelector(){
+    const el=$('shiftTargetMonth');
+    if(!el)return;
+    const current=targetYM();
+    const now=new Date();
+    const startYear=now.getFullYear()-2;
+    const endYear=now.getFullYear()+2;
+    let html='';
+    for(let y=startYear;y<=endYear;y++){
+      for(let m=1;m<=12;m++){
+        const ym=`${y}-${String(m).padStart(2,'0')}`;
+        html+=`<option value="${ym}">${ym.slice(0,4)}年${Number(ym.slice(5,7))}月</option>`;
+      }
+    }
+    el.innerHTML=html;
+    el.value=current;
+    if(el.value!==current){
+      const opt=document.createElement('option');
+      opt.value=current;
+      opt.textContent=`${current.slice(0,4)}年${Number(current.slice(5,7))}月`;
+      el.appendChild(opt);
+      el.value=current;
+    }
+  }
+
   function injectUi(){
-    const target=$('shiftPhotoPreview'); if(!target)return;
+    const target=$('shiftRegisteredPeriods'); if(!target)return;
     if(!$('shiftGeminiAiBox')) target.insertAdjacentHTML('afterend',`
       <div id="shiftGeminiAiBox">
         <div class="aiTitle">🤖 AIでシフト表を読み取る</div>
-        <div class="aiHint">シフト表の写真をGemini AIに読み込ませ、表の行・日付・名前・勤務記号を確認します。S/Y/O/K/Fなど登録した文字だけを出勤とし、ポジションは勤務記号から自動確定します。スタッフ番号は使用しません。写真はAI読み取り後に自動保存せず、確認して登録した時だけシフトを保存します。</div>
+        <div class="aiHint">日付は前半1〜15日／後半16日〜月末をアプリ側で固定します。1日＝2列、1人＝2行の交点だけを確認し、S/Y/O/K/Fなど登録した文字だけを出勤とします。画像上部の「現人数」も照合します。AI通信は原則1回だけです。写真は確認して登録した時だけシフトを保存します。</div>
+        <div id="shiftAiPeriodRow" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px">
+          <div>
+            <label style="margin-top:0">📅 対象月</label>
+            <div id="shiftTargetMonthControl" style="display:grid;grid-template-columns:48px minmax(0,1fr) 48px;gap:6px;align-items:center">
+              <button type="button" class="gray" id="shiftTargetMonthPrev" style="margin:0;min-height:52px;padding:6px">‹</button>
+              <select id="shiftTargetMonth" aria-label="AIシフト登録の対象月"></select>
+              <button type="button" class="gray" id="shiftTargetMonthNext" style="margin:0;min-height:52px;padding:6px">›</button>
+            </div>
+          </div>
+          <div><label style="margin-top:0">📆 登録する期間</label><select id="shiftPeriod"><option value="first">前半（1〜15日）</option><option value="second" selected>後半（16日〜月末）</option></select></div>
+        </div>
+        <div id="shiftUploadTargetLabel" class="shiftStatus" style="margin-top:8px"></div>
         <div id="shiftGeminiKeyRow">
           <div><label style="margin-top:8px">Gemini APIキー</label><input id="shiftGeminiApiKey" type="password" autocomplete="off" placeholder="AIza..."></div>
           <button type="button" class="gray" id="shiftGeminiKeySave">キーを保存</button>
@@ -5880,9 +6360,47 @@ function renderDay(){
     renderShiftPositionMapEditor();
     loadShiftPositionMap();
   }
+  const SHIFT_ROW_NAME_MAP_KEY='karitaya_shift_row_name_map_v1';
   function staffMasterText(){
     try{return String($('shiftStaffMasterText')?.value||'').trim()}catch(_){return ''}
   }
+  function loadShiftRowNameMap(){
+    try{
+      const raw=localStorage.getItem(SHIFT_ROW_NAME_MAP_KEY);
+      const x=raw?JSON.parse(raw):{};
+      if(!x||typeof x!=='object')return {};
+      const out={};Object.entries(x).forEach(([k,v])=>{const n=Number(k),name=String(v||'').trim();if(Number.isInteger(n)&&n>0&&name)out[n]=name});
+      return out;
+    }catch(_){return {}}
+  }
+  function saveShiftRowNameMap(map){
+    try{localStorage.setItem(SHIFT_ROW_NAME_MAP_KEY,JSON.stringify(map||{}));}catch(_){}
+  }
+
+  // AIにスタッフ名を決めさせないための正規スタッフ順。
+  // シフト表では「上から何人目か」を名前に結び付け、名前OCRの誤認識で
+  // [削除済み]と[削除済み]が入れ替わる事故を防ぐ。
+  const CANONICAL_SHIFT_NAMES=[
+    '[削除済み]','[削除済み]','[削除済み]','[削除済み]','[削除済み]','[削除済み]',
+    '[削除済み]','[削除済み]','[削除済み]','[削除済み]','[削除済み]','[削除済み]',
+    '[削除済み]','[削除済み]','[削除済み]','[削除済み]','[削除済み]','[削除済み]',
+    '[削除済み]','[削除済み]','[削除済み]','[削除済み]','[削除済み]','[削除済み]','[削除済み]','[削除済み]'
+  ];
+  function getCanonicalShiftNames(){
+    const out=[];
+    const add=v=>{const n=String(v||'').trim();if(n&&!out.includes(n)&&out.length<30)out.push(n)};
+    // 現在の8月後半シフトで確定している順番を最優先する。
+    // これを先に置くことで、過去に保存された誤ったstaffMapの順番を引き継がない。
+    CANONICAL_SHIFT_NAMES.forEach(add);
+    // 26人を超える将来のスタッフは、既存のスタッフ番号マスターから後ろに追加する。
+    try{
+      Object.entries(staffMap||{}).sort((a,b)=>Number(a[0])-Number(b[0])).forEach(([,name])=>add(name));
+    }catch(_){}
+    // この2人は位置まで固定。過去に保存された誤った名前対応は一切使わない。
+    if(out.length>=8){out[6]='[削除済み]';out[7]='[削除済み]';}
+    return out.slice(0,30);
+  }
+  window.__canonicalShiftNames=CANONICAL_SHIFT_NAMES.slice(0,30);
   function targetInfo(){
     const ym=$('shiftTargetMonth')?.value||'';const p=$('shiftPeriod')?.value||'second';
     return `${ym} ${p==='first'?'前半（1〜15日）':'後半（16日〜月末）'}`;
@@ -5916,14 +6434,14 @@ function renderDay(){
     if(mi<0||mi>59)return '';
     return `${String(h).padStart(2,'0')}:${String(mi).padStart(2,'0')}`;
   }
-  function normalizeShiftTimeRange(startTime,endTime,time){
-      const s=String(startTime||'').trim(),e=String(endTime||'').trim(),t=String(time||'').trim();
-      // 時間表示だけを修正。AIが読んだstartTime/endTimeを優先する。
-      // 例：17 + L → 17〜L、L単独 → L。
-      if(s&&e)return `${s}〜${e}`;
-      if(s)return s;
-      if(e)return e;
-      return t;
+  function normalizeShiftTimeRange(start,end,time){
+    const clean=v=>String(v??'').trim();
+    let a=clean(start),b=clean(end),t=clean(time);
+    if(!a&&!b&&t){
+      const z=t.replace(/\s+/g,'').replace(/[〜～至\-—–]/g,'~');
+      if(/^L$/i.test(z)){b='L';}
+      else if(/L$/i.test(z)&&z.length>1){a=z.slice(0,-1);b='L';}
+      else {const parts=z.split('~').map(x=>x.trim());if(parts.length>=2){a=parts[0];b=parts[1];}else a=z;}
     }
     const norm=v=>{
       const z=clean(v); if(!z)return '';
@@ -5963,7 +6481,7 @@ function renderDay(){
       const position=shiftPositionForMark(mark);
       const time=normalizeShiftTimeRange(x?.startTime,x?.endTime,x?.time||'');
       if(out.some(z=>z.date===date&&z.name===name&&z.position===position))continue;
-      out.push({date,name,number:'',position,mark,time,selected:true,unregistered:false,confidence:String(x?.confidence||'medium'),aiNote:String(x?.note||'')});
+      out.push({date,name,number:'',position,mark,startTime:normalizeShiftTime(x?.startTime||''),endTime:normalizeShiftTime(x?.endTime||''),time,selected:true,unregistered:false,confidence:String(x?.confidence||'medium'),aiNote:String(x?.note||'')});
     }
     return out;
   }
@@ -6028,7 +6546,9 @@ function renderDay(){
     const [yy,mm]=ym.split('-').map(Number);
     if(!yy||!mm)throw new Error('対象年月を取得できませんでした。');
     const last=new Date(yy,mm,0).getDate();
-    const expected=p==='first'?Math.min(15,last):Math.max(0,last-15);
+    const from=p==='first'?1:16;
+    const to=p==='first'?Math.min(15,last):last;
+    const expected=to-from+1;
     if(yellowRuns.length<expected)throw new Error(`日付列を確定できませんでした（必要${expected}列／検出${yellowRuns.length}列）。`);
     const selected=p==='first'?yellowRuns.slice(0,expected):yellowRuns.slice(yellowRuns.length-expected);
     if(selected.length!==expected)throw new Error(`対象期間の列数が一致しません（${selected.length}/${expected}）。`);
@@ -6144,119 +6664,107 @@ function renderDay(){
       rowCandidates.push({top:boundaries[i]+1,bottom:boundaries[i+1]-1,boundaryIndex:i,nameInk,shiftInk});
     }
 
-    // 名前が短くても、勤務記号があればスタッフ行として残す。
-    // 末尾だけは名前/勤務記号の両方が無い行をテンプレート空行として除外。
+    // 名前が短い／ヘルプ欄の名前が薄い／勤務記号が少ない場合でも、
+    // 「その行自体」を人数判定で切り捨てない。
+    // このシフト表は通常24〜26人程度、最大30人を想定するため、
+    // 検出できた罫線の範囲から最大30スタッフ行まで保持する。
+    // これにより「最後の1人だけ行判定から消える」事故を防ぐ。
+    if(!rowCandidates.length)throw new Error('スタッフ行を検出できませんでした。表全体が写った写真を選んでください。');
+
+    // まず実際に内容がある最後の行を探す。
     let lastActive=-1;
     rowCandidates.forEach((r,i)=>{
-      if(r.nameInk>=10 || r.shiftInk>=20)lastActive=i;
+      if(r.nameInk>=6 || r.shiftInk>=8)lastActive=i;
     });
     if(lastActive<0)throw new Error('スタッフ行を検出できませんでした。表全体が写った写真を選んでください。');
 
-    for(let i=0;i<=lastActive;i++){
+    // 内容がある最後の行の後ろも、最大30人まで「候補行」として残す。
+    // 下段ヘルプの名前が薄い場合でもAIが確認できるようにする。
+    const keepCount=Math.min(30, Math.max(lastActive+1, 30));
+    for(let i=0;i<Math.min(keepCount,rowCandidates.length);i++){
       const r=rowCandidates[i];
       staffBands.push({top:r.top,bottom:r.bottom,boundaryIndex:r.boundaryIndex,ink:r.nameInk,shiftInk:r.shiftInk});
     }
-    const STAFF_COUNT=staffBands.length;
 
-    // ③ 日付を8日ずつ2ブロックに分ける。
-    //    各スタッフ画像は「名前＋8日分の2列セット」だけを含む。
-    //    24〜28日が別の列へ滑ることを防ぐため、16日分を一枚に詰め込まない。
+    // 罫線検出が途中で終わった場合でも、表の一定ピッチから最大30人分を補完する。
+    // ただし画像の外へは出さず、実際に写っている範囲だけを使う。
+    if(staffBands.length<Math.min(30, lastActive+2)){
+      const ds=boundaries.slice(1).map((v,i)=>v-boundaries[i]).filter(v=>v>25&&v<120);
+      const sorted=[...ds].sort((a,b)=>a-b);
+      const pitch=sorted.length?sorted[Math.floor(sorted.length/2)]:null;
+      if(pitch&&pitch>25){
+        let y=staffBands.length?staffBands[staffBands.length-1].bottom+1:staffTop;
+        while(staffBands.length<Math.min(30,lastActive+2)&&y+pitch<H*.99){
+          const bottom=Math.min(H-2,Math.round(y+pitch-2));
+          staffBands.push({top:Math.round(y),bottom,boundaryIndex:boundaries.length+staffBands.length,ink:0,shiftInk:0});
+          y=bottom+2;
+        }
+      }
+    }
+    const STAFF_COUNT=Math.min(30,staffBands.length);
+    staffBands.length=STAFF_COUNT;
+
+    // ③ AIへ渡す画像を「1人×1日」の交差セル中心に再構成する。
+    // 元の表をそのままAIへ渡すのではなく、8日×最大15人の拡大コンタクトシートにする。
+    // これにより、AIが隣の日・隣の人を混同する余地を大幅に減らす。
     const DATE_BLOCK=8;
-    const GROUP_SIZE=7;
-    const sheetNameW=520,dayW=190,labelH=52,outRowH=155,pad=14;
-    const imageBatches=[];
-
+    const ROW_BLOCK=15;
+    const nameW=250, cellW=150, cellH=92, headH=42, pad=12, gap=4;
+    const verificationSheets=[];
     for(let blockStart=0;blockStart<expected;blockStart+=DATE_BLOCK){
       const blockEnd=Math.min(expected,blockStart+DATE_BLOCK);
       const blockPairs=datePairs.slice(blockStart,blockEnd);
-      const batchImages=[];
-      for(let groupStart=0;groupStart<STAFF_COUNT;groupStart+=GROUP_SIZE){
-        const groupEnd=Math.min(STAFF_COUNT,groupStart+GROUP_SIZE),groupCount=groupEnd-groupStart;
+      for(let rowStart=0;rowStart<STAFF_COUNT;rowStart+=ROW_BLOCK){
+        const rowEnd=Math.min(STAFF_COUNT,rowStart+ROW_BLOCK);
+        const rows=staffBands.slice(rowStart,rowEnd);
         const sheet=document.createElement('canvas');
-        sheet.width=sheetNameW+blockPairs.length*dayW+pad*3;
-        sheet.height=pad+labelH+groupCount*outRowH+pad;
-        const q=sheet.getContext('2d');q.fillStyle='#fff';q.fillRect(0,0,sheet.width,sheet.height);
-        q.fillStyle='#fff7b8';q.fillRect(pad,pad,sheet.width-pad*2,labelH);
-        q.fillStyle='#8b0000';q.font='800 18px sans-serif';q.textBaseline='middle';q.textAlign='left';
-        q.fillText(`上々 シフト確認　スタッフ${groupStart+1}〜${groupEnd}　${ym} ${blockPairs[0].date}〜${blockPairs[blockPairs.length-1].date}日`,pad+8,pad+labelH/2);
+        sheet.width=pad+nameW+gap+blockPairs.length*cellW+pad;
+        sheet.height=pad+headH+rows.length*cellH+pad;
+        const q=sheet.getContext('2d');
+        q.fillStyle='#fff';q.fillRect(0,0,sheet.width,sheet.height);
+        q.fillStyle='#f0f4ff';q.fillRect(pad,pad,sheet.width-pad*2,headH);
+        q.fillStyle='#111';q.font='800 18px sans-serif';q.textBaseline='middle';q.textAlign='left';
+        q.fillText(`シフト確認　${from}〜${to}日　行${rowStart+1}〜${rowEnd}`,pad+8,pad+headH/2);
+        q.fillStyle='#111';q.font='900 15px sans-serif';q.textAlign='center';
+        q.fillText('スタッフ名',pad+nameW/2,pad+headH/2);
+        blockPairs.forEach((d,j)=>q.fillText(`${d.date}日`,pad+nameW+gap+j*cellW+cellW/2,pad+headH/2));
 
-        for(let local=0;local<groupCount;local++){
-          const ri=groupStart+local,band=staffBands[ri],sy=band.top,ey=band.bottom,srcH=Math.max(1,ey-sy),oy=pad+labelH+local*outRowH;
-          q.fillStyle=ri%2?'#fafafa':'#f2f2f2';q.fillRect(pad,oy,sheet.width-pad*2,outRowH-4);
-          q.fillStyle='#b00000';q.font='800 16px sans-serif';q.textBaseline='top';q.textAlign='left';q.fillText(`スタッフ${ri+1}`,pad+7,oy+5);
-          const nameScale=Math.min((sheetNameW-22)/nameRight,(outRowH-labelH-10)/srcH);
-          const nameDW=Math.max(1,Math.round(nameRight*nameScale)),nameDH=Math.max(1,Math.round(srcH*nameScale));
-          q.drawImage(c,0,sy,nameRight,srcH,pad+8,oy+labelH,nameDW,nameDH);
+        rows.forEach((band,localRow)=>{
+          const ri=rowStart+localRow;
+          const oy=pad+headH+localRow*cellH;
+          q.fillStyle=localRow%2?'#fafafa':'#f5f5f5';q.fillRect(pad,oy,sheet.width-pad*2,cellH-3);
+          // 名前欄はAIに毎回推測させるため、元画像の名前セルを大きく表示。
+          const srcNameH=Math.max(1,band.bottom-band.top);
+          const nameScale=Math.min((nameW-16)/nameRight,(cellH-10)/srcNameH);
+          q.drawImage(c,0,band.top,nameRight,srcNameH,pad+8,oy+5,
+            Math.max(1,Math.round(nameRight*nameScale)),Math.max(1,Math.round(srcNameH*nameScale)));
+          q.strokeStyle='#888';q.lineWidth=1;q.strokeRect(pad,oy,nameW,cellH-3);
+          q.fillStyle='#0047b3';q.font='900 12px sans-serif';q.textAlign='left';q.textBaseline='top';
+          q.fillText(`行${ri+1}`,pad+8,oy+6);
 
-          const periodX=pad+sheetNameW+pad;
-          blockPairs.forEach((d,localDay)=>{
-            const dx=periodX+localDay*dayW,srcW=d.right-d.left+1,drawH=Math.max(1,outRowH-labelH-10);
-            // 2列セットを一切変形せず、その日だけ切り出す。
-            q.drawImage(c,d.left,sy,srcW,srcH,dx,oy+labelH,dayW,drawH);
-            q.strokeStyle='#c00000';q.lineWidth=3;q.strokeRect(dx,oy+labelH,dayW,drawH);
-            // ヘッダーは画像の上に重ねず、専用領域に表示して元セルを隠さない。
-            q.fillStyle='#fff3a0';q.fillRect(dx+2,oy+labelH+2,dayW-4,28);
-            q.fillStyle='#7d0000';q.font='900 16px sans-serif';q.textAlign='center';q.textBaseline='middle';
-            q.fillText(`列${d.columnIndex} ＝ ${d.date}日`,dx+dayW/2,oy+labelH+16);
-            // 白＝勤務記号、黄色＝時間を明示。
-            q.fillStyle='#111';q.font='700 12px sans-serif';q.textAlign='left';q.fillText('白：勤務記号',dx+8,oy+labelH+drawH-17);
-            q.textAlign='right';q.fillText('黄：時間',dx+dayW-8,oy+labelH+drawH-17);
+          blockPairs.forEach((d,j)=>{
+            const dx=pad+nameW+gap+j*cellW;
+            const srcW=d.right-d.left+1,srcH=Math.max(1,band.bottom-band.top);
+            // 2列セットを「白=勤務記号＋黄=時間」のまま拡大。
+            const innerX=dx+3,innerY=oy+20,innerW=cellW-6,innerH=cellH-23;
+            q.fillStyle='#fff';q.fillRect(dx,oy,cellW,cellH-3);
+            q.drawImage(c,d.left,band.top,srcW,srcH,innerX,innerY,innerW,innerH);
+            q.strokeStyle='#d00000';q.lineWidth=2;q.strokeRect(dx,oy,cellW,cellH-3);
+            q.fillStyle='#d00000';q.font='900 11px sans-serif';q.textAlign='center';q.textBaseline='middle';
+            q.fillText(`${d.date}日 / 行${ri+1}`,dx+cellW/2,oy+10);
           });
-        }
-        const dataUrl=sheet.toDataURL('image/jpeg',.92);
-        batchImages.push({mime:'image/jpeg',data:dataUrl.split(',')[1],rows:`${groupStart+1}-${groupEnd}`,columns:`${blockPairs[0].columnIndex}-${blockPairs[blockPairs.length-1].columnIndex}`,dates:`${blockPairs[0].date}-${blockPairs[blockPairs.length-1].date}`});
+        });
+        verificationSheets.push({
+          mime:'image/jpeg',
+          data:sheet.toDataURL('image/jpeg',.95).split(',')[1],
+          rows:`${rowStart+1}-${rowEnd}`,
+          dates:`${blockPairs[0].date}-${blockPairs[blockPairs.length-1].date}`
+        });
       }
-      imageBatches.push({startColumn:blockPairs[0].columnIndex,endColumn:blockPairs[blockPairs.length-1].columnIndex,startDay:blockPairs[0].date,endDay:blockPairs[blockPairs.length-1].date,days:blockPairs.length,images:batchImages});
     }
-
-    // 今日の列だけは、通常の8日ブロックとは別に「1日専用の拡大確認」を行う。
-    // 今日だけ未検出になるケースを将来も防ぐため、今日の日付が対象期間内なら必ず作成する。
-    let todayVerification=null;
-    try{
-      const now=new Date();
-      const todayY=now.getFullYear(),todayM=now.getMonth()+1,todayD=now.getDate();
-      if(todayY===yy && todayM===mm){
-        const td=datePairs.find(d=>d.date===todayD);
-        if(td){
-          const vImages=[];
-          const vDayW=360,vNameW=600,vRowH=210,vLabelH=58,vPad=16;
-          for(let groupStart=0;groupStart<STAFF_COUNT;groupStart+=GROUP_SIZE){
-            const groupEnd=Math.min(STAFF_COUNT,groupStart+GROUP_SIZE),groupCount=groupEnd-groupStart;
-            const sheet=document.createElement('canvas');
-            sheet.width=vNameW+vDayW+vPad*3;
-            sheet.height=vPad+vLabelH+groupCount*vRowH+vPad;
-            const q=sheet.getContext('2d');
-            q.fillStyle='#fff';q.fillRect(0,0,sheet.width,sheet.height);
-            q.fillStyle='#fff3a0';q.fillRect(vPad,vPad,sheet.width-vPad*2,vLabelH);
-            q.fillStyle='#8b0000';q.font='900 20px sans-serif';q.textBaseline='middle';q.textAlign='left';
-            q.fillText(`今日確認　${ym}年${todayD}日　スタッフ${groupStart+1}〜${groupEnd}`,vPad+8,vPad+vLabelH/2);
-            for(let local=0;local<groupCount;local++){
-              const ri=groupStart+local,band=staffBands[ri],sy=band.top,ey=band.bottom,srcH=Math.max(1,ey-sy),oy=vPad+vLabelH+local*vRowH;
-              q.fillStyle=ri%2?'#fafafa':'#f2f2f2';q.fillRect(vPad,oy,sheet.width-vPad*2,vRowH-4);
-              q.fillStyle='#b00000';q.font='900 17px sans-serif';q.textBaseline='top';q.textAlign='left';q.fillText(`スタッフ${ri+1}`,vPad+7,oy+5);
-              const nameScale=Math.min((vNameW-24)/nameRight,(vRowH-vLabelH-12)/srcH);
-              const nameDW=Math.max(1,Math.round(nameRight*nameScale)),nameDH=Math.max(1,Math.round(srcH*nameScale));
-              q.drawImage(c,0,sy,nameRight,srcH,vPad+8,oy+vLabelH,nameDW,nameDH);
-              const dx=vPad+vNameW+vPad,srcW=td.right-td.left+1,drawH=Math.max(1,vRowH-vLabelH-10);
-              q.drawImage(c,td.left,sy,srcW,srcH,dx,oy+vLabelH,vDayW,drawH);
-              q.strokeStyle='#c00000';q.lineWidth=4;q.strokeRect(dx,oy+vLabelH,vDayW,drawH);
-              q.fillStyle='#fff3a0';q.fillRect(dx+3,oy+vLabelH+3,vDayW-6,32);
-              q.fillStyle='#7d0000';q.font='900 18px sans-serif';q.textAlign='center';q.textBaseline='middle';
-              q.fillText(`列${td.columnIndex} ＝ ${td.date}日（今日）`,dx+vDayW/2,oy+vLabelH+19);
-              q.fillStyle='#111';q.font='800 14px sans-serif';q.textAlign='left';q.fillText('白：勤務記号',dx+10,oy+vLabelH+drawH-19);
-              q.textAlign='right';q.fillText('黄：時間',dx+vDayW-10,oy+vLabelH+drawH-19);
-            }
-            const du=sheet.toDataURL('image/jpeg',.94);
-            vImages.push({mime:'image/jpeg',data:du.split(',')[1],rows:`${groupStart+1}-${groupEnd}`,columns:String(td.columnIndex),dates:String(td.date)});
-          }
-          todayVerification={date:todayD,columnIndex:td.columnIndex,images:vImages};
-        }
-      }
-    }catch(_){ todayVerification=null; }
-
     const originalDataUrl=c.toDataURL('image/jpeg',.90);
-    const payloadKB=Math.round(imageBatches.reduce((n,b)=>n+b.images.reduce((m,x)=>m+x.data.length,0),0)*.75/1024);
-    return {mime:'image/jpeg',dataUrl:originalDataUrl,batches:imageBatches,todayVerification,days:expected,dayStart:p==='first'?1:16,rowCount:STAFF_COUNT,payloadKB,datePairs};
+    const payloadKB=Math.round(verificationSheets.reduce((n,x)=>n+x.data.length,0)*.75/1024);
+    return {mime:'image/jpeg',dataUrl:originalDataUrl,verificationSheets,todayVerification:null,days:expected,dayStart:p==='first'?1:16,rowCount:STAFF_COUNT,payloadKB,datePairs,staffBands};
   }
 
   async function runGeminiRead(){
@@ -6264,305 +6772,200 @@ function renderDay(){
     if(!key){alert('先にGemini APIキーを保存してください。');return}
     if(!aiFile){alert('先に「AI読み取り用の写真を選ぶ」で写真を選んでください。');return}
 
-    const LOCK_KEY='karuya_shift_gemini_last_request_v2';
+    const LOCK_KEY='karuya_shift_gemini_last_request_v3';
     const now=Date.now(),last=Number(localStorage.getItem(LOCK_KEY)||0);
     if(last&&now-last<60000){
       const sec=Math.ceil((60000-(now-last))/1000);
-      setAiStatus(`前回のAI読み取りから60秒未満です。\nあと約${sec}秒待ってから実行してください。`,'warn');
+      setAiStatus(`前回のAI読み取りから60秒未満です。あと約${sec}秒待ってください。`,'warn');
       return;
     }
 
     const b=$('shiftGeminiRead');
-    if(b){b.disabled=true;b.textContent='🤖 AIが読み取り中…'}
-    setAiStatus('写真を確認し、スタッフを上から1人ずつ・対象日を左から1日ずつ読み取っています…','');
+    if(b){b.disabled=true;b.textContent='🤖 AIがシフト表を確認中…'}
+    setAiStatus('日付と既知スタッフ名はアプリで固定し、AIは各交差セルの出勤記号と時間だけを確認しています…','');
 
     try{
       localStorage.setItem(LOCK_KEY,String(Date.now()));
-
       const img=await prepareShiftAiImage(aiFile);
-      if(!img || !Array.isArray(img.batches) || !img.batches.length || !Number.isInteger(Number(img.rowCount))){
-        throw new Error('AI確認画像の作成結果が不正です。ページを再読み込みして、写真を選び直してください。');
+      if(!img?.dataUrl||!Array.isArray(img.datePairs)||!img.datePairs.length||!Number(img.rowCount)){
+        throw new Error('シフト表の位置情報を作成できませんでした。表全体が写った写真を選んでください。');
       }
-      const totalImages=img.batches.reduce((n,b)=>n+(Array.isArray(b.images)?b.images.length:0),0);
-      if(totalImages<1){
-        throw new Error('AI確認画像を1枚も作成できませんでした。写真全体が写っているか確認してください。');
-      }
-      aiPhotoData=img.dataUrl;
-      setAiStatus(`AIへ送信準備完了（確認画像${totalImages}枚・${img.batches.length}日付ブロック・スタッフ${img.rowCount}人・約${img.payloadKB||0}KB）。全スタッフを確認中…`,'');
 
+      aiPhotoData=img.dataUrl;
       const allowed=getAllowedShiftMarks();
       const allowedText=allowed.join('、');
       const positionRules=allowed.map(k=>`${k}=${shiftPositionForMark(k)}`).join('、');
       const target=targetInfo();
-      const masterText=staffMasterText();
+      const ym=targetYM();
+      const [yy,mm]=ym.split('-').map(Number);
+      const p=$('shiftPeriod')?.value||'second';
+      const lastDay=new Date(yy,mm,0).getDate();
+      const from=p==='first'?1:16;
+      const to=p==='first'?Math.min(15,lastDay):lastDay;
+      const days=to-from+1;
+      const dateList=Array.from({length:days},(_,i)=>from+i);
+      // AIには元画像を主資料として渡さず、アプリが作った「拡大・位置固定シート」だけを渡す。
+      // 日付・行番号は画像内にアプリが印字済みなので、AIは交差セルの判定に集中する。
+      const responseJsonSchema={
+        type:'object',
+        properties:{
+          staffRows:{type:'array',items:{type:'object',properties:{rowIndex:{type:'integer'},name:{type:'string'},checked:{type:'boolean'}},required:['rowIndex','name','checked']}},
+          entries:{type:'array',items:{type:'object',properties:{rowIndex:{type:'integer'},day:{type:'integer'},mark:{type:'string'},present:{type:'boolean'},startTime:{type:'string'},endTime:{type:'string'},time:{type:'string'},confidence:{type:'string'}},required:['rowIndex','day','mark','present','startTime','endTime','time']}},
+          dayChecks:{type:'array',items:{type:'object',properties:{day:{type:'integer'},headcount:{type:'integer'},entryCount:{type:'integer'},ok:{type:'boolean'}},required:['day','headcount','entryCount','ok']}}
+        },
+        required:['staffRows','entries','dayChecks']
+      };
 
-      const promptBase=`あなたは飲食店のシフト表を読む専門の画像認識AIです。
+      const prompt=`あなたは飲食店のシフト表を読む画像認識AIです。
 
-【最重要目的】
-1. 出勤者を1人でも見落とさない。
-2. 隣の日付の勤務記号を絶対に混ぜない。
-3. 表に存在するスタッフ行を全員確認する。
-4. 見えないものを推測しない。
-
+【最重要】
+この処理では、日付を画像から推測しません。対象日付はアプリ側で既に確定しています。
 対象期間：${target}
+対象日：${dateList.join('、')}
 
-【画像の構造】
-- 1人＝名前欄1区間（この表ではExcel上2行結合）。
-- 1日＝「白い勤務記号列＋黄色い時間列」の2列セット。
-- 各画像には名前欄と、今回のバッチで指定された日付だけが入っています。
-- 画像上部に「列N＝○日」と明記されています。このラベルが唯一の日付対応です。
+【表の固定構造】
+- 1日につき2列を1セットとして使います。
+- 1人につき縦方向に2行を1セットとして使います。
+- したがって「日付×スタッフ」の交点は必ず1つの2列×2行セル範囲です。
+- 対象期間は${from}日〜${to}日です。これ以外の日を絶対に読みません。
+- 画像内の小さい日付文字を根拠に日付を変更・補正してはいけません。
+- 元画像の黄色列は時間側、白い列は勤務記号側です。
 
-【日付の絶対ルール】
-- 元画像の小さい日付数字を単独で読んで日付を決めてはいけません。
-- 各セルの上にある「列N＝○日」の赤枠ラベルを必ず確認してください。
-- そのセルの中央が入っている赤枠の列Nだけを採用してください。
-- さらに○日を対象年月のカレンダーと照合し、曜日も確認してください。
-- 例：2026年8月23日は日曜日。23日のセルを22日や24日のセルとして扱ってはいけません。
-- 「日曜日だから前後の列を読む」のような曜日からの推測は禁止です。実際の赤枠ラベルを優先してください。
-- 隣の赤枠・隣の日付から勤務記号や時間を補完してはいけません。
-- 白列＝勤務記号、黄色列＝同じ日の時間です。別の日の黄色列を時間として使ってはいけません。
-- 1つの勤務記号は必ず、その直上に表示された列N＝○日のラベルと同じ列として返してください。
+【スタッフ行】
+- rowIndex=1は表の最初のスタッフ、rowIndex=2は次のスタッフ、という上から順番の固定番号です。
+- 空欄のスタッフ行も飛ばさず、上から順番を維持する。
+- 同じ名前を別の行に移動させない。
+- ヘルプなど下段の名前も、画像に実際に存在する場合はその行番号のまま読む。
+- 「スタッフ行」は名前の文字だけで人数を決めず、横罫線で区切られた行を上から順番に確認する。
+- 既知のスタッフ名はアプリ側でrowIndexに固定しています。AIは既知スタッフの名前を変更・入れ替え・補正してはいけません。
+- 既知スタッフ：${getCanonicalShiftNames().map((n,i)=>`行${i+1}=${n}`).join('、')}
+- rowIndexは必ず「上から何人目か」を表し、名前を別のrowIndexへ移動させない。
+- 26人を超える下段ヘルプ枠は、画像に実際の名前がある場合だけAIが名前を返してよい。ただしrowIndexは画像上の位置から固定する。
 
-【出勤として認める勤務記号】
-${allowedText}
-これ以外の文字・記号・数字は絶対に出勤にしません。
+【勤務記号】
+出勤として認めるのは ${allowedText} のみ。
+${allowedText} 以外の数字、L、△、▲、×、○、線、記号、空欄は出勤ではない。
+勤務記号は白い側のセルだけを見る。
 
-【スタッフ名】
-スタッフ名は必ず、そのスタッフ行の左側の名前欄から読み取ってください。
-別の行の名前を使ってはいけません。
-画像に存在しない名前を追加してはいけません。
-${masterText?`\n旧スタッフマスター（名前確認の補助のみ）：\n${masterText}\n`:''}
+【時間】
+- 時間は同じスタッフ・同じ日の黄色側セルだけを見る。
+- 「L」は終了時刻の意味として、そのままLを返す。
+- 見えない時間は推測せず空文字。
+- 9.5は09:30、13.5は13:30、19.5は19:30として返す。
+- 10、14、16、17、22などはそのまま時刻として扱う。
+- 出勤（present=true）の行は、startTime/endTime/timeを必ず返す。黄色側セルから読めない場合だけ空文字にする。推測は禁止。
+- timeは必ず「開始〜終了」の形式にし、例：10:00〜L、16:00〜22:00。
+- startTimeは開始時刻だけ、endTimeは終了時刻だけを返す。終了がLならendTimeは「L」。
+
+【現人数】
+画像上部の「現人数」は重要な検算値です。
+ただし現人数そのものを出勤者として登録してはいけません。
+日ごとの出勤者数が現人数と一致するか、最後に必ず確認してください。
 
 【読み取り手順】
-1. 今回のバッチに含まれる全画像を確認する。
-2. スタッフ行を上から最後まで1人ずつ確認する。
-3. 各スタッフについて、今回のバッチの列を左から右へ1列ずつ確認する。
-4. 勤務記号が明確に ${allowedText} のいずれかならpresent=true。
-5. △、▲、▼、×、ラ、L、イベ、イベント、休、空欄、丸印、線、汚れ、罫線、数字だけの時間は出勤ではない。
-6. 時間は同じスタッフ・同じ列の黄色セルだけから読む。見えない場合は空文字。推測禁止。
-7. 全スタッフを読み終えたら、同じ画像をもう一度見て中央列の取り違えがないか確認する。
-8. staffRowsには今回確認した全スタッフを必ず1行ずつ返す。出勤がないスタッフもpresent=falseで返す。
-9. checkedColumnsは今回のバッチで実際に確認した列数を返す。
-10. entriesは出勤セルだけ返す。
-11. JSON以外は返さない。
+1. AIが見る画像は確認シートのみ。元画像の位置関係を再解釈しない。既知スタッフ名は画像OCRしない。
+2. 各確認シートの「行N」「N日」を住所として固定する。
+3. 1つの枠は1人×1日の2列セットなので、隣の枠へ文字を移さない。
+4. 対象期間の日数をアプリ側の固定順序で扱う。
+5. スタッフを上から1行ずつ確認する。
+6. 各スタッフについて対象日を左から順番に確認する。
+7. 各日の2列セットの白側に ${allowedText} があるかだけを見る。
+8. あればentriesに1件だけ返す。
+9. 同じ交点について別の日の記号や時間を混ぜない。
+10. 時間は同じ交点の黄色側だけから読む。
+11. 【第2回独立チェック】最初の読み取り結果をいったん忘れ、各日の全スタッフ（最大30行）を上からもう一度確認してください。特に、最後のスタッフ行、下段ヘルプ、記号が小さいセル、隣接セルに記号があるセル、土日付近を重点的に再確認してください。
+12. 各日の出勤人数をentriesから数え、画像上部の「現人数」と照合してください。dayChecksにその日・画像の現人数・entryCount・一致判定を返してください。
+13. 【人数不足レスキュー】現人数 > entryCount の日は「読み落としがある」と判断してください。第1回と第2回で一致しなかった候補も含め、その日だけ全30スタッフ行の交差セルをもう一度確認してください。許可記号（${allowedText}）が1文字でも確認できるセルは、隣のセルと混同せずrowIndex×dayを固定してentriesへ追加してください。人数を合わせるために架空の出勤者を作ってはいけません。
+14. 現人数 = entryCount になった日を合格とし、現人数 > entryCount のままなら、見落としの可能性が高い行をconfidence=lowで返しても構いませんが、そのセルを勝手に別の日へ移動してはいけません。
+15. staffRowsには確認した全スタッフをrowIndex順に返す。既知スタッフのnameは上記固定名と完全一致させる。
+16. entriesには最終的に確認できた出勤セルだけ返す。
+17. JSON以外は返さない。
+
+【日付番号】
+${dateList.map((d,i)=>`${i+1}番目の日セット=${d}日`).join('\n')}
 
 【ポジション】
 ${positionRules}
 
 【返却形式】
 {
-  "staffRows":[
-    {"rowIndex":1,"name":"スタッフ名","present":true,"checkedColumns":8,"note":"全8列確認済み"}
-  ],
-  "entries":[
-    {"rowIndex":1,"columnIndex":1,"name":"スタッフ名","mark":"S","present":true,"startTime":"9.5","endTime":"17","time":"09:30〜17:00","dayCheck":"8月23日（日）","confidence":"high","note":"赤枠ラベル列1＝23日を確認"}
-  ]
+  "staffRows":[{"rowIndex":1,"name":"[削除済み]","checked":true}],
+  "entries":[{"rowIndex":1,"day":25,"mark":"S","present":true,"startTime":"10","endTime":"L","time":"10:00〜L","confidence":"high"}]
 }
 
-重要：
-- rowIndexは画像の「スタッフN」と完全一致。
-- columnIndexは元の対象期間全体に対する列番号（例：24日が9列目ならcolumnIndex=9）。
-- numberとdateは返さない。日付はアプリ側で列番号から確定する。`;
+注意：dayは必ず対象日の実日付（例25）を返す。画像の小さい日付文字を読み直して別の日に変更しない。`;
 
-      // 16日分を一度に送らず、8日ずつ2バッチに分ける。
-      // これにより中央付近の24〜28日を別の日と混同しにくくする。
-      const responseJsonSchema={
-        type:"object",
-        properties:{
-          staffRows:{type:"array",items:{type:"object",properties:{rowIndex:{type:"integer"},name:{type:"string"},present:{type:"boolean"},checkedColumns:{type:"integer"},note:{type:"string"}},required:["rowIndex","name","present","checkedColumns"]}},
-          entries:{type:"array",items:{type:"object",properties:{rowIndex:{type:"integer"},columnIndex:{type:"integer"},name:{type:"string"},mark:{type:"string"},present:{type:"boolean"},startTime:{type:"string"},endTime:{type:"string"},time:{type:"string"},dayCheck:{type:"string"},confidence:{type:"string"},note:{type:"string"}},required:["rowIndex","columnIndex","name","mark","present"]}}
-        },
-        required:["staffRows","entries"]
-      };
+      const parts=[{text:prompt}];
+      (img.verificationSheets||[]).forEach((sheet,i)=>{
+        parts.push({text:`【確認シート${i+1}】行${sheet.rows}／日付${sheet.dates}。各枠は1人×1日の2列セットを拡大したもの。枠上部の「日付/行番号」が正しい住所です。`});
+        parts.push({inline_data:{mime_type:sheet.mime||'image/jpeg',data:sheet.data}});
+      });
+      const body={contents:[{role:'user',parts}],generationConfig:{responseMimeType:'application/json',responseJsonSchema}};
 
-      let allEntries=[];
-      let allStaffRows=[];
-      const modelErrors=[];
-      const retryableStatus=new Set([429,500,502,503,504]);
-
-      for(const batch of img.batches){
-        const parts=[{text:`【今回のバッチ】列${batch.startColumn}〜${batch.endColumn}（${batch.startDay}〜${batch.endDay}日）だけを確認してください。今回のバッチは${batch.days}列です。スタッフ1〜${img.rowCount}を全員確認してください。`}];
-        for(const im of batch.images){
-          parts.push({text:`【スタッフ行確認画像：スタッフ${im.rows}／列${im.columns}／${im.dates}日】この画像だけでなく、このバッチ内の全画像と照合してください。`});
-          parts.push({inline_data:{mime_type:im.mime,data:im.data}});
-        }
-        const batchPrompt=promptBase.replace(/checkedColumns":8/g,`checkedColumns":${batch.days}`).replace(/全8列確認済み/g,`全${batch.days}列確認済み`)+`\n\n【今回のバッチ限定】\n- 対象列は列${batch.startColumn}〜列${batch.endColumn}のみ。\n- このバッチの画像内の左から1番目は全体の列${batch.startColumn}、2番目は列${batch.startColumn+1}…です。\n- checkedColumnsは必ず${batch.days}。\n- 列番号は元の対象期間全体に対するグローバル列番号で返してください。\n- それ以外の列については一切entriesを作らない。\n- バッチ境界をまたいで文字・時間・勤務記号を補完しない。`;
-        const body={contents:[{role:'user',parts:[{text:batchPrompt},...parts]}],generationConfig:{responseMimeType:'application/json',responseJsonSchema}};
-
-        let parsed=null,candidateText='';
-        for(const model of MODELS){
-          const url=`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
-          try{
-            setAiStatus(`AI読み取り中… ${batch.startDay}〜${batch.endDay}日（${model}）`,'');
-            const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':key},body:JSON.stringify(body)});
-            const raw=await res.text();let j=null;try{j=JSON.parse(raw)}catch(_){j=null}
-            if(!res.ok){modelErrors.push(`${batch.startDay}〜${batch.endDay}日 ${model}: HTTP ${res.status}`);if(retryableStatus.has(res.status))continue;throw new Error(j?.error?.message||`Gemini APIエラー（${res.status}）`)}
-            const ct=(j?.candidates||[]).flatMap(c=>c?.content?.parts||[]).map(x=>x?.text||'').join('').trim();
-            if(!ct){modelErrors.push(`${batch.startDay}〜${batch.endDay}日 ${model}: 応答が空`);continue}
-            parsed=j;candidateText=ct;break;
-          }catch(err){modelErrors.push(`${batch.startDay}〜${batch.endDay}日 ${model}: ${err?.message||String(err)}`);continue}
-        }
-        if(!parsed||!candidateText)throw new Error(`AI通信に失敗しました。${batch.startDay}〜${batch.endDay}日の読み取りを完了できませんでした。\n${modelErrors.join(' / ')}`);
-
-        const obj=JSON.parse(cleanJsonText(candidateText));
-        const batchEntries=Array.isArray(obj.entries)?obj.entries:[];
-        const batchRows=Array.isArray(obj.staffRows)?obj.staffRows:[];
-        const expectedRows=Number(img.rowCount)||0;
-        // staffRows は「全員を返せたか」を判定するためには使わない。
-        // Geminiが空欄のスタッフ行を1人飛ばすだけで全結果を破棄するのは、
-        // 人数可変のシフト表では不安定だからです。行の正解は画像側のstaffBandsで確定し、
-        // 実際の出勤セルはentriesのrowIndexで受け取ります。
-        const checkedMap=new Map();
-        for(const r of batchRows){
-          const ri=Number(r?.rowIndex),name=String(r?.name||'').trim(),cols=Number(r?.checkedColumns);
-          if(Number.isInteger(ri)&&ri>=1&&ri<=expectedRows&&name){
-            checkedMap.set(ri,{ri,name,cols,present:r?.present===true,batchStart:batch.startColumn,batchEnd:batch.endColumn});
-          }
-        }
-        allStaffRows.push(...checkedMap.values());
-        for(const x of batchEntries){
-          const ri=Number(x?.rowIndex);
-          if(!Number.isInteger(ri)||ri<1||ri>expectedRows)continue;
-          const name=String(x?.name||'').trim();
-          if(!name)continue;
-          allEntries.push({...x,__batchStart:batch.startColumn,__batchEnd:batch.endColumn});
-        }
+      const model='gemini-3.6-flash';
+      const url=`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
+      setAiStatus(`AIへ1回だけ送信中… ${from}〜${to}日・${img.rowCount}スタッフ・${days}日`,'' );
+      const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':key},body:JSON.stringify(body)});
+      const raw=await res.text();let j=null;try{j=JSON.parse(raw)}catch(_){j=null}
+      if(!res.ok){
+        const msg=j?.error?.message||`Gemini APIエラー（${res.status}）`;
+        if(res.status===429){throw new Error(`Geminiの無料枠/クォータに達しています。\n${msg}`)}
+        throw new Error(msg);
       }
+      const candidate=(j?.candidates||[]).flatMap(c=>c?.content?.parts||[]).map(x=>x?.text||'').join('').trim();
+      if(!candidate)throw new Error('AIから読み取り結果が返りませんでした。');
+      const obj=JSON.parse(cleanJsonText(candidate));
 
-      // 今日の列だけは専用拡大画像で再確認する。
-      // 通常8日ブロックで今日の勤務記号を取[削除済み]ぼしても、今日だけはこの結果を優先する。
-      if(img.todayVerification?.images?.length){
-        const tv=img.todayVerification;
-        const parts=[{text:`【今日だけの再確認】対象は${target}の${tv.date}日（元の全体列${tv.columnIndex}）だけです。スタッフ1〜${img.rowCount}を全員確認してください。`}];
-        for(const im of tv.images){
-          parts.push({text:`【今日専用拡大画像：スタッフ${im.rows}／列${im.columns}／${im.dates}日】この画像の白い勤務記号列を1人ずつ拡大して確認してください。黄色列は同じ日の時間だけです。`});
-          parts.push({inline_data:{mime_type:im.mime,data:im.data}});
-        }
-        const todayPrompt=promptBase.replace(/checkedColumns":8/g,'checkedColumns":1').replace(/全8列確認済み/g,'全1列確認済み')+`\n\n【今日専用の絶対ルール】\n- 今回は${tv.date}日だけを確認する。\n- 列番号は${tv.columnIndex}だけ。\n- 各スタッフの白い勤務記号セルを必ず拡大して確認する。\n- ${allowedText}の文字が見えたらpresent=true。特に小さいS/Y/O/K/Fを見落とさない。\n- 空欄・L・数字だけ・▲・×は出勤ではない。\n- 8日ブロックの結果より、この今日専用画像の結果を優先する。\n- 今日のentriesは、確認できた出勤者を漏れなく返す。\n- JSON以外は返さない。`;
-        const body={contents:[{role:'user',parts:[{text:todayPrompt},...parts]}],generationConfig:{responseMimeType:'application/json',responseJsonSchema}};
-        let parsedToday=null,candidateToday='';
-        for(const model of MODELS){
-          const url=`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
-          try{
-            setAiStatus(`今日 ${tv.date}日の再確認中…（${model}）`,'');
-            const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':key},body:JSON.stringify(body)});
-            const raw=await res.text();let j=null;try{j=JSON.parse(raw)}catch(_){j=null}
-            if(!res.ok){if(retryableStatus.has(res.status))continue;throw new Error(j?.error?.message||`Gemini APIエラー（${res.status}）`)}
-            const ct=(j?.candidates||[]).flatMap(c=>c?.content?.parts||[]).map(x=>x?.text||'').join('').trim();
-            if(!ct)continue;
-            parsedToday=j;candidateToday=ct;break;
-          }catch(err){console.warn('today verification',model,err)}
-        }
-        if(parsedToday&&candidateToday){
-          try{
-            const obj=JSON.parse(cleanJsonText(candidateToday));
-            const verifyEntries=Array.isArray(obj.entries)?obj.entries:[];
-            const verified=[];
-            for(const x of verifyEntries){
-              const ri=Number(x?.rowIndex),ci=Number(x?.columnIndex);
-              const mark=String(x?.mark??x?.symbol??'').trim().toUpperCase();
-              if(!Number.isInteger(ri)||ri<1||ri>img.rowCount)continue;
-              if(ci!==tv.columnIndex||x?.present!==true||!isAllowedShiftMark(mark))continue;
-              const name=String(x?.name||'').trim();if(!name)continue;
-              verified.push({...x,__batchStart:tv.columnIndex,__batchEnd:tv.columnIndex});
-            }
-            // 今日の再確認は「上書き」しない。
-            // 再確認AIが1人でも見落とすと通常8日ブロックで拾った人まで消えるため、
-            // 以前の方式のように「今日の結果だけ全置換」はしない。
-            // rowIndexを基準に通常結果へ追加し、重複は後段で整理する。
-            // また、同じrowIndexで既に取得できている名前を優先して名前揺れを防ぐ。
-            if(verified.length){
-              const rowNameByIndex=new Map();
-              for(const r of allStaffRows){
-                const ri=Number(r?.ri),name=String(r?.name||'').trim();
-                if(Number.isInteger(ri)&&name&&!rowNameByIndex.has(ri))rowNameByIndex.set(ri,name);
-              }
-              allEntries.push(...verified.map(x=>({
-                ...x,
-                name:rowNameByIndex.get(Number(x?.rowIndex))||String(x?.name||'').trim()
-              })).filter(x=>String(x.name||'').trim()));
-            }
-          }catch(err){console.warn('today verification parse',err)}
-        }
+      const rows=Array.isArray(obj.staffRows)?obj.staffRows:[];
+      const rowNames=new Map();
+      const canonicalNames=getCanonicalShiftNames();
+      // ★重要：既知のスタッフはAIの名前回答を一切採用しない。
+      // rowIndex（上から何人目）→スタッフ名をアプリ側で固定する。
+      // これで「中島を読まない→石川として登録」「石川を別日に入れる」系の
+      // 名前OCR・類似文字・過去保存値による誤紐付けを根本的に遮断する。
+      canonicalNames.forEach((name,i)=>rowNames.set(i+1,name));
+      // 26人を超える将来のヘルプ枠だけは、AIが実際に読んだ名前を利用可能。
+      for(const r of rows){
+        const ri=Number(r?.rowIndex),name=String(r?.name||'').trim();
+        if(Number.isInteger(ri)&&ri>=1&&ri<=img.rowCount&&!rowNames.has(ri)&&name)rowNames.set(ri,name);
       }
+      // 中島・石川は位置固定を再度明示。過去データの入れ替わりを絶対に引き継がない。
+      if(img.rowCount>=8){rowNames.set(7,'[削除済み]');rowNames.set(8,'[削除済み]');}
 
-      const entries=allEntries;
-      const staffRows=allStaffRows;
-      const expectedRows=Number(img.rowCount)||0;
-      // 行番号は画像の幾何学検出を正とする。AIのstaffRowsは名前補助としてのみ使用。
-      // 同じrowIndexで両バッチに名前が返った場合だけ、名前の不一致をエラーにする。
-      // 8日ブロックごとに同じスタッフ行を別画像としてAIへ送るため、
-      // バッチごとに名前の読み方が微妙に変わることがあります。
-      // スタッフ行そのものは画像側のstaffBandsで確定しているので、
-      // 名前の不一致だけで全結果を破棄しません。
-      // 最初に正常に読めた名前を、そのrowIndexの名前として採用します。
-      const nameByRow=new Map();
-      for(const r of staffRows){
-        const ri=Number(r?.ri),name=String(r?.name||'').trim();
-        if(!Number.isInteger(ri)||!name)continue;
-        if(!nameByRow.has(ri))nameByRow.set(ri,name);
-      }
-      const checkedMap=nameByRow;
-
-
-      const [yy,mm]=targetYM().split('-').map(Number);
-      const p=$('shiftPeriod')?.value||'second';
-      const dayStart=p==='first'?1:16;
-      const lastDay=new Date(yy,mm,0).getDate();
-      const safeEntries=[];
-
-      // AIの名前を、同じrowIndexのstaffRows名で固定。
-      // これによりentries側で別行の名前が混入するのを防止。
-      for(const x of entries){
-        const mark=String(x?.mark??x?.symbol??'').trim().toUpperCase();
-        const ci=Number(x?.columnIndex);
-        const ri=Number(x?.rowIndex);
-        if(!isAllowedShiftMark(mark))continue;
-        if(x?.present!==true)continue;
-        if(!Number.isInteger(ri)||ri<1||ri>expectedRows)continue;
-        if(!Number.isInteger(ci)||ci<1||ci>img.days)continue;
-        if(Number.isInteger(x?.__batchStart)&&Number.isInteger(x?.__batchEnd)&&(ci<x.__batchStart||ci>x.__batchEnd))continue;
-
-        // 名前は同じrowIndexのstaffRowsを優先し、AIがその行を返さなかった場合はentriesの名前を使用。
-        const row=checkedMap.get(ri);
-        const entryName=String(x?.name||'').trim();
-        const resolvedName=row?.name||entryName;
-        if(!resolvedName)continue;
-        const day=dayStart+ci-1;
-        if(day<1||day>lastDay)continue;
-
+      // entriesは「rowIndex × 実日付」で固定。AIが返した日付が対象外なら破棄。
+      const rawEntries=Array.isArray(obj.entries)?obj.entries:[];
+      const entries=[];
+      for(const x of rawEntries){
+        const ri=Number(x?.rowIndex),day=Number(x?.day);
+        const mark=String(x?.mark||'').trim().toUpperCase();
+        if(!Number.isInteger(ri)||ri<1||ri>img.rowCount)continue;
+        if(!Number.isInteger(day)||!dateList.includes(day))continue;
+        if(x?.present!==true||!isAllowedShiftMark(mark))continue;
+        const name=rowNames.get(ri)||'';
+        if(!name)continue;
         const date=`${yy}-${String(mm).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
-        const pos=shiftPositionForMark(mark);
-        const time=normalizeShiftTimeRange('', '', x?.time||normalizeShiftTimeRange(x?.startTime,x?.endTime,''));
-        safeEntries.push({
-          ...x,
-          date,
-          name:resolvedName,
-          mark,
-          number:'',
-          position:pos,
-          time,
-          present:true,
-          columnIndex:ci,
-          rowIndex:ri
+        const startTime=normalizeShiftTime(x?.startTime||'');
+        const endTime=normalizeShiftTime(x?.endTime||'');
+        const time=normalizeShiftTimeRange(startTime,endTime,x?.time||'');
+        entries.push({
+          date,name,mark,number:'',position:shiftPositionForMark(mark),startTime,endTime,time,
+          present:true,rowIndex:ri,columnIndex:dateList.indexOf(day)+1,
+          confidence:String(x?.confidence||'medium')
         });
       }
 
-      const uniq=[],seen=new Set();
-      for(const x of safeEntries){
-        const k=`${x.date}|${aiNameNorm(x.name)}|${x.mark}`;
-        if(seen.has(k))continue;
-        seen.add(k);uniq.push(x);
-      }
+      // 同一スタッフ×同一日を1件に固定。
+      const uniq=[];const seen=new Set();
+      for(const x of entries){const k=`${x.date}|${x.rowIndex}`;if(seen.has(k))continue;seen.add(k);uniq.push(x)}
+
+      // 重要：現人数の検算はAIの自由回答を信用せず、画像上部の数字をAIに返させるのではなく、
+      // 出勤結果の不足を検出するための「登録前確認」として扱う。
+      const countByDate={};
+      for(const x of uniq)countByDate[x.date]=(countByDate[x.date]||0)+1;
 
       const next=buildPending(uniq);
-      if(!next.length)throw new Error('対象期間の出勤者を読み取れませんでした。写真の勤務記号を確認してください。');
-
-      next.forEach(x=>{
-        x.number='';
-        x.position=shiftPositionForMark(x.mark);
-        x.time=normalizeShiftTimeRange(x.startTime,x.endTime,x.time);
-      });
+      if(!next.length)throw new Error('対象期間の出勤者を1人も確定できませんでした。');
+      next.forEach(x=>{x.number='';x.position=shiftPositionForMark(x.mark);x.startTime=normalizeShiftTime(x.startTime||'');x.endTime=normalizeShiftTime(x.endTime||'');x.time=normalizeShiftTimeRange(x.startTime,x.endTime,x.time)});
 
       const pendingDetail={items:next,photoData:aiPhotoData,photoName:aiFile.name};
       if(typeof window.__showShiftAiReview==='function')window.__showShiftAiReview({detail:pendingDetail});
@@ -6570,31 +6973,57 @@ ${positionRules}
 
       const uniqueDates=[...new Set(next.map(x=>x.date))].length;
       const low=next.filter(x=>x.confidence==='low').length;
-      const posSummary=[...new Set(next.map(x=>`${x.mark}→${x.position}`))].join('、');
-
+      const summary=Object.entries(countByDate).map(([d,n])=>`${Number(d.slice(-2))}日:${n}人`).join('、');
+      const checks=Array.isArray(obj.dayChecks)?obj.dayChecks:[];
+      const badChecks=checks.filter(x=>Number.isInteger(Number(x?.day))&&x?.ok===false);
       if($('shiftGeminiAiResult')){
         $('shiftGeminiAiResult').hidden=false;
         $('shiftGeminiAiResult').textContent=
           `AI読み取り完了：${uniqueDates}日・${next.length}件\n`+
-          `スタッフ行：${expectedRows}区間を画像から確定\n`+
-          `日付はアプリ側で列番号から確定：${dayStart}〜${dayStart+img.days-1}日\n`+
-          `ポジション：${posSummary}`+
-          (low?`\n⚠️ 名前の確信度が低い項目：${low}件`:'')+
-          `\n※登録前の確認画面で名前・勤務記号・時間・ポジションを確認してください。`;
+          `日付：アプリ側で${from}〜${to}日に固定\n`+
+          `1日2列・1人2行の交点を確認\n`+
+          `出勤人数：${summary}`+
+          (badChecks.length?`\n⚠️ 人数不一致：${badChecks.map(x=>`${x.day}日`).join('、')}（再確認済み）`:'')+
+          (low?`\n⚠️ 確信度が低い項目：${low}件`:'')+
+          `\n※登録前の確認画面で最終確認してください。`;
       }
-
-      setAiStatus(`AI読み取り完了。スタッフ${expectedRows}区間を画像から確定し、出勤セルを読み取りました。日付は固定列から確定しています。`,'ok');
-
+      setAiStatus(`AI読み取り完了。${from}〜${to}日を1回のAI通信で確認しました。日付はアプリ側で固定しています。`,'ok');
     }catch(e){
       console.error(e);
       let msg=e?.message||String(e);
-      if(/Load failed/i.test(msg)){
-        msg='Gemini APIへ接続できませんでした（Safariの通信/CORS、通信状態、またはAPIキー制限の可能性）。\n※スタッフ確認画像は4枚を1回のAPI通信で送信しています。';
-      }
+      if(/Load failed/i.test(msg))msg='Gemini APIへ接続できませんでした。通信状態・APIキー制限を確認してください。';
       setAiStatus('AI読み取りに失敗しました。\n'+msg,'err');
     }finally{
       if(b){b.disabled=false;b.textContent='🤖 AIで出勤者を読み取る'}
     }
+  }
+
+  async function makeShiftGuideImage(file,img,dateList){
+    // 元画像ではなく、prepareShiftAiImageで同じ縮尺にした画像へガイドを重ねる。
+    // これで日付2列の位置とスタッフ行の位置が完全に一致する。
+    const src=await (async()=>{
+      const r=await fetch(img.dataUrl);return await r.blob();
+    })();
+    const bmp=await createImageBitmap(src);
+    const c=document.createElement('canvas');c.width=bmp.width;c.height=bmp.height;
+    const q=c.getContext('2d');q.drawImage(bmp,0,0);if(bmp.close)bmp.close();
+    const pairs=img.datePairs||[];
+    q.save();
+    pairs.forEach((d,i)=>{
+      const x1=Math.max(0,Math.round(d.left)),x2=Math.min(c.width,Math.round(d.right+1));
+      q.strokeStyle='#d40000';q.lineWidth=3;q.strokeRect(x1,0,Math.max(2,x2-x1),c.height);
+      q.fillStyle='#d40000';q.fillRect(x1+2,2,Math.max(58,Math.min(120,x2-x1-4)),28);
+      q.fillStyle='#fff';q.font='900 17px sans-serif';q.textAlign='center';q.textBaseline='middle';
+      q.fillText(`${dateList[i]}日`,x1+(x2-x1)/2,16);
+    });
+    const bands=Array.isArray(img.staffBands)?img.staffBands:[];
+    bands.forEach((band,i)=>{
+      const y1=Math.max(0,Math.round(band.top)),y2=Math.min(c.height,Math.round(band.bottom));
+      q.strokeStyle='rgba(255,0,0,.70)';q.lineWidth=2;q.strokeRect(0,y1,c.width,Math.max(2,y2-y1));
+      q.fillStyle='#d40000';q.fillRect(2,y1+2,58,23);q.fillStyle='#fff';q.font='800 13px sans-serif';q.textAlign='left';q.textBaseline='middle';q.fillText(`行${i+1}`,9,y1+13);
+    });
+    q.restore();
+    return c.toDataURL('image/jpeg',.90);
   }
 
   function hookPending(){
@@ -6609,18 +7038,18 @@ ${positionRules}
         const d=date.value;const rows=sortShiftAiRowsLocal(items.map((x,i)=>({...x,i})).filter(x=>x.date===d));
         count.textContent=`${rows.filter(x=>x.selected!==false).length}人`;
         box.innerHTML=rows.map(x=>{
-          const parts=String(x.time||'').split('〜');
+          const normalizedReviewTime=normalizeShiftTimeRange(x.startTime||'',x.endTime||'',x.time||'');const parts=String(normalizedReviewTime||'').split('〜');
           const st=parts[0]||'';const et=parts[1]||'';
           return `<div class="shiftReviewName" style="display:grid;grid-template-columns:28px minmax(0,1fr) 58px 58px 105px;align-items:center;gap:6px">
           <input type="checkbox" data-gsr="${x.i}" ${x.selected!==false?'checked':''}>
-          <input type="text" data-gn="${x.i}" value="${esc(x.name)}" placeholder="名前" style="width:100%;box-sizing:border-box;border:1px solid #ddd;border-radius:10px;padding:10px;font-weight:700">
+          <input type="text" data-gn="${x.i}" value="${esc(x.name)}" placeholder="名前（自由入力）" aria-label="スタッフ名（自由入力）" style="width:100%;box-sizing:border-box;border:1px solid #ddd;border-radius:10px;padding:10px;font-weight:700">
           <input type="text" inputmode="decimal" data-gst="${x.i}" value="${esc(st)}" placeholder="開始" style="width:100%;box-sizing:border-box;border:1px solid #ddd;border-radius:10px;padding:9px;font-weight:700;text-align:center">
           <input type="text" inputmode="decimal" data-get="${x.i}" value="${esc(et)}" placeholder="終了" style="width:100%;box-sizing:border-box;border:1px solid #ddd;border-radius:10px;padding:9px;font-weight:700;text-align:center">
-          <div style="display:flex;flex-direction:column;gap:3px"><b style="font-size:13px;text-align:center">${esc(x.mark||'')}</b>${(document.body.dataset.shiftMode==='lunch')?'':'<input type="text" data-gp="'+x.i+'" value="'+esc(x.position||shiftPositionForMark(x.mark))+'" placeholder="ポジション" style="width:100%;box-sizing:border-box;border:1px solid #ddd;border-radius:10px;padding:9px;font-weight:700">'}</div>
+          <div style="display:flex;flex-direction:column;gap:3px"><b style="font-size:13px;text-align:center">${esc(x.mark||'')}</b>${(document.body.dataset.shiftMode==='lunch')?'':'<select data-gp="'+x.i+'" style="width:100%;box-sizing:border-box;border:1px solid #ddd;border-radius:10px;padding:9px;font-weight:700;background:#fff"><option value="">未選択</option><option value="板場" '+((x.position||shiftPositionForMark(x.mark))==='板場'?'selected':'')+'>板場</option><option value="焼場" '+((x.position||shiftPositionForMark(x.mark))==='焼場'?'selected':'')+'>焼場</option><option value="コンロ" '+((x.position||shiftPositionForMark(x.mark))==='コンロ'?'selected':'')+'>コンロ</option><option value="揚場" '+((x.position||shiftPositionForMark(x.mark))==='揚場'?'selected':'')+'>揚場</option><option value="ホール" '+((x.position||shiftPositionForMark(x.mark))==='ホール'?'selected':'')+'>ホール</option></select>'}</div>
         </div>`;
         }).join('');
         box.querySelectorAll('[data-gsr]').forEach(c=>c.onchange=()=>{items[Number(c.dataset.gsr)].selected=c.checked;render()});
-        box.querySelectorAll('[data-gn]').forEach(c=>c.onchange=()=>{items[Number(c.dataset.gn)].name=c.value.trim();render()});
+        box.querySelectorAll('[data-gn]').forEach(c=>{c.oninput=()=>{items[Number(c.dataset.gn)].name=c.value;};c.onchange=()=>{items[Number(c.dataset.gn)].name=c.value.trim();};});
         box.querySelectorAll('[data-gst]').forEach(c=>c.onchange=()=>{const i=Number(c.dataset.gst),v=normalizeShiftTime(c.value),parts=String(items[i].time||'').split('〜');items[i].time=normalizeShiftTimeRange(v,parts[1]||'');render()});
         box.querySelectorAll('[data-get]').forEach(c=>c.onchange=()=>{const i=Number(c.dataset.get),v=normalizeShiftTime(c.value),parts=String(items[i].time||'').split('〜');items[i].time=normalizeShiftTimeRange(parts[0]||'',v);render()});
         box.querySelectorAll('[data-gp]').forEach(c=>c.onchange=()=>{const i=Number(c.dataset.gp);items[i].position=c.value.trim();render()});
@@ -6644,7 +7073,7 @@ ${positionRules}
             const fb=window.__fb,live=await fb.get(fb.ref(fb.db,'shift/schedules')),cur=live.val()||{},u={};
             const currentService=document.body.dataset.shiftMode==='lunch'?'lunch':'dinner';
             Object.entries(cur).forEach(([id,x])=>{const itemService=String(x?.shiftType||'dinner');if(itemService===currentService&&x?.date&&String(x.date).startsWith(ym+'-')){const d=Number(String(x.date).slice(-2));if(d>=from&&d<=to)u[`shift/schedules/${id}`]=null}});
-            chosen.forEach(x=>{const id=fb.push(fb.ref(fb.db,'shift/schedules')).key;u[`shift/schedules/${id}`]={date:x.date,name:x.name,number:'',position:shiftPositionForMark(x.mark)||x.position||'',mark:String(x.mark||'').toUpperCase(),time:normalizeShiftTimeRange('', '', x.time||normalizeShiftTimeRange(x.startTime,x.endTime,'')),period:p,shiftType:currentService,source:'gemini-ai',confidence:x.confidence||'medium',createdAt:Date.now()}});
+            chosen.forEach(x=>{const id=fb.push(fb.ref(fb.db,'shift/schedules')).key;const st=normalizeShiftTime(x.startTime||'');const et=normalizeShiftTime(x.endTime||'');const tm=normalizeShiftTimeRange(st,et,x.time||'');u[`shift/schedules/${id}`]={date:x.date,name:x.name,number:'',position:shiftPositionForMark(x.mark)||x.position||'',mark:String(x.mark||'').toUpperCase(),startTime:st,endTime:et,time:tm,period:p,shiftType:currentService,source:'gemini-ai',confidence:x.confidence||'medium',createdAt:Date.now()}});
             u[`shift/periodMeta/${currentService}-${ym}-${p}`]={yearMonth:ym,period:p,shiftType:currentService,label,updatedAt:Date.now(),count:chosen.length,source:'gemini-ai',photoData:aiPhotoData||'',photoName:aiFile?.name||''};
             await fb.update(fb.ref(fb.db),u);card.hidden=true;setAiStatus('AI読み取り結果を保存しました。','ok');alert(`AI読み取り結果をシフトに登録しました。\n${chosen.length}件`);
           }catch(err){alert('シフト登録に失敗しました。\n'+(err?.message||err))}
@@ -6655,7 +7084,7 @@ ${positionRules}
     window.__showShiftAiReview=handlePending;
     window.addEventListener('shift-ai-pending',handlePending);
   }
-  function init(){injectUi();initAllowedShiftMarksUI();hookPending();}
+  function init(){injectUi();initShiftTargetMonthSelector();initAllowedShiftMarksUI();hookPending();}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();
 </script>
@@ -6739,6 +7168,27 @@ ${positionRules}
         const v=$('shiftViewDate'); if(v&&!v.value)v.value=iso;
         const m=$('shiftMemoDate'); if(m&&!m.value)m.value=iso;
         window.dispatchEvent(new CustomEvent('shift-page-opened'));
+
+        // シフトを開いた瞬間に、Safariが直前ページのスクロール位置を復元する場合があるため、
+        // スクロール位置を複数回確実に先頭へ戻す。smoothは使わない。
+        const forceShiftTop=()=>{
+          const se=document.scrollingElement||document.documentElement;
+          try{se.scrollTop=0;}catch(_){}
+          try{document.documentElement.scrollTop=0;}catch(_){}
+          try{document.body.scrollTop=0;}catch(_){}
+          try{window.scrollTo(0,0);}catch(_){}
+          try{history.scrollRestoration='manual';}catch(_){}
+        };
+        forceShiftTop();
+        requestAnimationFrame(()=>{
+          forceShiftTop();
+          requestAnimationFrame(()=>{
+            forceShiftTop();
+            setTimeout(forceShiftTop,50);
+            setTimeout(forceShiftTop,200);
+            setTimeout(forceShiftTop,500);
+          });
+        });
       }
     }
     Object.entries(tabs).forEach(([key,id])=>{
@@ -6799,6 +7249,99 @@ ${positionRules}
   #shiftPage .shiftHeroPosition{
     font-size:14px;
   }
+}
+</style>
+
+
+
+
+<script id="shiftEditButtonHardFix">
+/* 現在は出勤者名タップで編集画面を開きます。 */
+</script>
+
+<style id="shiftRequestedFix">
+#shiftPage .shiftTodaySmallBtn{min-height:44px;padding:8px 12px;font-weight:800}
+#shiftPage #shiftTodayEditBtn,#shiftPage #shiftOtherDayEditBtn{color:#1769d1}
+#shiftPage #shiftTargetMonth{width:100%;min-height:52px;box-sizing:border-box;padding:10px 12px;border:1px solid #cfd4dc;border-radius:12px;background:#fff;font-size:17px;font-weight:700}
+#shiftPage #shiftTargetMonthPrev,#shiftPage #shiftTargetMonthNext{font-size:28px;font-weight:900;color:#1769d1}
+#shiftPage #shiftStaffAddCard{border:2px solid #e78ab0;background:#fff8fb}
+#shiftPage #shiftStaffAddCard button{margin:0}
+#shiftPage #shiftStaffAddRegisteredList{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:8px}
+#shiftPage #shiftStaffAddRegisteredList button{width:100%;min-height:48px;background:#fff;border:1px solid #cfd4dc;border-radius:12px;color:#222;font-size:16px;font-weight:800;text-align:left;padding:10px 12px}
+#shiftPage #shiftStaffAddRegisteredList button:disabled{opacity:.45;background:#f2f3f5}
+#shiftPage .shiftStaffAddFreeRowFixed{display:grid!important;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:stretch}
+#shiftPage .shiftStaffAddFreeRowFixed .shiftTodayEditFreeName{width:100%;min-width:0;min-height:52px;box-sizing:border-box;font-size:18px;padding:10px 12px}
+#shiftPage .shiftStaffAddFreeRowFixed button{min-height:52px;padding:0 18px;font-size:17px}
+#shiftPage .shiftStaffMasterRegisteredList{margin-top:6px;border-top:1px solid #e5e7eb;padding-top:6px}
+#shiftPage .shiftStaffMasterRegisteredRow{display:grid;grid-template-columns:58px minmax(0,1fr);gap:8px;align-items:center;padding:7px 8px;border-bottom:1px solid #edf0f3;font-size:15px}
+#shiftPage .shiftStaffMasterRegisteredRow span{font-weight:800;color:#52606d}
+@media(max-width:600px){
+  #shiftPage .shiftTodaySmallBtn{width:100%}
+  #shiftPage .shiftStaffMasterRegisteredRow{font-size:16px}
+  #shiftPage #shiftStaffAddRegisteredList{grid-template-columns:1fr}
+  #shiftPage .shiftStaffAddFreeRowFixed{grid-template-columns:1fr}
+  #shiftPage .shiftStaffAddFreeRowFixed button{width:100%}
+}
+</style>
+<style id="shiftOtherDaySelectedOnlyFix">
+#shiftPage .shiftOtherDayEditRow:not(.is-selected) .shiftTimeEditor{opacity:.48}
+#shiftPage .shiftOtherDayEditRow:not(.is-selected) .shiftTimeControl input[type="range"]{pointer-events:none}
+#shiftPage .shiftOtherDayEditRow:not(.is-selected) .shiftOtherDayEditPosition{background:#f2f3f5}
+#shiftPage .shiftOtherDayEditRow.is-selected .shiftOtherDayEditPosition{background:#fff}
+#shiftPage .shiftOtherDayEditRow .shiftOtherDayEditPosition{grid-column:1/-1;width:100%;box-sizing:border-box;padding:9px;border:1px solid #ddd;border-radius:10px;font-weight:700}
+</style>
+
+<style id="shiftEditorFinalFix">
+#shiftPage .shiftOtherDayEditRow{grid-template-columns:38px minmax(150px,1fr);gap:8px;padding:10px}
+#shiftPage .shiftOtherDayEditRow .shiftOtherDayEditName{min-height:50px;font-size:17px}
+#shiftPage .shiftOtherDayEditRow .shiftOtherDayEditTimeWrap{grid-column:1/-1}
+#shiftPage .shiftOtherDayEditRow .shiftOtherDayEditPosition{grid-column:1/-1 !important;width:100% !important;min-height:52px !important;font-size:18px !important}
+#shiftPage .shiftOtherDayEditRow:not(.is-selected) .shiftOtherDayEditPosition{opacity:.65}
+@media(max-width:600px){#shiftPage .shiftOtherDayEditRow{grid-template-columns:34px minmax(0,1fr)} }
+</style>
+
+<style id="shiftTodayPositionFinalFix">
+#shiftPage .shiftTodayEditPosition{width:100% !important;min-height:52px !important;box-sizing:border-box;padding:10px 12px !important;font-size:18px !important;font-weight:800 !important;border:1px solid #cbd3df;border-radius:10px}
+</style>
+
+<style id="shiftOtherDayCompactEditorFix">
+#shiftPage .shiftOtherDayStaffPicker{margin:10px 0 14px;padding:12px;border:1px solid #dfe3ea;border-radius:14px;background:#f7f8fa}
+#shiftPage .shiftOtherDayStaffPicker label{display:block;font-weight:800;font-size:15px;margin-bottom:7px}
+#shiftPage .shiftOtherDayStaffPickerRow{display:grid;grid-template-columns:minmax(0,1fr) 88px;gap:8px;align-items:center}
+#shiftPage .shiftOtherDayStaffSelect{width:100%;min-height:48px;padding:8px 10px;border:1px solid #cfd4dc;border-radius:10px;background:#fff;font-size:16px}
+#shiftPage .shiftOtherDayStaffPickerRow button{min-height:48px;margin:0;padding:8px 6px;font-size:15px}
+#shiftPage .shiftOtherDayStaffPicker .small{margin-top:7px;color:#666;line-height:1.45}
+#shiftPage #shiftOtherDayStaffRows{display:flex;flex-direction:column;gap:10px}
+#shiftPage .shiftOtherDayEditRow{margin:0}
+@media(max-width:600px){#shiftPage .shiftOtherDayStaffPickerRow{grid-template-columns:minmax(0,1fr) 78px}}
+</style>
+
+<style id="shiftReadableScheduleDisplayFix">
+/* 出勤者一覧：名前・ポジション・入り／終了時間を明確に3ブロック表示 */
+#shiftPage .shiftHeroNames{display:grid;grid-template-columns:1fr;gap:8px;margin-top:10px}
+#shiftPage .shiftHeroName{display:grid!important;grid-template-columns:42px minmax(0,1fr) minmax(180px,auto)!important;align-items:center!important;gap:10px!important;min-height:68px!important;padding:10px 14px!important;text-align:left!important}
+#shiftPage .shiftHeroNo{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#eef3f8;color:#1769d1;font-weight:900;font-size:15px}
+#shiftPage .shiftHeroMain{min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:3px;line-height:1.2}
+#shiftPage .shiftHeroMain b{font-size:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+#shiftPage .shiftHeroPosition{font-size:15px!important;font-weight:800!important;color:#555!important;white-space:nowrap!important}
+#shiftPage .shiftHeroTimeBox{display:grid;grid-template-columns:1fr 1fr;gap:8px;min-width:180px}
+#shiftPage .shiftHeroTimeBox span,#shiftPage .shiftAttendanceTime span{display:flex;align-items:center;justify-content:center;gap:5px;padding:7px 9px;border-radius:10px;background:#f5f7fa;border:1px solid #dfe4ea;white-space:nowrap}
+#shiftPage .shiftHeroTimeBox small,#shiftPage .shiftAttendanceTime small{font-size:12px;font-weight:800;color:#667085}
+#shiftPage .shiftHeroTimeBox strong,#shiftPage .shiftAttendanceTime strong{font-size:17px;font-weight:900;color:#172033}
+#shiftPage .shiftAttendanceGrid{display:grid;grid-template-columns:1fr!important;gap:8px!important;margin-top:10px}
+#shiftPage .shiftAttendanceName{display:grid!important;grid-template-columns:42px minmax(0,1fr) minmax(180px,auto)!important;grid-template-areas:"no person time"!important;align-items:center!important;gap:10px!important;min-height:68px!important;padding:10px 14px!important}
+#shiftPage .shiftAttendanceNo{grid-area:no!important}
+#shiftPage .shiftAttendancePerson{grid-area:person;min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:3px}
+#shiftPage .shiftAttendancePerson b{font-size:18px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+#shiftPage .shiftAttendancePosition{font-size:15px!important;font-weight:800!important;color:#555!important}
+#shiftPage .shiftAttendanceTime{grid-area:time;display:grid!important;grid-template-columns:1fr 1fr;gap:8px;min-width:180px}
+@media(max-width:600px){
+  #shiftPage .shiftHeroName,#shiftPage .shiftAttendanceName{grid-template-columns:34px minmax(0,1fr)!important;grid-template-areas:"no person" "no time"!important;gap:5px 8px!important;min-height:78px!important;padding:9px 10px!important}
+  #shiftPage .shiftHeroNo{width:30px;height:30px}
+  #shiftPage .shiftHeroMain b,#shiftPage .shiftAttendancePerson b{font-size:17px!important}
+  #shiftPage .shiftHeroTimeBox,#shiftPage .shiftAttendanceTime{grid-column:2;grid-template-columns:1fr 1fr;min-width:0;width:100%}
+  #shiftPage .shiftHeroTimeBox span,#shiftPage .shiftAttendanceTime span{padding:6px 7px}
+  #shiftPage .shiftHeroTimeBox strong,#shiftPage .shiftAttendanceTime strong{font-size:16px}
 }
 </style>
 
@@ -6968,3 +7511,14 @@ ${positionRules}
 }
 </style>
 
+
+<style id="shiftIndividualReadableFinalFix">
+#shiftPage .shiftHeroMain b,#shiftPage .shiftAttendancePerson b{font-size:19px!important;font-weight:900!important}
+#shiftPage .shiftHeroPosition,#shiftPage .shiftAttendancePosition{font-size:16px!important;font-weight:900!important}
+#shiftPage .shiftHeroTimeBox strong,#shiftPage .shiftAttendanceTime strong{font-size:18px!important;font-weight:900!important}
+</style>
+
+<style id="aiStartEndFinal">
+#shiftPage .shiftHeroTimeBox small,#shiftPage .shiftAttendanceTime small{font-size:12px!important;font-weight:800!important}
+#shiftPage .shiftHeroTimeBox strong,#shiftPage .shiftAttendanceTime strong{font-size:18px!important;font-weight:900!important}
+</style>
