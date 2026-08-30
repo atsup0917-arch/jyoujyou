@@ -1118,6 +1118,25 @@ body{
 #shiftPage{overflow-anchor:none!important;}
 body{overflow-anchor:none!important;}
 </style>
+
+<style id="shiftB案CleanupAndLaborStyle">
+/* B案：ユーザー操作不要になった旧インポート・シフトGemini読み取りUIを非表示 */
+#shiftChatGPTImportBox,#shiftEmbeddedHtmlBox,#shiftGeminiAiBox{display:none!important;}
+/* スタッフマスターは内部データとして保持し、通常画面では表示しない */
+#shiftPage .shiftStaffSettings{display:none!important;}
+/* 人件費計算 */
+.shiftLaborGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.shiftLaborRateRow{display:grid;grid-template-columns:72px 1fr 120px;gap:8px;align-items:center;padding:9px 0;border-bottom:1px solid #eee}
+.shiftLaborRateRow .name{font-weight:800;min-width:0;overflow-wrap:anywhere}
+.shiftLaborRateRow input{margin:0!important;padding:10px!important;font-size:16px!important}
+.shiftLaborResult{background:#f7f9fc;border:1px solid #dfe5ee;border-radius:14px;padding:14px;margin-top:12px}
+.shiftLaborResult table{width:100%;border-collapse:collapse;font-size:14px}
+.shiftLaborResult th,.shiftLaborResult td{border-bottom:1px solid #e2e6eb;padding:8px 5px;text-align:right}
+.shiftLaborResult th:first-child,.shiftLaborResult td:first-child{text-align:left}
+.shiftLaborTotal{font-size:24px;font-weight:900;text-align:right;margin-top:10px}
+.shiftLaborAiBox{margin-top:12px;padding:12px;border-radius:14px;background:#f4f8ff;border:1px solid #cddcfb;white-space:pre-wrap;line-height:1.55}
+@media(max-width:520px){.shiftLaborGrid{grid-template-columns:1fr}.shiftLaborRateRow{grid-template-columns:58px 1fr 105px}.shiftLaborResult{overflow:auto}.shiftLaborResult table{min-width:430px}}
+</style>
 </head>
 <body><div class="wrap">
 <div class="navtabs navtabs3 navtabs4">
@@ -1446,9 +1465,36 @@ body{overflow-anchor:none!important;}
   <div id="shiftRegisteredPeriods" class="shiftRegisteredPeriods" style="margin-top:12px"></div>
 </div>
 
+<div class="card" id="shiftLaborCostCard">
+  <div class="shiftSectionTitle">💰 人件費計算（Gemini）</div>
+  <div class="shiftHint">登録済みのシフトを使って人件費を集計します。シフト登録そのものにはGemini APIを使用しません。Geminiは人件費の計算確認・分析にのみ使用します。</div>
+  <div class="shiftLaborGrid" style="margin-top:10px">
+    <div><label style="margin-top:0">📅 対象月</label><input id="laborTargetMonth" type="month"></div>
+    <div><label style="margin-top:0">🌙 対象</label><select id="laborShiftType"><option value="dinner">ディナー</option><option value="lunch">ランチ</option><option value="all">ランチ＋ディナー</option></select></div>
+  </div>
+  <div class="shiftLaborGrid">
+    <div><label>⏰ L（終了）時刻</label><input id="laborCloseTime" type="time" value="22:00"><div class="small">Lはこの時刻で人件費を計算します。</div></div>
+    <div><label>💴 売上（任意）</label><input id="laborSales" type="number" min="0" step="1" placeholder="例：300000"><div class="small">入力すると人件費率も表示します。</div></div>
+  </div>
+  <details style="margin-top:12px">
+    <summary style="cursor:pointer;font-weight:800;font-size:18px">⚙️ スタッフ時給</summary>
+    <div id="laborRateList" style="margin-top:8px"></div>
+  </details>
+  <div class="shiftLaborGrid" style="margin-top:10px">
+    <div><label>Gemini APIキー</label><input id="laborGeminiKey" type="password" autocomplete="off" placeholder="AIza..."></div>
+    <div style="display:flex;align-items:end"><button type="button" class="gray" id="laborGeminiKeySave">キーを保存</button></div>
+  </div>
+  <div id="laborGeminiKeyStatus" class="small"></div>
+  <button type="button" id="laborCalculate">💰 シフトから人件費を計算</button>
+  <button type="button" class="gray" id="laborGeminiAnalyze" style="margin-top:8px">🤖 Geminiで人件費を確認・分析</button>
+  <div id="laborStatus" class="shiftStatus" style="margin-top:10px"></div>
+  <div id="laborResult" class="shiftLaborResult" hidden></div>
+  <div id="laborGeminiResult" class="shiftLaborAiBox" hidden></div>
+</div>
+
 <div class="card" id="shiftReviewCard" hidden>
   <div class="shiftSectionTitle">✅ 登録前の確認</div>
-  <div class="shiftHint">日付を選ぶと、その日の出勤者だけを確認できます。AIが写真から名前と勤務記号を読み取ります。登録前に名前・勤務記号・ポジションを確認して修正できます。</div>
+  <div class="shiftHint">日付を選ぶと、その日の出勤者だけを確認できます。1回目は正式マスターの名前・番号と出勤日・ポジションを確認します。2回目は時間だけを統合します。登録前に内容を確認できます。</div>
   <div class="shiftReviewDateBar" style="margin-top:10px">
     <div><label>確認する日</label><input id="shiftReviewDate" type="date"></div>
     <div class="shiftStatus" id="shiftReviewCount">0人</div>
@@ -4868,7 +4914,6 @@ button, label {
       const n=Object.keys(staffMap||{}).length;
       st.textContent=n?`✅ 登録済みスタッフを表示しました（${n}番号）`:'登録済みスタッフはありません。';
     }
-    try{$('shiftStaffMasterText')?.scrollIntoView({behavior:'smooth',block:'center'});}catch(_){}
   }
 
   function showPreview(file){
@@ -5196,14 +5241,24 @@ button, label {
         }
         if(!comps.length)return {ok:false,score:0};
         function triangle(o){
-          if(o.bh<5||o.bw<3||o.density<.22)return false;
-          const expanding=o.bottom>Math.max(2,o.top*1.35);
-          const bottomWide=o.bottom>=o.bw*.32;
-          const topNarrow=o.top<=o.bw*.68;
+          // ▲は三角形なので、上端が狭く下端ほど横幅が広がる。
+          // JPEGのにじみで従来判定をすり抜ける場合があるため、複数条件で厳格に除外する。
+          if(o.bh<4||o.bw<4)return false;
+          const expanding=o.bottom>Math.max(2,o.top*1.25);
+          const bottomWide=o.bottom>=o.bw*.28;
+          const topNarrow=o.top<=o.bw*.62;
           return expanding&&bottomWide&&topNarrow;
         }
+        function triangleLike(o){
+          // ▲の典型形状：上から下へインク幅が増える。S/Y/O/K/F/Lはこの形になりにくい。
+          if(o.bh<5||o.bw<4)return false;
+          const areaRatio=o.area/Math.max(1,o.bw*o.bh);
+          if(areaRatio<.08||areaRatio>.72)return false;
+          const heightEnough=o.bh>=Math.max(5,Math.round(o.bw*.55));
+          return heightEnough && o.bottom>=o.top*1.15 && o.bottom>=o.bw*.25 && o.top<=o.bw*.65;
+        }
         const usable=comps.filter(o=>{
-          if(triangle(o))return false;
+          if(triangle(o)||triangleLike(o))return false;
           // 罫線の塊・全面塗りつぶしは除外。通常のS/Y/O/K/F/Lは残す。
           const ar=o.bw/Math.max(1,o.bh);
           // 横長・縦長すぎる細線は罫線やセル境界の残骸として除外。
@@ -5726,8 +5781,34 @@ function renderDay(){
         <input type="text" class="shiftTodayEditName" value="${esc(x.name)}" aria-label="スタッフ名">
         <div class="shiftTodayEditTimeWrap">${buildShiftTimeEditor(x.time||'','today')}</div>
         <select class="shiftTodayEditPosition">${posOptions(x.position||'')}</select>
+        <button type="button" class="danger shiftTodayEditDelete" style="min-height:44px;padding:10px 14px;white-space:nowrap">削除</button>
       </div>`;
       bindShiftTimeEditors(box);
+      box.querySelector('.shiftTodayEditDelete')?.addEventListener('click', async ()=>{
+        const target=String(x.name||'').trim();
+        if(!target)return;
+        if(!confirm(`${target}を今日の出勤者から削除します。\n\nよろしいですか？`))return;
+        if(!fb()){alert('Firebaseが準備できていません。');return}
+        try{
+          const liveSnap=await fb().get(ref('shift/schedules'));
+          const current=liveSnap.val()||{}, updates={};
+          let found=false;
+          Object.entries(current).forEach(([id,v])=>{
+            if(v?.date===today()&&shiftIsCurrentType(v)&&String(v?.name||'').trim()===target){
+              updates[`shift/schedules/${id}`]=null;
+              found=true;
+            }
+          });
+          if(!found){alert(`${target}の登録シフトが見つかりません。`);return}
+          await fb().update(fb().ref(fb().db),updates);
+          closeTodayEditor();
+          renderTodayQuick();
+          renderDay();
+        }catch(e){
+          console.error(e);
+          alert('削除に失敗しました。\\n'+(e?.message||e));
+        }
+      });
     }
     card.hidden=false;
     card.scrollIntoView({behavior:'smooth',block:'start'});
@@ -6069,7 +6150,7 @@ function renderDay(){
   function initData(){
     const start=Date.now(), timer=setInterval(()=>{
       if(window.__fb){clearInterval(timer);dbReady=true;if(typeof bindShiftStandalone==='function')bindShiftStandalone();
-        try{fb().onValue(ref('shift/schedules'),s=>{schedules=s.val()||{};renderShiftRegisteredPeriods();renderDay()});fb().onValue(ref('shift/memos'),s=>{memos=s.val()||{};renderMemos();renderMemoCalendar()});fb().onValue(ref('shift/periodMeta'),s=>{window.__shiftPeriodMeta=s.val()||{};renderShiftRegisteredPeriods()});fb().onValue(ref('shift/staffMap'),s=>{const v=s.val()||{};const a={};Object.entries(v).forEach(([n,x])=>{const name=String(x?.name||'').trim();if(name)a[normalizeStaffNumber(n)]=name;});if(Object.keys(a).length){staffMap=a;staff=Object.values(a);renderStaff();}});}catch(e){console.warn('shift realtime',e)}
+        try{fb().onValue(ref('shift/schedules'),s=>{schedules=s.val()||{};renderShiftRegisteredPeriods();renderDay()});fb().onValue(ref('shift/memos'),s=>{memos=s.val()||{};renderMemos();renderMemoCalendar()});fb().onValue(ref('shift/periodMeta'),s=>{window.__shiftPeriodMeta=s.val()||{};renderShiftRegisteredPeriods()});fb().onValue(ref('shift/staffMap'),s=>{const v=s.val()||{};const a={};Object.entries(v).forEach(([n,x])=>{const name=String(x?.name||'').trim();if(name)a[normalizeStaffNumber(n)]=name;});if(Object.keys(a).length){staffMap=a;staffMap['40']='[削除済み]';staff=Object.values(staffMap);renderStaff();}});}catch(e){console.warn('shift realtime',e)}
       }else if(Date.now()-start>15000){clearInterval(timer);if(typeof bindShiftStandalone==='function')bindShiftStandalone();setStatus('Firebaseの共有接続がまだ準備できていません。写真・名前はこの端末で操作できます。','warn')}
     },100);
   }
@@ -6098,6 +6179,14 @@ function renderDay(){
 #shiftAiPhotoPreview img{display:block;width:100%;height:auto;max-height:280px;object-fit:contain;border-radius:10px}
 .shiftAiResult{margin-top:10px;padding:10px 12px;border-radius:12px;background:#fff;border:1px solid #e1e4e8;white-space:pre-wrap;line-height:1.5}
 @media(max-width:600px){#shiftGeminiKeyRow{grid-template-columns:1fr!important}#shiftGeminiKeyRow button{width:100%}.aiPhotoActions{grid-template-columns:1fr!important}}
+#shiftChatGPTImportBox{margin-top:14px;padding:14px;border:1px solid #d8e2f5;border-radius:16px;background:#fbfcff}
+#shiftChatGPTImportBox .bTitle{font-weight:900;font-size:19px;margin-bottom:6px}
+#shiftChatGPTImportBox .bHint{font-size:13px;color:#555;line-height:1.55}
+#shiftChatGPTJson{width:100%;min-height:230px;box-sizing:border-box;margin-top:10px;padding:12px;border:1px solid #c9d2e3;border-radius:12px;font-family:ui-monospace,monospace;font-size:13px;line-height:1.5;resize:vertical;background:#fff}
+.shiftBActions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.shiftBPreview{margin-top:10px;padding:10px 12px;border-radius:12px;background:#fff;border:1px solid #e1e4e8;white-space:pre-wrap;line-height:1.5}
+@media(max-width:600px){.shiftBActions{grid-template-columns:1fr}}
+
 </style>
 <script id="shiftGeminiAiReader">
 (function(){
@@ -6164,12 +6253,22 @@ function renderDay(){
     }
   }
 
+  function removeLegacyShiftAiUi(){
+    // 以前の3段階版UIがブラウザの復元表示等で残っている場合だけ除去する。
+    // 現在の2段階版UI・他のシフト機能には触れない。
+    document.querySelectorAll('#shiftGeminiAiBox').forEach(box=>{
+      const t=String(box.textContent||'');
+      if(t.includes('3回目')||t.includes('出勤セルを再照合')) box.remove();
+    });
+  }
+
   function injectUi(){
     const target=$('shiftRegisteredPeriods'); if(!target)return;
+    removeLegacyShiftAiUi();
     if(!$('shiftGeminiAiBox')) target.insertAdjacentHTML('afterend',`
       <div id="shiftGeminiAiBox">
         <div class="aiTitle">🤖 AIでシフト表を読み取る</div>
-        <div class="aiHint">日付は前半1〜15日／後半16日〜月末をアプリ側で固定します。1日＝2列、1人＝2行の交点だけを確認し、S/Y/O/K/Fなど登録した文字だけを出勤とします。画像上部の「現人数」も照合します。AI通信は原則1回だけです。写真は確認して登録した時だけシフトを保存します。</div>
+        <div class="aiHint">日付・名前・番号はアプリ側で固定します。AI読み取りは2回に分けます。1回目は出勤日とポジションだけ、内容を確認して登録した後、2回目は登録済み出勤者の時間だけを読み取り統合します。1人＝2行、1日＝2列の交点を厳密に確認します。</div>
         <div id="shiftAiPeriodRow" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px">
           <div>
             <label style="margin-top:0">📅 対象月</label>
@@ -6197,7 +6296,8 @@ function renderDay(){
           <div id="shiftAiPhotoName" class="aiHint" style="margin-top:7px">AI読み取り用の写真はまだありません。</div>
           <div id="shiftAiPhotoPreview" hidden></div>
         </div>
-        <button type="button" id="shiftGeminiRead" style="margin-top:10px">🤖 AIで出勤者を読み取る</button>
+        <button type="button" id="shiftGeminiRead" style="margin-top:10px">🤖 1回目：出勤日・ポジションを読み取る</button>
+        <button type="button" id="shiftGeminiTimeRead" class="gray" style="margin-top:8px" disabled>🔒 2回目：1回目登録後に時間を読み取って統合</button>
         <div id="shiftGeminiAiStatus" class="shiftStatus" style="margin-top:10px">Gemini APIキーと写真を用意してください。</div>
         <div id="shiftGeminiAiResult" class="shiftAiResult" hidden></div>
         <details open class="card" style="margin-top:12px" id="shiftAllowedMarksSettings">
@@ -6220,6 +6320,24 @@ function renderDay(){
           </div>
         </details>
       </div>`);
+    if(!$('shiftChatGPTImportBox')) target.insertAdjacentHTML('afterend',`
+      <div id="shiftChatGPTImportBox">
+        <div class="bTitle">💬 B案：ChatGPTで作ったシフトデータを登録</div>
+        <div class="bHint">シフト写真をChatGPTで読み取り、完成したJSONをここへ貼り付けます。アプリ側で対象月・前半/後半・登録スタッフを確認し、Firebaseへ保存します。このB案のシフト登録処理ではGemini APIを一切使用しません。Geminiは他のAI機能専用です。A案の既存機能はそのまま残します。</div>
+        <div class="bHint" style="margin-top:8px"><b>推奨形式</b>：1件につき「date・number・name・position・startTime・endTime・time」。名前と番号はアプリのスタッフマスターを優先し、日付は指定した対象期間だけ登録します。</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px">
+          <button type="button" class="gray" id="shiftChatGPTPromptCopy">📋 ChatGPT用プロンプトをコピー</button>
+          <button type="button" class="gray" id="shiftChatGPTJsonFileChoose">📄 JSONファイルを選択</button>
+        </div>
+        <input id="shiftChatGPTJsonFile" type="file" accept=".json,application/json,text/plain" style="display:none">
+        <textarea id="shiftChatGPTJson" spellcheck="false" placeholder='例：[ {"date":"2026-08-16","number":"10","name":"[削除済み]","position":"板場","startTime":"17:00","endTime":"22:00","time":"17:00〜22:00"} ]'></textarea>
+        <div class="shiftBActions">
+          <button type="button" class="gray" id="shiftChatGPTValidate">🔍 データを確認</button>
+          <button type="button" id="shiftChatGPTSave">💾 Firebaseへ登録</button>
+        </div>
+        <div id="shiftChatGPTStatus" class="shiftStatus" style="margin-top:10px">ChatGPTで作成したJSONを貼り付けてください。</div>
+        <div id="shiftChatGPTPreview" class="shiftBPreview" hidden></div>
+      </div>`);
     const k=getKey(); if($('shiftGeminiApiKey'))$('shiftGeminiApiKey').value=k;
     $('shiftGeminiKeyStatus').textContent=k?'✅ この端末にAPIキーを保存済み':'APIキーはこの端末だけに保存します。HTMLやGitHubには書き込みません。';
     $('shiftGeminiKeySave').onclick=()=>{const v=$('shiftGeminiApiKey').value.trim();if(!v){alert('APIキーを入力してください。');return}localStorage.setItem(KEY_STORE,v);$('shiftGeminiKeyStatus').textContent='✅ APIキーをこの端末に保存しました。';setAiStatus('APIキーを保存しました。写真を選んでAI読み取りしてください。','ok')};
@@ -6228,6 +6346,135 @@ function renderDay(){
     $('shiftAiPhotoInput').onchange=e=>{aiFile=e.target.files?.[0]||null;if(aiFile)showAiPhoto(aiFile)};
     $('shiftAiPhotoDelete').onclick=deleteAiPhoto;
     $('shiftGeminiRead').onclick=runGeminiRead;
+    $('shiftGeminiTimeRead').onclick=runGeminiTimeRead;
+    bindShiftChatGPTImport();
+    // 起動直後はlocalStorageだけを根拠に「1回目登録済み」にしない。
+    // 実際にこの対象期間へ1回目が登録されていることをFirebaseで確認してから復元する。
+    setStageButtons('none');
+    reconcileShiftAiStage();
+  }
+
+  function setShiftBStatus(msg,kind=''){const e=$('shiftChatGPTStatus');if(e){e.className='shiftStatus '+kind;e.textContent=msg}}
+  function parseShiftChatGPTJson(){
+    const raw=String($('shiftChatGPTJson')?.value||'').trim();
+    if(!raw)throw new Error('JSONを貼り付けてください。');
+    let parsed;
+    try{parsed=JSON.parse(raw)}catch(e){
+      const a=raw.indexOf('['),z=raw.lastIndexOf(']');
+      if(a>=0&&z>a){try{parsed=JSON.parse(raw.slice(a,z+1))}catch(_){}}
+      if(!parsed){const a2=raw.indexOf('{'),z2=raw.lastIndexOf('}');if(a2>=0&&z2>a2){try{parsed=JSON.parse(raw.slice(a2,z2+1))}catch(_){}}}
+      if(!parsed)throw new Error('JSONを解析できません。ChatGPTのJSON部分だけを貼り付けてください。');
+    }
+    let arr=Array.isArray(parsed)?parsed:(Array.isArray(parsed.shifts)?parsed.shifts:(Array.isArray(parsed.items)?parsed.items:[]));
+    if(!arr.length)throw new Error('登録データが0件です。shifts または items の配列を確認してください。');
+    const ctx=getShiftAiPeriodContext();
+    const masterByNo={};const masterByName={};
+    ctx.masters.forEach(m=>{const no=normalizeStaffNumber(m.number);if(no)masterByNo[no]=m;const nm=String(m.name||'').trim();if(nm)masterByName[nm]=m});
+    const from=ctx.from,to=ctx.to,prefix=`${ctx.ym}-`,errors=[],out=[],seen=new Set();
+    const parseTime=(v)=>{const x=String(v??'').trim();if(!x)return '';if(/^L$/i.test(x))return 'L';return normalizeShiftTime(x)||x};
+    arr.forEach((x,i)=>{
+      const date=String(x?.date||x?.day||'').trim();
+      if(!/^\d{4}-\d{2}-\d{2}$/.test(date)){errors.push(`${i+1}件目：dateがYYYY-MM-DDではありません。`);return}
+      if(!date.startsWith(prefix)){errors.push(`${i+1}件目：対象月${ctx.ym}ではありません（${date}）。`);return}
+      const dn=Number(date.slice(-2));if(dn<from||dn>to){errors.push(`${i+1}件目：指定期間外の日付です（${date}）。`);return}
+      const suppliedNo=normalizeStaffNumber(x?.number||x?.staffNumber||x?.staffNo||'');
+      const suppliedName=String(x?.name||x?.staffName||'').trim();
+      const master=(suppliedNo&&masterByNo[suppliedNo])||(suppliedName&&masterByName[suppliedName]);
+      if(!master){errors.push(`${i+1}件目：スタッフを正式マスターと照合できません（番号=${suppliedNo||'—'} 名前=${suppliedName||'—'}）。`);return}
+      const number=normalizeStaffNumber(master.number),name=String(master.name||'').trim();
+      let position=String(x?.position||x?.pos||'').trim();
+      const mark=String(x?.mark||'').trim().toUpperCase();
+      if(!position&&mark)position=shiftPositionForMark(mark);
+      const st=parseTime(x?.startTime||x?.start||'');
+      const et=parseTime(x?.endTime||x?.end||'');
+      let time=String(x?.time||'').trim();
+      if(!time){time=normalizeShiftTimeRange(st,et,'')}
+      if(/^L$/i.test(et)){time='L'}
+      else if(time)time=normalizeShiftTimeRange(st,et,time)||time;
+      const key=`${date}|${number}`;
+      if(seen.has(key)){errors.push(`${i+1}件目：同じスタッフ・同じ日に重複しています（${date}／${name}）。`);return}
+      seen.add(key);
+      out.push({date,name,number,position:position||'',time:time||'',startTime:st||'',endTime:et||'',period:ctx.p,shiftType:ctx.service,source:'chatgpt-import',createdAt:Date.now()});
+    });
+    return {ctx,items:out,errors};
+  }
+  function validateShiftChatGPTImport(show=true){
+    try{
+      const r=parseShiftChatGPTJson(),dates=[...new Set(r.items.map(x=>x.date))].sort(),names=[...new Set(r.items.map(x=>x.name))];
+      const msg=`確認OK\n対象：${r.ctx.ym} ${r.ctx.p==='first'?'前半（1〜15日）':'後半（16日〜月末）'}\n日数：${dates.length}日\n件数：${r.items.length}件\nスタッフ：${names.length}人`+(r.errors.length?`\n\n⚠️ 除外・要確認：${r.errors.length}件\n${r.errors.slice(0,8).join('\n')}${r.errors.length>8?'\n…':''}`:'');
+      const box=$('shiftChatGPTPreview');if(box){box.hidden=false;box.textContent=msg}
+      setShiftBStatus(r.errors.length?'一部に確認が必要です。内容を直してから登録してください。':'データ確認OKです。Firebaseへ登録できます。',r.errors.length?'warn':'ok');
+      return r;
+    }catch(e){setShiftBStatus(e?.message||String(e),'err');const box=$('shiftChatGPTPreview');if(box){box.hidden=true;box.textContent=''};return null}
+  }
+  async function saveShiftChatGPTImport(){
+    const r=validateShiftChatGPTImport(false);if(!r)return;
+    if(r.errors.length){alert('エラーのあるデータは登録できません。\n\n'+r.errors.slice(0,12).join('\n'));return}
+    if(!fb()){alert('Firebaseが準備されていません。');return}
+    const label=periodText(r.ctx.ym,r.ctx.p);
+    if(!confirm(`${label}をChatGPT読み取りデータに入れ替えます。\n\n登録：${r.items.length}件\n\nよろしいですか？`))return;
+    const btn=$('shiftChatGPTSave');if(btn){btn.disabled=true;btn.textContent='💾 登録中…'}
+    try{
+      const liveSnap=await fb().get(ref('shift/schedules'));const current=liveSnap.val()||{};const u={};
+      const inPeriod=d=>{if(!String(d).startsWith(`${r.ctx.ym}-`))return false;const n=Number(String(d).slice(-2));return n>=r.ctx.from&&n<=r.ctx.to};
+      Object.entries(current).forEach(([id,x])=>{if(inPeriod(x?.date)&&shiftIsCurrentType(x))u[`shift/schedules/${id}`]=null});
+      r.items.forEach(x=>{const id=fb().push(ref('shift/schedules')).key;u[`shift/schedules/${id}`]=x});
+      u[`shift/periodMeta/${shiftType()}-${r.ctx.ym}-${r.ctx.p}`]={yearMonth:r.ctx.ym,period:r.ctx.p,shiftType:shiftType(),label,updatedAt:Date.now(),count:r.items.length,source:'chatgpt-import'};
+      await fb().update(fb().ref(fb().db),u);
+      setShiftBStatus(`${label}をFirebaseへ登録しました。\n${r.items.length}件`,'ok');
+      if($('shiftChatGPTJson'))$('shiftChatGPTJson').value='';
+      if($('shiftChatGPTPreview'))$('shiftChatGPTPreview').hidden=true;
+      renderShiftRegisteredPeriods();renderDay();
+    }catch(e){console.error(e);setShiftBStatus('Firebase登録に失敗しました。\n'+(e?.message||String(e)),'err');alert('Firebase登録に失敗しました。\n'+(e?.message||String(e)))}
+    finally{if(btn){btn.disabled=false;btn.textContent='💾 Firebaseへ登録'}}
+  }
+  function buildShiftChatGPTPrompt(){
+    const ctx=getShiftAiPeriodContext();
+    const staff=getCanonicalShiftStaff();
+    const staffText=staff.map(x=>`${x.number}: ${x.name}`).join('\n');
+    return `あなたは飲食店のシフト表読み取り担当です。添付したシフト表画像だけを根拠に、${ctx.ym}の${ctx.p==='first'?'前半（1〜15日）':'後半（16日〜月末）'}・${ctx.service||'ディナー'}だけを読み取ってください。\n\n【絶対ルール】\n1. 日付は画像上部の列見出しを基準にし、対象期間外の列は絶対に読み取らない。1日＝2列（左＝ポジション記号、右＝時間）として列を固定する。隣の日付へずらさない。\n2. 1人＝2行。名前欄の1人分の上下2行を1セットとして、その人の全日付を同じ行位置から読む。\n3. 名前・番号はAIで新規作成・推測しない。下記の正式スタッフマスターから、画像の上からの行順に対応させる。\n4. 出勤判定はS/Y/O/K/Fのみ。その他の文字・記号・空欄・×・▲・○は出勤として登録しない。\n5. ポジションは S=板場、Y=焼場、O=ホール、K=コンロ、F=揚場。\n6. 時間は画像に明確に書かれているものだけ。読めない・判定不能な時間は推測せず空欄にする。\n7. 17は17:00、18.5は18:30として正規化する。LはLとして保持する。\n8. JSON以外の説明文を出さない。\n9. 1件は「出勤として読み取れた人×日付」だけ。休み・空欄の人は出力しない。\n10. dateはYYYY-MM-DD、numberは文字列で返す。\n\n【正式スタッフマスター】\n${staffText}\n\n【出力形式】\n[{"date":"YYYY-MM-DD","number":"10","name":"[削除済み]","position":"板場","startTime":"17:00","endTime":"22:00","time":"17:00〜22:00"}]`;
+  }
+  async function copyShiftChatGPTPrompt(){
+    const p=buildShiftChatGPTPrompt();
+    try{await navigator.clipboard.writeText(p);setShiftBStatus('ChatGPT用プロンプトをコピーしました。ChatGPTに写真と一緒に貼り付けてください。','ok')}
+    catch(_){const ta=document.createElement('textarea');ta.value=p;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();setShiftBStatus('ChatGPT用プロンプトをコピーしました。','ok')}
+  }
+  function bindShiftChatGPTImport(){
+    const v=$('shiftChatGPTValidate'),s=$('shiftChatGPTSave');
+    if(v&&!v.dataset.bound){v.dataset.bound='1';v.onclick=()=>validateShiftChatGPTImport(true)}
+    if(s&&!s.dataset.bound){s.dataset.bound='1';s.onclick=saveShiftChatGPTImport}
+    const pc=$('shiftChatGPTPromptCopy'); if(pc&&!pc.dataset.bound){pc.dataset.bound='1';pc.onclick=copyShiftChatGPTPrompt}
+    const fc=$('shiftChatGPTJsonFileChoose'),fi=$('shiftChatGPTJsonFile');
+    if(fc&&!fc.dataset.bound){fc.dataset.bound='1';fc.onclick=()=>fi?.click()}
+    if(fi&&!fi.dataset.bound){fi.dataset.bound='1';fi.onchange=async e=>{const f=e.target.files?.[0];if(!f)return;try{const text=await f.text();$('shiftChatGPTJson').value=text;setShiftBStatus(`JSONファイルを読み込みました：${f.name}`,'ok');validateShiftChatGPTImport(true)}catch(err){setShiftBStatus('JSONファイルを読み込めませんでした。','err')}}}
+  }
+
+  async function reconcileShiftAiStage(){
+    const stage=loadShiftAiStage();
+    if(!stage || stage.key!==shiftAiStageKey()) return;
+    // 1回目の読み取り結果をまだ登録していない段階（stage='first'）は、
+    // 登録前の確認画面を維持するためlocalStorageをそのまま使う。
+    if(stage.stage!=='time') return;
+    try{
+      const fb=window.__fb;
+      if(!fb?.get || !fb?.ref) { clearShiftAiStage(); setStageButtons('none'); return; }
+      const ctx=getShiftAiPeriodContext();
+      const metaSnap=await fb.get(fb.ref(fb.db,`shift/periodMeta/${ctx.service}-${ctx.ym}-${ctx.p}`));
+      const meta=metaSnap?.val?.()||null;
+      const hasStage1Meta=meta && meta.source==='gemini-ai-stage1';
+      if(!hasStage1Meta){
+        clearShiftAiStage();
+        setStageButtons('none');
+        if($('shiftGeminiAiResult')){$('shiftGeminiAiResult').hidden=true;$('shiftGeminiAiResult').textContent='';}
+        setAiStatus('Gemini APIキーと写真を用意してください。','');
+        return;
+      }
+      setStageButtons('time');
+    }catch(e){
+      // 通信確認に失敗した場合は、誤って「1回目登録済み」にしない。
+      clearShiftAiStage();
+      setStageButtons('none');
+    }
   }
   function showAiPhoto(file){
     const box=$('shiftAiPhotoPreview'); if(!box)return;
@@ -6352,27 +6599,28 @@ function renderDay(){
   // AIにスタッフ名を決めさせないための正規スタッフ順。
   // シフト表では「上から何人目か」を名前に結び付け、名前OCRの誤認識で
   // [削除済み]と[削除済み]が入れ替わる事故を防ぐ。
-  const CANONICAL_SHIFT_NAMES=[
-    '[削除済み]','[削除済み]','[削除済み]','[削除済み]','[削除済み]','[削除済み]',
-    '[削除済み]','[削除済み]','[削除済み]','[削除済み]','[削除済み]','[削除済み]',
-    '[削除済み]','[削除済み]','[削除済み]','[削除済み]','[削除済み]','[削除済み]',
-    '[削除済み]','[削除済み]','[削除済み]','[削除済み]','[削除済み]','[削除済み]','[削除済み]','[削除済み]'
+  // 2026年8月後半の正式シフト表＋スタッフマスターの番号対応を固定。
+  // 登録番号は10,12,14...60。AIには名前・番号を推測させない。
+  const CANONICAL_SHIFT_STAFF=[
+    {number:'10',name:'[削除済み]'}, {number:'12',name:'[削除済み]'},
+    {number:'14',name:'[削除済み]'}, {number:'16',name:'[削除済み]'},
+    {number:'18',name:'[削除済み]'}, {number:'20',name:'[削除済み]'},
+    {number:'22',name:'[削除済み]'}, {number:'24',name:'[削除済み]'},
+    {number:'26',name:'[削除済み]'}, {number:'28',name:'[削除済み]'},
+    {number:'30',name:'[削除済み]'}, {number:'32',name:'[削除済み]'},
+    {number:'34',name:'[削除済み]'}, {number:'36',name:'[削除済み]'},
+    {number:'38',name:'[削除済み]'}, {number:'40',name:'[削除済み]'},
+    {number:'42',name:'[削除済み]'}, {number:'44',name:'[削除済み]'},
+    {number:'46',name:'[削除済み]'}, {number:'48',name:'[削除済み]'},
+    {number:'50',name:'[削除済み]'}, {number:'52',name:'[削除済み]'},
+    {number:'54',name:'[削除済み]'}, {number:'56',name:'[削除済み]'},
+    {number:'58',name:'[削除済み]'}, {number:'60',name:'[削除済み]'}
   ];
-  function getCanonicalShiftNames(){
-    const out=[];
-    const add=v=>{const n=String(v||'').trim();if(n&&!out.includes(n)&&out.length<30)out.push(n)};
-    // 現在の8月後半シフトで確定している順番を最優先する。
-    // これを先に置くことで、過去に保存された誤ったstaffMapの順番を引き継がない。
-    CANONICAL_SHIFT_NAMES.forEach(add);
-    // 26人を超える将来のスタッフは、既存のスタッフ番号マスターから後ろに追加する。
-    try{
-      Object.entries(staffMap||{}).sort((a,b)=>Number(a[0])-Number(b[0])).forEach(([,name])=>add(name));
-    }catch(_){}
-    // この2人は位置まで固定。過去に保存された誤った名前対応は一切使わない。
-    if(out.length>=8){out[6]='[削除済み]';out[7]='[削除済み]';}
-    return out.slice(0,30);
-  }
-  window.__canonicalShiftNames=CANONICAL_SHIFT_NAMES.slice(0,30);
+  const CANONICAL_SHIFT_NAMES=CANONICAL_SHIFT_STAFF.map(x=>x.name);
+  function getCanonicalShiftNames(){return CANONICAL_SHIFT_STAFF.map(x=>x.name);}
+  function getCanonicalShiftStaff(){return CANONICAL_SHIFT_STAFF.map(x=>({number:x.number,name:x.name}));}
+  window.__canonicalShiftNames=CANONICAL_SHIFT_NAMES.slice();
+  window.__canonicalShiftStaff=getCanonicalShiftStaff();
   function targetInfo(){
     const ym=$('shiftTargetMonth')?.value||'';const p=$('shiftPeriod')?.value||'second';
     return `${ym} ${p==='first'?'前半（1〜15日）':'後半（16日〜月末）'}`;
@@ -6464,7 +6712,7 @@ function renderDay(){
     // ・1人＝名前セル1区間（この表ではExcel上2行結合）。
     // ・1日＝「白い勤務記号列＋黄色い時間列」の2列セット。
     // ・日付はAIに推測させず、アプリ側で列番号→日付を確定する。
-    // ・AIへは16日分を一度に見せず、前半8日/後半8日に分割する。
+    // ・AIへは最大8日分ずつに分割する。
     //   特に中央付近の隣日付混同を防ぐため、各画像は8日分だけにする。
     const bmp=await createImageBitmap(file);
     const max=3000, scale=Math.min(1,max/Math.max(bmp.width,bmp.height));
@@ -6548,140 +6796,79 @@ function renderDay(){
       };
     });
 
-    // ② スタッフ区間を自動検出。名前欄の横罫線を使うが、人数は固定しない。
+    // ② スタッフ区間を確定する。
+    // この正式シフト表は「1人＝横2行」「1日＝縦2列」の構造。
+    // 上段＝出勤/ポジション、下段＝時間。1行を1人として扱わない。
     const nameRight=Math.max(40,datePairs[0].left-3);
     const staffStart=Math.floor(H*.12);
     const neutralLine=(r,g,b)=>{const mx=Math.max(r,g,b),mn=Math.min(r,g,b);return mx<225&&(mx-mn)<24&&r>70;};
     const lineScore=new Uint16Array(H);
     for(let y=staffStart;y<Math.floor(H*.99);y++){
-      let n=0;for(let x=2;x<nameRight;x++){const i=(y*W+x)*4;if(neutralLine(data[i],data[i+1],data[i+2]))n++;}
+      let n=0;
+      for(let x=2;x<nameRight;x++){
+        const i=(y*W+x)*4;
+        if(neutralLine(data[i],data[i+1],data[i+2]))n++;
+      }
       lineScore[y]=n;
     }
     const lineThreshold=Math.max(35,Math.floor(Math.min(nameRight-2,140)*.45));
-    const lineYs=[];for(let y=staffStart;y<H;y++)if(lineScore[y]>=lineThreshold)lineYs.push(y);
+    const lineYs=[];
+    for(let y=staffStart;y<H;y++)if(lineScore[y]>=lineThreshold)lineYs.push(y);
     let hRuns=makeRuns(lineYs,2).map(r=>Math.round((r[0]+r[1])/2));
-    hRuns=hRuns.filter((y,i)=>i===0||y-hRuns[i-1]>=15);
-    if(hRuns.length<4)throw new Error('スタッフ欄の横罫線を検出できませんでした。');
+    hRuns=hRuns.filter((y,i)=>i===0||y-hRuns[i-1]>=12);
+    if(hRuns.length<6)throw new Error('スタッフ欄の横罫線を十分に検出できませんでした。表全体が写った写真を選んでください。');
 
     let staffTop=-1;
     for(let y=staffStart;y<H;y++){
-      let n=0;for(let x=selected[0][0];x<=selected[0][1];x++){const i=(y*W+x)*4;if(yellow(data[i],data[i+1],data[i+2]))n++;}
+      let n=0;
+      for(let x=selected[0][0];x<=selected[0][1];x++){
+        const i=(y*W+x)*4;
+        if(yellow(data[i],data[i+1],data[i+2]))n++;
+      }
       if(n>Math.max(8,(selected[0][1]-selected[0][0])*.35)){staffTop=y;break;}
     }
     if(staffTop<0)throw new Error('スタッフ欄の開始位置を確定できませんでした。');
-    let startIndex=0,best=Infinity;hRuns.forEach((y,i)=>{const d=Math.abs(y-staffTop);if(d<best){best=d;startIndex=i;}});
+    let startIndex=0,best=Infinity;
+    hRuns.forEach((y,i)=>{const d=Math.abs(y-staffTop);if(d<best){best=d;startIndex=i;}});
     let boundaries=hRuns.slice(startIndex);
+
+    // 横罫線が写真の一部で薄い場合は、検出済みの中央値ピッチから欠落境界を補完。
     if(boundaries.length>=3){
-      const ds=boundaries.slice(1).map((v,i)=>v-boundaries[i]).filter(v=>v>25&&v<100);
+      const ds=boundaries.slice(1).map((v,i)=>v-boundaries[i]).filter(v=>v>12&&v<100);
       if(ds.length>=2){
-        const pitch=[...ds].sort((a,b)=>a-b)[Math.floor(ds.length/2)],ext=[];
+        const pitch=[...ds].sort((a,b)=>a-b)[Math.floor(ds.length/2)];
+        const ext=[];
         for(let i=1;i<boundaries.length;i++){
           const gap=boundaries[i]-boundaries[i-1];
-          if(gap>pitch*1.55&&gap<pitch*2.5){const n=Math.round(gap/pitch);for(let k=1;k<n;k++)ext.push(Math.round(boundaries[i-1]+gap*k/n));}
+          if(gap>pitch*1.55&&gap<pitch*2.5){
+            const n=Math.round(gap/pitch);
+            for(let k=1;k<n;k++)ext.push(Math.round(boundaries[i-1]+gap*k/n));
+          }
         }
         boundaries=[...boundaries,...ext].sort((a,b)=>a-b);
       }
     }
-    boundaries=boundaries.filter((y,i)=>i===0||y-boundaries[i-1]>=15);
+    boundaries=boundaries.filter((y,i)=>i===0||y-boundaries[i-1]>=12);
 
+    // 正式マスター26人を固定し、各人を必ず「2行ひと組」で切り出す。
+    const STAFF_COUNT=CANONICAL_SHIFT_STAFF.length;
     const staffBands=[];
-    const nameTextLeft=Math.max(10,Math.floor(nameRight*.22));
-    const nameTextRight=Math.max(nameTextLeft+20,nameRight-Math.floor(nameRight*.10));
-
-    // 重要：人数を「名前の文字量」だけで決めない。
-    // 短い名前（例：2文字）や下段の小さい名前は文字インク量が少なく、
-    // 以前の方式ではそこから下のスタッフ行そのものを消してしまっていた。
-    // まず罫線から全スタッフ区間を作り、その後「名前または勤務記号」がある
-    // 最後の区間までをスタッフ行として保持する。途中に空欄スタッフがあっても
-    // rowIndexを詰めないので、上下のスタッフが別人になることも防ぐ。
-    const textInkScore=(top,bottom)=>{
-      let score=0;
-      const xL=nameTextLeft,xR=nameTextRight;
-      for(let y=top;y<bottom;y++){
-        for(let x=xL;x<xR;x++){
-          const q=(y*W+x)*4;
-          if(!dark(data[q],data[q+1],data[q+2]))continue;
-          let hr=1,vr=1;
-          for(let xx=x-1;xx>=xL;xx--){const z=(y*W+xx)*4;if(!dark(data[z],data[z+1],data[z+2]))break;hr++;if(hr>18)break;}
-          for(let xx=x+1;xx<xR;xx++){const z=(y*W+xx)*4;if(!dark(data[z],data[z+1],data[z+2]))break;hr++;if(hr>18)break;}
-          for(let yy=y-1;yy>=top;yy--){const z=(yy*W+x)*4;if(!dark(data[z],data[z+1],data[z+2]))break;vr++;if(vr>18)break;}
-          for(let yy=y+1;yy<bottom;yy++){const z=(yy*W+x)*4;if(!dark(data[z],data[z+1],data[z+2]))break;vr++;if(vr>18)break;}
-          if(hr>=18||vr>=18)continue;
-          score++;
-        }
-      }
-      return score;
-    };
-
-    const scheduleInkScore=(top,bottom)=>{
-      let score=0;
-      // 白い勤務記号列だけを調べる。黄色の時間列は人数判定に使わない。
-      for(const d of datePairs){
-        const xL=Math.min(W-1,d.symbolLeft+6),xR=Math.max(xL+1,Math.min(W,d.symbolRight-5));
-        for(let y=top;y<bottom;y++){
-          for(let x=xL;x<xR;x++){
-            const q=(y*W+x)*4;
-            if(dark(data[q],data[q+1],data[q+2]))score++;
-          }
-        }
-      }
-      return score;
-    };
-
-    const rowCandidates=[];
-    for(let i=0;i<boundaries.length-1;i++){
-      const top=boundaries[i]+6,bottom=boundaries[i+1]-6;if(bottom<=top)continue;
-      const nameInk=textInkScore(top,bottom);
-      const shiftInk=scheduleInkScore(top,bottom);
-      rowCandidates.push({top:boundaries[i]+1,bottom:boundaries[i+1]-1,boundaryIndex:i,nameInk,shiftInk});
+    for(let ri=0;ri<STAFF_COUNT;ri++){
+      const bi=ri*2;
+      if(bi+2>=boundaries.length)break;
+      const top=boundaries[bi]+1;
+      const bottom=boundaries[bi+2]-1;
+      if(bottom<=top+8)break;
+      staffBands.push({top,bottom,boundaryIndex:bi,name:CANONICAL_SHIFT_STAFF[ri]?.name||'',number:CANONICAL_SHIFT_STAFF[ri]?.number||''});
+    }
+    if(staffBands.length!==STAFF_COUNT){
+      throw new Error(`スタッフの「1人＝2行」を26人分確定できませんでした（${staffBands.length}/26人）。表全体が写った写真を選んでください。`);
     }
 
-    // 名前が短い／ヘルプ欄の名前が薄い／勤務記号が少ない場合でも、
-    // 「その行自体」を人数判定で切り捨てない。
-    // このシフト表は通常24〜26人程度、最大30人を想定するため、
-    // 検出できた罫線の範囲から最大30スタッフ行まで保持する。
-    // これにより「最後の1人だけ行判定から消える」事故を防ぐ。
-    if(!rowCandidates.length)throw new Error('スタッフ行を検出できませんでした。表全体が写った写真を選んでください。');
-
-    // まず実際に内容がある最後の行を探す。
-    let lastActive=-1;
-    rowCandidates.forEach((r,i)=>{
-      if(r.nameInk>=6 || r.shiftInk>=8)lastActive=i;
-    });
-    if(lastActive<0)throw new Error('スタッフ行を検出できませんでした。表全体が写った写真を選んでください。');
-
-    // 内容がある最後の行の後ろも、最大30人まで「候補行」として残す。
-    // 下段ヘルプの名前が薄い場合でもAIが確認できるようにする。
-    const keepCount=Math.min(30, Math.max(lastActive+1, 30));
-    for(let i=0;i<Math.min(keepCount,rowCandidates.length);i++){
-      const r=rowCandidates[i];
-      staffBands.push({top:r.top,bottom:r.bottom,boundaryIndex:r.boundaryIndex,ink:r.nameInk,shiftInk:r.shiftInk});
-    }
-
-    // 罫線検出が途中で終わった場合でも、表の一定ピッチから最大30人分を補完する。
-    // ただし画像の外へは出さず、実際に写っている範囲だけを使う。
-    if(staffBands.length<Math.min(30, lastActive+2)){
-      const ds=boundaries.slice(1).map((v,i)=>v-boundaries[i]).filter(v=>v>25&&v<120);
-      const sorted=[...ds].sort((a,b)=>a-b);
-      const pitch=sorted.length?sorted[Math.floor(sorted.length/2)]:null;
-      if(pitch&&pitch>25){
-        let y=staffBands.length?staffBands[staffBands.length-1].bottom+1:staffTop;
-        while(staffBands.length<Math.min(30,lastActive+2)&&y+pitch<H*.99){
-          const bottom=Math.min(H-2,Math.round(y+pitch-2));
-          staffBands.push({top:Math.round(y),bottom,boundaryIndex:boundaries.length+staffBands.length,ink:0,shiftInk:0});
-          y=bottom+2;
-        }
-      }
-    }
-    const STAFF_COUNT=Math.min(30,staffBands.length);
-    staffBands.length=STAFF_COUNT;
-
-    // ③ AIへ渡す画像を「1人×1日」の交差セル中心に再構成する。
-    // 元の表をそのままAIへ渡すのではなく、8日×最大15人の拡大コンタクトシートにする。
-    // これにより、AIが隣の日・隣の人を混同する余地を大幅に減らす。
+    // ③ AI確認画像を「1人×1日」の2行×2列交差セルとして再構成。
     const DATE_BLOCK=8;
-    const ROW_BLOCK=15;
-    const nameW=250, cellW=150, cellH=92, headH=42, pad=12, gap=4;
+    const ROW_BLOCK=7;
+    const nameW=190,cellW=300,cellH=190,headH=54,pad=14,gap=6;
     const verificationSheets=[];
     for(let blockStart=0;blockStart<expected;blockStart+=DATE_BLOCK){
       const blockEnd=Math.min(expected,blockStart+DATE_BLOCK);
@@ -6694,279 +6881,239 @@ function renderDay(){
         sheet.height=pad+headH+rows.length*cellH+pad;
         const q=sheet.getContext('2d');
         q.fillStyle='#fff';q.fillRect(0,0,sheet.width,sheet.height);
-        q.fillStyle='#f0f4ff';q.fillRect(pad,pad,sheet.width-pad*2,headH);
-        q.fillStyle='#111';q.font='800 18px sans-serif';q.textBaseline='middle';q.textAlign='left';
-        q.fillText(`シフト確認　${from}〜${to}日　行${rowStart+1}〜${rowEnd}`,pad+8,pad+headH/2);
+        q.fillStyle='#eef4ff';q.fillRect(pad,pad,sheet.width-pad*2,headH);
+        q.fillStyle='#111';q.font='900 19px sans-serif';q.textBaseline='middle';q.textAlign='left';
+        q.fillText(`シフト確認　${from}〜${to}日　${rowStart+1}〜${rowEnd}人`,pad+8,pad+headH/2);
         q.fillStyle='#111';q.font='900 15px sans-serif';q.textAlign='center';
-        q.fillText('スタッフ名',pad+nameW/2,pad+headH/2);
+        q.fillText('スタッフ（固定）',pad+nameW/2,pad+headH/2);
         blockPairs.forEach((d,j)=>q.fillText(`${d.date}日`,pad+nameW+gap+j*cellW+cellW/2,pad+headH/2));
-
         rows.forEach((band,localRow)=>{
-          const ri=rowStart+localRow;
-          const oy=pad+headH+localRow*cellH;
+          const ri=rowStart+localRow,oy=pad+headH+localRow*cellH;
           q.fillStyle=localRow%2?'#fafafa':'#f5f5f5';q.fillRect(pad,oy,sheet.width-pad*2,cellH-3);
-          // 名前欄はAIに毎回推測させるため、元画像の名前セルを大きく表示。
-          const srcNameH=Math.max(1,band.bottom-band.top);
-          const nameScale=Math.min((nameW-16)/nameRight,(cellH-10)/srcNameH);
-          q.drawImage(c,0,band.top,nameRight,srcNameH,pad+8,oy+5,
-            Math.max(1,Math.round(nameRight*nameScale)),Math.max(1,Math.round(srcNameH*nameScale)));
-          q.strokeStyle='#888';q.lineWidth=1;q.strokeRect(pad,oy,nameW,cellH-3);
-          q.fillStyle='#0047b3';q.font='900 12px sans-serif';q.textAlign='left';q.textBaseline='top';
-          q.fillText(`行${ri+1}`,pad+8,oy+6);
-
+          q.strokeStyle='#777';q.lineWidth=1;q.strokeRect(pad,oy,nameW,cellH-3);
+          q.fillStyle='#0047b3';q.font='900 22px sans-serif';q.textAlign='center';q.textBaseline='middle';
+          q.fillText(`行${ri+1}`,pad+nameW/2,oy+43);
+          q.fillStyle='#222';q.font='900 17px sans-serif';
+          q.fillText(`${band.number} ${band.name}`,pad+nameW/2,oy+82);
+          q.fillStyle='#666';q.font='700 12px sans-serif';
+          q.fillText('各行：左=ポジション / 右=時間',pad+nameW/2,oy+128);
           blockPairs.forEach((d,j)=>{
             const dx=pad+nameW+gap+j*cellW;
             const srcW=d.right-d.left+1,srcH=Math.max(1,band.bottom-band.top);
-            // 2列セットを「白=勤務記号＋黄=時間」のまま拡大。
-            const innerX=dx+3,innerY=oy+20,innerW=cellW-6,innerH=cellH-23;
             q.fillStyle='#fff';q.fillRect(dx,oy,cellW,cellH-3);
-            q.drawImage(c,d.left,band.top,srcW,srcH,innerX,innerY,innerW,innerH);
+            q.drawImage(c,d.left,band.top,srcW,srcH,dx+4,oy+30,cellW-8,cellH-34);
             q.strokeStyle='#d00000';q.lineWidth=2;q.strokeRect(dx,oy,cellW,cellH-3);
-            q.fillStyle='#d00000';q.font='900 11px sans-serif';q.textAlign='center';q.textBaseline='middle';
-            q.fillText(`${d.date}日 / 行${ri+1}`,dx+cellW/2,oy+10);
+            q.fillStyle='#d00000';q.font='900 12px sans-serif';q.textAlign='center';q.textBaseline='middle';
+            q.fillText(`${d.date}日 / 行${ri+1}`,dx+cellW/2,oy+15);
           });
         });
-        verificationSheets.push({
-          mime:'image/jpeg',
-          data:sheet.toDataURL('image/jpeg',.95).split(',')[1],
-          rows:`${rowStart+1}-${rowEnd}`,
-          dates:`${blockPairs[0].date}-${blockPairs[blockPairs.length-1].date}`
-        });
+        verificationSheets.push({mime:'image/jpeg',data:sheet.toDataURL('image/jpeg',.96).split(',')[1],rows:`${rowStart+1}-${rowEnd}`,dates:`${blockPairs[0].date}-${blockPairs[blockPairs.length-1].date}`});
       }
     }
-    const originalDataUrl=c.toDataURL('image/jpeg',.90);
+    const originalDataUrl=c.toDataURL('image/jpeg',.92);
     const payloadKB=Math.round(verificationSheets.reduce((n,x)=>n+x.data.length,0)*.75/1024);
     return {mime:'image/jpeg',dataUrl:originalDataUrl,verificationSheets,todayVerification:null,days:expected,dayStart:p==='first'?1:16,rowCount:STAFF_COUNT,payloadKB,datePairs,staffBands};
   }
+  // ============================================================
+  // AIシフト読み取り：2段階方式
+  // 1回目＝出勤日・ポジションだけ確定
+  // 2回目＝登録済み出勤者の時間だけ確定して統合
+  // 名前・番号・日付はAIに読ませず、正式マスター／アプリ側で固定する。
+  // ============================================================
+  const SHIFT_AI_STAGE_KEY='karuya_shift_ai_stage_v1';
+  const SHIFT_AI_LOCK_KEY='karuya_shift_gemini_last_request_v5';
+
+  function shiftAiStageKey(){
+    const ym=targetYM(),p=$('shiftPeriod')?.value||'second',svc=document.body.dataset.shiftMode==='lunch'?'lunch':'dinner';
+    return `${svc}-${ym}-${p}`;
+  }
+  function loadShiftAiStage(){
+    try{return JSON.parse(localStorage.getItem(SHIFT_AI_STAGE_KEY)||'null')}catch(_){return null}
+  }
+  function saveShiftAiStage(v){try{localStorage.setItem(SHIFT_AI_STAGE_KEY,JSON.stringify(v||null))}catch(_){}
+  }
+  function clearShiftAiStage(){try{localStorage.removeItem(SHIFT_AI_STAGE_KEY)}catch(_){}
+  }
+  function setStageButtons(stage){
+    const b1=$('shiftGeminiRead'),b2=$('shiftGeminiTimeRead');
+    if(b1){b1.disabled=stage==='time'||stage==='running';b1.textContent=stage==='time'?'✅ 1回目登録済み：出勤者・ポジション確定':'🤖 1回目：出勤日・ポジションを読み取る'}
+    if(b2){b2.disabled=stage!=='time';b2.textContent=stage==='time'?'🤖 2回目：時間を読み取って統合':'🔒 2回目：1回目登録後に使用'}
+  }
+  function getShiftAiPeriodContext(){
+    const target=targetInfo(),ym=targetYM(),[yy,mm]=ym.split('-').map(Number),p=$('shiftPeriod')?.value||'second';
+    const lastDay=new Date(yy,mm,0).getDate(),from=p==='first'?1:16,to=p==='first'?Math.min(15,lastDay):lastDay;
+    const dateList=Array.from({length:to-from+1},(_,i)=>from+i);
+    return {target,ym,yy,mm,p,from,to,dateList,masters:getCanonicalShiftStaff(),service:document.body.dataset.shiftMode==='lunch'?'lunch':'dinner'};
+  }
+  function shiftAiApiParts(prompt,sheets){
+    const parts=[{text:prompt}];
+    (sheets||[]).forEach((sheet,i)=>{
+      parts.push({text:`【確認画像${i+1}】行${sheet.rows}／日付${sheet.dates}。赤字の行番号・日付を絶対基準にしてください。`});
+      parts.push({inline_data:{mime_type:sheet.mime||'image/jpeg',data:sheet.data}});
+    });
+    return parts;
+  }
+  async function callShiftGemini(key,prompt,sheets,schema,label){
+    const body={contents:[{role:'user',parts:shiftAiApiParts(prompt,sheets)}],generationConfig:{responseMimeType:'application/json',responseSchema:schema,temperature:0,maxOutputTokens:8192}};
+    const model='gemini-3.6-flash';
+    const url=`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
+    setAiStatus(`AI確認中… ${label}`,'');
+    const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':key},body:JSON.stringify(body)});
+    const raw=await res.text();let j=null;try{j=JSON.parse(raw)}catch(_){j=null}
+    if(!res.ok){
+      const msg=j?.error?.message||`Gemini APIエラー（${res.status}）`;
+      if(res.status===429)throw new Error(`Geminiの無料枠/クォータに達しています。少し時間を置いてください。\n${msg}`);
+      throw new Error(msg);
+    }
+    const candidate=(j?.candidates||[]).flatMap(c=>c?.content?.parts||[]).map(x=>x?.text||'').join('').trim();
+    if(!candidate)throw new Error(`${label}のAI結果が返りませんでした。`);
+    try{return JSON.parse(cleanJsonText(candidate))}catch(_){
+      const a=candidate.indexOf('{'),z=candidate.lastIndexOf('}');
+      if(a>=0&&z>a){try{return JSON.parse(candidate.slice(a,z+1))}catch(__){}}
+      throw new Error(`${label}のJSONが途中で切れました。`);
+    }
+  }
 
   async function runGeminiRead(){
-    const key=getKey();
-    if(!key){alert('先にGemini APIキーを保存してください。');return}
+    const key=getKey();if(!key){alert('先にGemini APIキーを保存してください。');return}
     if(!aiFile){alert('先に「AI読み取り用の写真を選ぶ」で写真を選んでください。');return}
-
-    const LOCK_KEY='karuya_shift_gemini_last_request_v3';
-    const now=Date.now(),last=Number(localStorage.getItem(LOCK_KEY)||0);
-    if(last&&now-last<60000){
-      const sec=Math.ceil((60000-(now-last))/1000);
-      setAiStatus(`前回のAI読み取りから60秒未満です。あと約${sec}秒待ってください。`,'warn');
-      return;
-    }
-
-    const b=$('shiftGeminiRead');
-    if(b){b.disabled=true;b.textContent='🤖 AIがシフト表を確認中…'}
-    setAiStatus('日付とスタッフ名はアプリで固定し、AIは出勤表示・時間・ポジションだけを確認しています…','');
-
+    const ctx=getShiftAiPeriodContext();
+    const now=Date.now(),last=Number(localStorage.getItem(SHIFT_AI_LOCK_KEY)||0);
+    if(last&&now-last<60000){setAiStatus(`前回のAI読み取りから60秒未満です。あと約${Math.ceil((60000-(now-last))/1000)}秒待ってください。`,'warn');return}
+    const b=$('shiftGeminiRead');if(b){b.disabled=true;b.textContent='🤖 1回目を読み取り中…'}
     try{
-      localStorage.setItem(LOCK_KEY,String(Date.now()));
+      localStorage.setItem(SHIFT_AI_LOCK_KEY,String(Date.now()));
       const img=await prepareShiftAiImage(aiFile);
-      if(!img?.dataUrl||!Array.isArray(img.datePairs)||!img.datePairs.length||!Number(img.rowCount)){
-        throw new Error('シフト表の位置情報を作成できませんでした。表全体が写った写真を選んでください。');
-      }
-
+      if(!img?.dataUrl||!Array.isArray(img.verificationSheets)||img.rowCount!==ctx.masters.length)throw new Error('シフト表の位置情報を作成できませんでした。表全体が写った写真を選んでください。');
       aiPhotoData=img.dataUrl;
-      const allowed=getAllowedShiftMarks();
-      const allowedText=allowed.join('、');
-      const positionRules=allowed.map(k=>`${k}=${shiftPositionForMark(k)}`).join('、');
-      const target=targetInfo();
-      const ym=targetYM();
-      const [yy,mm]=ym.split('-').map(Number);
-      const p=$('shiftPeriod')?.value||'second';
-      const lastDay=new Date(yy,mm,0).getDate();
-      const from=p==='first'?1:16;
-      const to=p==='first'?Math.min(15,lastDay):lastDay;
-      const days=to-from+1;
-      const dateList=Array.from({length:days},(_,i)=>from+i);
-      // AIには元画像を主資料として渡さず、アプリが作った「拡大・位置固定シート」だけを渡す。
-      // 日付・行番号は画像内にアプリが印字済みなので、AIは交差セルの判定に集中する。
-      const responseJsonSchema={
-        type:'object',
-        properties:{
-          entries:{type:'array',items:{type:'object',properties:{rowIndex:{type:'integer'},day:{type:'integer'},mark:{type:'string'},present:{type:'boolean'},position:{type:'string'},startTime:{type:'string'},endTime:{type:'string'},time:{type:'string'},confidence:{type:'string'}},required:['rowIndex','day','mark','present','position','startTime','endTime','time']}},
-          dayChecks:{type:'array',items:{type:'object',properties:{day:{type:'integer'},headcount:{type:'integer'},entryCount:{type:'integer'},ok:{type:'boolean'}},required:['day','headcount','entryCount','ok']}}
-        },
-        required:['entries','dayChecks']
-      };
-
-      const prompt=`あなたは飲食店のシフト表を読む画像認識AIです。
-
-【最重要】
-この処理では、日付を画像から推測しません。対象日付はアプリ側で既に確定しています。
-対象期間：${target}
-対象日：${dateList.join('、')}
+      const allowed=getAllowedShiftMarks(),allowedText=allowed.join('、');
+      const ROW_BLOCK=13,allRows=new Map();
+      const responseSchema={type:'object',properties:{rows:{type:'array',items:{type:'object',properties:{rowIndex:{type:'integer'},marks:{type:'string'},confidence:{type:'string'}},required:['rowIndex','marks','confidence']}}},required:['rows']};
+      const sheets=img.verificationSheets;
+      for(let blockStart=1;blockStart<=img.rowCount;blockStart+=ROW_BLOCK){
+        const blockEnd=Math.min(img.rowCount,blockStart+ROW_BLOCK-1);
+        const blockSheets=sheets.filter(sh=>{const m=String(sh.rows||'').match(/^(\d+)-(\d+)$/);return m&&Number(m[1])===blockStart&&Number(m[2])===blockEnd});
+        if(!blockSheets.length)throw new Error(`行${blockStart}〜${blockEnd}の確認画像を作成できませんでした。`);
+        const names=ctx.masters.slice(blockStart-1,blockEnd).map((x,i)=>`行${blockStart+i}＝登録番号${x.number}＝${x.name}`).join('、');
+        const prompt=`あなたは飲食店のシフト表を読む画像認識AIです。今回は【1回目】です。時間は一切読まないでください。
 
 【表の固定構造】
-- 1日につき2列を1セットとして使います。
-- 1人につき縦方向に2行を1セットとして使います。
-- したがって「日付×スタッフ」の交点は必ず1つの2列×2行セル範囲です。
-- 対象期間は${from}日〜${to}日です。これ以外の日を絶対に読みません。
-- 画像内の小さい日付文字を根拠に日付を変更・補正してはいけません。
-- 元画像の黄色列は時間側、白い列は勤務記号側です。
+1人＝高さ2物理行のスタッフ帯（名前セルが2行結合）、1日＝横2列。左の白い列＝出勤／ポジション記号、右の黄色列＝時間。1人につき1日1つの判定です。2行を別スタッフ・別出勤として数えてはいけません。
+アプリ側が日付とスタッフを固定します。AIは名前・番号・日付を決めてはいけません。
 
-【スタッフ行・名前はAIで読み取らない】
-- スタッフ名はこのAI処理では一切OCRしません。
-- 名前はアプリに登録済みのスタッフマスターをそのまま使用します。
-- AIが返すのは「rowIndex（上から何人目か）」だけです。
-- rowIndex=1は表の最初のスタッフ、rowIndex=2は次のスタッフ、という上から順番の固定番号です。
-- 空欄のスタッフ行も飛ばさず、横罫線で区切られた行を上から順番に確認する。
-- 名前の文字を読んで人数・順番・名前を判断してはいけません。
-- rowIndexを別のスタッフへ移動させてはいけません。
-- 登録済みスタッフ：${getCanonicalShiftNames().map((n,i)=>`行${i+1}=${n}`).join('、')}
-- AIのname項目は返却しません。名前の補正・推測・入れ替えは禁止です。
+【担当】行${blockStart}〜${blockEnd}。対象日：${ctx.dateList.join('、')}。登録スタッフ：${names}
 
-【出勤表示・ポジション】
-- AIが読み取るのは、各「スタッフ×日」の交差セルにある出勤記号だけです。
-- 出勤として認める記号は ${allowedText} のみ。
-- ${allowedText} 以外の数字、L、△、▲、×、○、線、記号、空欄は出勤ではない。
-- 出勤記号は白い側のセルだけを見る。
-- 読み取った記号からポジションも判定して返してください。
-- ポジションは ${positionRules} の対応を基本とし、記号とポジションを同じ交差セルから判断する。
-- 出勤していないセルはentriesに返さない。
-- 名前からポジションを推測してはいけません。
+【1回目で読むもの】
+各「1人×1日」の2行×2列の交差ブロックを1セットとして確認し、白いポジション列だけを読みます。2行のどこかに実際の登録文字があれば、その日を1件の出勤として扱います。
+登録された出勤文字【${allowedText}】だけを有効な出勤とします。それ以外の数字、L、○、△、▲、×、線、空欄は出勤ではありません。特に▲は休み／対象外の三角記号なので、S/Y/O/K/Fのどれにも変換せず、絶対に出勤として返してはいけません。
+2行のどこかに${allowedText}が実際に見える場合、その文字をmarksに1文字だけ入れます。2行とも空欄なら「.」です。2行に異なる登録文字が同時にある場合は推測せず、そのセルをconfidence=lowとして1文字だけ選んでください。
 
-【時間】
-- 時間は同じスタッフ・同じ日の黄色側セルだけを見る。
-- 「L」は終了時刻の意味として、そのままLを返す。
-- 見えない時間は推測せず空文字。
-- 9.5は09:30、13.5は13:30、19.5は19:30として返す。
-- 10、14、16、17、22などはそのまま時刻として扱う。
-- 出勤（present=true）の行は、startTime/endTime/timeを必ず返す。黄色側セルから読めない場合だけ空文字にする。推測は禁止。
-- timeは必ず「開始〜終了」の形式にし、例：10:00〜L、16:00〜22:00。
-- startTimeは開始時刻だけ、endTimeは終了時刻だけを返す。終了がLならendTimeは「L」。
+【絶対禁止】
+時間、黄色セルの数字は今回の判定に使わない。隣の日付・隣スタッフから記号を移さない。出勤人数を合わせるための推測をしない。
 
-【現人数】
-画像上部の「現人数」は重要な検算値です。
-ただし現人数そのものを出勤者として登録してはいけません。
-日ごとの出勤者数が現人数と一致するか、最後に必ず確認してください。
-
-【読み取り手順】
-1. AIが見る画像は確認シートのみ。元画像の位置関係を再解釈しない。スタッフ名はOCRしない。
-2. 各確認シートの「行N」「N日」を住所として固定し、行NはアプリのスタッフマスターのN番目の名前に対応させる。
-3. 1つの枠は1人×1日の2列セットなので、隣の枠へ文字を移さない。
-4. 対象期間の日数をアプリ側の固定順序で扱う。
-5. スタッフを上から1行ずつ確認する。
-6. 各スタッフについて対象日を左から順番に確認する。
-7. 各日の2列セットの白側に ${allowedText} があるかだけを見る。
-8. あればentriesに1件だけ返す。名前は返さず、rowIndexだけ返す。
-9. 同じ交点について別の日の記号・時間・ポジションを混ぜない。
-10. 時間は同じ交点の黄色側だけから読む。
-11. ポジションは同じ交点の出勤記号から判定し、entriesのpositionに返す。
-12. 【第2回独立チェック】最初の読み取り結果をいったん忘れ、各日の全スタッフ（最大30行）を上からもう一度確認してください。特に、最後のスタッフ行、下段ヘルプ、記号が小さいセル、隣接セルに記号があるセル、土日付近を重点的に再確認してください。
-13. 各日の出勤人数をentriesから数え、画像上部の「現人数」と照合してください。dayChecksにその日・画像の現人数・entryCount・一致判定を返してください。
-14. 【人数不足レスキュー】現人数 > entryCount の日は「読み落としがある」と判断してください。第1回と第2回で一致しなかった候補も含め、その日だけ全30スタッフ行の交差セルをもう一度確認してください。許可記号（${allowedText}）が1文字でも確認できるセルは、隣のセルと混同せずrowIndex×dayを固定してentriesへ追加してください。人数を合わせるために架空の出勤者を作ってはいけません。
-15. 現人数 = entryCount になった日を合格とし、現人数 > entryCount のままなら、見落としの可能性が高い行をconfidence=lowで返しても構いませんが、そのセルを勝手に別の日へ移動してはいけません。
-16. スタッフ名は返却せず、entriesのrowIndexだけを返す。名前はアプリ側で固定する。
-17. entriesには最終的に確認できた出勤セルだけ返し、positionも返す。
-18. JSON以外は返さない。
-
-【日付番号】
-${dateList.map((d,i)=>`${i+1}番目の日セット=${d}日`).join('\n')}
-
-【ポジション】
-${positionRules}
-
-【返却形式】
-{
-  "entries":[{"rowIndex":1,"day":25,"mark":"S","present":true,"position":"板場","startTime":"10","endTime":"L","time":"10:00〜L","confidence":"high"}],
-  "dayChecks":[{"day":25,"headcount":1,"entryCount":1,"ok":true}]
-}
-
-注意：dayは必ず対象日の実日付（例25）を返す。画像の小さい日付文字を読み直して別の日に変更しない。`;
-
-      const parts=[{text:prompt}];
-      (img.verificationSheets||[]).forEach((sheet,i)=>{
-        parts.push({text:`【確認シート${i+1}】行${sheet.rows}／日付${sheet.dates}。各枠は1人×1日の2列セットを拡大したもの。枠上部の「日付/行番号」が正しい住所です。`});
-        parts.push({inline_data:{mime_type:sheet.mime||'image/jpeg',data:sheet.data}});
-      });
-      const body={contents:[{role:'user',parts}],generationConfig:{responseMimeType:'application/json',responseJsonSchema}};
-
-      const model='gemini-3.6-flash';
-      const url=`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
-      setAiStatus(`AIへ1回だけ送信中… ${from}〜${to}日・${img.rowCount}スタッフ・${days}日`,'' );
-      const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':key},body:JSON.stringify(body)});
-      const raw=await res.text();let j=null;try{j=JSON.parse(raw)}catch(_){j=null}
-      if(!res.ok){
-        const msg=j?.error?.message||`Gemini APIエラー（${res.status}）`;
-        if(res.status===429){throw new Error(`Geminiの無料枠/クォータに達しています。\n${msg}`)}
-        throw new Error(msg);
+【返却】
+行番号順に全行を必ず返す。marksは対象日数と同じ文字数、日付順。各日は必ず1文字（出勤記号または「.」）です。
+JSONのみ。説明文禁止。
+例：${JSON.stringify({rows:[{rowIndex:blockStart,marks:'.'.repeat(ctx.dateList.length),confidence:'high'}]})}`;
+        const obj=await callShiftGemini(key,prompt,blockSheets,responseSchema,`1回目 行${blockStart}〜${blockEnd}/${img.rowCount}`);
+        const rawRows=Array.isArray(obj.rows)?obj.rows:[],local=new Map();
+        for(const r of rawRows){
+          const ri=Number(r?.rowIndex),marks=String(r?.marks||'').trim().toUpperCase();
+          if(!Number.isInteger(ri)||ri<blockStart||ri>blockEnd||local.has(ri))continue;
+          if(marks.length!==ctx.dateList.length)throw new Error(`1回目：行${ri}のmarksが不完全です（${marks.length}/${ctx.dateList.length}）。`);
+          local.set(ri,{marks,confidence:String(r?.confidence||'medium')});
+        }
+        if(local.size!==blockEnd-blockStart+1){const miss=[];for(let i=blockStart;i<=blockEnd;i++)if(!local.has(i))miss.push(i);throw new Error(`1回目：行を省略しました（不足：${miss.join('、')}）。`)}
+        local.forEach((v,k)=>allRows.set(k,v));
       }
-      const candidate=(j?.candidates||[]).flatMap(c=>c?.content?.parts||[]).map(x=>x?.text||'').join('').trim();
-      if(!candidate)throw new Error('AIから読み取り結果が返りませんでした。');
-      const obj=JSON.parse(cleanJsonText(candidate));
-
-      // ★重要：スタッフ名はAI結果を一切使わず、アプリのスタッフマスターだけを使用。
-      // rowIndex（上から何人目）→登録済みスタッフ名を固定する。
-      const rowNames=new Map();
-      const canonicalNames=getCanonicalShiftNames();
-      canonicalNames.forEach((name,i)=>rowNames.set(i+1,name));
-
-      // entriesは「rowIndex × 実日付」で固定。AIが返した日付が対象外なら破棄。
-      const rawEntries=Array.isArray(obj.entries)?obj.entries:[];
       const entries=[];
-      for(const x of rawEntries){
-        const ri=Number(x?.rowIndex),day=Number(x?.day);
-        const mark=String(x?.mark||'').trim().toUpperCase();
-        if(!Number.isInteger(ri)||ri<1||ri>img.rowCount)continue;
-        if(!Number.isInteger(day)||!dateList.includes(day))continue;
-        if(x?.present!==true||!isAllowedShiftMark(mark))continue;
-        const name=rowNames.get(ri)||'';
-        if(!name)continue;
-        const date=`${yy}-${String(mm).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
-        const startTime=normalizeShiftTime(x?.startTime||'');
-        const endTime=normalizeShiftTime(x?.endTime||'');
-        const time=normalizeShiftTimeRange(startTime,endTime,x?.time||'');
-        const aiPosition=String(x?.position||'').trim();
-        const position=aiPosition||shiftPositionForMark(mark);
-        entries.push({
-          date,name,mark,number:'',position,startTime,endTime,time,
-          present:true,rowIndex:ri,columnIndex:dateList.indexOf(day)+1,
-          confidence:String(x?.confidence||'medium')
-        });
+      for(let ri=1;ri<=img.rowCount;ri++){
+        const r=allRows.get(ri),master=ctx.masters[ri-1];if(!r||!master)continue;
+        for(let di=0;di<ctx.dateList.length;di++){
+          const mark=String(r.marks[di]||'.').trim().toUpperCase();
+          // 出勤はS/Y/O/K/Fのみ。▲・△・○・×・数字・L等は絶対に登録しない。
+          if(!/^[SYOKF]$/.test(mark) || !isAllowedShiftMark(mark))continue;
+          const date=`${ctx.yy}-${String(ctx.mm).padStart(2,'0')}-${String(ctx.dateList[di]).padStart(2,'0')}`;
+          entries.push({date,name:master.name,number:master.number,mark,position:shiftPositionForMark(mark),startTime:'',endTime:'',time:'',present:true,rowIndex:ri,columnIndex:di+1,confidence:r.confidence,selected:true});
+        }
       }
+      if(!entries.length)throw new Error('1回目で出勤者を1人も確認できませんでした。');
+      const stage={key:shiftAiStageKey(),ym:ctx.ym,p:ctx.p,service:ctx.service,photoName:aiFile.name,photoData:aiPhotoData,items:entries,createdAt:Date.now()};
+      saveShiftAiStage(stage);setStageButtons('first');
+      window.__showShiftAiReview?.({detail:{items:entries,photoData:aiPhotoData,photoName:aiFile.name,stage:'first'}});
+      const summary={};entries.forEach(x=>summary[x.date]=(summary[x.date]||0)+1);
+      $('shiftGeminiAiResult').hidden=false;$('shiftGeminiAiResult').textContent=`1回目の読み取り完了：出勤日・ポジションのみ確認しました。\nスタッフ名・番号：正式マスターから固定\n日付：アプリ側で${ctx.from}〜${ctx.to}日に固定\n時間：まだ読み取りません\n出勤人数：${Object.entries(summary).map(([d,n])=>`${Number(d.slice(-2))}日:${n}人`).join('、')}\n\n内容を確認して「1回目を登録」してください。登録後に2回目の時間読み取りが使えます。`;
+      setAiStatus('1回目完了。出勤日・ポジションを確認して登録してください。','ok');
+    }catch(e){console.error(e);setAiStatus('AI読み取りに失敗しました。\n'+(e?.message||String(e)),'err')}
+    finally{if(b&&!b.disabled){b.textContent='🤖 1回目：出勤日・ポジションを読み取る'}else if(b&&b.disabled&&b.textContent.includes('読み取り中')){b.disabled=false;b.textContent='🤖 1回目：出勤日・ポジションを読み取る'}}
+  }
 
-      // 同一スタッフ×同一日を1件に固定。
-      const uniq=[];const seen=new Set();
-      for(const x of entries){const k=`${x.date}|${x.rowIndex}`;if(seen.has(k))continue;seen.add(k);uniq.push(x)}
+  async function runGeminiTimeRead(){
+    const key=getKey();if(!key){alert('先にGemini APIキーを保存してください。');return}
+    if(!aiFile){alert('先に「AI読み取り用の写真を選ぶ」で写真を選んでください。');return}
+    const stage=loadShiftAiStage(),ctx=getShiftAiPeriodContext();
+    if(!stage||stage.key!==shiftAiStageKey()||stage.items?.length===0){alert('先に1回目で出勤日・ポジションを読み取り、登録してください。');return}
+    const now=Date.now(),last=Number(localStorage.getItem(SHIFT_AI_LOCK_KEY)||0);
+    if(last&&now-last<60000){setAiStatus(`前回のAI読み取りから60秒未満です。あと約${Math.ceil((60000-(now-last))/1000)}秒待ってください。`,'warn');return}
+    const b=$('shiftGeminiTimeRead');if(b){b.disabled=true;b.textContent='🤖 2回目を読み取り中…'}
+    try{
+      localStorage.setItem(SHIFT_AI_LOCK_KEY,String(Date.now()));
+      const img=await prepareShiftAiImage(aiFile);aiPhotoData=img.dataUrl;
+      const ROW_BLOCK=13,allRows=new Map(),dateCount=ctx.dateList.length;
+      const responseSchema={type:'object',properties:{rows:{type:'array',items:{type:'object',properties:{rowIndex:{type:'integer'},times:{type:'array',items:{type:'string'}},confidence:{type:'string'}},required:['rowIndex','times','confidence']}}},required:['rows']};
+      const sheets=img.verificationSheets;
+      for(let blockStart=1;blockStart<=img.rowCount;blockStart+=ROW_BLOCK){
+        const blockEnd=Math.min(img.rowCount,blockStart+ROW_BLOCK-1);
+        const blockSheets=sheets.filter(sh=>{const m=String(sh.rows||'').match(/^(\d+)-(\d+)$/);return m&&Number(m[1])===blockStart&&Number(m[2])===blockEnd});
+        const stageRows=stage.items.filter(x=>x.rowIndex>=blockStart&&x.rowIndex<=blockEnd);
+        const expected={};for(const x of stageRows){expected[`${x.rowIndex}|${x.columnIndex}`]=true}
+        const prompt=`あなたは飲食店のシフト表を読む画像認識AIです。今回は【2回目】です。出勤判定やポジションは変更せず、【時間だけ】読み取ってください。
 
-      // 重要：現人数の検算はAIの自由回答を信用せず、画像上部の数字をAIに返させるのではなく、
-      // 出勤結果の不足を検出するための「登録前確認」として扱う。
-      const countByDate={};
-      for(const x of uniq)countByDate[x.date]=(countByDate[x.date]||0)+1;
+【固定構造】
+1人＝高さ2物理行のスタッフ帯（名前セルが2行結合）、1日＝横2列。左の白い列＝ポジション、右の黄色列＝時間。1人につき1日1つの時間です。
+日付とスタッフはアプリ側で固定されています。AIは名前・番号・日付を決めません。
 
-      const next=buildPending(uniq);
-      if(!next.length)throw new Error('対象期間の出勤者を1人も確定できませんでした。');
-      next.forEach(x=>{x.number='';x.position=shiftPositionForMark(x.mark);x.startTime=normalizeShiftTime(x.startTime||'');x.endTime=normalizeShiftTime(x.endTime||'');x.time=normalizeShiftTimeRange(x.startTime,x.endTime,x.time)});
+【担当】行${blockStart}〜${blockEnd}。対象日：${ctx.dateList.join('、')}
 
-      const pendingDetail={items:next,photoData:aiPhotoData,photoName:aiFile.name};
-      if(typeof window.__showShiftAiReview==='function')window.__showShiftAiReview({detail:pendingDetail});
-      else window.dispatchEvent(new CustomEvent('shift-ai-pending',{detail:pendingDetail}));
+【1回目で確定済みの出勤セル】
+${JSON.stringify(stageRows.map(x=>({rowIndex:x.rowIndex,columnIndex:x.columnIndex,date:x.date,mark:x.mark,name:x.name})))}
+この一覧にないセルの時間は読まず、空文字にしてください。
 
-      const uniqueDates=[...new Set(next.map(x=>x.date))].length;
-      const low=next.filter(x=>x.confidence==='low').length;
-      const summary=Object.entries(countByDate).map(([d,n])=>`${Number(d.slice(-2))}日:${n}人`).join('、');
-      const checks=Array.isArray(obj.dayChecks)?obj.dayChecks:[];
-      const badChecks=checks.filter(x=>Number.isInteger(Number(x?.day))&&x?.ok===false);
-      if($('shiftGeminiAiResult')){
-        $('shiftGeminiAiResult').hidden=false;
-        $('shiftGeminiAiResult').textContent=
-          `AI読み取り完了：${uniqueDates}日・${next.length}件\n`+
-          `日付：アプリ側で${from}〜${to}日に固定\n`+
-          `1日2列・1人2行の交点を確認\n`+
-          `スタッフ名：アプリ登録名を固定\n`+
-          `読み取り：出勤表示・時間・ポジション\n`+
-          `出勤人数：${summary}`+
-          (badChecks.length?`\n⚠️ 人数不一致：${badChecks.map(x=>`${x.day}日`).join('、')}（再確認済み）`:'')+
-          (low?`\n⚠️ 確信度が低い項目：${low}件`:'')+
-          `\n※登録前の確認画面で最終確認してください。`;
+【時間の読み方】
+指定された出勤日について、その同じ「2行×2列」の交差ブロック内にある黄色い時間列だけを確認します。2行を別々の時間として返さず、その日1つの時間だけを返します。
+見えない・判別できない時間は推測せず空文字。
+13.5=13:30、18.5=18:30、19.5=19:30、10=10:00、14=14:00、16=16:00、17=17:00、22=22:00。
+Lは終了時刻として「L」。開始側にLを作らない。
+隣の日付・隣スタッフの数字を絶対に移さない。
+
+【返却】
+全${blockEnd-blockStart+1}行を返し、timesは対象日数と同じ個数を必ず返す。順番は日付順、各日1個。1回目の出勤者以外は空文字。
+JSONのみ。説明文禁止。
+例：${JSON.stringify({rows:[{rowIndex:blockStart,times:Array(dateCount).fill(''),confidence:'high'}]})}`;
+        const obj=await callShiftGemini(key,prompt,blockSheets,responseSchema,`2回目 行${blockStart}〜${blockEnd}/${img.rowCount}`);
+        const rawRows=Array.isArray(obj.rows)?obj.rows:[],local=new Map();
+        for(const r of rawRows){
+          const ri=Number(r?.rowIndex),times=Array.isArray(r?.times)?r.times:[];
+          if(!Number.isInteger(ri)||ri<blockStart||ri>blockEnd||local.has(ri))continue;
+          if(times.length!==dateCount)throw new Error(`2回目：行${ri}のtimesが不完全です（${times.length}/${dateCount}）。`);
+          local.set(ri,{times,confidence:String(r?.confidence||'medium')});
+        }
+        if(local.size!==blockEnd-blockStart+1)throw new Error(`2回目：行を省略しました（行${blockStart}〜${blockEnd}）。`);
+        local.forEach((v,k)=>allRows.set(k,v));
       }
-      setAiStatus(`AI読み取り完了。${from}〜${to}日を1回のAI通信で確認しました。日付はアプリ側で固定しています。`,'ok');
-    }catch(e){
-      console.error(e);
-      let msg=e?.message||String(e);
-      if(/Load failed/i.test(msg))msg='Gemini APIへ接続できませんでした。通信状態・APIキー制限を確認してください。';
-      setAiStatus('AI読み取りに失敗しました。\n'+msg,'err');
-    }finally{
-      if(b){b.disabled=false;b.textContent='🤖 AIで出勤者を読み取る'}
-    }
+      const merged=stage.items.map(x=>{
+        const r=allRows.get(x.rowIndex);const raw=String(r?.times?.[(x.columnIndex-1)]||'').trim();
+        let st='',et='',time='';
+        if(/^L$/i.test(raw)){et='L';time='L'}else if(raw.includes('〜')){const z=raw.split('〜');st=normalizeShiftTime(z[0]);et=normalizeShiftTime(z.slice(1).join('〜'));time=normalizeShiftTimeRange(st,et,raw)}else{st=normalizeShiftTime(raw);time=normalizeShiftTimeRange(st,'',raw)}
+        return {...x,startTime:st,endTime:et,time,confidence:r?.confidence||x.confidence};
+      });
+      stage.items=merged;stage.photoData=aiPhotoData;stage.updatedAt=Date.now();stage.stage='time';saveShiftAiStage(stage);
+      window.__showShiftAiReview?.({detail:{items:merged,photoData:aiPhotoData,photoName:aiFile.name,stage:'time'}});
+      setStageButtons('time');
+      $('shiftGeminiAiResult').hidden=false;$('shiftGeminiAiResult').textContent=`2回目の読み取り完了：登録済み出勤者の時間を統合しました。\n名前・番号・出勤日・ポジション：1回目の確定値を維持\n時間：2回目で確認\n\n登録前の確認画面で最終確認してください。`;
+      setAiStatus('2回目完了。時間を1回目の出勤者に統合しました。','ok');
+    }catch(e){console.error(e);setAiStatus('AI読み取りに失敗しました。\n'+(e?.message||String(e)),'err')}
+    finally{if(b){b.disabled=false;b.textContent='🤖 2回目：時間を読み取って統合'}}
   }
 
   async function makeShiftGuideImage(file,img,dateList){
@@ -7000,10 +7147,13 @@ ${positionRules}
   function hookPending(){
     const handlePending=e=>{
       let items=e.detail?.items||[];if(!items.length)return;
-      // 常に最新のAI結果を使う。前回の読み取り結果を保持しない。
+      const aiStage=e.detail?.stage||'first';
+      // 1回目／2回目の結果だけを現在の確認画面へ渡す。
       window.__shiftGeminiPending=items;
       const card=$('shiftReviewCard'),date=$('shiftReviewDate'),box=$('shiftReviewNames'),count=$('shiftReviewCount');
       if(!card||!date||!box||!count)return;
+      const saveButton=$('shiftSave');
+      if(saveButton)saveButton.textContent=aiStage==='first'?'✅ 1回目を登録（出勤日・ポジション）':'✅ 2回目を登録（時間を統合）';
       const dates=[...new Set(items.map(x=>x.date))].sort();date.value=dates[0];
       const render=()=>{
         const d=date.value;const rows=sortShiftAiRowsLocal(items.map((x,i)=>({...x,i})).filter(x=>x.date===d));
@@ -7033,7 +7183,7 @@ ${positionRules}
         const old=save.__shiftAiSaveHandler;if(old)save.removeEventListener('click',old,true);
         const handler=async e=>{
           e.preventDefault();e.stopImmediatePropagation();
-          const chosen=items.filter(x=>x.selected!==false&&x.date&&x.name&&!String(x.name).startsWith('未登録')&&x.name!=='番号不明').map(x=>({...x,number:'',position:shiftPositionForMark(x.mark)||x.position||'',time:normalizeShiftTimeRange('', '', x.time)}));
+          const chosen=items.filter(x=>x.selected!==false&&x.date&&x.name&&!String(x.name).startsWith('未登録')&&x.name!=='番号不明').map(x=>({...x,number:x.number||'',position:shiftPositionForMark(x.mark)||x.position||'',time:normalizeShiftTimeRange(x.startTime||'', x.endTime||'', x.time||'')}));
           if(!chosen.length){alert('登録する出勤者がありません。');return}
           const ym=$('shiftTargetMonth').value,p=$('shiftPeriod').value||'second';
           const [from,to]=p==='first'?[1,15]:[16,new Date(Number(ym.slice(0,4)),Number(ym.slice(5,7)),0).getDate()];
@@ -7041,12 +7191,39 @@ ${positionRules}
           if(!confirm(`${label}のシフトをAI読み取り結果に入れ替えます。\n\n${chosen.length}件を登録します。\n\nよろしいですか？`))return;
           try{
             if(!window.__fb)throw new Error('Firebaseが準備できていません。');
-            const fb=window.__fb,live=await fb.get(fb.ref(fb.db,'shift/schedules')),cur=live.val()||{},u={};
-            const currentService=document.body.dataset.shiftMode==='lunch'?'lunch':'dinner';
-            Object.entries(cur).forEach(([id,x])=>{const itemService=String(x?.shiftType||'dinner');if(itemService===currentService&&x?.date&&String(x.date).startsWith(ym+'-')){const d=Number(String(x.date).slice(-2));if(d>=from&&d<=to)u[`shift/schedules/${id}`]=null}});
-            chosen.forEach(x=>{const id=fb.push(fb.ref(fb.db,'shift/schedules')).key;const st=normalizeShiftTime(x.startTime||'');const et=normalizeShiftTime(x.endTime||'');const tm=normalizeShiftTimeRange(st,et,x.time||'');u[`shift/schedules/${id}`]={date:x.date,name:x.name,number:'',position:x.position||shiftPositionForMark(x.mark)||'',mark:String(x.mark||'').toUpperCase(),startTime:st,endTime:et,time:tm,period:p,shiftType:currentService,source:'gemini-ai',confidence:x.confidence||'medium',createdAt:Date.now()}});
-            u[`shift/periodMeta/${currentService}-${ym}-${p}`]={yearMonth:ym,period:p,shiftType:currentService,label,updatedAt:Date.now(),count:chosen.length,source:'gemini-ai',photoData:aiPhotoData||'',photoName:aiFile?.name||''};
-            await fb.update(fb.ref(fb.db),u);card.hidden=true;setAiStatus('AI読み取り結果を保存しました。','ok');alert(`AI読み取り結果をシフトに登録しました。\n${chosen.length}件`);
+            const fb=window.__fb,currentService=document.body.dataset.shiftMode==='lunch'?'lunch':'dinner';
+            const stage=loadShiftAiStage();
+            if(aiStage==='first'){
+              // 1回目は名前・番号・出勤日・ポジションだけを登録。時間は空欄のまま。
+              const live=await fb.get(fb.ref(fb.db,'shift/schedules')),cur=live.val()||{},u={};
+              Object.entries(cur).forEach(([id,x])=>{const itemService=String(x?.shiftType||'dinner');if(itemService===currentService&&x?.date&&String(x.date).startsWith(ym+'-')){const d=Number(String(x.date).slice(-2));if(d>=from&&d<=to)u[`shift/schedules/${id}`]=null}});
+              chosen.forEach(x=>{const id=fb.push(fb.ref(fb.db,'shift/schedules')).key;u[`shift/schedules/${id}`]={date:x.date,name:x.name,number:normalizeStaffNumber(x.number||''),position:x.position||shiftPositionForMark(x.mark)||'',mark:String(x.mark||'').toUpperCase(),startTime:'',endTime:'',time:'',period:p,shiftType:currentService,source:'gemini-ai-stage1',confidence:x.confidence||'medium',createdAt:Date.now()}});
+              u[`shift/periodMeta/${currentService}-${ym}-${p}`]={yearMonth:ym,period:p,shiftType:currentService,label,updatedAt:Date.now(),count:chosen.length,source:'gemini-ai-stage1',photoData:aiPhotoData||'',photoName:aiFile?.name||''};
+              await fb.update(fb.ref(fb.db),u);
+              if(stage&&stage.key===shiftAiStageKey()){stage.stage='time';stage.items=chosen.map(x=>({...x,startTime:'',endTime:'',time:''}));stage.updatedAt=Date.now();saveShiftAiStage(stage);}
+              card.hidden=true;setStageButtons('time');setAiStatus('1回目を登録しました。内容を確認できたら「2回目：時間を読み取って統合」を押してください。','ok');alert(`1回目を登録しました。\n${chosen.length}件\n\n内容を確認済みなら、次に2回目で時間を読み取れます。`);
+            }else{
+              // 2回目は既存の1回目登録を残し、同じ日・同じスタッフの時間だけ更新する。
+              const live=await fb.get(fb.ref(fb.db,'shift/schedules')),cur=live.val()||{},u={};
+              const byKey=new Map(chosen.map(x=>[`${x.date}|${normalizeStaffNumber(x.number||'')}|${x.name}`,x]));
+              let updated=0;
+              Object.entries(cur).forEach(([id,x])=>{
+                if(String(x?.shiftType||'dinner')!==currentService||!x?.date||!String(x.date).startsWith(ym+'-'))return;
+                const d=Number(String(x.date).slice(-2));if(d<from||d>to)return;
+                const k=`${x.date}|${normalizeStaffNumber(x.number||'')}|${x.name}`;const hit=byKey.get(k);if(!hit)return;
+                const tm=normalizeShiftTimeRange(hit.startTime||'',hit.endTime||'',hit.time||'');
+                const parts=String(tm||'').split('〜');
+                u[`shift/schedules/${id}/startTime`]=normalizeShiftTime(hit.startTime||parts[0]||'');
+                u[`shift/schedules/${id}/endTime`]=/^L$/i.test(hit.endTime||'')?'L':normalizeShiftTime(hit.endTime||parts[1]||'');
+                u[`shift/schedules/${id}/time`]=tm;
+                u[`shift/schedules/${id}/source`]='gemini-ai-stage2';
+                u[`shift/schedules/${id}/updatedAt`]=Date.now();updated++;
+              });
+              if(!updated)throw new Error('1回目に登録された出勤者と2回目の結果を統合できませんでした。1回目と同じ写真・期間で実行してください。');
+              u[`shift/periodMeta/${currentService}-${ym}-${p}/source`]='gemini-ai-stage2';
+              u[`shift/periodMeta/${currentService}-${ym}-${p}/updatedAt`]=Date.now();
+              await fb.update(fb.ref(fb.db),u);clearShiftAiStage();card.hidden=true;setStageButtons('none');setAiStatus('2回目の時間を統合して保存しました。','ok');alert(`2回目の時間を登録しました。\n${updated}件を1回目の出勤者に統合しました。`);
+            }
           }catch(err){alert('シフト登録に失敗しました。\n'+(err?.message||err))}
         };
         save.__shiftAiSaveHandler=handler;save.addEventListener('click',handler,true);
@@ -7056,6 +7233,17 @@ ${positionRules}
     window.addEventListener('shift-ai-pending',handlePending);
   }
   function init(){injectUi();initShiftTargetMonthSelector();initAllowedShiftMarksUI();hookPending();}
+  // Safari等がページをbfcacheから復元した場合にも、旧3段階UIが残らないようにする。
+  window.addEventListener('pageshow',()=>{
+    const box=$('shiftGeminiAiBox');
+    if(box && /3回目|出勤セルを再照合/.test(String(box.textContent||''))){
+      box.remove();
+      injectUi();
+      initShiftTargetMonthSelector();
+      initAllowedShiftMarksUI();
+      reconcileShiftAiStage();
+    }
+  });
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();
 </script>
@@ -7365,6 +7553,160 @@ ${positionRules}
 }
 </style>
 
+
+<script id="shiftEmbeddedHtmlData">
+(function(){
+  'use strict';
+  // B案：ChatGPTで確定したシフトをHTML自身に内蔵。Gemini APIは使用しない。
+  const EMBEDDED_SHIFT_VERSION='2026-08-second-dinner-v3';
+  const EMBEDDED_SHIFT={
+    yearMonth:'2026-08', period:'second', shiftType:'dinner',
+    label:'2026年8月後半（16日〜月末）ディナー',
+    version:EMBEDDED_SHIFT_VERSION,
+    items:[{"date":"2026-08-16","number":"10","name":"[削除済み]","position":"板場","startTime":"","endTime":"","time":"","period":"second","shiftType":"dinner","source":"html-embedded","embeddedVersion":"2026-08-second-dinner-v3"},{"date":"2026-08-19","number":"10","name":"[削除済み]","position":"ホール","startTime":"","endTime":"","time":"","period":"second","shiftType":"dinner","source":"html-embedded","embeddedVersion":"2026-08-second-dinner-v3"},{"date":"2026-08-20","number":"10","name":"[削除済み]","position":"板場","startTime":"","endTime":"","time":"","period":"second","shiftType":"dinner","source":"html-embedded","embeddedVersion":"2026-08-second-dinner-v3"},{"date":"2026-08-21","number":"10","name":"[削除済み]","position":"板場","startTime":"","endTime":"","time":"","period":"second","shiftType":"dinner","source":"html-embedded","embeddedVersion":"2026-08-second-dinner-v3"},{"date":"2026-08-22","number":"10","name":"[削除済み]","position":"板場","startTime":"","endTime":"","time":"","period":"second","shiftType":"dinner","source":"html-embedded","embeddedVersion":"2026-08-second-dinner-v3"},{"date":"2026-08-23","number":"10","name":"[削除済み]","position":"板場","startTime":"","endTime":"","time":"","period":"second","shiftType":"dinner","source":"html-embedded","embeddedVersion":"2026-08-second-dinner-v3"},{"date":"2026-08-24","number":"10","name":"[削除済み]","position":"板場","startTime":"","endTime":"","time":"","period":"second","shiftType":"dinner","source":"html-embedded","embeddedVersion":"2026-08-second-dinner-v3"},{"date":"2026-08-27","number":"10","name":"[削除済み]","position":"板場","startTime":"","endTime":"","time":"","period":"second","shiftType":"dinner","source":"html-embedded","embeddedVersion":"2026-08-second-dinner-v3"},{"date":"2026-08-28","number":"10","name":"[削除済み]","position":"板場","startTime":"","endTime":"","time":"","period":"second","shiftType":"dinner","source":"html-embedded","embeddedVersion":"2026-08-second-dinner-v3"},{"date":"2026-08-29","number":"10","name":"[削除済み]","position":"板場","startTime":"","endTime":"","time":"","period":"second","shiftType":"dinner","source":"html-embedded","embeddedVersion":"2026-08-second-dinner-v3"},{"date":"2026-08-30","number":"10","name":"[削除済み]","position":"板場","startTime":"","endTime":"","time":"","period":"second","shiftType":"dinner","source":"html-embedded","embeddedVersion":"2026-08-second-dinner-v3"},{"date":"2026-08-31","number":"10","name":"[削除済み]","position":"板場","startTime":"","endTime":"","time":"","period":"second","shiftType":"dinner","source":"html-embedded","embeddedVersion":"2026-08-second-dinner-v3"},{"date":"2026-08-19","number":"14","name":"[削除済み]","position":"ホール","startTime":"","endTime":"","time":"","period":"second","shiftType":"dinner","source":"html-embedded","embeddedVersion":"2026-08-second-dinner-v3"},{"date":"2026-08-20","number":"14","name":"[削除済み]","position":"焼場","startTime":"","endTime":"","time":"","period":"second","shiftType":"dinner","source":"html-embedded","embeddedVersion":"2026-08-second-dinner-v3"},{"date":"2026-08-21","number":"14","name":"[削除済み]","position":"焼場","startTime":"","endTime":"","time":"","period":"second","shiftType":"dinner","source":"html-embedded","embeddedVersion":"2026-08-second-dinner-v3"},{"date":"2026-08-22","number":"14","name":"[削除済み]","position":"焼場","startTime":"","endTime":"","time":"","period":"second","shiftType":"dinner","source":"html-embedded","embeddedVersion":"2026-08-second-dinner-v3"},{"date":"2026-08-25","number":"14","name":"[削除済み]","position":"板場","startTime":"","endTime":"","time":"","period":"second","shiftType":"dinner","source":"html-embedded","embeddedVersion":"2026-08-second-dinner-v3"},{"date":"2026-08-27","number":"14","name":"[削除済み]","position":"焼場","startTime":"","endTime":"","time":"","period":"second","shiftType":"dinner","source":"html-embedded","embeddedVersion":"2026-08-second-dinner-v3"},{"date":"2026-08-28","number":"14","name":"[削除済み]","position":"焼場","startTime":"","endTime":"","time":"","period":"second","shiftType":"dinner","source":"html-embedded","embeddedVersion":"2026-08-second-dinner-v3"},{"date":"2026-08-29","number":"14","name":"[削除済み]","position":"焼場","startTime":"","endTime":"","time":"","period":"second","shiftType":"dinner","source":"html-embedded","embeddedVersion":"2026-08-second-dinner-v3"},{"date":"2026-08-16","number":"16","name":"[削除済み]","position":"コンロ","startTime":"13:00","endTime":"","time":"13:00","period":"second","shiftType":"dinner","source":"html-embedded","embeddedVersion":"2026-08-second-dinner-v3"},{"date":"2026-08-16","number":"18","name":"[削除済み]","position":"焼場","startTime":"","endTime":"","time":"","period":"second","shiftType":"dinner","source":"html-embedded","embeddedVersion":"2026-08-second-dinner-v3"},{"date":"2026-08-19","number":"18","name":"[削除済み]","position":"ホール","startTime":"","endTime":"","time":"","period":"second","shiftType":"dinner","source":"html-embedded","embeddedVersion":"2026-08-second-dinner-v3"},{"date":"2026-08-20","number":"18","name":"[削除済み]","position":"コンロ","startTime":"","endTime":"","time":"","period":"second","shiftType":"dinner","source":"html-embedded","embeddedVersion":"2026-08-second-dinner-v3"},{"date":"2026-08-21","number":"18","name":"[削除済み]","position":"揚場","startTime":"","endTime":"","time":"","period":"second","shiftType":"dinner","source":"html-embedded","embeddedVersion":"2026-08-second-dinner-v3"},{"date":"2026-08-22","number":"18","name":"[削除済み]","position":"揚場","startTime":"","endTime":"","time":"","period":"second","shiftType":"dinner","source":"html-embedded","embeddedVersion":"2026-08-second-dinner-v3"},{"date":"2026-08-23","number":"18","name":"[削除済み]","position":"揚場","startTime":"","endTime":"","time":"","period":"second","shiftType":"dinner","source":"html-embedded","embeddedVersion":"2026-08-second-dinner-v3"},{"date":"2026-08-24","number":"18","name":"[削除済み]","position":"コンロ","startTime":"","endTime":"","time":"","period":"second","shiftType":"dinner","source":"html-embedded","embeddedVersion":"2026-08-second-dinner-v3"},{"date":"2026-08-27","number":"18","name":"[削除済み]","position":"コンロ","startTime":"","endTime":"","time":"","period":"second","shiftType":"dinner","source":"html-embedded","embeddedVersion":"2026-08-second-dinner-v3"},{"date":"2026-08-28","number":"18","name":"[削除済み]","position":"コンロ","startTime":"","endTime":"","time":"","period":"second","shiftType":"dinner","source":"html-embedded","embeddedVersion":"2026-08-second-dinner-v3"},{"date":"2026-08-29","number":"18","name":"[削除済み]","position":"揚場","startTime":"","endTime":"","time":"","period":"second","shiftType":"dinner","source":"html-embedded","embeddedVersion":"2026-08-second-dinner-v3"},{"date":"2026-08-30","number":"18","name":"[削除済み]","position":"焼場","startTime":"","endTime":"","time":"","period":"second","shiftType":"dinner","source":"html-embedded","embeddedVersion":"2026-08-second-dinner-v3"},{"date":"2026-08-31","number":"18","name":"[削除済み]","position":"揚場","startTime":"","endTime":"","time":"","period":"second","shiftType":"dinner","source":"html-embedded","embeddedVersion":"2026-08-second-dinner-v3"},{"date":"2026-08-16","number":"20","name":"[削除済み]","position":"板場","startTime":"","endTime":"","time":"","period":"second","shiftType":"dinner","source":"html-embedded","embeddedVersion":"2026-08-second-dinner-v3"},{"date":"2026-08-19","number":"20","name":"[削除済み]","position":"ホール","startTime":"","endTime":"","time":"","period":"second","shiftType":"dinner","source":"html-embedded","embeddedVersion":"2026-08-second-dinner-v3"},{"date":"2026-08-21","number":"20","name":"[削除済み]","position":"板場","startTime":"","endTime":"","time":"","period":"second","shiftType":"dinner","source":"html-embedded","embeddedVersion":"2026-08-second-dinner-v3"},{"date":"2026-08-22","number":"20","name":"[削除済み]","position":"板場","startTime":"","endTime":"","time":"","period":"second","shiftType":"dinner","source":"html-embedded","embeddedVersion":"2026-08-second-dinner-v3"},{"date":"2026-08-23","number":"20","name":"[削除済み]","position":"板場","startTime":"","endTime":"","time":"","period":"second","shiftType":"dinner","source":"html-embedded","embeddedVersion":"2026-08-second-dinner-v3"},{"date":"2026-08-24","number":"20","name":"[削除済み]","position":"焼場","startTime":"","endTime":"","time":"","period":"second","shiftType":"dinner","source":"html-embedded","embeddedVersion":"2026-08-second-dinner-v3"},{"date":"2026-08-25","number":"20","name":"[削除済み]","position":"コンロ","startTime":"","endTime":"","time":"","period":"second","shiftType":"dinner","source":"html-embedded","embeddedVersion":"2026-08-second-dinner-v3"},{"date":"2026-08-28","number":"20","name":"[削除済み]","position":"板場","startTime":"","endTime":"","time":"","period":"second","shiftType":"dinner","source":"html-embedded","embeddedVersion":"2026-08-second-dinner-v3"},{"date":"2026-08-29","number":"20","name":"[削除済み]","position":"板場","startTime":"","endTime":"","time":"","period":"second","shiftType":"dinner","source":"html-embedded","embeddedVersion":"2026-08-second-dinner-v3"},{"date":"2026-08-30","number":"20","name":"[削除済み]","position":"板場","startTime":"","endTime":"","time":"","period":"second","shiftType":"dinner","source":"html-embedded","embeddedVersion":"2026-08-second-dinner-v3"},{"date":"2026-08-31","number":"20","name":"[削除済み]","position":"焼場","startTime":"","endTime":"","time":"","period":"second","shiftType":"dinner","source":"html-embedded","embeddedVersion":"2026-08-second-dinner-v3"},{"date":"2026-08-19","number":"22","name":"[削除済み]","position":"ホール","startTime":"15:00","endTime":"","time":"15:00","period":"second","shiftType":"dinner","source":"html-embedded","embeddedVersion":"2026-08-second-dinner-v3"},{"date":"2026-08-20","number":"22","name":"[削除済み]","position":"ホール","startTime":"14:00","endTime":"L","time":"14:00〜L","period":"second","shiftType":"dinner","source":"html-embedded","embeddedVersion":"2026-08-second-dinner-v3"},{"date":"2026-08-21","number":"22","name":"[削除済み]","position":"ホール","startTime":"14:00","endTime":"L","time":"14:00〜L","period":"second","shiftType":"dinner","source":"html-embedded","embeddedVersion":"2026-08-second-dinner-v3"},{"date":"2026-08-23","number":"22","name":"[削除済み]","position":"ホール","startTime":"14:00","endTime":"L","time":"14:00〜L","period":"second","shiftType":"dinner","source":"html-embedded","embeddedVersion":"2026-08-second-dinner-v3"},{"date":"2026-08-24","number":"22","name":"[削除済み]","position":"ホール","startTime":"14:00","endTime":"L","time":"14:00〜L","period":"second","shiftType":"dinner","source":"html-embedded","embeddedVersion":"2026-08-second-dinner-v3"},{"date":"2026-08-25","number":"22","name":"[削除済み]","position":"焼場","startTime":"14:00","endTime":"L","time":"14:00〜L","period":"second","shiftType":"dinner","source":"html-embedded","embeddedVersion":"2026-08-second-dinner-v3"},{"date":"2026-08-27","number":"22","name":"[削除済み]","position":"ホール","startTime":"14:00","endTime":"L","time":"14:00〜L","period":"second","shiftType":"dinner","source":"html-embedded","embeddedVersion":"2026-08-second-dinner-v3"},{"date":"2026-08-28","number":"22","name":"[削除済み]","position":"ホール","startTime":"14:00","endTime":"L","time":"14:00〜L","period":"second","shiftType":"dinner","source":"html-embedded","embeddedVersion":"2026-08-second-dinner-v3"},{"date":"2026-08-30","number":"22","name":"[削除済み]","position":"ホール","startTime":"14:00","endTime":"L","time":"14:00〜L","period":"second","shiftType":"dinner","source":"html-embedded","embeddedVersion":"2026-08-second-dinner-v3"},{"date":"2026-08-16","number":"24","name":"[削除済み]","position":"ホール","startTime":"17:00","endTime":"L","time":"17:00〜L","period":"second","shiftType":"dinner","source":"html-embedded","embeddedVersion":"2026-08-second-dinner-v3"},{"date":"2026-08-23","number":"24","name":"[削除済み]","position":"焼場","startTime":"17:00","endTime":"L","time":"17:00〜L","period":"second","shiftType":"dinner","source":"html-embedded","embeddedVersion":"2026-08-second-dinner-v3"},{"date":"2026-08-29","number":"24","name":"[削除済み]","position":"ホール","startTime":"17:00","endTime":"22:00","time":"17:00〜22:00","period":"second","shiftType":"dinner","source":"html-embedded","embeddedVersion":"2026-08-second-dinner-v3"},{"date":"2026-08-16","number":"28","name":"[削除済み]","position":"揚場","startTime":"17:00","endTime":"L","time":"17:00〜L","period":"second","shiftType":"dinner","source":"html-embedded","embeddedVersion":"2026-08-second-dinner-v3"},{"date":"2026-08-29","number":"30","name":"[削除済み]","position":"ホール","startTime":"19:30","endTime":"L","time":"19:30〜L","period":"second","shiftType":"dinner","source":"html-embedded","embeddedVersion":"2026-08-second-dinner-v3"},{"date":"2026-08-21","number":"32","name":"[削除済み]","position":"ホール","startTime":"17:00","endTime":"L","time":"17:00〜L","period":"second","shiftType":"dinner","source":"html-embedded","embeddedVersion":"2026-08-second-dinner-v3"},{"date":"2026-08-21","number":"34","name":"[削除済み]","position":"ホール","startTime":"16:00","endTime":"L","time":"16:00〜L","period":"second","shiftType":"dinner","source":"html-embedded","embeddedVersion":"2026-08-second-dinner-v3"},{"date":"2026-08-29","number":"34","name":"[削除済み]","position":"ホール","startTime":"16:00","endTime":"L","time":"16:00〜L","period":"second","shiftType":"dinner","source":"html-embedded","embeddedVersion":"2026-08-second-dinner-v3"},{"date":"2026-08-31","number":"34","name":"[削除済み]","position":"コンロ","startTime":"16:00","endTime":"L","time":"16:00〜L","period":"second","shiftType":"dinner","source":"html-embedded","embeddedVersion":"2026-08-second-dinner-v3"},{"date":"2026-08-16","number":"36","name":"[削除済み]","position":"ホール","startTime":"18:30","endTime":"L","time":"18:30〜L","period":"second","shiftType":"dinner","source":"html-embedded","embeddedVersion":"2026-08-second-dinner-v3"},{"date":"2026-08-21","number":"36","name":"[削除済み]","position":"コンロ","startTime":"17:00","endTime":"L","time":"17:00〜L","period":"second","shiftType":"dinner","source":"html-embedded","embeddedVersion":"2026-08-second-dinner-v3"},{"date":"2026-08-22","number":"36","name":"[削除済み]","position":"コンロ","startTime":"17:00","endTime":"L","time":"17:00〜L","period":"second","shiftType":"dinner","source":"html-embedded","embeddedVersion":"2026-08-second-dinner-v3"},{"date":"2026-08-23","number":"36","name":"[削除済み]","position":"コンロ","startTime":"17:00","endTime":"L","time":"17:00〜L","period":"second","shiftType":"dinner","source":"html-embedded","embeddedVersion":"2026-08-second-dinner-v3"},{"date":"2026-08-29","number":"36","name":"[削除済み]","position":"コンロ","startTime":"17:00","endTime":"L","time":"17:00〜L","period":"second","shiftType":"dinner","source":"html-embedded","embeddedVersion":"2026-08-second-dinner-v3"},{"date":"2026-08-30","number":"36","name":"[削除済み]","position":"コンロ","startTime":"17:00","endTime":"L","time":"17:00〜L","period":"second","shiftType":"dinner","source":"html-embedded","embeddedVersion":"2026-08-second-dinner-v3"},{"date":"2026-08-22","number":"38","name":"[削除済み]","position":"ホール","startTime":"18:30","endTime":"L","time":"18:30〜L","period":"second","shiftType":"dinner","source":"html-embedded","embeddedVersion":"2026-08-second-dinner-v3"},{"date":"2026-08-20","number":"40","name":"[削除済み]","position":"ホール","startTime":"16:00","endTime":"L","time":"16:00〜L","period":"second","shiftType":"dinner","source":"html-embedded","embeddedVersion":"2026-08-second-dinner-v3"},{"date":"2026-08-25","number":"40","name":"[削除済み]","position":"ホール","startTime":"16:00","endTime":"L","time":"16:00〜L","period":"second","shiftType":"dinner","source":"html-embedded","embeddedVersion":"2026-08-second-dinner-v3"},{"date":"2026-08-27","number":"40","name":"[削除済み]","position":"ホール","startTime":"16:00","endTime":"L","time":"16:00〜L","period":"second","shiftType":"dinner","source":"html-embedded","embeddedVersion":"2026-08-second-dinner-v3"},{"date":"2026-08-30","number":"40","name":"[削除済み]","position":"ホール","startTime":"16:00","endTime":"L","time":"16:00〜L","period":"second","shiftType":"dinner","source":"html-embedded","embeddedVersion":"2026-08-second-dinner-v3"},{"date":"2026-08-23","number":"46","name":"[削除済み]","position":"ホール","startTime":"17:00","endTime":"L","time":"17:00〜L","period":"second","shiftType":"dinner","source":"html-embedded","embeddedVersion":"2026-08-second-dinner-v3"},{"date":"2026-08-30","number":"46","name":"[削除済み]","position":"ホール","startTime":"17:00","endTime":"L","time":"17:00〜L","period":"second","shiftType":"dinner","source":"html-embedded","embeddedVersion":"2026-08-second-dinner-v3"},{"date":"2026-08-31","number":"46","name":"[削除済み]","position":"ホール","startTime":"17:00","endTime":"L","time":"17:00〜L","period":"second","shiftType":"dinner","source":"html-embedded","embeddedVersion":"2026-08-second-dinner-v3"},{"date":"2026-08-20","number":"48","name":"[削除済み]","position":"揚場","startTime":"16:00","endTime":"L","time":"16:00〜L","period":"second","shiftType":"dinner","source":"html-embedded","embeddedVersion":"2026-08-second-dinner-v3"},{"date":"2026-08-25","number":"48","name":"[削除済み]","position":"揚場","startTime":"16:00","endTime":"L","time":"16:00〜L","period":"second","shiftType":"dinner","source":"html-embedded","embeddedVersion":"2026-08-second-dinner-v3"},{"date":"2026-08-27","number":"48","name":"[削除済み]","position":"揚場","startTime":"16:00","endTime":"L","time":"16:00〜L","period":"second","shiftType":"dinner","source":"html-embedded","embeddedVersion":"2026-08-second-dinner-v3"},{"date":"2026-08-28","number":"48","name":"[削除済み]","position":"揚場","startTime":"16:00","endTime":"L","time":"16:00〜L","period":"second","shiftType":"dinner","source":"html-embedded","embeddedVersion":"2026-08-second-dinner-v3"},{"date":"2026-08-30","number":"48","name":"[削除済み]","position":"揚場","startTime":"16:00","endTime":"L","time":"16:00〜L","period":"second","shiftType":"dinner","source":"html-embedded","embeddedVersion":"2026-08-second-dinner-v3"},{"date":"2026-08-24","number":"50","name":"[削除済み]","position":"ホール","startTime":"17:00","endTime":"","time":"17:00","period":"second","shiftType":"dinner","source":"html-embedded","embeddedVersion":"2026-08-second-dinner-v3"},{"date":"2026-08-28","number":"50","name":"[削除済み]","position":"ホール","startTime":"16:00","endTime":"","time":"16:00","period":"second","shiftType":"dinner","source":"html-embedded","embeddedVersion":"2026-08-second-dinner-v3"},{"date":"2026-08-22","number":"52","name":"[削除済み]","position":"ホール","startTime":"16:00","endTime":"","time":"16:00","period":"second","shiftType":"dinner","source":"html-embedded","embeddedVersion":"2026-08-second-dinner-v3"},{"date":"2026-08-24","number":"52","name":"[削除済み]","position":"揚場","startTime":"17:00","endTime":"","time":"17:00","period":"second","shiftType":"dinner","source":"html-embedded","embeddedVersion":"2026-08-second-dinner-v3"},{"date":"2026-08-25","number":"52","name":"[削除済み]","position":"ホール","startTime":"17:00","endTime":"","time":"17:00","period":"second","shiftType":"dinner","source":"html-embedded","embeddedVersion":"2026-08-second-dinner-v3"},{"date":"2026-08-29","number":"52","name":"[削除済み]","position":"ホール","startTime":"16:00","endTime":"","time":"16:00","period":"second","shiftType":"dinner","source":"html-embedded","embeddedVersion":"2026-08-second-dinner-v3"},{"date":"2026-08-28","number":"54","name":"[削除済み]","position":"ホール","startTime":"17:00","endTime":"","time":"17:00","period":"second","shiftType":"dinner","source":"html-embedded","embeddedVersion":"2026-08-second-dinner-v3"},{"date":"2026-08-22","number":"56","name":"[削除済み]","position":"ホール","startTime":"17:00","endTime":"","time":"17:00","period":"second","shiftType":"dinner","source":"html-embedded","embeddedVersion":"2026-08-second-dinner-v3"},{"date":"2026-08-23","number":"56","name":"[削除済み]","position":"ホール","startTime":"16:00","endTime":"","time":"16:00","period":"second","shiftType":"dinner","source":"html-embedded","embeddedVersion":"2026-08-second-dinner-v3"},{"date":"2026-08-22","number":"58","name":"[削除済み]","position":"ホール","startTime":"16:00","endTime":"","time":"16:00","period":"second","shiftType":"dinner","source":"html-embedded","embeddedVersion":"2026-08-second-dinner-v3"}]
+  };
+  function waitForFirebase(){
+    const started=Date.now();
+    const timer=setInterval(async()=>{
+      try{
+        if(!window.__fb){ if(Date.now()-started>20000) clearInterval(timer); return; }
+        clearInterval(timer); await syncEmbeddedShift();
+      }catch(e){ console.warn('HTML内蔵シフト同期失敗',e); }
+    },200);
+  }
+  async function syncEmbeddedShift(){
+    const fb=window.__fb;
+    if(!fb?.get||!fb?.update||!fb?.ref||!fb?.push) return;
+    const metaPath=`shift/periodMeta/${EMBEDDED_SHIFT.shiftType}-${EMBEDDED_SHIFT.yearMonth}-${EMBEDDED_SHIFT.period}`;
+    const metaSnap=await fb.get(fb.ref(fb.db,metaPath));
+    const meta=metaSnap?.val?.()||{};
+    if(meta.source==='html-embedded' && meta.embeddedVersion===EMBEDDED_SHIFT_VERSION){
+      showEmbeddedStatus('✅ HTML内蔵シフトはFirebase反映済み'); return;
+    }
+    const liveSnap=await fb.get(fb.ref(fb.db,'shift/schedules'));
+    const current=liveSnap?.val?.()||{}; const updates={};
+    const inPeriod=x=>String(x?.date||'').startsWith('2026-08-') && Number(String(x.date).slice(-2))>=16 && Number(String(x.date).slice(-2))<=31 && String(x?.shiftType||'dinner')==='dinner';
+    Object.entries(current).forEach(([id,x])=>{ if(inPeriod(x)) updates[`shift/schedules/${id}`]=null; });
+    EMBEDDED_SHIFT.items.filter(x=>x && x.date && x.name && ['板場','焼場','ホール','コンロ','揚場'].includes(String(x.position||''))).forEach(x=>{
+      const id=fb.push(fb.ref(fb.db,'shift/schedules')).key;
+      updates[`shift/schedules/${id}`]={...x,createdAt:Date.now()};
+    });
+    updates[metaPath]={yearMonth:EMBEDDED_SHIFT.yearMonth,period:EMBEDDED_SHIFT.period,shiftType:EMBEDDED_SHIFT.shiftType,label:EMBEDDED_SHIFT.label,updatedAt:Date.now(),count:EMBEDDED_SHIFT.items.length,source:'html-embedded',embeddedVersion:EMBEDDED_SHIFT_VERSION};
+    await fb.update(fb.ref(fb.db),updates);
+    showEmbeddedStatus(`✅ ${EMBEDDED_SHIFT.label}をFirebaseへ反映しました（${EMBEDDED_SHIFT.items.length}件）`);
+  }
+  function showEmbeddedStatus(msg){ const box=document.getElementById('shiftEmbeddedHtmlStatus'); if(box) box.textContent=msg; }
+  function init(){
+    const target=document.getElementById('shiftChatGPTImportBox') || document.getElementById('shiftGeminiAiBox');
+    if(target && !document.getElementById('shiftEmbeddedHtmlBox')){
+      target.insertAdjacentHTML('beforebegin',`<div id="shiftEmbeddedHtmlBox" style="margin-top:14px;padding:14px;border:2px solid #3b6fd8;border-radius:16px;background:#f4f8ff">
+        <div style="font-weight:900;font-size:19px">📦 B案：HTML内蔵シフト</div>
+        <div style="font-size:13px;line-height:1.55;margin-top:6px">このHTMLには <b>2026年8月後半・ディナー</b> のシフトを内蔵しています。Gemini API・JSONファイル選択は不要です。HTMLを開くとFirebaseへ自動反映します。</div>
+        <div id="shiftEmbeddedHtmlStatus" class="shiftStatus" style="margin-top:8px">Firebase反映を確認中…</div>
+      </div>`);
+    }
+    waitForFirebase();
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();
+})();
+</script>
+<script id="shiftLaborCostFeature">
+(function(){
+  'use strict';
+  const $=id=>document.getElementById(id);
+  const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  const RATE_KEY='karuya_shift_hourly_rates_v1';
+  const GEMINI_KEY='karuya_shift_gemini_api_key_v1';
+  const staffFallback=[
+    ['10','[削除済み]'],['12','[削除済み]'],['14','[削除済み]'],['16','[削除済み]'],['18','[削除済み]'],['20','[削除済み]'],['22','[削除済み]'],['24','[削除済み]'],['26','[削除済み]'],['28','[削除済み]'],['30','[削除済み]'],['32','[削除済み]'],['34','[削除済み]'],['36','[削除済み]'],['38','[削除済み]'],['40','[削除済み]'],['42','[削除済み]'],['44','[削除済み]'],['46','[削除済み]'],['48','[削除済み]'],['50','[削除済み]'],['52','[削除済み]'],['54','[削除済み]'],['56','[削除済み]'],['58','[削除済み]'],['60','[削除済み]']
+  ];
+  function defaultYM(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`}
+  function loadRates(){try{return JSON.parse(localStorage.getItem(RATE_KEY)||'{}')||{}}catch(_){return {}}}
+  function saveRates(v){localStorage.setItem(RATE_KEY,JSON.stringify(v||{}))}
+  function getStaff(){
+    try{const raw=localStorage.getItem('karuya_shift_staff_map_v1');const m=raw?JSON.parse(raw):null;if(m&&typeof m==='object'){
+      const a=Object.entries(m).map(([n,x])=>[String(n),String(x?.name||x||'').trim()]).filter(x=>x[1]);
+      const i40=a.findIndex(x=>x[0]==='40'); if(i40>=0)a[i40][1]='[削除済み]';
+      if(a.length)return a.sort((a,b)=>Number(a[0])-Number(b[0]));
+    }}catch(_){ }
+    return staffFallback.slice();
+  }
+  function initRates(){
+    const box=$('laborRateList');if(!box)return;
+    const rates=loadRates(),staff=getStaff();
+    box.innerHTML=staff.map(([no,name])=>`<div class="shiftLaborRateRow"><span>${esc(no)}</span><span class="name">${esc(name)}</span><input type="number" min="0" step="1" data-rate-no="${esc(no)}" value="${rates[no]??''}" placeholder="時給円"></div>`).join('');
+    box.querySelectorAll('[data-rate-no]').forEach(el=>el.addEventListener('change',()=>{const r=loadRates();r[el.dataset.rateNo]=Number(el.value)||0;saveRates(r)}));
+  }
+  function normalizeTime(v){
+    let s=String(v??'').trim().replace(/[：]/g,':').replace(/[時]/g,':').replace(/[分]/g,'').replace(/\s+/g,'');
+    if(!s||/^L$/i.test(s))return null;
+    s=s.replace(/[０-９]/g,ch=>String.fromCharCode(ch.charCodeAt(0)-0xFEE0));
+    const m=s.match(/^(\d{1,2}):(\d{1,2})$/);if(m)return Number(m[1])*60+Number(m[2]);
+    const n=Number(s);if(Number.isFinite(n)&&n>=0&&n<24){const h=Math.floor(n),f=Math.round((n-h)*100);return h*60+(f===50?30:f===0?0:Math.round(f*.6));}
+    return null;
+  }
+  function hoursFor(x,close){
+    let a=normalizeTime(x?.startTime),b=normalizeTime(x?.endTime);
+    const t=String(x?.time||'').trim();
+    if(a===null&&t){const parts=t.replace(/[～~]/g,'〜').split('〜');a=normalizeTime(parts[0]);if(b===null&&parts[1]&&!/^L$/i.test(parts[1]))b=normalizeTime(parts[1]);}
+    if(a===null)return 0;
+    if(b===null)b=close;
+    if(b<a)b+=24*60;
+    return Math.max(0,(b-a)/60);
+  }
+  function shiftTypeOf(x){return String(x?.shiftType||'').toLowerCase()==='lunch'?'lunch':'dinner'}
+  function readSchedules(){
+    try{const fb=window.__fb;if(!fb)return {};return null}catch(_){return null}
+  }
+  async function fetchSchedules(ym,type){
+    const fb=window.__fb;if(!fb)throw new Error('Firebaseが準備できていません。');
+    const snap=await fb.get(fb.ref(fb.db,'shift/schedules'));const all=snap.val()||{};
+    const out=[];Object.values(all).forEach(x=>{if(!x?.date||!String(x.date).startsWith(ym+'-'))return;if(type!=='all'&&shiftTypeOf(x)!==type)return;out.push(x)});return out;
+  }
+  function setStatus(msg,kind=''){const e=$('laborStatus');if(e){e.className='shiftStatus '+kind;e.textContent=msg}}
+  function renderResult(rows,close,sales){
+    const rates=loadRates(),by={};let total=0,totalHours=0,unpriced=0;
+    rows.forEach(x=>{const no=String(x.number||'').trim();const name=String(x.name||'').trim();let key=no;
+      if(!key){const staff=getStaff().find(([n,nm])=>nm===name);key=staff?.[0]||''}
+      const h=hoursFor(x,close);const rate=Number(rates[key]||0);const cost=h*rate;totalHours+=h;total+=cost;if(!rate&&h>0)unpriced++;
+      const k=key||name;by[k]??={no:key,name,hours:0,cost:0,rate};by[k].hours+=h;by[k].cost+=cost;
+    });
+    const arr=Object.values(by).filter(x=>x.hours>0).sort((a,b)=>Number(a.no||9999)-Number(b.no||9999));
+    const rate=Number(sales)>0?total/Number(sales)*100:null;
+    const e=$('laborResult');if(!e)return;
+    e.hidden=false;e.innerHTML=`<div><b>対象シフト：</b>${rows.length}件　<b>総勤務時間：</b>${totalHours.toFixed(2)}時間</div><div class="shiftLaborTotal">人件費 ¥${Math.round(total).toLocaleString()}${rate!==null?`　（人件費率 ${rate.toFixed(1)}%）`:''}</div>${unpriced?`<div class="small" style="color:#b42318;font-weight:700">⚠️ 時給未登録のスタッフが ${unpriced} 件あります。時給を登録すると反映されます。</div>`:''}<table><thead><tr><th>スタッフ</th><th>時間</th><th>時給</th><th>人件費</th></tr></thead><tbody>${arr.map(x=>`<tr><td>${esc(x.name)}</td><td>${x.hours.toFixed(2)}</td><td>¥${Number(x.rate||0).toLocaleString()}</td><td>¥${Math.round(x.cost).toLocaleString()}</td></tr>`).join('')}</tbody></table>`;
+    return {total,totalHours,rate,unpriced,arr};
+  }
+  async function calculate(){
+    const ym=$('laborTargetMonth')?.value||defaultYM(),type=$('laborShiftType')?.value||'dinner',close=normalizeTime($('laborCloseTime')?.value||'22:00')??1320,sales=Number($('laborSales')?.value||0);
+    setStatus('Firebaseから登録済みシフトを取得中…');
+    try{const rows=await fetchSchedules(ym,type);if(!rows.length){$('laborResult').hidden=true;setStatus(`${ym}の対象シフトがありません。`,'warn');return null}const result=renderResult(rows,close,sales);setStatus(`✅ ${ym}の人件費を計算しました。`,'ok');return {ym,type,close,sales,rows,result}}
+    catch(e){setStatus('計算に失敗しました：'+(e?.message||String(e)),'err');return null}
+  }
+  function getKey(){return String(localStorage.getItem(GEMINI_KEY)||localStorage.getItem('karuya_shift_gemini_api_key_v1')||'').trim()}
+  async function analyze(){
+    const key=getKey();if(!key){alert('先にGemini APIキーを保存してください。');return}
+    const calc=await calculate();if(!calc)return;
+    const prompt=`飲食店の人件費分析をしてください。計算結果の数値を勝手に変更せず、与えたデータを根拠に、月間の人件費・総勤務時間・人件費率（売上入力時）・時給未登録の注意点を簡潔に日本語でまとめてください。改善提案は事実と推測を分けてください。\n対象月:${calc.ym}\n対象:${calc.type}\nL終了:${$('laborCloseTime')?.value||'22:00'}\n売上:${calc.sales||0}\n人件費:${Math.round(calc.result.total)}\n総勤務時間:${calc.result.totalHours.toFixed(2)}\n人件費率:${calc.result.rate===null?'未計算':calc.result.rate.toFixed(1)+'%'}\nスタッフ別:${JSON.stringify(calc.result.arr)}`;
+    const b=$('laborGeminiAnalyze');b.disabled=true;b.textContent='🤖 Gemini分析中…';
+    try{
+      const body={contents:[{role:'user',parts:[{text:prompt}]}],generationConfig:{temperature:0.1,maxOutputTokens:1200}};
+      const res=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent',{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':key},body:JSON.stringify(body)});
+      const j=await res.json();if(!res.ok)throw new Error(j?.error?.message||`Gemini APIエラー（${res.status}）`);
+      const text=(j?.candidates||[]).flatMap(c=>c?.content?.parts||[]).map(p=>p?.text||'').join('').trim();if(!text)throw new Error('Geminiから分析結果が返りませんでした。');
+      const out=$('laborGeminiResult');out.hidden=false;out.textContent=text;setStatus('✅ Geminiによる人件費確認・分析が完了しました。','ok');
+    }catch(e){$('laborGeminiResult').hidden=false;$('laborGeminiResult').textContent='Gemini分析エラー：'+(e?.message||String(e));setStatus('Gemini分析に失敗しました。','err')}
+    finally{b.disabled=false;b.textContent='🤖 Geminiで人件費を確認・分析'}
+  }
+  function init(){
+    const m=$('laborTargetMonth');if(!m)return;m.value=defaultYM();
+    const key=getKey();if($('laborGeminiKey'))$('laborGeminiKey').value=key;if($('laborGeminiKeyStatus'))$('laborGeminiKeyStatus').textContent=key?'✅ この端末にAPIキーを保存済み':'APIキーはこの端末に保存します。';
+    $('laborGeminiKeySave')?.addEventListener('click',()=>{const v=$('laborGeminiKey').value.trim();if(!v){alert('APIキーを入力してください。');return}localStorage.setItem(GEMINI_KEY,v);$('laborGeminiKeyStatus').textContent='✅ APIキーをこの端末に保存しました。';});
+    initRates();$('laborCalculate')?.addEventListener('click',calculate);$('laborGeminiAnalyze')?.addEventListener('click',analyze);
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+})();
+</script>
 </body></html>
 
 
@@ -7541,4 +7883,99 @@ ${positionRules}
 <style id="aiStartEndFinal">
 #shiftPage .shiftHeroTimeBox small,#shiftPage .shiftAttendanceTime small{font-size:12px!important;font-weight:800!important}
 #shiftPage .shiftHeroTimeBox strong,#shiftPage .shiftAttendanceTime strong{font-size:18px!important;font-weight:900!important}
+</style>
+<style id="shiftMobileSimpleLayoutFix">
+/* シフト表示：スマホだけを見やすく整列。AI読み取り・データ・PC表示は変更しない */
+@media (max-width:600px){
+  #shiftPage .shiftHeroNames{grid-template-columns:1fr !important;gap:8px !important;}
+  #shiftPage .shiftHeroName,
+  #shiftPage .shiftAttendanceName{
+    display:grid !important;
+    grid-template-columns:34px minmax(90px,1fr) minmax(145px,1.25fr) !important;
+    grid-template-areas:"no person time" !important;
+    align-items:center !important;
+    column-gap:7px !important;
+    row-gap:0 !important;
+    min-height:68px !important;
+    padding:9px 10px !important;
+    box-sizing:border-box !important;
+    text-align:left !important;
+  }
+  #shiftPage .shiftHeroNo,
+  #shiftPage .shiftAttendanceNo{
+    grid-area:no !important;
+    width:30px !important;
+    min-width:30px !important;
+    height:30px !important;
+  }
+  #shiftPage .shiftHeroMain,
+  #shiftPage .shiftAttendancePerson{
+    grid-area:person !important;
+    min-width:0 !important;
+    display:flex !important;
+    flex-direction:column !important;
+    align-items:flex-start !important;
+    justify-content:center !important;
+    gap:2px !important;
+    overflow:hidden !important;
+  }
+  #shiftPage .shiftHeroMain b,
+  #shiftPage .shiftAttendancePerson b{
+    font-size:17px !important;
+    line-height:1.2 !important;
+    white-space:nowrap !important;
+    overflow:hidden !important;
+    text-overflow:ellipsis !important;
+    max-width:100% !important;
+  }
+  #shiftPage .shiftHeroPosition,
+  #shiftPage .shiftAttendancePosition{
+    font-size:14px !important;
+    line-height:1.2 !important;
+    white-space:nowrap !important;
+    overflow:hidden !important;
+    text-overflow:ellipsis !important;
+    max-width:100% !important;
+  }
+  #shiftPage .shiftHeroTimeBox,
+  #shiftPage .shiftAttendanceTime{
+    grid-area:time !important;
+    grid-column:auto !important;
+    min-width:0 !important;
+    width:100% !important;
+    display:grid !important;
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr) !important;
+    gap:5px !important;
+  }
+  #shiftPage .shiftHeroTimeBox span,
+  #shiftPage .shiftAttendanceTime span{
+    min-width:0 !important;
+    padding:7px 4px !important;
+    display:flex !important;
+    flex-direction:column !important;
+    align-items:center !important;
+    justify-content:center !important;
+    gap:1px !important;
+    border-radius:9px !important;
+    white-space:nowrap !important;
+  }
+  #shiftPage .shiftHeroTimeBox small,
+  #shiftPage .shiftAttendanceTime small{font-size:10px !important;}
+  #shiftPage .shiftHeroTimeBox strong,
+  #shiftPage .shiftAttendanceTime strong{font-size:15px !important;line-height:1.15 !important;}
+}
+@media (max-width:360px){
+  #shiftPage .shiftHeroName,
+  #shiftPage .shiftAttendanceName{
+    grid-template-columns:32px minmax(82px,1fr) minmax(132px,1.25fr) !important;
+    column-gap:6px !important;
+    padding:8px !important;
+  }
+  #shiftPage .shiftHeroNo,
+  #shiftPage .shiftAttendanceNo{width:28px !important;min-width:28px !important;height:28px !important;}
+  #shiftPage .shiftHeroMain b,
+  #shiftPage .shiftAttendancePerson b{font-size:16px !important;}
+  #shiftPage .shiftHeroTimeBox strong,
+  #shiftPage .shiftAttendanceTime strong{font-size:14px !important;}
+}
 </style>
