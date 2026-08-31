@@ -1203,6 +1203,7 @@ body{overflow-anchor:none!important;}
 }
 </style>
 
+
 </head>
 <body><div class="wrap">
 <div class="navtabs navtabs3 navtabs4">
@@ -1353,7 +1354,7 @@ body{overflow-anchor:none!important;}
 <select id="nonVegProductSelect"></select>
 
 <div class="orderRow">
-<div><label>数量</label><input id="nonVegQty" type="number" min="1" step="1" value="1"></div>
+<div><label>数量</label><select id="nonVegQty"></select></div>
 <div><label>単位</label><select id="nonVegUnit"></select></div>
 <div><button type="button" id="nonVegAddOrder">追加</button></div>
 </div>
@@ -1475,7 +1476,7 @@ body{overflow-anchor:none!important;}
     </div>
     <div class="shiftHint" style="margin-top:8px">追加したスタッフは時間・ポジション未設定で登録されます。追加後、名前をタップして編集できます。</div>
   </div>
-  <button type="button" class="gray" id="shiftStaffAddClose" style="margin-top:8px">閉じる</button>
+  <button type="button" class="gray" id="shiftStaffAddClose" style="margin-top:8px"></button>
 </div>
 
 <div class="card" id="shiftTodayEditCard" hidden>
@@ -1492,7 +1493,7 @@ body{overflow-anchor:none!important;}
 <div class="card" id="shiftMemoCard">
   <div class="shiftSectionTitle" style="display:flex;align-items:center;justify-content:space-between;gap:8px">
     <span>📝 引き継ぎメモ</span>
-    <button type="button" class="gray" id="shiftMemoToggle" style="width:auto;margin:0;padding:8px 12px">▲ 閉じる</button>
+    <button type="button" class="gray" id="shiftMemoToggle" style="width:auto;margin:0;padding:8px 12px">▲</button>
   </div>
   <div id="shiftMemoBody">
   <div class="shiftHint">先の日付も登録できます。例：8/30 テイクアウトあり。</div>
@@ -1514,7 +1515,7 @@ body{overflow-anchor:none!important;}
 <div class="card" id="shiftOtherDaySectionCard">
   <div class="shiftSectionTitle" style="display:flex;align-items:center;justify-content:space-between;gap:8px">
     <span>📅 別の日を見る・編集</span>
-    <button type="button" class="gray" id="shiftOtherDayToggle" style="width:auto;margin:0;padding:8px 12px">▲ 閉じる</button>
+    <button type="button" class="gray" id="shiftOtherDayToggle" style="width:auto;margin:0;padding:8px 12px">▲</button>
   </div>
   <div id="shiftOtherDayBody">
   <div class="shiftDateRow">
@@ -3598,6 +3599,9 @@ function renderNonVegProductManager(){
       $("nonVegRegisterMsg").textContent=`✅ 「${name}」を登録しました。`;
       renderProducts();
     };
+
+    const nonVegQty=$("nonVegQty");
+    if(nonVegQty && !nonVegQty.options.length){ for(let i=1;i<=30;i++) nonVegQty.insertAdjacentHTML("beforeend",`<option value="${i}">${i}</option>`); }
 
     $("nonVegAddOrder").onclick=()=>{
       const sid=$("nonVegSupplier").value;
@@ -7930,11 +7934,11 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       btn.addEventListener('click',function(){
         const isOpen=!body.hidden;
         body.hidden=isOpen;
-        btn.textContent=isOpen?'▼ 開く':'▲ 閉じる';
+        btn.textContent=isOpen?'▼':'▲';
         try{localStorage.setItem('karitaya_shift_other_day_open',isOpen?'0':'1')}catch(_){}
       });
       try{
-        if(localStorage.getItem('karitaya_shift_other_day_open')==='0'){body.hidden=true;btn.textContent='▼ 開く';}
+        if(localStorage.getItem('karitaya_shift_other_day_open')==='0'){body.hidden=true;btn.textContent='▼';}
       }catch(_){}
     }
   }
@@ -8461,7 +8465,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     btn.addEventListener('click',function(){
       const isOpen=!body.hidden;
       body.hidden=isOpen;
-      btn.textContent=isOpen?'▼ 開く':'▲ 閉じる';
+      btn.textContent=isOpen?'▼':'▲';
     });
   }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();
