@@ -1137,6 +1137,20 @@ body{overflow-anchor:none!important;}
 .shiftLaborAiBox{margin-top:12px;padding:12px;border-radius:14px;background:#f4f8ff;border:1px solid #cddcfb;white-space:pre-wrap;line-height:1.55}
 @media(max-width:520px){.shiftLaborGrid{grid-template-columns:1fr}.shiftLaborRateRow{grid-template-columns:58px 1fr 105px}.shiftLaborResult{overflow:auto}.shiftLaborResult table{min-width:430px}}
 </style>
+<style id="shiftSalesBridgeStyle">
+#shiftTodayPrevYearSales,#shiftOtherDayPrevYearSales{display:block!important;min-height:22px!important;margin-top:6px!important;padding:4px 10px!important;border-radius:8px!important;background:#f4f8ff!important;color:#245ec7!important;font-size:14px!important;font-weight:800!important;line-height:1.4!important;box-sizing:border-box!important;}
+</style>
+
+<style id="shiftSalesExpensePlacementStyle">
+#shiftRegisteredPeriods + #shiftSalesExpenseBtn{margin-top:14px!important;}
+.shiftSalesExpenseBtn{width:100%;background:#fff7fb!important;border:1px solid #e4a6c5!important;color:#b33b73!important;font-weight:900!important;}
+.salesPageHeader{display:flex;align-items:center;justify-content:space-between;gap:10px;}
+.salesPageCloseBtn{width:auto!important;margin:0!important;padding:8px 14px!important;background:#fff!important;color:#555!important;border:1px solid #d8dce3!important;font-weight:900!important;border-radius:12px!important;line-height:1;}
+.salesPageCloseBtn:hover{background:#f5f6f8!important;}
+
+#salesPage #shiftLaborCostCard{margin-top:12px;}
+#salesPage #shiftLaborCostCard .shiftSectionTitle{font-size:20px;}
+</style>
 </head>
 <body><div class="wrap">
 <div class="navtabs navtabs3 navtabs4">
@@ -1378,6 +1392,7 @@ body{overflow-anchor:none!important;}
     <div>
       <div class="shiftSectionTitle">👥 本日の出勤者</div>
       <div id="shiftTodayDateLabel" class="shiftHeroDate"></div>
+      <div id="shiftTodayPrevYearSales" class="shiftPrevYearSalesUnderDate"></div>
     </div>
     <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end">
       <button type="button" class="gray shiftTodaySmallBtn" id="shiftTodayQuickBtn">今日を表示</button>
@@ -1451,7 +1466,7 @@ body{overflow-anchor:none!important;}
   </div>
   <div id="shiftOtherDayBody">
   <div class="shiftDateRow">
-    <div><label>日付</label><input id="shiftViewDate" type="date"></div>
+    <div><label>日付</label><input id="shiftViewDate" type="date"><div id="shiftOtherDayPrevYearSales" class="shiftPrevYearSalesUnderDate"></div></div>
     <button type="button" class="gray" id="shiftTodayBtn">今日</button>
     <button type="button" id="shiftOtherDayStaffAddBtnTop">＋スタッフ追加</button>
   </div>
@@ -1473,34 +1488,10 @@ body{overflow-anchor:none!important;}
   <div class="shiftSectionTitle">📷 シフト登録状況</div>
   <div class="shiftHint">現在登録されている期間を確認できます。シフトの読み取りはAIのみ使用します。</div>
   <div id="shiftRegisteredPeriods" class="shiftRegisteredPeriods" style="margin-top:12px"></div>
+  <button type="button" id="shiftSalesExpenseBtn" class="shiftSalesExpenseBtn">💰 売上・経費</button>
 </div>
 
-<div class="card" id="shiftLaborCostCard">
-  <div class="shiftSectionTitle">💰 人件費計算（Gemini）</div>
-  <div class="shiftHint">登録済みのシフトを使って人件費を集計します。シフト登録そのものにはGemini APIを使用しません。Geminiは人件費の計算確認・分析にのみ使用します。</div>
-  <div class="shiftLaborGrid" style="margin-top:10px">
-    <div><label style="margin-top:0">📅 対象月</label><input id="laborTargetMonth" type="month"></div>
-    <div><label style="margin-top:0">🌙 対象</label><select id="laborShiftType"><option value="dinner">ディナー</option><option value="lunch">ランチ</option><option value="all">ランチ＋ディナー</option></select></div>
-  </div>
-  <div class="shiftLaborGrid">
-    <div><label>⏰ L（終了）時刻</label><input id="laborCloseTime" type="time" value="22:00"><div class="small">Lはこの時刻で人件費を計算します。</div></div>
-    <div><label>💴 売上（任意）</label><input id="laborSales" type="number" min="0" step="1" placeholder="例：300000"><div class="small">入力すると人件費率も表示します。</div></div>
-  </div>
-  <details style="margin-top:12px">
-    <summary style="cursor:pointer;font-weight:800;font-size:18px">⚙️ スタッフ時給</summary>
-    <div id="laborRateList" style="margin-top:8px"></div>
-  </details>
-  <div class="shiftLaborGrid" style="margin-top:10px">
-    <div><label>Gemini APIキー</label><input id="laborGeminiKey" type="password" autocomplete="off" placeholder="AIza..."></div>
-    <div style="display:flex;align-items:end"><button type="button" class="gray" id="laborGeminiKeySave">キーを保存</button></div>
-  </div>
-  <div id="laborGeminiKeyStatus" class="small"></div>
-  <button type="button" id="laborCalculate">💰 シフトから人件費を計算</button>
-  <button type="button" class="gray" id="laborGeminiAnalyze" style="margin-top:8px">🤖 Geminiで人件費を確認・分析</button>
-  <div id="laborStatus" class="shiftStatus" style="margin-top:10px"></div>
-  <div id="laborResult" class="shiftLaborResult" hidden></div>
-  <div id="laborGeminiResult" class="shiftLaborAiBox" hidden></div>
-</div>
+
 
 <div class="card" id="shiftReviewCard" hidden>
   <div class="shiftSectionTitle">✅ 登録前の確認</div>
@@ -5518,6 +5509,7 @@ function displayShiftTime(v){
 
 function renderDay(){
     const date=$('shiftViewDate')?.value||today(); const list=$('shiftDayList'),sum=$('shiftDaySummary');if(!list||!sum)return;
+    renderPrevYearSalesUnderDate(date);
     const rows=window.sortShiftDisplayByPosition(Object.values(schedules).filter(x=>x?.date===date&&x?.name&&shiftIsCurrentType(x)));
     const byName={};
     rows.forEach(x=>{
@@ -5888,11 +5880,21 @@ function renderDay(){
       alert(`${name}の変更を保存しました。`);
     }catch(e){console.error(e);alert('保存に失敗しました。\n'+(e?.message||e));}
   }
+  function renderPrevYearSalesUnderDate(date){
+    const daily=window.__salesDailyData||{};
+    const p=typeof window.__salesPrevSameWeekday==='function'?window.__salesPrevSameWeekday(date):'';
+    const v=Number(daily?.[p]?.amount||0);
+    const text=p ? `前年同曜日売上：¥${v.toLocaleString('ja-JP')}${daily?.[p]?'':'（未登録）'}` : '';
+    const a=$('shiftTodayPrevYearSales'); if(a) a.textContent=text;
+    const b=$('shiftOtherDayPrevYearSales'); if(b) b.textContent=text;
+  }
+
   function renderTodayQuick(){
     const date=today();
     const label=$('shiftTodayDateLabel'),sum=$('shiftTodayQuickSummary'),list=$('shiftTodayQuickList'),memoBox=$('shiftTodayQuickMemo');
     if(!sum||!list)return;
     if(label){const d=new Date(date+'T00:00:00');label.textContent=`${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日（${['日','月','火','水','木','金','土'][d.getDay()]}）`; }
+    renderPrevYearSalesUnderDate(date);
     const rows=Object.values(schedules).filter(x=>x?.date===date&&x?.name&&shiftIsCurrentType(x));
     const byName={};
     rows.forEach(x=>{
@@ -7908,6 +7910,222 @@ function waitForFirebase(){if(window.__fb?.db)syncSepFirstLunch().catch(e=>conso
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',waitForFirebase);else waitForFirebase();
 })();
 </script>
+
+<style id="salesManagementAddStyle">
+#salesPage .salesGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+#salesPage .salesSummary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+#salesPage .salesKpi{background:#f7f8fa;border:1px solid #e1e4e8;border-radius:12px;padding:12px;text-align:center}
+#salesPage .salesKpi b{display:block;font-size:20px;margin-top:4px}
+#salesPage .salesRow{display:grid;grid-template-columns:105px 1fr 90px;gap:8px;align-items:end;margin:8px 0}
+#salesPage .salesList{max-height:420px;overflow:auto}
+#salesPage .salesItem{display:grid;grid-template-columns:100px 1fr auto;gap:8px;align-items:center;padding:9px 0;border-bottom:1px solid #eee}
+#salesPage .salesBadge{display:inline-block;margin:4px 4px 0 0;padding:4px 8px;border-radius:999px;background:#eef3ff;font-size:13px;font-weight:700}
+#shiftPage .prevYearSalesBadge{display:block;margin-top:3px;font-size:12px;font-weight:700;color:#3269df}
+#shiftPage .shiftPrevYearSalesUnderDate{margin-top:4px;font-size:14px;font-weight:800;color:#3269df;line-height:1.35}
+@media(max-width:600px){#salesPage .salesGrid,#salesPage .salesSummary{grid-template-columns:1fr 1fr}#salesPage .salesRow{grid-template-columns:1fr 1fr 72px}#salesPage .salesItem{grid-template-columns:82px 1fr auto}.navtabs4{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
+</style>
+<div id="salesPage" class="page" hidden>
+  <div class="salesPageHeader"><h1 style="margin:0">💰 売上・経費管理</h1><button type="button" id="salesPageCloseBtn" class="salesPageCloseBtn" aria-label="売上・経費を閉じる">✕</button></div>
+  <div class="card">
+    <h2>📊 日別売上・前年同曜日比較</h2>
+    <div class="salesGrid">
+      <div><label>📅 日付</label><input id="salesDate" type="date"></div>
+      <div><label>💴 当日売上</label><input id="salesAmount" type="number" min="0" step="1" placeholder="例：250000"></div>
+    </div>
+    <div class="salesGrid" style="margin-top:10px">
+      <div><label>📝 メモ</label><input id="salesMemo" type="text" placeholder="例：周年イベント"></div>
+      <div style="display:flex;align-items:end"><button id="salesSave">保存</button></div>
+    </div>
+    <div id="salesCompare" style="margin-top:12px"></div>
+  </div>
+  <div class="card">
+    <h2>🧾 経費管理</h2>
+    <div class="salesRow"><div><label>📅 日付</label><input id="expenseDate" type="date"></div><div><label>項目</label><input id="expenseName" placeholder="仕入・水道光熱など"></div><div><label>金額</label><input id="expenseAmount" type="number" min="0"></div></div>
+    <button id="expenseSave">経費を保存</button>
+    <div id="expenseList" class="salesList" style="margin-top:10px"></div>
+  </div>
+<div class="card" id="shiftLaborCostCard">
+  <div class="shiftSectionTitle">💰 人件費計算（Gemini）</div>
+  <div class="shiftHint">登録済みのシフトを使って人件費を集計します。シフト登録そのものにはGemini APIを使用しません。Geminiは人件費の計算確認・分析にのみ使用します。</div>
+  <div class="shiftLaborGrid" style="margin-top:10px">
+    <div><label style="margin-top:0">📅 対象月</label><input id="laborTargetMonth" type="month"></div>
+    <div><label style="margin-top:0">🌙 対象</label><select id="laborShiftType"><option value="dinner">ディナー</option><option value="lunch">ランチ</option><option value="all">ランチ＋ディナー</option></select></div>
+  </div>
+  <div class="shiftLaborGrid">
+    <div><label>⏰ L（終了）時刻</label><input id="laborCloseTime" type="time" value="22:00"><div class="small">Lはこの時刻で人件費を計算します。</div></div>
+    <div><label>💴 売上（任意）</label><input id="laborSales" type="number" min="0" step="1" placeholder="例：300000"><div class="small">入力すると人件費率も表示します。</div></div>
+  </div>
+  <details style="margin-top:12px">
+    <summary style="cursor:pointer;font-weight:800;font-size:18px">⚙️ スタッフ時給</summary>
+    <div id="laborRateList" style="margin-top:8px"></div>
+  </details>
+  <div class="shiftLaborGrid" style="margin-top:10px">
+    <div><label>Gemini APIキー</label><input id="laborGeminiKey" type="password" autocomplete="off" placeholder="AIza..."></div>
+    <div style="display:flex;align-items:end"><button type="button" class="gray" id="laborGeminiKeySave">キーを保存</button></div>
+  </div>
+  <div id="laborGeminiKeyStatus" class="small"></div>
+  <button type="button" id="laborCalculate">💰 シフトから人件費を計算</button>
+  <button type="button" class="gray" id="laborGeminiAnalyze" style="margin-top:8px">🤖 Geminiで人件費を確認・分析</button>
+  <div id="laborStatus" class="shiftStatus" style="margin-top:10px"></div>
+  <div id="laborResult" class="shiftLaborResult" hidden></div>
+  <div id="laborGeminiResult" class="shiftLaborAiBox" hidden></div>
+</div>
+  <div class="card">
+    <h2>📈 月間集計</h2>
+    <div class="salesGrid"><div><label>対象月</label><input id="salesSummaryMonth" type="month"></div><div style="display:flex;align-items:end"><button id="salesSummaryCalc">集計</button></div></div>
+    <div id="salesSummaryResult" style="margin-top:10px"></div>
+  </div>
+</div>
+<script id="salesManagementAddScript">
+(function(){
+  const $=id=>document.getElementById(id);
+  const fb=()=>window.__fb;
+  const today=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
+  const ym=()=>today().slice(0,7);
+  const fmt=n=>'¥'+Number(n||0).toLocaleString('ja-JP');
+  const esc=s=>String(s??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  let salesData={}, expenseData={}, schedules={};
+  function dateObj(s){const [y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d)}
+  function prevSameWeekday(dateStr){
+    const d=dateObj(dateStr), y=d.getFullYear()-1, target=d.getDay();
+    const base=new Date(y,d.getMonth(),d.getDate());
+    for(let delta=-3;delta<=3;delta++){const x=new Date(base);x.setDate(base.getDate()+delta);if(x.getDay()===target)return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0')}
+    return base.getFullYear()+'-'+String(base.getMonth()+1).padStart(2,'0')+'-'+String(base.getDate()).padStart(2,'0');
+  }
+  function hours(x){
+    let st=String(x?.startTime||''), en=String(x?.endTime||'');
+    if(!st && x?.time){const z=String(x.time).match(/(\d+(?:\.5)?)(?:〜|-)(\d+(?:\.5)?|L)/);if(z){st=z[1];en=z[2]}}
+    const cv=v=>{if(!v||v==='L')return null;const m=String(v).match(/^(\d{1,2})(?::(\d{2}))?$/);if(!m)return null;return Number(m[1])+(Number(m[2]||0)/60)};
+    let a=cv(st),b=cv(en);if(b===null)b=22;if(a===null)return 0; if(b<a)b+=24;return Math.max(0,b-a)
+  }
+  function rateMap(){try{return JSON.parse(localStorage.getItem('shiftLaborRates')||'{}')}catch(_){return {}}}
+  function renderCompare(){const d=$('salesDate')?.value||today(), p=prevSameWeekday(d), cur=Number(salesData[d]?.amount||0), prev=Number(salesData[p]?.amount||0), diff=prev?((cur-prev)/prev*100):null; $('salesCompare').innerHTML=`<div class="salesSummary"><div class="salesKpi">当日売上<b>${fmt(cur)}</b></div><div class="salesKpi">前年同曜日<br><small>${p}</small><b>${fmt(prev)}</b></div><div class="salesKpi">前年比<b>${diff===null?'—':diff.toFixed(1)+'%'}</b></div></div><div class="small" style="margin-top:8px">前年同曜日は前年の同じ曜日になる日付を基準にします。データが未登録なら¥0表示です。</div>`}
+  async function load(){if(!fb()?.get)return; const [a,b,c]=await Promise.all([fb().get(fb().ref(fb().db,'sales/daily')),fb().get(fb().ref(fb().db,'expenses')),fb().get(fb().ref(fb().db,'shift/schedules'))]);salesData=a?.val?.()||{};expenseData=b?.val?.()||{};schedules=c?.val?.()||{};window.__salesDailyData=salesData;window.__salesPrevSameWeekday=prevSameWeekday;renderCompare();renderExpenses();}
+  function renderExpenses(){const month=$('salesSummaryMonth')?.value||ym();const arr=Object.entries(expenseData).filter(([,x])=>String(x?.date||'').startsWith(month)).sort((a,b)=>String(a[1].date).localeCompare(String(b[1].date)));let total=0;arr.forEach(([,x])=>total+=Number(x.amount||0));$('expenseList').innerHTML=arr.length?arr.map(([id,x])=>`<div class="salesItem"><span>${esc(x.date)}</span><span>${esc(x.name||'経費')}<br><small>${fmt(x.amount)}</small></span><button class="gray" data-exp-del="${esc(id)}">削除</button></div>`).join('')+`<div style="font-weight:800;margin-top:8px">合計：${fmt(total)}</div>`:'<div class="small">この月の経費はありません。</div>'}
+  async function calcLabor(){const month=$('salesLaborMonth')?.value||ym();const rates=rateMap();const rows=Object.values(schedules).filter(x=>String(x?.date||'').startsWith(month));let total=0,hrs=0,un=0;rows.forEach(x=>{const h=hours(x);if(!h)return;hrs+=h;const r=Number(rates[x.number]||0);if(!r)un++;total+=h*r});$('salesLaborResult').innerHTML=`<div class="salesSummary"><div class="salesKpi">総勤務時間<b>${hrs.toFixed(2)}h</b></div><div class="salesKpi">人件費<b>${fmt(total)}</b></div><div class="salesKpi">時給未登録<b>${un}件</b></div></div>`}
+  async function calcSummary(){const month=$('salesSummaryMonth')?.value||ym();let sales=0,exp=0;Object.values(salesData).forEach(x=>{if(String(x?.date||'').startsWith(month))sales+=Number(x.amount||0)});Object.values(expenseData).forEach(x=>{if(String(x?.date||'').startsWith(month))exp+=Number(x.amount||0)});const rates=rateMap();let labor=0;Object.values(schedules).forEach(x=>{if(String(x?.date||'').startsWith(month))labor+=hours(x)*Number(rates[x.number]||0)});$('salesSummaryResult').innerHTML=`<div class="salesSummary"><div class="salesKpi">売上<b>${fmt(sales)}</b></div><div class="salesKpi">経費<b>${fmt(exp)}</b></div><div class="salesKpi">人件費<b>${fmt(labor)}</b></div></div><div style="margin-top:10px;font-weight:800">売上−経費−人件費：${fmt(sales-exp-labor)}　／　人件費率：${sales?((labor/sales)*100).toFixed(1)+'%':'—'}</div>`}
+  async function saveSales(){if(!fb()?.set)return;const d=$('salesDate').value||today(),amount=Number($('salesAmount').value||0);if(!amount&&!String($('salesMemo').value||'').trim()&&!confirm('売上0円として保存しますか？'))return;await fb().set(fb().ref(fb().db,'sales/daily/'+d),{date:d,amount,memo:String($('salesMemo').value||''),updatedAt:Date.now()});await load();alert('売上を保存しました。')}
+  async function saveExpense(){if(!fb()?.push)return;const d=$('expenseDate').value||today(),name=String($('expenseName').value||'').trim(),amount=Number($('expenseAmount').value||0);if(!name||!amount){alert('日付・項目・金額を入力してください。');return}const id=fb().push(fb().ref(fb().db,'expenses')).key;await fb().set(fb().ref(fb().db,'expenses/'+id),{date:d,name,amount,createdAt:Date.now()});$('expenseName').value='';$('expenseAmount').value='';await load();alert('経費を保存しました。')}
+  function augmentShift(){
+    const date=$('shiftViewDate')?.value||today();
+    if(date) renderPrevYearSalesUnderDate(date);
+  }
+  function switchSalesPage(){if(typeof window.switchPage==='function')window.switchPage('sales')}
+  function closeSalesPage(){
+    const sales=$('salesPage'), shift=$('shiftPage');
+    if(sales)sales.hidden=true;
+    if(shift)shift.hidden=false;
+    $('tabShift')?.classList.add('active');
+    $('tabShopping')?.classList.remove('active');$('tabVegetable')?.classList.remove('active');$('tabPrep')?.classList.remove('active');
+    try{window.dispatchEvent(new CustomEvent('shift-page-opened'));}catch(_){}
+  }
+  function init(){if($('salesDate'))$('salesDate').value=today();if($('expenseDate'))$('expenseDate').value=today();if($('salesLaborMonth'))$('salesLaborMonth').value=ym();if($('salesSummaryMonth'))$('salesSummaryMonth').value=ym();$('tabSales')?.addEventListener('click',switchSalesPage);$('salesPageCloseBtn')?.addEventListener('click',closeSalesPage);$('salesDate')?.addEventListener('change',renderCompare);$('salesSave')?.addEventListener('click',saveSales);$('expenseSave')?.addEventListener('click',saveExpense);$('salesLaborCalc')?.addEventListener('click',calcLabor);$('salesSummaryCalc')?.addEventListener('click',calcSummary);$('salesSummaryMonth')?.addEventListener('change',renderExpenses);$('expenseList')?.addEventListener('click',async e=>{const b=e.target.closest('[data-exp-del]');if(!b)return;if(!confirm('この経費を削除しますか？'))return;await fb().remove(fb().ref(fb().db,'expenses/'+b.dataset.expDel));await load()});load().then(augmentShift);setInterval(augmentShift,1500)}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+})();
+</script>
+<script id="shiftSalesExpenseButtonBind">
+(function(){
+  function bind(){
+    const b=document.getElementById('shiftSalesExpenseBtn');
+    if(b && b.dataset.bound!=='1'){
+      b.dataset.bound='1';
+      b.addEventListener('click',function(){
+        if(typeof window.switchPage==='function') window.switchPage('sales');
+        else {
+          document.getElementById('shiftPage')?.setAttribute('hidden','');
+          document.getElementById('salesPage')?.removeAttribute('hidden');
+        }
+      });
+    }
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bind);else bind();
+  setInterval(bind,1000);
+})();
+</script>
+
+
+<!-- SHIFT_SALES_BRIDGE_V3 -->
+<script>
+(function(){
+  'use strict';
+  function el(id){return document.getElementById(id)}
+  function isoToday(){
+    const d=new Date();
+    return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  }
+  function dateObj(s){
+    const m=String(s||'').match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+    return m?new Date(Number(m[1]),Number(m[2])-1,Number(m[3])):new Date('invalid');
+  }
+  function prevSameWeekday(s){
+    const d=dateObj(s); if(isNaN(d.getTime())) return '';
+    const target=d.getDay();
+    const base=new Date(d.getFullYear()-1,d.getMonth(),d.getDate());
+    for(let delta=-7;delta<=7;delta++){
+      const x=new Date(base); x.setDate(base.getDate()+delta);
+      if(x.getDay()===target) return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0');
+    }
+    return '';
+  }
+  let daily={};
+  function ensureBoxes(){
+    const todayLabel=el('shiftTodayDateLabel');
+    if(todayLabel && !el('shiftTodayPrevYearSales')){
+      const b=document.createElement('div'); b.id='shiftTodayPrevYearSales'; b.className='shiftPrevYearSalesUnderDate';
+      todayLabel.insertAdjacentElement('afterend',b);
+    }
+    const input=el('shiftViewDate');
+    if(input && !el('shiftOtherDayPrevYearSales')){
+      const parent=input.parentElement;
+      if(parent){const b=document.createElement('div');b.id='shiftOtherDayPrevYearSales';b.className='shiftPrevYearSalesUnderDate';input.insertAdjacentElement('afterend',b);}
+    }
+  }
+  function paint(date){
+    ensureBoxes();
+    date=date||isoToday();
+    const p=prevSameWeekday(date);
+    const rec=p?daily[p]:null;
+    const amount=Number(rec && rec.amount!=null ? rec.amount : 0);
+    const text=p?'前年同曜日売上：¥'+amount.toLocaleString('ja-JP')+(rec?'':'（未登録）'):'';
+    const a=el('shiftTodayPrevYearSales'); if(a)a.textContent=text;
+    const b=el('shiftOtherDayPrevYearSales'); if(b)b.textContent=text;
+  }
+  function bind(){
+    ensureBoxes();
+    const d=el('shiftViewDate');
+    if(d&&!d.dataset.salesBridgeV3){
+      d.dataset.salesBridgeV3='1';
+      d.addEventListener('change',function(){paint(d.value||isoToday())});
+    }
+    paint(isoToday()); paint(d&&d.value?d.value:isoToday());
+  }
+  function start(){
+    if(!window.__fb || !window.__fb.db || !window.__fb.ref || !window.__fb.get){return false}
+    bind();
+    try{
+      const r=window.__fb.ref(window.__fb.db,'sales/daily');
+      if(window.__fb.onValue){
+        window.__fb.onValue(r,function(snap){daily=snap.val()||{};bind();paint(isoToday());paint(el('shiftViewDate')?.value||isoToday())});
+      }else{
+        window.__fb.get(r).then(function(snap){daily=snap.val()||{};bind()}).catch(function(e){console.warn('前年売上取得:',e);});
+      }
+    }catch(e){console.warn('前年売上連携:',e)}
+    return true;
+  }
+  function boot(){
+    ensureBoxes();
+    if(start()) return;
+    setTimeout(boot,300);
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
+  // シフト画面の再描画後にも必ず表示欄を復元
+  setInterval(function(){
+    ensureBoxes();
+    const d=el('shiftViewDate');
+    paint(d&&d.value?d.value:isoToday());
+  },1000);
+})();
+</script>
 </body></html>
 
 
@@ -8195,5 +8413,87 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     });
   }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();
+})();
+</script>
+
+<style id="salesMobileLayoutV6">
+/* 売上・経費ページ：既存スマホ画面と同じ4タブ・カード型の見た目 */
+.navtabs.navtabs4{
+  display:grid!important;
+  grid-template-columns:repeat(4,minmax(0,1fr))!important;
+  gap:10px!important;
+  width:100%!important;
+}
+.navtabs.navtabs4 button{
+  min-width:0!important;
+  width:100%!important;
+  box-sizing:border-box!important;
+  padding:12px 4px!important;
+  white-space:nowrap!important;
+}
+#salesPage{box-sizing:border-box;}
+#salesPage .salesPageHeader{
+  position:relative;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:10px!important;
+  margin-bottom:14px!important;
+}
+#salesPage .salesPageHeader h1{font-size:clamp(24px,6vw,34px)!important;line-height:1.2!important;}
+#salesPage .salesPageCloseBtn{flex:0 0 auto!important;width:46px!important;height:46px!important;border-radius:50%!important;font-size:22px!important;padding:0!important;display:flex!important;align-items:center!important;justify-content:center!important;}
+#salesPage .card{border-radius:20px!important;margin-bottom:14px!important;}
+@media(max-width:600px){
+  .navtabs.navtabs4{grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:8px!important;}
+  .navtabs.navtabs4 button{font-size:14px!important;padding:11px 2px!important;border-radius:18px!important;}
+  #salesPage .salesGrid{grid-template-columns:1fr!important;gap:8px!important;}
+  #salesPage .salesSummary{grid-template-columns:1fr!important;}
+  #salesPage .salesRow{grid-template-columns:1fr!important;}
+  #salesPage .salesItem{grid-template-columns:78px 1fr auto!important;}
+  #salesPage h2{font-size:21px!important;}
+}
+</style>
+<script id="salesPageOpenCloseV6">
+(function(){
+  'use strict';
+  function top(){
+    try{window.scrollTo({top:0,left:0,behavior:'auto'});}catch(e){window.scrollTo(0,0);}
+    try{document.documentElement.scrollTop=0;document.body.scrollTop=0;}catch(e){}
+  }
+  function showSales(){
+    var sales=document.getElementById('salesPage'), shift=document.getElementById('shiftPage');
+    if(!sales)return;
+    document.querySelectorAll('.page').forEach(function(p){p.hidden=true;});
+    sales.hidden=false;
+    document.querySelectorAll('.navtabs.navtabs4 button').forEach(function(b){b.classList.remove('active');});
+    top();
+    setTimeout(top,30);
+  }
+  function showShift(){
+    var sales=document.getElementById('salesPage'), shift=document.getElementById('shiftPage');
+    if(sales)sales.hidden=true;
+    if(shift)shift.hidden=false;
+    var b=document.getElementById('tabShift');if(b)b.classList.add('active');
+    ['tabShopping','tabVegetable','tabPrep'].forEach(function(id){var x=document.getElementById(id);if(x)x.classList.remove('active');});
+    top();
+    try{window.dispatchEvent(new CustomEvent('shift-page-opened'));}catch(e){}
+  }
+  function bind(){
+    var b=document.getElementById('shiftSalesExpenseBtn');
+    if(b && b.dataset.salesV6!=='1'){
+      b.dataset.salesV6='1';
+      b.addEventListener('click',function(e){e.preventDefault();showSales();});
+    }
+    var c=document.getElementById('salesPageCloseBtn');
+    if(c && c.dataset.salesCloseV6!=='1'){
+      c.dataset.salesCloseV6='1';
+      c.addEventListener('click',function(e){e.preventDefault();showShift();});
+    }
+    /* 売上ページを開く処理を一本化。既存4タブは従来どおり */
+    window.__openSalesPageV6=showSales;
+    window.__closeSalesPageV6=showShift;
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bind);else bind();
+  setInterval(bind,1000);
 })();
 </script>
