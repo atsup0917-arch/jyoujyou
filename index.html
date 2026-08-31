@@ -1151,6 +1151,58 @@ body{overflow-anchor:none!important;}
 #salesPage #shiftLaborCostCard{margin-top:12px;}
 #salesPage #shiftLaborCostCard .shiftSectionTitle{font-size:20px;}
 </style>
+
+<style id="topTabCountPositionFixV7">
+/* 上部4タブ：数字バッジが隣のタブへはみ出さないように位置固定 */
+.navtabs.navtabs4{
+  overflow:visible !important;
+}
+.navtabs.navtabs4 button{
+  position:relative !important;
+  overflow:visible !important;
+  box-sizing:border-box !important;
+  min-width:0 !important;
+  padding-left:3px !important;
+  padding-right:3px !important;
+}
+.navtabs.navtabs4 button .count{
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  vertical-align:middle !important;
+  box-sizing:border-box !important;
+  min-width:20px !important;
+  height:20px !important;
+  margin-left:3px !important;
+  padding:0 5px !important;
+  border-radius:999px !important;
+  font-size:12px !important;
+  line-height:20px !important;
+  white-space:nowrap !important;
+  flex:0 0 auto !important;
+}
+
+/* 画面が狭いスマホでは、数字をタブ右上に固定して文字の幅を圧迫しない */
+@media(max-width:430px){
+  .navtabs.navtabs4 button .count{
+    position:absolute !important;
+    top:-5px !important;
+    right:-3px !important;
+    z-index:5 !important;
+    margin:0 !important;
+    min-width:19px !important;
+    height:19px !important;
+    padding:0 4px !important;
+    font-size:11px !important;
+    line-height:19px !important;
+  }
+  .navtabs.navtabs4 button{
+    padding-left:2px !important;
+    padding-right:2px !important;
+  }
+}
+</style>
+
 </head>
 <body><div class="wrap">
 <div class="navtabs navtabs3 navtabs4">
