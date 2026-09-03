@@ -6145,13 +6145,24 @@ function renderDay(){
     }catch(e){console.error(e);alert('保存に失敗しました。\n'+(e?.message||e));}
   }
   function renderPrevYearSalesUnderDate(date){
+    // shiftTodayPrevYearSalesは常に「本日」、shiftOtherDayPrevYearSalesは
+    // 「別の日を見る・編集」で選んだ日付、と別々に計算する。
+    // (以前は1つのdateで両方を同じ値に上書きしており、タブ切替や
+    //  別の日の閲覧時に本日の欄まで別の日の金額になってしまっていた。)
     const daily=window.__salesDailyData||{};
-    const p=typeof window.__salesPrevSameWeekday==='function'?window.__salesPrevSameWeekday(date):'';
-    const v=Number(daily?.[p]?.amount||0);
-    const text=p ? `前年同曜日売上：¥${v.toLocaleString('ja-JP')}${daily?.[p]?'':'（未登録）'}` : '';
-    const a=$('shiftTodayPrevYearSales'); if(a) a.textContent=text;
-    const b=$('shiftOtherDayPrevYearSales'); if(b) b.textContent=text;
+    const type=shiftType();
+    const label=type==='lunch'?'ランチ':'ディナー';
+    function calc(d){
+      const p=typeof window.__salesPrevSameWeekday==='function'?window.__salesPrevSameWeekday(d):'';
+      const rec=p?daily?.[p]:null;
+      const hasSplit=rec&&(rec.lunch!=null||rec.dinner!=null);
+      const v=Number(hasSplit?(type==='lunch'?rec.lunch:rec.dinner)||0:(rec?.amount||0));
+      return p ? `前年同曜日売上（${label}）：¥${v.toLocaleString('ja-JP')}${rec?'':'（未登録）'}` : '';
+    }
+    const a=$('shiftTodayPrevYearSales'); if(a) a.textContent=calc(today());
+    const b=$('shiftOtherDayPrevYearSales'); if(b) b.textContent=calc(date||today());
   }
+  window.renderPrevYearSalesUnderDate=renderPrevYearSalesUnderDate;
 
   function renderTodayQuick(){
     const date=today();
@@ -6587,6 +6598,9 @@ function renderDay(){
   'use strict';
   const $=id=>document.getElementById(id);
   const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  // AI読み取り側は別IIFEのため、fb/ref も既存のshiftStandaloneFixedと同じ形でここに定義する。
+  function fb(){return window.__fb||null}
+  function ref(path){return fb().ref(fb().db,path)}
   const KEY_STORE='karuya_shift_gemini_api_key_v1';
   // AI出勤読み取りは、混雑時に自動で別の安定モデルへ切り替える。
   // 3.6/3.5 は画像入力＋構造化JSONに対応。3.7は最後の予備。
@@ -8210,13 +8224,20 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     <h2>📊 日別売上・前年同曜日比較</h2>
     <div class="salesGrid">
       <div><label>📅 日付</label><input id="salesDate" type="date"></div>
-      <div><label>💴 当日売上</label><input id="salesAmount" type="number" min="0" step="1" placeholder="例：250000"></div>
+      <div><label>📝 メモ</label><input id="salesMemo" type="text" placeholder="例：周年イベント"></div>
     </div>
     <div class="salesGrid" style="margin-top:10px">
-      <div><label>📝 メモ</label><input id="salesMemo" type="text" placeholder="例：周年イベント"></div>
-      <div style="display:flex;align-items:end"><button id="salesSave">保存</button></div>
+      <div><label>🍽️ ランチ売上</label><input id="salesAmountLunch" type="number" min="0" step="1" placeholder="例：120000"></div>
+      <div><label>🌙 ディナー売上</label><input id="salesAmountDinner" type="number" min="0" step="1" placeholder="例：250000"></div>
     </div>
+    <div style="margin-top:10px"><button id="salesSave">保存</button></div>
     <div id="salesCompare" style="margin-top:12px"></div>
+  </div>
+  <div class="card">
+    <h2>🗂️ 前年売上データ 一括インポート</h2>
+    <div class="small">2025年6月〜2026年5月分の実績（手書きの売上表より集計）を、ランチ・ディナー別に一括登録します。すでに同じ日付のデータがある場合は上書きされます。2025年12月1日〜21日は元データが見つからず対象外です。</div>
+    <button type="button" class="gray" id="salesImportBtn" style="margin-top:10px">一括インポートを実行</button>
+    <div id="salesImportStatus" class="small" style="margin-top:8px"></div>
   </div>
   <div class="card">
     <h2>🧾 経費管理</h2>
@@ -8262,6 +8283,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   const fb=()=>window.__fb;
   const today=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
   const ym=()=>today().slice(0,7);
+  const SALES_IMPORT_DATA={"2025-06-01":{"l":0,"d":235477},"2025-06-02":{"l":103900,"d":145629},"2025-06-03":{"l":84400,"d":79566},"2025-06-04":{"l":133000,"d":0},"2025-06-05":{"l":119400,"d":140286},"2025-06-06":{"l":116000,"d":236302},"2025-06-07":{"l":123600,"d":380669},"2025-06-08":{"l":0,"d":256523},"2025-06-09":{"l":112400,"d":193400},"2025-06-10":{"l":121400,"d":148565},"2025-06-11":{"l":107400,"d":0},"2025-06-12":{"l":124000,"d":139415},"2025-06-13":{"l":135800,"d":399919},"2025-06-14":{"l":145550,"d":396158},"2025-06-15":{"l":0,"d":383506},"2025-06-16":{"l":142200,"d":131266},"2025-06-17":{"l":129200,"d":154102},"2025-06-18":{"l":140050,"d":0},"2025-06-19":{"l":113600,"d":169244},"2025-06-20":{"l":111200,"d":308534},"2025-06-21":{"l":84800,"d":466084},"2025-06-22":{"l":0,"d":240543},"2025-06-23":{"l":118550,"d":163463},"2025-06-24":{"l":111000,"d":112013},"2025-06-25":{"l":101200,"d":0},"2025-06-26":{"l":89400,"d":124581},"2025-06-27":{"l":122800,"d":324358},"2025-06-28":{"l":121350,"d":481929},"2025-06-29":{"l":0,"d":291778},"2025-06-30":{"l":119800,"d":119573},"2025-07-01":{"l":98600,"d":112313},"2025-07-02":{"l":118150,"d":0},"2025-07-03":{"l":127400,"d":89774},"2025-07-04":{"l":114200,"d":298345},"2025-07-05":{"l":136950,"d":450714},"2025-07-06":{"l":0,"d":260626},"2025-07-07":{"l":138550,"d":171746},"2025-07-08":{"l":105400,"d":92546},"2025-07-09":{"l":125600,"d":0},"2025-07-10":{"l":99800,"d":122455},"2025-07-11":{"l":108750,"d":277357},"2025-07-12":{"l":119000,"d":517845},"2025-07-13":{"l":0,"d":346580},"2025-07-14":{"l":106350,"d":122095},"2025-07-15":{"l":123950,"d":170891},"2025-07-16":{"l":129600,"d":0},"2025-07-17":{"l":120200,"d":150661},"2025-07-18":{"l":111800,"d":288159},"2025-07-19":{"l":0,"d":374333},"2025-07-20":{"l":0,"d":343370,"n":"上々=ブロック合計より逆算（原本判読やや不明瞭）"},"2025-07-21":{"l":0,"d":172527},"2025-07-22":{"l":0,"d":0},"2025-07-23":{"l":0,"d":0},"2025-07-24":{"l":82600,"d":120574},"2025-07-25":{"l":123600,"d":341655},"2025-07-26":{"l":133600,"d":408535},"2025-07-27":{"l":0,"d":326164},"2025-07-28":{"l":102750,"d":104437},"2025-07-29":{"l":119800,"d":156885},"2025-07-30":{"l":123400,"d":0},"2025-07-31":{"l":101200,"d":163139},"2025-08-01":{"l":90600,"d":253336,"n":"ランチに+1000の修正メモあり(原本参照)"},"2025-08-02":{"l":94400,"d":343352},"2025-08-03":{"l":0,"d":221323},"2025-08-04":{"l":112400,"d":259886},"2025-08-05":{"l":107600,"d":153013},"2025-08-06":{"l":110900,"d":0},"2025-08-07":{"l":115400,"d":222361},"2025-08-08":{"l":133800,"d":307817,"n":"ブロック合計とは¥60程度の誤差あり"},"2025-08-09":{"l":133950,"d":437922},"2025-08-10":{"l":0,"d":365484},"2025-08-11":{"l":118105,"d":319559},"2025-08-12":{"l":140100,"d":313467},"2025-08-13":{"l":0,"d":0},"2025-08-14":{"l":0,"d":312986},"2025-08-15":{"l":0,"d":0},"2025-08-16":{"l":0,"d":0},"2025-08-17":{"l":0,"d":0},"2025-08-18":{"l":142000,"d":0},"2025-08-19":{"l":141800,"d":192445},"2025-08-20":{"l":131350,"d":0},"2025-08-21":{"l":140400,"d":98032},"2025-08-22":{"l":126200,"d":277843},"2025-08-23":{"l":114000,"d":466377},"2025-08-24":{"l":0,"d":263588},"2025-08-25":{"l":134200,"d":142827},"2025-08-26":{"l":139600,"d":117761},"2025-08-27":{"l":117800,"d":0},"2025-08-28":{"l":97350,"d":136992},"2025-08-29":{"l":131850,"d":262751},"2025-08-30":{"l":132700,"d":361160},"2025-08-31":{"l":0,"d":236719},"2025-09-01":{"l":133000,"d":143702},"2025-09-02":{"l":99200,"d":147291},"2025-09-03":{"l":137400,"d":0},"2025-09-04":{"l":109400,"d":87750},"2025-09-05":{"l":130400,"d":311003},"2025-09-06":{"l":135000,"d":364365},"2025-09-07":{"l":0,"d":147394},"2025-09-08":{"l":124750,"d":104517},"2025-09-09":{"l":112000,"d":71852},"2025-09-10":{"l":104200,"d":0},"2025-09-11":{"l":128600,"d":90841},"2025-09-12":{"l":129200,"d":236179},"2025-09-13":{"l":145900,"d":438096,"n":"ブロック合計とは¥5,000程度の誤差あり(この週内のいずれかのセル)"},"2025-09-14":{"l":0,"d":272630},"2025-09-15":{"l":115000,"d":172153},"2025-09-16":{"l":132700,"d":87153},"2025-09-17":{"l":128200,"d":0},"2025-09-18":{"l":99400,"d":114579},"2025-09-19":{"l":138600,"d":221418},"2025-09-20":{"l":100600,"d":339025},"2025-09-21":{"l":0,"d":275714},"2025-09-22":{"l":107900,"d":168251},"2025-09-23":{"l":136300,"d":193857},"2025-09-24":{"l":113200,"d":0},"2025-09-25":{"l":109400,"d":100730},"2025-09-26":{"l":111200,"d":257540},"2025-09-27":{"l":118800,"d":419284},"2025-09-28":{"l":0,"d":309117},"2025-09-29":{"l":108350,"d":86672},"2025-09-30":{"l":131600,"d":178569},"2025-10-01":{"l":120000,"d":0},"2025-10-02":{"l":98000,"d":149866},"2025-10-03":{"l":114000,"d":168922},"2025-10-04":{"l":124800,"d":351526},"2025-10-05":{"l":0,"d":234093},"2025-10-06":{"l":135550,"d":121479},"2025-10-07":{"l":66000,"d":97111},"2025-10-08":{"l":88600,"d":0},"2025-10-09":{"l":143200,"d":363498},"2025-10-10":{"l":116350,"d":257411},"2025-10-11":{"l":112000,"d":417923},"2025-10-12":{"l":0,"d":239276},"2025-10-13":{"l":110400,"d":237787},"2025-10-14":{"l":118150,"d":139315},"2025-10-15":{"l":78350,"d":0},"2025-10-16":{"l":95400,"d":181724},"2025-10-17":{"l":115150,"d":231630},"2025-10-18":{"l":134400,"d":373681},"2025-10-19":{"l":0,"d":263065},"2025-10-20":{"l":95800,"d":51457},"2025-10-21":{"l":108000,"d":73985},"2025-10-22":{"l":102800,"d":0},"2025-10-23":{"l":129600,"d":67936},"2025-10-24":{"l":112200,"d":313473},"2025-10-25":{"l":123950,"d":310145},"2025-10-26":{"l":0,"d":154685},"2025-10-27":{"l":113000,"d":111986},"2025-10-28":{"l":102000,"d":112255},"2025-10-29":{"l":113200,"d":0},"2025-10-30":{"l":98400,"d":112682},"2025-10-31":{"l":108100,"d":156068},"2025-11-01":{"l":142400,"d":408236},"2025-11-02":{"l":0,"d":256575},"2025-11-03":{"l":108600,"d":95315},"2025-11-04":{"l":137500,"d":117205},"2025-11-05":{"l":115400,"d":0},"2025-11-06":{"l":125850,"d":106387},"2025-11-07":{"l":104550,"d":179836},"2025-11-08":{"l":158950,"d":425381},"2025-11-09":{"l":0,"d":315326},"2025-11-10":{"l":118800,"d":57849},"2025-11-11":{"l":114000,"d":108052},"2025-11-12":{"l":103200,"d":0},"2025-11-13":{"l":110200,"d":161384},"2025-11-14":{"l":126000,"d":106313},"2025-11-15":{"l":116200,"d":381176},"2025-11-16":{"l":0,"d":334159},"2025-11-17":{"l":83000,"d":120668},"2025-11-18":{"l":106200,"d":97625},"2025-11-19":{"l":102200,"d":0},"2025-11-20":{"l":113200,"d":156635},"2025-11-21":{"l":113800,"d":235510},"2025-11-22":{"l":125600,"d":332106},"2025-11-23":{"l":0,"d":380894},"2025-11-24":{"l":87800,"d":146938},"2025-11-25":{"l":110600,"d":55839},"2025-11-26":{"l":144400,"d":0},"2025-11-27":{"l":120400,"d":51145},"2025-11-28":{"l":118000,"d":257185},"2025-11-29":{"l":108800,"d":396409},"2025-11-30":{"l":0,"d":282528},"2025-12-22":{"l":125750,"d":193864},"2025-12-23":{"l":127600,"d":154055},"2025-12-24":{"l":111200,"d":0},"2025-12-25":{"l":111400,"d":170160},"2025-12-26":{"l":123600,"d":391969},"2025-12-27":{"l":0,"d":384993},"2025-12-28":{"l":0,"d":403395},"2025-12-29":{"l":0,"d":468581},"2025-12-30":{"l":0,"d":514376},"2025-12-31":{"l":0,"d":0},"2026-01-01":{"l":0,"d":0},"2026-01-02":{"l":0,"d":273701},"2026-01-03":{"l":0,"d":296494},"2026-01-04":{"l":0,"d":265914},"2026-01-05":{"l":0,"d":163727},"2026-01-06":{"l":116600,"d":72345},"2026-01-07":{"l":114400,"d":0},"2026-01-08":{"l":106350,"d":192253},"2026-01-09":{"l":88500,"d":244456},"2026-01-10":{"l":124300,"d":287624,"n":"上々に修正メモあり。ブロック合計とは¥3,000程度の誤差あり"},"2026-01-11":{"l":0,"d":336100},"2026-01-12":{"l":143400,"d":112783},"2026-01-13":{"l":107500,"d":141042},"2026-01-14":{"l":148500,"d":0},"2026-01-15":{"l":143200,"d":100502},"2026-01-16":{"l":158600,"d":352785},"2026-01-17":{"l":167800,"d":396947},"2026-01-18":{"l":0,"d":441978},"2026-01-19":{"l":163400,"d":144199},"2026-01-20":{"l":147000,"d":89245},"2026-01-21":{"l":150400,"d":0},"2026-01-22":{"l":143800,"d":135069},"2026-01-23":{"l":160000,"d":373218},"2026-01-24":{"l":168100,"d":448859},"2026-01-25":{"l":0,"d":390128},"2026-01-26":{"l":173800,"d":245070,"n":"ランチに+6500の修正メモあり(原本参照)"},"2026-01-27":{"l":153800,"d":207306,"n":"ランチに+1600の修正メモあり(原本参照)"},"2026-01-28":{"l":168400,"d":0},"2026-01-29":{"l":141400,"d":137140},"2026-01-30":{"l":128100,"d":270475},"2026-01-31":{"l":96500,"d":355275},"2026-02-01":{"l":0,"d":184827},"2026-02-02":{"l":137900,"d":46598},"2026-02-03":{"l":120200,"d":62766},"2026-02-04":{"l":140400,"d":0},"2026-02-05":{"l":131500,"d":272280},"2026-02-06":{"l":122700,"d":188738},"2026-02-07":{"l":139000,"d":432667},"2026-02-08":{"l":0,"d":227291},"2026-02-09":{"l":157500,"d":101030},"2026-02-10":{"l":131100,"d":109912},"2026-02-11":{"l":139600,"d":0},"2026-02-12":{"l":109600,"d":54285,"n":"ランチに+4000の修正メモあり(原本参照)"},"2026-02-13":{"l":131850,"d":262625},"2026-02-14":{"l":141100,"d":446766},"2026-02-15":{"l":0,"d":406185},"2026-02-16":{"l":145100,"d":87500},"2026-02-17":{"l":136300,"d":90808},"2026-02-18":{"l":131200,"d":0},"2026-02-19":{"l":133900,"d":150013,"n":"ブロック合計とは¥510程度の誤差あり"},"2026-02-20":{"l":124100,"d":347512},"2026-02-21":{"l":135600,"d":355697},"2026-02-22":{"l":0,"d":429015},"2026-02-23":{"l":136350,"d":269031},"2026-02-24":{"l":104700,"d":91256},"2026-02-25":{"l":118950,"d":0},"2026-02-26":{"l":129500,"d":110776},"2026-02-27":{"l":116050,"d":267764},"2026-02-28":{"l":146600,"d":394262},"2026-03-01":{"l":0,"d":257277},"2026-03-02":{"l":126450,"d":107273},"2026-03-03":{"l":115100,"d":101640},"2026-03-04":{"l":90800,"d":0},"2026-03-05":{"l":130100,"d":81521},"2026-03-06":{"l":147100,"d":205293},"2026-03-07":{"l":138600,"d":271975},"2026-03-08":{"l":0,"d":339696},"2026-03-09":{"l":131400,"d":69315,"n":"ランチに+200の修正メモあり(原本参照)"},"2026-03-10":{"l":140200,"d":207933},"2026-03-11":{"l":130750,"d":0},"2026-03-12":{"l":112100,"d":127579},"2026-03-13":{"l":97900,"d":327591},"2026-03-14":{"l":120400,"d":370307},"2026-03-15":{"l":0,"d":301913},"2026-03-16":{"l":127650,"d":125150},"2026-03-17":{"l":126500,"d":230236},"2026-03-18":{"l":131200,"d":0},"2026-03-19":{"l":117400,"d":169484},"2026-03-20":{"l":126600,"d":252749},"2026-03-21":{"l":114600,"d":461087},"2026-03-22":{"l":0,"d":336833},"2026-03-23":{"l":147500,"d":138735},"2026-03-24":{"l":140600,"d":107921},"2026-03-25":{"l":126900,"d":0},"2026-03-26":{"l":99600,"d":190361},"2026-03-27":{"l":148000,"d":286530},"2026-03-28":{"l":109900,"d":456616},"2026-03-29":{"l":0,"d":294093},"2026-03-30":{"l":136200,"d":100749},"2026-03-31":{"l":104900,"d":124190},"2026-04-01":{"l":133400,"d":0},"2026-04-02":{"l":137900,"d":121916},"2026-04-03":{"l":105900,"d":202436},"2026-04-04":{"l":127650,"d":360993},"2026-04-05":{"l":0,"d":348137},"2026-04-06":{"l":134400,"d":118648,"n":"ブロック合計とは¥5,000程度の誤差あり"},"2026-04-07":{"l":110650,"d":74231},"2026-04-08":{"l":126400,"d":0},"2026-04-09":{"l":137900,"d":121170},"2026-04-10":{"l":132050,"d":225915},"2026-04-11":{"l":142700,"d":371972},"2026-04-12":{"l":0,"d":289989},"2026-04-13":{"l":123250,"d":65562},"2026-04-14":{"l":105200,"d":135857},"2026-04-15":{"l":126600,"d":0},"2026-04-16":{"l":108700,"d":177432},"2026-04-17":{"l":137500,"d":268074},"2026-04-18":{"l":125550,"d":510755},"2026-04-19":{"l":0,"d":439758},"2026-04-20":{"l":132400,"d":93688},"2026-04-21":{"l":132900,"d":80953},"2026-04-22":{"l":139600,"d":0},"2026-04-23":{"l":117900,"d":55038},"2026-04-24":{"l":135300,"d":280630},"2026-04-25":{"l":140150,"d":333698},"2026-04-26":{"l":0,"d":409420},"2026-04-27":{"l":131500,"d":53596},"2026-04-28":{"l":154000,"d":354366},"2026-04-29":{"l":0,"d":0},"2026-04-30":{"l":139750,"d":248084},"2026-05-01":{"l":134150,"d":385302},"2026-05-02":{"l":110300,"d":465484},"2026-05-03":{"l":0,"d":481687},"2026-05-04":{"l":0,"d":402308},"2026-05-05":{"l":0,"d":300733},"2026-05-06":{"l":0,"d":0},"2026-05-07":{"l":127150,"d":74399},"2026-05-08":{"l":127300,"d":221278},"2026-05-09":{"l":160350,"d":440844},"2026-05-10":{"l":0,"d":456068},"2026-05-11":{"l":126600,"d":114320},"2026-05-12":{"l":110200,"d":113835},"2026-05-13":{"l":126050,"d":0},"2026-05-14":{"l":117100,"d":136568},"2026-05-15":{"l":120300,"d":206370},"2026-05-16":{"l":148200,"d":330343},"2026-05-17":{"l":0,"d":361638},"2026-05-18":{"l":140350,"d":147206},"2026-05-19":{"l":101300,"d":118107},"2026-05-20":{"l":137700,"d":0},"2026-05-21":{"l":125300,"d":59603},"2026-05-22":{"l":125200,"d":245735},"2026-05-23":{"l":121400,"d":436415},"2026-05-24":{"l":0,"d":319750},"2026-05-25":{"l":143200,"d":157760},"2026-05-26":{"l":114600,"d":109137},"2026-05-27":{"l":144300,"d":0},"2026-05-28":{"l":134900,"d":77385},"2026-05-29":{"l":133500,"d":328531},"2026-05-30":{"l":147400,"d":366608},"2026-05-31":{"l":0,"d":324226}};
   const fmt=n=>'¥'+Number(n||0).toLocaleString('ja-JP');
   const esc=s=>String(s??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   let salesData={}, expenseData={}, schedules={};
@@ -8279,12 +8301,44 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     let a=cv(st),b=cv(en);if(b===null)b=22;if(a===null)return 0; if(b<a)b+=24;return Math.max(0,b-a)
   }
   function rateMap(){try{return JSON.parse(localStorage.getItem('shiftLaborRates')||'{}')}catch(_){return {}}}
-  function renderCompare(){const d=$('salesDate')?.value||today(), p=prevSameWeekday(d), cur=Number(salesData[d]?.amount||0), prev=Number(salesData[p]?.amount||0), diff=prev?((cur-prev)/prev*100):null; $('salesCompare').innerHTML=`<div class="salesSummary"><div class="salesKpi">当日売上<b>${fmt(cur)}</b></div><div class="salesKpi">前年同曜日<br><small>${p}</small><b>${fmt(prev)}</b></div><div class="salesKpi">前年比<b>${diff===null?'—':diff.toFixed(1)+'%'}</b></div></div><div class="small" style="margin-top:8px">前年同曜日は前年の同じ曜日になる日付を基準にします。データが未登録なら¥0表示です。</div>`}
+  function renderCompare(){
+    const d=$('salesDate')?.value||today(), p=prevSameWeekday(d);
+    const curL=Number(salesData[d]?.lunch||0), curD=Number(salesData[d]?.dinner||0);
+    const prevRec=salesData[p], prevL=Number(prevRec?.lunch||0), prevD=Number(prevRec?.dinner||0);
+    const diffL=prevL?((curL-prevL)/prevL*100):null, diffD=prevD?((curD-prevD)/prevD*100):null;
+    $('salesCompare').innerHTML=`<div class="small" style="font-weight:800;margin-bottom:4px">🍽️ ランチ</div><div class="salesSummary"><div class="salesKpi">当日売上<b>${fmt(curL)}</b></div><div class="salesKpi">前年同曜日<br><small>${p}</small><b>${fmt(prevL)}</b></div><div class="salesKpi">前年比<b>${diffL===null?'—':diffL.toFixed(1)+'%'}</b></div></div><div class="small" style="font-weight:800;margin:10px 0 4px">🌙 ディナー</div><div class="salesSummary"><div class="salesKpi">当日売上<b>${fmt(curD)}</b></div><div class="salesKpi">前年同曜日<br><small>${p}</small><b>${fmt(prevD)}</b></div><div class="salesKpi">前年比<b>${diffD===null?'—':diffD.toFixed(1)+'%'}</b></div></div><div class="small" style="margin-top:8px">前年同曜日は前年の同じ曜日になる日付を基準にします。データが未登録なら¥0表示です。${prevRec&&prevRec.n?'<br>⚠️ '+esc(prevRec.n):''}</div>`
+  }
   async function load(){if(!fb()?.get)return; const [a,b,c]=await Promise.all([fb().get(fb().ref(fb().db,'sales/daily')),fb().get(fb().ref(fb().db,'expenses')),fb().get(fb().ref(fb().db,'shift/schedules'))]);salesData=a?.val?.()||{};expenseData=b?.val?.()||{};schedules=c?.val?.()||{};window.__salesDailyData=salesData;window.__salesPrevSameWeekday=prevSameWeekday;renderCompare();renderExpenses();}
   function renderExpenses(){const month=$('salesSummaryMonth')?.value||ym();const arr=Object.entries(expenseData).filter(([,x])=>String(x?.date||'').startsWith(month)).sort((a,b)=>String(a[1].date).localeCompare(String(b[1].date)));let total=0;arr.forEach(([,x])=>total+=Number(x.amount||0));$('expenseList').innerHTML=arr.length?arr.map(([id,x])=>`<div class="salesItem"><span>${esc(x.date)}</span><span>${esc(x.name||'経費')}<br><small>${fmt(x.amount)}</small></span><button class="gray" data-exp-del="${esc(id)}">削除</button></div>`).join('')+`<div style="font-weight:800;margin-top:8px">合計：${fmt(total)}</div>`:'<div class="small">この月の経費はありません。</div>'}
   async function calcLabor(){const month=$('salesLaborMonth')?.value||ym();const rates=rateMap();const rows=Object.values(schedules).filter(x=>String(x?.date||'').startsWith(month));let total=0,hrs=0,un=0;rows.forEach(x=>{const h=hours(x);if(!h)return;hrs+=h;const r=Number(rates[x.number]||0);if(!r)un++;total+=h*r});$('salesLaborResult').innerHTML=`<div class="salesSummary"><div class="salesKpi">総勤務時間<b>${hrs.toFixed(2)}h</b></div><div class="salesKpi">人件費<b>${fmt(total)}</b></div><div class="salesKpi">時給未登録<b>${un}件</b></div></div>`}
   async function calcSummary(){const month=$('salesSummaryMonth')?.value||ym();let sales=0,exp=0;Object.values(salesData).forEach(x=>{if(String(x?.date||'').startsWith(month))sales+=Number(x.amount||0)});Object.values(expenseData).forEach(x=>{if(String(x?.date||'').startsWith(month))exp+=Number(x.amount||0)});const rates=rateMap();let labor=0;Object.values(schedules).forEach(x=>{if(String(x?.date||'').startsWith(month))labor+=hours(x)*Number(rates[x.number]||0)});$('salesSummaryResult').innerHTML=`<div class="salesSummary"><div class="salesKpi">売上<b>${fmt(sales)}</b></div><div class="salesKpi">経費<b>${fmt(exp)}</b></div><div class="salesKpi">人件費<b>${fmt(labor)}</b></div></div><div style="margin-top:10px;font-weight:800">売上−経費−人件費：${fmt(sales-exp-labor)}　／　人件費率：${sales?((labor/sales)*100).toFixed(1)+'%':'—'}</div>`}
-  async function saveSales(){if(!fb()?.set)return;const d=$('salesDate').value||today(),amount=Number($('salesAmount').value||0);if(!amount&&!String($('salesMemo').value||'').trim()&&!confirm('売上0円として保存しますか？'))return;await fb().set(fb().ref(fb().db,'sales/daily/'+d),{date:d,amount,memo:String($('salesMemo').value||''),updatedAt:Date.now()});await load();alert('売上を保存しました。')}
+  async function saveSales(){if(!fb()?.update)return;const d=$('salesDate').value||today(),lunch=Number($('salesAmountLunch').value||0),dinner=Number($('salesAmountDinner').value||0);if(!lunch&&!dinner&&!String($('salesMemo').value||'').trim()&&!confirm('ランチ・ディナーとも0円として保存しますか？'))return;const base='sales/daily/'+d+'/';await fb().update(fb().ref(fb().db),{[base+'date']:d,[base+'lunch']:lunch,[base+'dinner']:dinner,[base+'amount']:lunch+dinner,[base+'memo']:String($('salesMemo').value||''),[base+'updatedAt']:Date.now()});await load();alert('売上を保存しました。')}
+  async function runSalesImport(){
+    if(!fb()?.update){alert('Firebaseが準備できていません。');return}
+    const entries=Object.entries(SALES_IMPORT_DATA);
+    if(!confirm(`2025年6月〜2026年5月分（${entries.length}日分）の売上データを、ランチ・ディナー別に一括登録します。\n同じ日付の既存データは上書きされます。\n\nよろしいですか？`))return;
+    const status=$('salesImportStatus'); if(status)status.textContent='登録中…';
+    try{
+      const updates={};
+      entries.forEach(([d,x])=>{
+        const base='sales/daily/'+d+'/';
+        updates[base+'date']=d;
+        updates[base+'lunch']=Number(x.l||0);
+        updates[base+'dinner']=Number(x.d||0);
+        updates[base+'amount']=Number(x.l||0)+Number(x.d||0);
+        if(x.n)updates[base+'n']=x.n;
+        updates[base+'updatedAt']=Date.now();
+      });
+      await fb().update(fb().ref(fb().db),updates);
+      await load();
+      if(status)status.textContent=`✅ ${entries.length}日分のデータを登録しました。`;
+      alert(`${entries.length}日分の売上データを登録しました。`);
+    }catch(e){
+      console.error(e);
+      if(status)status.textContent='❌ 登録に失敗しました：'+(e?.message||e);
+      alert('登録に失敗しました。\n'+(e?.message||e));
+    }
+  }
   async function saveExpense(){if(!fb()?.push)return;const d=$('expenseDate').value||today(),name=String($('expenseName').value||'').trim(),amount=Number($('expenseAmount').value||0);if(!name||!amount){alert('日付・項目・金額を入力してください。');return}const id=fb().push(fb().ref(fb().db,'expenses')).key;await fb().set(fb().ref(fb().db,'expenses/'+id),{date:d,name,amount,createdAt:Date.now()});$('expenseName').value='';$('expenseAmount').value='';await load();alert('経費を保存しました。')}
   function augmentShift(){
     const date=$('shiftViewDate')?.value||today();
@@ -8299,7 +8353,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     $('tabShopping')?.classList.remove('active');$('tabVegetable')?.classList.remove('active');$('tabPrep')?.classList.remove('active');
     try{window.dispatchEvent(new CustomEvent('shift-page-opened'));}catch(_){}
   }
-  function init(){if($('salesDate'))$('salesDate').value=today();if($('expenseDate'))$('expenseDate').value=today();if($('salesLaborMonth'))$('salesLaborMonth').value=ym();if($('salesSummaryMonth'))$('salesSummaryMonth').value=ym();$('tabSales')?.addEventListener('click',switchSalesPage);$('salesPageCloseBtn')?.addEventListener('click',closeSalesPage);$('salesDate')?.addEventListener('change',renderCompare);$('salesSave')?.addEventListener('click',saveSales);$('expenseSave')?.addEventListener('click',saveExpense);$('salesLaborCalc')?.addEventListener('click',calcLabor);$('salesSummaryCalc')?.addEventListener('click',calcSummary);$('salesSummaryMonth')?.addEventListener('change',renderExpenses);$('expenseList')?.addEventListener('click',async e=>{const b=e.target.closest('[data-exp-del]');if(!b)return;if(!confirm('この経費を削除しますか？'))return;await fb().remove(fb().ref(fb().db,'expenses/'+b.dataset.expDel));await load()});load().then(augmentShift);setInterval(augmentShift,1500)}
+  function init(){if($('salesDate'))$('salesDate').value=today();if($('expenseDate'))$('expenseDate').value=today();if($('salesLaborMonth'))$('salesLaborMonth').value=ym();if($('salesSummaryMonth'))$('salesSummaryMonth').value=ym();$('tabSales')?.addEventListener('click',switchSalesPage);$('salesPageCloseBtn')?.addEventListener('click',closeSalesPage);$('salesDate')?.addEventListener('change',renderCompare);$('salesSave')?.addEventListener('click',saveSales);$('salesImportBtn')?.addEventListener('click',runSalesImport);$('expenseSave')?.addEventListener('click',saveExpense);$('salesLaborCalc')?.addEventListener('click',calcLabor);$('salesSummaryCalc')?.addEventListener('click',calcSummary);$('salesSummaryMonth')?.addEventListener('change',renderExpenses);$('expenseList')?.addEventListener('click',async e=>{const b=e.target.closest('[data-exp-del]');if(!b)return;if(!confirm('この経費を削除しますか？'))return;await fb().remove(fb().ref(fb().db,'expenses/'+b.dataset.expDel));await load()});load().then(augmentShift);setInterval(augmentShift,1500)}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();
 </script>
@@ -8338,10 +8392,12 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     return m?new Date(Number(m[1]),Number(m[2])-1,Number(m[3])):new Date('invalid');
   }
   function prevSameWeekday(s){
+    // 他の前年同曜日売上ロジック(shiftStandaloneFixed/salesManagementAddScript)と
+    // 探索範囲を完全に一致させ、表示のちらつき・食い違いを防ぐ。
     const d=dateObj(s); if(isNaN(d.getTime())) return '';
     const target=d.getDay();
     const base=new Date(d.getFullYear()-1,d.getMonth(),d.getDate());
-    for(let delta=-7;delta<=7;delta++){
+    for(let delta=-3;delta<=3;delta++){
       const x=new Date(base); x.setDate(base.getDate()+delta);
       if(x.getDay()===target) return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0');
     }
@@ -8361,14 +8417,20 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     }
   }
   function paint(date){
+    // shiftTodayPrevYearSalesは常に「本日」、shiftOtherDayPrevYearSalesは
+    // 引数のdate(「別の日を見る・編集」で選んだ日付)で、別々に計算する。
     ensureBoxes();
-    date=date||isoToday();
-    const p=prevSameWeekday(date);
-    const rec=p?daily[p]:null;
-    const amount=Number(rec && rec.amount!=null ? rec.amount : 0);
-    const text=p?'前年同曜日売上：¥'+amount.toLocaleString('ja-JP')+(rec?'':'（未登録）'):'';
-    const a=el('shiftTodayPrevYearSales'); if(a)a.textContent=text;
-    const b=el('shiftOtherDayPrevYearSales'); if(b)b.textContent=text;
+    const type=document.body.dataset.shiftMode==='lunch'?'lunch':'dinner';
+    const label=type==='lunch'?'ランチ':'ディナー';
+    function calc(d){
+      const p=prevSameWeekday(d);
+      const rec=p?daily[p]:null;
+      const hasSplit=rec&&(rec.lunch!=null||rec.dinner!=null);
+      const amount=Number(hasSplit?(type==='lunch'?rec.lunch:rec.dinner)||0:(rec&&rec.amount!=null?rec.amount:0));
+      return p?'前年同曜日売上（'+label+'）：¥'+amount.toLocaleString('ja-JP')+(rec?'':'（未登録）'):'';
+    }
+    const a=el('shiftTodayPrevYearSales'); if(a)a.textContent=calc(isoToday());
+    const b=el('shiftOtherDayPrevYearSales'); if(b)b.textContent=calc(date||isoToday());
   }
   function bind(){
     ensureBoxes();
