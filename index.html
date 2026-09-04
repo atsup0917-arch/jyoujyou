@@ -2147,6 +2147,8 @@ $("tabShopping").onclick=()=>switchPage("shopping");
 $("tabVegetable").onclick=()=>switchPage("vegetable");
 $("tabPrep").onclick=()=>switchPage("prep");
 $("tabShift").onclick=()=>switchPage("shift");
+// スマホでのスワイプ切り替え機能（別スクリプトから呼び出すためだけに公開。既存の動作は変更しない）
+window.switchPage=switchPage;
 
 const tomorrow=new Date();
 tomorrow.setDate(tomorrow.getDate()+1);
@@ -8997,5 +8999,72 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bind);else bind();
   setInterval(bind,1000);
+})();
+</script>
+
+<script id="pageSwipeNavigation">
+/* スマホで 買い物 → 野菜発注 → 仕込み表 → シフト をスワイプで切り替える機能を追加。
+   既存のタブボタン・ページ内容・データ処理は一切変更しない（見出しの追加スワイプ操作のみ）。 */
+(function(){
+  var ORDER=["shopping","vegetable","prep","shift"];
+  var TAB_ID={shopping:"tabShopping",vegetable:"tabVegetable",prep:"tabPrep",shift:"tabShift"};
+  var PAGE_ID={shopping:"shoppingPage",vegetable:"vegetablePage",prep:"prepPage",shift:"shiftPage"};
+
+  function currentIndex(){
+    for(var i=0;i<ORDER.length;i++){
+      var tab=document.getElementById(TAB_ID[ORDER[i]]);
+      if(tab && tab.classList.contains("active"))return i;
+    }
+    for(var j=0;j<ORDER.length;j++){
+      var page=document.getElementById(PAGE_ID[ORDER[j]]);
+      if(page && !page.hidden)return j;
+    }
+    return -1;
+  }
+
+  function goTo(index){
+    if(index<0||index>=ORDER.length)return;
+    if(typeof window.switchPage!=="function")return;
+    window.switchPage(ORDER[index]);
+  }
+
+  // モーダル・オーバーレイ・パネル（レシピ帳、原価計算、商品原価、買い物アイテム編集 等）の上での
+  // タッチはページ切り替えの対象にしない。既存の横スクロール要素（レシピのカテゴリタブ等）も
+  // これらのモーダル／パネル内にあるため、あわせて対象外になる。
+  var EXCLUDE_SELECTOR='[id$="Modal"],[id$="Overlay"],[id$="Panel"],[data-me-drag],[data-ri-drag],.masterDragHandle';
+
+  var startX=0,startY=0,startTime=0,tracking=false;
+  var SWIPE_MIN_DISTANCE=60;
+  var SWIPE_MAX_TIME=700;
+
+  document.addEventListener("touchstart",function(e){
+    tracking=false;
+    if(!e.touches||e.touches.length!==1)return;
+    var target=e.target;
+    if(target&&target.closest&&target.closest(EXCLUDE_SELECTOR))return;
+    if(!target||!target.closest||!target.closest("#shoppingPage,#vegetablePage,#prepPage,#shiftPage"))return;
+    startX=e.touches[0].clientX;
+    startY=e.touches[0].clientY;
+    startTime=Date.now();
+    tracking=true;
+  },{passive:true});
+
+  document.addEventListener("touchend",function(e){
+    if(!tracking)return;
+    tracking=false;
+    var t=e.changedTouches&&e.changedTouches[0];
+    if(!t)return;
+    var dx=t.clientX-startX, dy=t.clientY-startY;
+    var elapsed=Date.now()-startTime;
+    if(elapsed>SWIPE_MAX_TIME)return;
+    if(Math.abs(dx)<SWIPE_MIN_DISTANCE)return;
+    if(Math.abs(dx)<Math.abs(dy)*1.5)return; // 横方向の動きが十分優勢な場合のみ切り替える
+    var idx=currentIndex();
+    if(idx<0)return;
+    if(dx<0)goTo(idx+1); // 左スワイプ→次のページ
+    else goTo(idx-1); // 右スワイプ→前のページ
+  },{passive:true});
+
+  document.addEventListener("touchcancel",function(){tracking=false;},{passive:true});
 })();
 </script>
