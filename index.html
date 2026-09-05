@@ -1094,6 +1094,32 @@ input,select,textarea{
 #shoppingPage .selectedStoreHint{color:#2f6fe4}
 </style>
 
+<style id="shoppingFiltersMobileScroll">
+/* スマホ表示のみ：「表示する場所」のボタンを3段（3行）にまとめて横スクロールできるように変更し、窮屈さを解消。
+   PC表示・他ページ（発注・仕込み等）の絞り込みボタンには影響しない。 */
+@media(max-width:600px){
+#shoppingPage #filters{
+  display:grid;
+  grid-auto-flow:column;
+  grid-template-rows:repeat(3,minmax(0,auto));
+  grid-auto-columns:minmax(78px,110px);
+  overflow-x:auto;
+  overflow-y:hidden;
+  -webkit-overflow-scrolling:touch;
+  scroll-snap-type:x proximity;
+  padding-bottom:8px;
+  scrollbar-width:none;
+}
+#shoppingPage #filters::-webkit-scrollbar{display:none}
+#shoppingPage #filters button{
+  scroll-snap-align:start;
+  font-size:14px;
+  padding:8px 10px;
+}
+#shoppingPage #filters button .count{font-size:12px}
+}
+</style>
+
 <style id="lightBackgroundOnlyFinal">
 /* 背景だけを薄く色付け。既存の機能・デザイン・JavaScriptは変更しない */
 html{
