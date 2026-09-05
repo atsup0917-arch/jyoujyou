@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>買い物リスト</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif;color:#171717;background:#f3f5f8}
@@ -1094,6 +1094,36 @@ input,select,textarea{
 #shoppingPage .selectedStoreHint{color:#2f6fe4}
 </style>
 
+<style id="shoppingFiltersMobileScroll">
+/* スマホ表示のみ：「表示する場所」のボタンを3段（3行）にまとめて横スクロールできるように変更し、窮屈さを解消。
+   PC表示・他ページ（発注・仕込み等）の絞り込みボタンには影響しない。 */
+@media(max-width:600px){
+#shoppingPage #filters{
+  display:grid;
+  grid-auto-flow:column;
+  grid-template-rows:repeat(3,minmax(0,auto));
+  grid-auto-columns:max-content;
+  overflow-x:auto;
+  overflow-y:hidden;
+  -webkit-overflow-scrolling:touch;
+  scroll-snap-type:x proximity;
+  padding-bottom:8px;
+  scrollbar-width:none;
+}
+#shoppingPage #filters::-webkit-scrollbar{display:none}
+#shoppingPage #filters button{
+  scroll-snap-align:start;
+  font-size:14px;
+  padding:8px 10px;
+  white-space:nowrap;
+  overflow-wrap:normal;
+  word-break:normal;
+  min-width:64px;
+}
+#shoppingPage #filters button .count{font-size:12px}
+}
+</style>
+
 <style id="lightBackgroundOnlyFinal">
 /* 背景だけを薄く色付け。既存の機能・デザイン・JavaScriptは変更しない */
 html{
@@ -2147,6 +2177,8 @@ $("tabShopping").onclick=()=>switchPage("shopping");
 $("tabVegetable").onclick=()=>switchPage("vegetable");
 $("tabPrep").onclick=()=>switchPage("prep");
 $("tabShift").onclick=()=>switchPage("shift");
+// スマホでのスワイプ切り替え機能（別スクリプトから呼び出すためだけに公開。既存の動作は変更しない）
+window.switchPage=switchPage;
 
 const tomorrow=new Date();
 tomorrow.setDate(tomorrow.getDate()+1);
@@ -8140,6 +8172,11 @@ const EMBEDDED_SEP_FIRST={
 async function syncSepFirstDinner(){
   const fb=window.__fb;if(!fb?.get||!fb?.update||!fb?.ref||!fb?.push)return;
   const now=Date.now();
+  // 反映済みなら何もしない（ここが無いと再読み込みのたびに保存済みの変更が内蔵データで上書きされてしまうため追加）
+  const metaPathCheck='shift/periodMeta/dinner-2026-09-first';
+  const metaSnapCheck=await fb.get(fb.ref(fb.db,metaPathCheck));
+  const metaCheck=metaSnapCheck?.val?.()||{};
+  if(metaCheck.source==='html-embedded' && metaCheck.embeddedVersion===EMBEDDED_SEP_FIRST.version) return;
   const snap=await fb.get(fb.ref(fb.db,'shift/schedules'));
   const current=snap?.val?.()||{};
   const updates={}; const seen=new Set();
@@ -8194,6 +8231,11 @@ items:[{"date":"2026-09-01","number":"","name":"[削除済み]","position":"","s
 };
 async function syncSepFirstLunch(){
  const fb=window.__fb;if(!fb?.get||!fb?.update||!fb?.ref||!fb?.push)return;
+ // 反映済みなら何もしない（ここが無いと再読み込みのたびに保存済みの変更が内蔵データで上書きされてしまうため追加）
+ const metaPathCheck='shift/periodMeta/lunch-2026-09-first';
+ const metaSnapCheck=await fb.get(fb.ref(fb.db,metaPathCheck));
+ const metaCheck=metaSnapCheck?.val?.()||{};
+ if(metaCheck.source==='html-embedded' && metaCheck.embeddedVersion===EMBEDDED_SEP_FIRST_LUNCH.version) return;
  const snap=await fb.get(fb.ref(fb.db,'shift/schedules'));const current=snap?.val?.()||{};const updates={};const seen=new Set();const now=Date.now();
  Object.entries(current).forEach(([id,x])=>{if(/^2026-09-(0[1-9]|1[0-5])$/.test(String(x?.date||''))&&String(x?.shiftType||'')==='lunch')updates['shift/schedules/'+id]=null;});
  EMBEDDED_SEP_FIRST_LUNCH.items.forEach(x=>{const key=x.date+'|'+x.name;if(seen.has(key))return;seen.add(key);const id=fb.push(fb.ref(fb.db,'shift/schedules')).key;updates['shift/schedules/'+id]={...x,createdAt:now};});
@@ -8597,6 +8639,9 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     addInput?.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();addConfirm?.click()}});
     const close=()=>{ov.hidden=true;card.hidden=false;card.scrollIntoView({behavior:'smooth',block:'start'});};
     ov.querySelector('.shiftNameEditorBack').onclick=close;ov.querySelector('.shiftNameEditorBack2').onclick=close;
+    // パネルの外側（背景）をタップした場合も閉じる。
+    // これが無いと、外側タップで閉じようとした際に画面全体が反応しなくなったように見えてしまうため追加。
+    ov.onclick=e=>{if(e.target===ov)close();};
     ov.querySelector('.shiftNameEditorSave').onclick=async()=>{
       const out=[...rows.querySelectorAll('.shiftNameEditRow input')].map(x=>x.value.trim()).filter(Boolean).filter((v,i,a)=>a.indexOf(v)===i).slice(0,50);
       const payload={lunch:s==='lunch'?out:namesFor('lunch'),dinner:s==='dinner'?out:namesFor('dinner'),_version:'v2-service-separated'};
@@ -8997,5 +9042,74 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bind);else bind();
   setInterval(bind,1000);
+})();
+</script>
+
+<script id="pageSwipeNavigation">
+/* スマホで 買い物 → 野菜発注 → 仕込み表 → シフト をスワイプで切り替える機能を追加。
+   既存のタブボタン・ページ内容・データ処理は一切変更しない（見出しの追加スワイプ操作のみ）。 */
+(function(){
+  var ORDER=["shopping","vegetable","prep","shift"];
+  var TAB_ID={shopping:"tabShopping",vegetable:"tabVegetable",prep:"tabPrep",shift:"tabShift"};
+  var PAGE_ID={shopping:"shoppingPage",vegetable:"vegetablePage",prep:"prepPage",shift:"shiftPage"};
+
+  function currentIndex(){
+    for(var i=0;i<ORDER.length;i++){
+      var tab=document.getElementById(TAB_ID[ORDER[i]]);
+      if(tab && tab.classList.contains("active"))return i;
+    }
+    for(var j=0;j<ORDER.length;j++){
+      var page=document.getElementById(PAGE_ID[ORDER[j]]);
+      if(page && !page.hidden)return j;
+    }
+    return -1;
+  }
+
+  function goTo(index){
+    if(index<0||index>=ORDER.length)return;
+    if(typeof window.switchPage!=="function")return;
+    window.switchPage(ORDER[index]);
+  }
+
+  // モーダル・オーバーレイ・パネル（レシピ帳、原価計算、商品原価、買い物アイテム編集 等）の上での
+  // タッチはページ切り替えの対象にしない。既存の横スクロール要素（レシピのカテゴリタブ等）も
+  // これらのモーダル／パネル内にあるため、あわせて対象外になる。
+  // 買い物ページ「表示する場所」（#filters）も横スクロールで店舗を切り替える要素のため、
+  // ここでの横方向の動きがページ切り替えに誤反応しないよう対象外にする。
+  var EXCLUDE_SELECTOR='[id$="Modal"],[id$="Overlay"],[id$="Panel"],[data-me-drag],[data-ri-drag],.masterDragHandle,#filters';
+
+  var startX=0,startY=0,startTime=0,tracking=false;
+  var SWIPE_MIN_DISTANCE=60;
+  var SWIPE_MAX_TIME=700;
+
+  document.addEventListener("touchstart",function(e){
+    tracking=false;
+    if(!e.touches||e.touches.length!==1)return;
+    var target=e.target;
+    if(target&&target.closest&&target.closest(EXCLUDE_SELECTOR))return;
+    if(!target||!target.closest||!target.closest("#shoppingPage,#vegetablePage,#prepPage,#shiftPage"))return;
+    startX=e.touches[0].clientX;
+    startY=e.touches[0].clientY;
+    startTime=Date.now();
+    tracking=true;
+  },{passive:true});
+
+  document.addEventListener("touchend",function(e){
+    if(!tracking)return;
+    tracking=false;
+    var t=e.changedTouches&&e.changedTouches[0];
+    if(!t)return;
+    var dx=t.clientX-startX, dy=t.clientY-startY;
+    var elapsed=Date.now()-startTime;
+    if(elapsed>SWIPE_MAX_TIME)return;
+    if(Math.abs(dx)<SWIPE_MIN_DISTANCE)return;
+    if(Math.abs(dx)<Math.abs(dy)*1.5)return; // 横方向の動きが十分優勢な場合のみ切り替える
+    var idx=currentIndex();
+    if(idx<0)return;
+    if(dx<0)goTo(idx+1); // 左スワイプ→次のページ
+    else goTo(idx-1); // 右スワイプ→前のページ
+  },{passive:true});
+
+  document.addEventListener("touchcancel",function(){tracking=false;},{passive:true});
 })();
 </script>
