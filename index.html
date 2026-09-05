@@ -8142,6 +8142,11 @@ const EMBEDDED_SEP_FIRST={
 async function syncSepFirstDinner(){
   const fb=window.__fb;if(!fb?.get||!fb?.update||!fb?.ref||!fb?.push)return;
   const now=Date.now();
+  // 反映済みなら何もしない（ここが無いと再読み込みのたびに保存済みの変更が内蔵データで上書きされてしまうため追加）
+  const metaPathCheck='shift/periodMeta/dinner-2026-09-first';
+  const metaSnapCheck=await fb.get(fb.ref(fb.db,metaPathCheck));
+  const metaCheck=metaSnapCheck?.val?.()||{};
+  if(metaCheck.source==='html-embedded' && metaCheck.embeddedVersion===EMBEDDED_SEP_FIRST.version) return;
   const snap=await fb.get(fb.ref(fb.db,'shift/schedules'));
   const current=snap?.val?.()||{};
   const updates={}; const seen=new Set();
@@ -8196,6 +8201,11 @@ items:[{"date":"2026-09-01","number":"","name":"[削除済み]","position":"","s
 };
 async function syncSepFirstLunch(){
  const fb=window.__fb;if(!fb?.get||!fb?.update||!fb?.ref||!fb?.push)return;
+ // 反映済みなら何もしない（ここが無いと再読み込みのたびに保存済みの変更が内蔵データで上書きされてしまうため追加）
+ const metaPathCheck='shift/periodMeta/lunch-2026-09-first';
+ const metaSnapCheck=await fb.get(fb.ref(fb.db,metaPathCheck));
+ const metaCheck=metaSnapCheck?.val?.()||{};
+ if(metaCheck.source==='html-embedded' && metaCheck.embeddedVersion===EMBEDDED_SEP_FIRST_LUNCH.version) return;
  const snap=await fb.get(fb.ref(fb.db,'shift/schedules'));const current=snap?.val?.()||{};const updates={};const seen=new Set();const now=Date.now();
  Object.entries(current).forEach(([id,x])=>{if(/^2026-09-(0[1-9]|1[0-5])$/.test(String(x?.date||''))&&String(x?.shiftType||'')==='lunch')updates['shift/schedules/'+id]=null;});
  EMBEDDED_SEP_FIRST_LUNCH.items.forEach(x=>{const key=x.date+'|'+x.name;if(seen.has(key))return;seen.add(key);const id=fb.push(fb.ref(fb.db,'shift/schedules')).key;updates['shift/schedules/'+id]={...x,createdAt:now};});
@@ -8599,6 +8609,9 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     addInput?.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();addConfirm?.click()}});
     const close=()=>{ov.hidden=true;card.hidden=false;card.scrollIntoView({behavior:'smooth',block:'start'});};
     ov.querySelector('.shiftNameEditorBack').onclick=close;ov.querySelector('.shiftNameEditorBack2').onclick=close;
+    // パネルの外側（背景）をタップした場合も閉じる。
+    // これが無いと、外側タップで閉じようとした際に画面全体が反応しなくなったように見えてしまうため追加。
+    ov.onclick=e=>{if(e.target===ov)close();};
     ov.querySelector('.shiftNameEditorSave').onclick=async()=>{
       const out=[...rows.querySelectorAll('.shiftNameEditRow input')].map(x=>x.value.trim()).filter(Boolean).filter((v,i,a)=>a.indexOf(v)===i).slice(0,50);
       const payload={lunch:s==='lunch'?out:namesFor('lunch'),dinner:s==='dinner'?out:namesFor('dinner'),_version:'v2-service-separated'};
