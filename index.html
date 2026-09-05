@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>買い物リスト</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif;color:#171717;background:#f3f5f8}
@@ -9074,7 +9074,9 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   // モーダル・オーバーレイ・パネル（レシピ帳、原価計算、商品原価、買い物アイテム編集 等）の上での
   // タッチはページ切り替えの対象にしない。既存の横スクロール要素（レシピのカテゴリタブ等）も
   // これらのモーダル／パネル内にあるため、あわせて対象外になる。
-  var EXCLUDE_SELECTOR='[id$="Modal"],[id$="Overlay"],[id$="Panel"],[data-me-drag],[data-ri-drag],.masterDragHandle';
+  // 買い物ページ「表示する場所」（#filters）も横スクロールで店舗を切り替える要素のため、
+  // ここでの横方向の動きがページ切り替えに誤反応しないよう対象外にする。
+  var EXCLUDE_SELECTOR='[id$="Modal"],[id$="Overlay"],[id$="Panel"],[data-me-drag],[data-ri-drag],.masterDragHandle,#filters';
 
   var startX=0,startY=0,startTime=0,tracking=false;
   var SWIPE_MIN_DISTANCE=60;
