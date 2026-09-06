@@ -58,6 +58,7 @@ button.gray{background:#e9eaed;color:#2371df}.danger{background:#fff0f0;color:#c
  .wrap>.navtabs,
  #shoppingPage,
  #vegetablePage,
+ #openClosePage,
  #prepPage>*:not(#printSheet){display:none!important}
  #prepPage{display:block!important;margin:0!important;padding:0!important}
  #printSheet{display:block!important;color:#000;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
@@ -997,7 +998,7 @@ body{
   color:#ffffff !important;
   box-shadow:0 5px 14px rgba(47,111,228,.24) !important;
 }
-.navtabs.navtabs4 #tabVegetable.active{
+.navtabs.navtabs4 #tabOpenClose.active{
   background:#2aa052 !important;
   border-color:#2aa052 !important;
   color:#ffffff !important;
@@ -1261,7 +1262,7 @@ body{overflow-anchor:none!important;}
 <body><div class="wrap">
 <div class="navtabs navtabs3 navtabs4">
 <button id="tabShopping" class="active">🛒 買い物</button>
-<button id="tabVegetable">🥬 野菜発注</button>
+<button id="tabOpenClose">✅ 開店<br>閉店</button>
 <button id="tabPrep">🔪 仕込み表</button>
 <button id="tabShift">👥 シフト</button>
 </div>
@@ -1343,7 +1344,7 @@ body{overflow-anchor:none!important;}
 </div>
 
 <div id="vegetablePage" class="page" hidden>
-<h1>📦 発注</h1>
+<div class="salesPageHeader" id="vegPageHeader"><h1 style="margin:0">📦 発注</h1><button type="button" id="vegPageCloseBtn" class="salesPageCloseBtn" aria-label="発注を閉じる">✕</button></div>
 <div class="navtabs navtabs3" id="orderModeTabs">
 <button type="button" id="orderModeVeg" class="active">🥬 野菜</button>
 <button type="button" id="orderModeSupplier">🏪 業者</button>
@@ -1483,6 +1484,69 @@ body{overflow-anchor:none!important;}
 </details>
 </div>
 </div>
+
+<div id="openClosePage" class="page" hidden>
+<h1>✅ 開店・閉店チェック</h1>
+
+<div class="navtabs" id="ccShiftTabs">
+<button type="button" id="ccTabLunch" class="active">🌞 ランチ</button>
+<button type="button" id="ccTabDinner">🌙 ディナー</button>
+</div>
+
+<div class="card ccListCard settingsCard" data-cc-list="lunchOpen">
+<details open>
+<summary>🌞 ランチ 開店準備</summary>
+<div class="settingsBody">
+  <div class="ccListToolbar"><span class="ccHint">「📅 曜日設定」で選んだ曜日だけ表示されます（未設定の項目は毎日表示）。</span><button type="button" class="ccShowAllBtn" data-cc-showall="lunchOpen">🔎 全項目を表示</button></div>
+  <div class="ccItems" data-cc-items="lunchOpen"></div>
+  <div class="ccAddRow"><input type="text" data-cc-input="lunchOpen" placeholder="項目を入力して追加"><button type="button" class="gray" data-cc-add="lunchOpen">＋ 追加</button></div>
+</div>
+</details>
+</div>
+<div class="card ccListCard settingsCard" data-cc-list="lunchClose">
+<details open>
+<summary>🌞 ランチ 閉店準備</summary>
+<div class="settingsBody">
+  <div class="ccListToolbar"><span class="ccHint">「📅 曜日設定」で選んだ曜日だけ表示されます（未設定の項目は毎日表示）。</span><button type="button" class="ccShowAllBtn" data-cc-showall="lunchClose">🔎 全項目を表示</button></div>
+  <div class="ccItems" data-cc-items="lunchClose"></div>
+  <div class="ccAddRow"><input type="text" data-cc-input="lunchClose" placeholder="項目を入力して追加"><button type="button" class="gray" data-cc-add="lunchClose">＋ 追加</button></div>
+</div>
+</details>
+</div>
+<div class="card ccListCard settingsCard" data-cc-list="dinnerOpen" hidden>
+<details open>
+<summary>🌙 ディナー 開店準備</summary>
+<div class="settingsBody">
+  <div class="ccListToolbar"><span class="ccHint">「📅 曜日設定」で選んだ曜日だけ表示されます（未設定の項目は毎日表示）。</span><button type="button" class="ccShowAllBtn" data-cc-showall="dinnerOpen">🔎 全項目を表示</button></div>
+  <div class="ccItems" data-cc-items="dinnerOpen"></div>
+  <div class="ccAddRow"><input type="text" data-cc-input="dinnerOpen" placeholder="項目を入力して追加"><button type="button" class="gray" data-cc-add="dinnerOpen">＋ 追加</button></div>
+</div>
+</details>
+</div>
+<div class="card ccListCard settingsCard" data-cc-list="dinnerClose" hidden>
+<details open>
+<summary>🌙 ディナー 閉店準備</summary>
+<div class="settingsBody">
+  <div class="ccListToolbar"><span class="ccHint">「📅 曜日設定」で選んだ曜日だけ表示されます（未設定の項目は毎日表示）。</span><button type="button" class="ccShowAllBtn" data-cc-showall="dinnerClose">🔎 全項目を表示</button></div>
+  <div class="ccItems" data-cc-items="dinnerClose"></div>
+  <div class="ccAddRow"><input type="text" data-cc-input="dinnerClose" placeholder="項目を入力して追加"><button type="button" class="gray" data-cc-add="dinnerClose">＋ 追加</button></div>
+</div>
+</details>
+</div>
+
+<div class="card ccListCard settingsCard">
+<details open>
+<summary>🙌 手空き作業</summary>
+<div class="settingsBody">
+  <div class="ccHint">チェックはありません。やったら日付と担当者を記入してください（次の人が上書きします）。</div>
+  <div class="ccFreeItems" id="ccFreeItems"></div>
+  <div class="ccAddRow"><input type="text" id="ccFreeInput" data-cc-input="freeTime" placeholder="項目を入力して追加"><button type="button" class="gray" id="ccFreeAdd" data-cc-add="freeTime">＋ 追加</button></div>
+</div>
+</details>
+</div>
+
+</div>
+
 <div id="shiftPage" class="page" hidden>
 <h1>👥 シフト</h1>
 
@@ -1642,7 +1706,7 @@ body{overflow-anchor:none!important;}
 
 <div id="prepPage" class="page" hidden>
 <h1>🔪 仕込み表</h1>
-<div class="card"><h2>表示するポジション</h2><div class="filters" id="prepFilters"></div></div><div class="card prepRecipeSearchCard" id="prepRecipeSearchCard">
+<div class="card"><h2>表示するポジション</h2><div class="filters" id="prepFilters"></div><button type="button" id="prepSeasonAllToggle" class="prepSeasonToggle">🔎 季節を問わず全品目表示</button></div><div class="card prepRecipeSearchCard" id="prepRecipeSearchCard">
   <h2>📖 仕込みレシピを検索</h2>
   <div class="prepRecipeSearchRow">
     <input id="prepRecipeSearch" type="search" placeholder="🔎 仕込みレシピ名を検索" autocomplete="off" aria-label="仕込みレシピを検索">
@@ -1665,6 +1729,7 @@ body{overflow-anchor:none!important;}
     <button class="gray" id="confirmPrep">仕込み確定</button>
     <button class="gray" id="clearPrep">仕込み数を全て0</button>
     <button class="gray" id="uncheckPrep">チェックを全て外す</button>
+    <button class="gray" id="prepVegetableBtn" type="button">🥬 野菜発注</button>
   </div>
 </div>
 <div id="prepList"></div>
@@ -1702,6 +1767,45 @@ let vegProducts={},vegUnits={},vegOrder=[],lastVegOrder=[];
 const lastVegOrderRef=ref(db,"vegetableOrder/lastOrder");
 const prepPositionsRef=ref(db,"prep/positions"),prepItemsRef=ref(db,"prep/items"),prepStateRef=ref(db,"prep/state");
 let prepPositions={},prepItems={},prepState={},prepFilter="ALL",prepConfirmed=false;
+/* ===== 仕込み品目の季節表示（開始月〜終了月）機能 =====
+   品目データ(prep/items/<id>)に seasonStart / seasonEnd（1〜12の月）を追加。
+   どちらも未設定（0やnull）の品目は従来どおり常時表示（既存品目の挙動は変わらない）。
+   季節設定がある品目は、今月がその範囲外だと仕込み表本体では自動的に非表示になる。
+   範囲は開始>終了でも（例：11月〜2月）年をまたいで正しく判定する。 */
+let prepShowAllSeasons=false;
+const PREP_SEASON_PREVIEW_DAYS=14; // この日数だけ前から「🔜 まもなく」表示で先出しする
+function prepInSeason(x){
+  const s=Number(x&&x.seasonStart)||0, e=Number(x&&x.seasonEnd)||0;
+  if(!s||!e) return true;
+  const m=new Date().getMonth()+1;
+  return s<=e ? (m>=s&&m<=e) : (m>=s||m<=e);
+}
+function prepSeasonUpcomingDays(x){
+  const s=Number(x&&x.seasonStart)||0, e=Number(x&&x.seasonEnd)||0;
+  if(!s||!e||prepInSeason(x)) return null;
+  const today=new Date();today.setHours(0,0,0,0);
+  const y=today.getFullYear();
+  let target=new Date(y,s-1,1);
+  if(target<today) target=new Date(y+1,s-1,1);
+  const days=Math.round((target-today)/86400000);
+  return days<=PREP_SEASON_PREVIEW_DAYS?days:null;
+}
+/* seasonForce："show"＝季節に関係なく常に表示／"hide"＝季節に関係なく常に非表示／未設定＝季節設定どおり自動判定。
+   仕込み品目管理の各品目に「🔁季節で自動判定」ボタンとして追加し、ワンタップで自動→表示→非表示→自動…と切り替える。 */
+function prepSeasonState(x){
+  const force=x&&x.seasonForce;
+  if(force==="show")return{visible:true,tag:"forceShow"};
+  if(force==="hide")return{visible:false,tag:"forceHide"};
+  if(prepInSeason(x))return{visible:true,tag:null};
+  const upcoming=prepSeasonUpcomingDays(x);
+  if(upcoming!==null)return{visible:true,tag:"upcoming",days:upcoming};
+  return{visible:false,tag:"off"};
+}
+function prepSeasonForceLabel(v){
+  if(v==="show")return"👁 常に表示中";
+  if(v==="hide")return"🚫 常に非表示中";
+  return"🔁 季節で自動判定";
+}
 
 let stores={},products={},items={},filter="ALL";
 const $=id=>document.getElementById(id);
@@ -2167,14 +2271,14 @@ $("uncheckAll").onclick=async()=>{for(const [id,x] of vals(items))if(x.done)awai
 // ---- 野菜発注 ----
 const weekdays=["日","月","火","水","木","金","土"];
 function switchPage(which){
- $("shoppingPage").hidden=which!=="shopping"; $("vegetablePage").hidden=which!=="vegetable"; $("prepPage").hidden=which!=="prep"; $("shiftPage").hidden=which!=="shift";
+ $("shoppingPage").hidden=which!=="shopping"; $("openClosePage").hidden=which!=="openclose"; $("prepPage").hidden=which!=="prep"; $("shiftPage").hidden=which!=="shift";
  $("tabShopping").classList.toggle("active",which==="shopping");
- $("tabVegetable").classList.toggle("active",which==="vegetable");
+ $("tabOpenClose").classList.toggle("active",which==="openclose");
  $("tabPrep").classList.toggle("active",which==="prep");
  $("tabShift").classList.toggle("active",which==="shift");
 }
 $("tabShopping").onclick=()=>switchPage("shopping");
-$("tabVegetable").onclick=()=>switchPage("vegetable");
+$("tabOpenClose").onclick=()=>switchPage("openclose");
 $("tabPrep").onclick=()=>switchPage("prep");
 $("tabShift").onclick=()=>switchPage("shift");
 // スマホでのスワイプ切り替え機能（別スクリプトから呼び出すためだけに公開。既存の動作は変更しない）
@@ -2413,14 +2517,23 @@ function renderPrepSelectors(){
  const keep=$("prepPos").value;$("prepPos").innerHTML=op().map(([id,x])=>`<option value="${id}">${esc(x.name)}</option>`).join("");if(prepPositions[keep])$("prepPos").value=keep;renderPosManage();renderPrepManage();
 }
 function renderPrepList(){
- let h="";for(const [pid,p] of op()){if(prepFilter!=="ALL"&&prepFilter!==pid)continue;let a=oi(pid);if(prepConfirmed)a=a.filter(([id])=>Number(prepState[id]?.count??0)>0);if(!a.length)continue;
+ let h="";for(const [pid,p] of op()){if(prepFilter!=="ALL"&&prepFilter!==pid)continue;let a=oi(pid);
+ if(!prepShowAllSeasons)a=a.filter(([,x])=>prepSeasonState(x).visible);
+ if(prepConfirmed)a=a.filter(([id])=>Number(prepState[id]?.count??0)>0);if(!a.length)continue;
  a=a.sort((A,B)=>Number(!!prepState[A[0]]?.done)-Number(!!prepState[B[0]]?.done));
  h+=`<section class="prepGroup"><div class="prepTitle">${esc(p.name)}</div>`;
- h+=a.map(([id,x])=>{const st=prepState[id]||{},n=st.count??0;return `<div class="prepRow ${st.done?"prepDone":""}"><input type="checkbox" data-pc="${id}" ${st.done?"checked":""}><div><b class="prepRecipeOpen" data-recipe-id="${id}" data-recipe-name="${esc(x.name)}">${esc(x.name)}</b><div class="small">平日 ${x.weekday??0} ／ 週末 ${x.weekend??0}</div></div><div class="prepQtyWrap"><select class="prepCount" data-pn="${id}">${Array.from({length:51},(_,i)=>`<option ${Number(n)===i?"selected":""}>${i}</option>`).join("")}</select><span class="prepQtyUnit">${esc(x.unit||"")}</span></div></div>`}).join("")+"</section>"}
+ h+=a.map(([id,x])=>{const st=prepState[id]||{},n=st.count??0;
+   const ss=prepSeasonState(x);
+   let seasonTag="";
+   if(ss.tag==="upcoming")seasonTag=`<span class="prepSeasonTag prepSeasonUpcoming">🔜 まもなく（${x.seasonStart}月〜・あと${ss.days}日）</span>`;
+   else if(ss.tag==="off")seasonTag=`<span class="prepSeasonTag prepSeasonOff">🌙 季節外（${x.seasonStart}〜${x.seasonEnd}月）</span>`;
+   else if(ss.tag==="forceShow")seasonTag=`<span class="prepSeasonTag prepSeasonForce">👁 常に表示中</span>`;
+   else if(ss.tag==="forceHide")seasonTag=`<span class="prepSeasonTag prepSeasonOff">🚫 常に非表示中</span>`;
+   return `<div class="prepRow ${st.done?"prepDone":""} ${!ss.visible?"prepOffSeason":""}"><input type="checkbox" data-pc="${id}" ${st.done?"checked":""}><div><b class="prepRecipeOpen" data-recipe-id="${id}" data-recipe-name="${esc(x.name)}">${esc(x.name)}</b>${seasonTag}<div class="small">平日 ${x.weekday??0} ／ 週末 ${x.weekend??0}</div></div><div class="prepQtyWrap"><select class="prepCount" data-pn="${id}">${Array.from({length:51},(_,i)=>`<option ${Number(n)===i?"selected":""}>${i}</option>`).join("")}</select><span class="prepQtyUnit">${esc(x.unit||"")}</span></div></div>`}).join("")+"</section>"}
  $("prepList").innerHTML=h||'<div class="empty">仕込み品目はまだありません。</div>';document.querySelectorAll("[data-pc]").forEach(c=>c.onchange=()=>update(ref(db,"prep/state/"+c.dataset.pc),{done:c.checked}));document.querySelectorAll("[data-pn]").forEach(c=>c.onchange=()=>update(ref(db,"prep/state/"+c.dataset.pn),{count:Number(c.value)}));
 }
 function renderPosManage(){const a=op();$("posManage").innerHTML=a.map(([id,x],i)=>`<div class="manage"><span>${esc(x.name)}</span><button data-pu="${id}">↑</button><button data-pd="${id}">↓</button><button class="danger" data-px="${id}">削除</button></div>`).join("");document.querySelectorAll("[data-pu]").forEach(b=>b.onclick=()=>movePos(b.dataset.pu,-1));document.querySelectorAll("[data-pd]").forEach(b=>b.onclick=()=>movePos(b.dataset.pd,1));document.querySelectorAll("[data-px]").forEach(b=>b.onclick=async()=>{const id=b.dataset.px;if(!confirm("このポジションと登録品目を削除しますか？"))return;const u={};u["prep/positions/"+id]=null;vals(prepItems).filter(([,x])=>x.positionId===id).forEach(([iid])=>{u["prep/items/"+iid]=null;u["prep/state/"+iid]=null});await update(ref(db),u)})}
-function renderPrepManage(){const pid=$("prepPos").value;if(!pid){$("prepManage").innerHTML="";return}const a=oi(pid);$("prepManage").innerHTML=a.map(([id,x])=>`<div class="manage"><span style="display:flex;gap:6px"><input type="text" value="${esc(x.name)}" data-en="${id}" style="flex:2;min-width:0;border:1px solid #ddd;border-radius:8px;padding:8px;font-weight:700;font-size:15px"><input type="text" value="${esc(x.unit||"")}" placeholder="単位" data-eu="${id}" style="flex:1;min-width:0;border:1px solid #ddd;border-radius:8px;padding:8px;font-size:15px"></span><button data-iu="${id}">↑</button><button data-id="${id}">↓</button><button class="danger" data-ix="${id}">削除</button></div><div class="needEdit"><input type="number" min="0" value="${x.weekday??0}" data-wd="${id}"><input type="number" min="0" value="${x.weekend??0}" data-we="${id}"></div>`).join("");document.querySelectorAll("[data-iu]").forEach(b=>b.onclick=()=>moveItem(b.dataset.iu,-1));document.querySelectorAll("[data-id]").forEach(b=>b.onclick=()=>moveItem(b.dataset.id,1));document.querySelectorAll("[data-ix]").forEach(b=>b.onclick=async()=>{await remove(ref(db,"prep/items/"+b.dataset.ix));await remove(ref(db,"prep/state/"+b.dataset.ix))});document.querySelectorAll("[data-wd]").forEach(i=>i.onchange=()=>update(ref(db,"prep/items/"+i.dataset.wd),{weekday:Number(i.value)||0}));document.querySelectorAll("[data-we]").forEach(i=>i.onchange=()=>update(ref(db,"prep/items/"+i.dataset.we),{weekend:Number(i.value)||0}));document.querySelectorAll("[data-en]").forEach(i=>i.onchange=()=>{const v=i.value.trim();if(v)update(ref(db,"prep/items/"+i.dataset.en),{name:v})});document.querySelectorAll("[data-eu]").forEach(i=>i.onchange=()=>update(ref(db,"prep/items/"+i.dataset.eu),{unit:i.value.trim()}))}
+function renderPrepManage(){const pid=$("prepPos").value;if(!pid){$("prepManage").innerHTML="";return}const a=oi(pid);const monthOptions=cur=>Array.from({length:12},(_,i)=>`<option value="${i+1}" ${cur===i+1?"selected":""}>${i+1}</option>`).join("");$("prepManage").innerHTML=a.map(([id,x])=>{const hasSeason=!!(x.seasonStart&&x.seasonEnd),ss=x.seasonStart||1,se=x.seasonEnd||12,force=x.seasonForce||"";return `<div class="manage"><span style="display:flex;gap:6px"><input type="text" value="${esc(x.name)}" data-en="${id}" style="flex:2;min-width:0;border:1px solid #ddd;border-radius:8px;padding:8px;font-weight:700;font-size:15px"><input type="text" value="${esc(x.unit||"")}" placeholder="単位" data-eu="${id}" style="flex:1;min-width:0;border:1px solid #ddd;border-radius:8px;padding:8px;font-size:15px"></span><button data-iu="${id}">↑</button><button data-id="${id}">↓</button><button class="danger" data-ix="${id}">削除</button></div><div class="needEdit"><input type="number" min="0" value="${x.weekday??0}" data-wd="${id}"><input type="number" min="0" value="${x.weekend??0}" data-we="${id}"></div><div class="seasonEdit"><label class="seasonEditCheck"><input type="checkbox" data-sk="${id}" ${hasSeason?"checked":""}> この品目は季節限定にする</label><div class="seasonControls" data-sw="${id}" ${hasSeason?"":"hidden"}><div class="seasonSelectWrap"><span class="seasonSelectLabel">開始</span><select class="prepMonthSelect" data-ss="${id}">${monthOptions(ss)}</select><span class="seasonSelectUnit">月</span></div><span class="seasonRangeSep">〜</span><div class="seasonSelectWrap"><span class="seasonSelectLabel">終了</span><select class="prepMonthSelect" data-se="${id}">${monthOptions(se)}</select><span class="seasonSelectUnit">月</span></div><button type="button" class="seasonForceBtn${force?" seasonForceActive":""}" data-sf="${id}" data-sfval="${force}">${prepSeasonForceLabel(force)}</button></div></div>`}).join("");document.querySelectorAll("[data-iu]").forEach(b=>b.onclick=()=>moveItem(b.dataset.iu,-1));document.querySelectorAll("[data-id]").forEach(b=>b.onclick=()=>moveItem(b.dataset.id,1));document.querySelectorAll("[data-ix]").forEach(b=>b.onclick=async()=>{await remove(ref(db,"prep/items/"+b.dataset.ix));await remove(ref(db,"prep/state/"+b.dataset.ix))});document.querySelectorAll("[data-wd]").forEach(i=>i.onchange=()=>update(ref(db,"prep/items/"+i.dataset.wd),{weekday:Number(i.value)||0}));document.querySelectorAll("[data-we]").forEach(i=>i.onchange=()=>update(ref(db,"prep/items/"+i.dataset.we),{weekend:Number(i.value)||0}));document.querySelectorAll("[data-en]").forEach(i=>i.onchange=()=>{const v=i.value.trim();if(v)update(ref(db,"prep/items/"+i.dataset.en),{name:v})});document.querySelectorAll("[data-eu]").forEach(i=>i.onchange=()=>update(ref(db,"prep/items/"+i.dataset.eu),{unit:i.value.trim()}));document.querySelectorAll("[data-sk]").forEach(cb=>cb.onchange=async()=>{const id=cb.dataset.sk,wrap=document.querySelector(`[data-sw="${id}"]`);if(cb.checked){wrap.hidden=false;const ssEl=wrap.querySelector("[data-ss]"),seEl=wrap.querySelector("[data-se]");await update(ref(db,"prep/items/"+id),{seasonStart:Number(ssEl.value),seasonEnd:Number(seEl.value)})}else{wrap.hidden=true;await update(ref(db,"prep/items/"+id),{seasonStart:null,seasonEnd:null,seasonForce:null})}});document.querySelectorAll("[data-ss]").forEach(sel=>sel.onchange=()=>update(ref(db,"prep/items/"+sel.dataset.ss),{seasonStart:Number(sel.value)}));document.querySelectorAll("[data-se]").forEach(sel=>sel.onchange=()=>update(ref(db,"prep/items/"+sel.dataset.se),{seasonEnd:Number(sel.value)}));document.querySelectorAll("[data-sf]").forEach(b=>b.onclick=async()=>{const id=b.dataset.sf,cur=b.dataset.sfval||"",next=cur===""?"show":cur==="show"?"hide":"";b.dataset.sfval=next;b.textContent=prepSeasonForceLabel(next);b.classList.toggle("seasonForceActive",!!next);await update(ref(db,"prep/items/"+id),{seasonForce:next||null})})}
 async function movePos(id,d){const a=op(),i=a.findIndex(([x])=>x===id),j=i+d;if(j<0||j>=a.length)return;const u={};u[`prep/positions/${a[i][0]}/order`]=j;u[`prep/positions/${a[j][0]}/order`]=i;await update(ref(db),u)}
 async function moveItem(id,d){const x=prepItems[id],a=oi(x.positionId),i=a.findIndex(([z])=>z===id),j=i+d;if(j<0||j>=a.length)return;const u={};u[`prep/items/${a[i][0]}/order`]=j;u[`prep/items/${a[j][0]}/order`]=i;await update(ref(db),u)}
 $("prepPos").onchange=renderPrepManage;
@@ -2436,7 +2549,35 @@ if($("confirmPrep"))$("confirmPrep").onclick=()=>{
   renderPrepFilters();
   renderPrepList();
 };
-onValue(prepPositionsRef,s=>{prepPositions=s.val()||{};renderPrepSelectors();renderPrepFilters();renderPrepList()});onValue(prepItemsRef,s=>{prepItems=s.val()||{};renderPrepManage();renderPrepList();updatePrepBadge()});onValue(prepStateRef,s=>{prepState=s.val()||{};renderPrepList();updatePrepBadge()});
+if($("prepSeasonAllToggle"))$("prepSeasonAllToggle").onclick=()=>{
+  prepShowAllSeasons=!prepShowAllSeasons;
+  $("prepSeasonAllToggle").textContent=prepShowAllSeasons?"🔎 季節内の品目のみ表示に戻す":"🔎 季節を問わず全品目表示";
+  $("prepSeasonAllToggle").classList.toggle("active",prepShowAllSeasons);
+  renderPrepList();
+};
+onValue(prepPositionsRef,s=>{prepPositions=s.val()||{};renderPrepSelectors();renderPrepFilters();renderPrepList()});
+onValue(prepItemsRef,s=>{
+  /* 品目管理欄（季節設定ボタン等）を操作すると、その上にある仕込み表本体（prepList）の
+     表示件数が増減して高さが変わり、画面が上下に揺れて見える不具合があったため、
+     #prepManageの画面上の位置を再描画の前後で比較し、ずれた分だけスクロール位置を
+     補正するようにした。他のonValueハンドラ（ポジション・状態）には影響しない。 */
+  const anchor=$("prepManage");
+  const beforeTop=anchor?anchor.getBoundingClientRect().top:null;
+  prepItems=s.val()||{};
+  renderPrepManage();
+  renderPrepList();
+  updatePrepBadge();
+  if(beforeTop!==null){
+    requestAnimationFrame(()=>{
+      const afterEl=$("prepManage");
+      if(!afterEl)return;
+      const afterTop=afterEl.getBoundingClientRect().top;
+      const delta=afterTop-beforeTop;
+      if(delta)window.scrollBy(0,delta);
+    });
+  }
+});
+onValue(prepStateRef,s=>{prepState=s.val()||{};renderPrepList();updatePrepBadge()});
 function updatePrepBadge(){
  const remaining=vals(prepItems).filter(([id])=>Number(prepState[id]?.count??0)>0&&!prepState[id]?.done).length;
  $("tabPrep").innerHTML=`🔪 仕込み表${remaining?` <span class="count">${remaining}</span>`:""}`;
@@ -3571,7 +3712,7 @@ function renderNonVegProductManager(){
     // 野菜ページ本体は、元の表示/非表示状態を壊さず、業者モード時だけ隠す。
     const children=[...$("vegetablePage").children];
     children.forEach(el=>{
-      if(el.id==="orderModeTabs"||el.id==="nonVegOrderArea"||el.tagName==="H1")return;
+      if(el.id==="orderModeTabs"||el.id==="nonVegOrderArea"||el.id==="vegPageHeader"||el.tagName==="H1")return;
       el.style.display=supplierMode ? "none" : "";
     });
 
@@ -7797,8 +7938,8 @@ JSONのみ。説明文禁止。
 
   function bindShiftNav(){
     const $=id=>document.getElementById(id);
-    const pages={shopping:'shoppingPage',vegetable:'vegetablePage',prep:'prepPage',shift:'shiftPage'};
-    const tabs={shopping:'tabShopping',vegetable:'tabVegetable',prep:'tabPrep',shift:'tabShift'};
+    const pages={shopping:'shoppingPage',openclose:'openClosePage',prep:'prepPage',shift:'shiftPage'};
+    const tabs={shopping:'tabShopping',openclose:'tabOpenClose',prep:'tabPrep',shift:'tabShift'};
 
     function show(which){
       if(which==='shift'){
@@ -8392,7 +8533,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     if(sales)sales.hidden=true;
     if(shift)shift.hidden=false;
     $('tabShift')?.classList.add('active');
-    $('tabShopping')?.classList.remove('active');$('tabVegetable')?.classList.remove('active');$('tabPrep')?.classList.remove('active');
+    $('tabShopping')?.classList.remove('active');$('tabOpenClose')?.classList.remove('active');$('tabPrep')?.classList.remove('active');
     try{window.dispatchEvent(new CustomEvent('shift-page-opened'));}catch(_){}
   }
   function init(){if($('salesDate'))$('salesDate').value=today();if($('expenseDate'))$('expenseDate').value=today();if($('salesLaborMonth'))$('salesLaborMonth').value=ym();if($('salesSummaryMonth'))$('salesSummaryMonth').value=ym();$('tabSales')?.addEventListener('click',switchSalesPage);$('salesPageCloseBtn')?.addEventListener('click',closeSalesPage);$('salesDate')?.addEventListener('change',renderCompare);$('salesSave')?.addEventListener('click',saveSales);$('salesImportBtn')?.addEventListener('click',runSalesImport);$('expenseSave')?.addEventListener('click',saveExpense);$('salesLaborCalc')?.addEventListener('click',calcLabor);$('salesSummaryCalc')?.addEventListener('click',calcSummary);$('salesSummaryMonth')?.addEventListener('change',renderExpenses);$('expenseList')?.addEventListener('click',async e=>{const b=e.target.closest('[data-exp-del]');if(!b)return;if(!confirm('この経費を削除しますか？'))return;await fb().remove(fb().ref(fb().db,'expenses/'+b.dataset.expDel));await load()});load().then(augmentShift);setInterval(augmentShift,1500)}
@@ -9021,7 +9162,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     if(sales)sales.hidden=true;
     if(shift)shift.hidden=false;
     var b=document.getElementById('tabShift');if(b)b.classList.add('active');
-    ['tabShopping','tabVegetable','tabPrep'].forEach(function(id){var x=document.getElementById(id);if(x)x.classList.remove('active');});
+    ['tabShopping','tabOpenClose','tabPrep'].forEach(function(id){var x=document.getElementById(id);if(x)x.classList.remove('active');});
     top();
     try{window.dispatchEvent(new CustomEvent('shift-page-opened'));}catch(e){}
   }
@@ -9049,9 +9190,9 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 /* スマホで 買い物 → 野菜発注 → 仕込み表 → シフト をスワイプで切り替える機能を追加。
    既存のタブボタン・ページ内容・データ処理は一切変更しない（見出しの追加スワイプ操作のみ）。 */
 (function(){
-  var ORDER=["shopping","vegetable","prep","shift"];
-  var TAB_ID={shopping:"tabShopping",vegetable:"tabVegetable",prep:"tabPrep",shift:"tabShift"};
-  var PAGE_ID={shopping:"shoppingPage",vegetable:"vegetablePage",prep:"prepPage",shift:"shiftPage"};
+  var ORDER=["shopping","openclose","prep","shift"];
+  var TAB_ID={shopping:"tabShopping",openclose:"tabOpenClose",prep:"tabPrep",shift:"tabShift"};
+  var PAGE_ID={shopping:"shoppingPage",openclose:"openClosePage",prep:"prepPage",shift:"shiftPage"};
 
   function currentIndex(){
     for(var i=0;i<ORDER.length;i++){
@@ -9076,7 +9217,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   // これらのモーダル／パネル内にあるため、あわせて対象外になる。
   // 買い物ページ「表示する場所」（#filters）も横スクロールで店舗を切り替える要素のため、
   // ここでの横方向の動きがページ切り替えに誤反応しないよう対象外にする。
-  var EXCLUDE_SELECTOR='[id$="Modal"],[id$="Overlay"],[id$="Panel"],[data-me-drag],[data-ri-drag],.masterDragHandle,#filters';
+  var EXCLUDE_SELECTOR='[id$="Modal"],[id$="Overlay"],[id$="Panel"],[data-me-drag],[data-ri-drag],.masterDragHandle,#filters,.ccDragHandle';
 
   var startX=0,startY=0,startTime=0,tracking=false;
   var SWIPE_MIN_DISTANCE=60;
@@ -9087,7 +9228,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     if(!e.touches||e.touches.length!==1)return;
     var target=e.target;
     if(target&&target.closest&&target.closest(EXCLUDE_SELECTOR))return;
-    if(!target||!target.closest||!target.closest("#shoppingPage,#vegetablePage,#prepPage,#shiftPage"))return;
+    if(!target||!target.closest||!target.closest("#shoppingPage,#openClosePage,#prepPage,#shiftPage"))return;
     startX=e.touches[0].clientX;
     startY=e.touches[0].clientY;
     startTime=Date.now();
@@ -9111,5 +9252,529 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   },{passive:true});
 
   document.addEventListener("touchcancel",function(){tracking=false;},{passive:true});
+})();
+</script>
+<style id="openCloseCheckTabFix">
+/* 「✅ 開店・閉店」タブが既存の白背景タブ(white-space:nowrap指定)より文字数が多く、
+   スマホ幅では枠からはみ出ていたため、このタブだけ折り返しを許可した。
+   さらに、自動改行だと「閉店」の途中（閉／店）で折り返されて読みにくかったため、
+   ラベル側に<br>を入れて「開店」「閉店」の間できれいに2行になるよう固定し、
+   それ以外の位置で改行されないようword-break:keep-allを指定した。
+   他の3タブ（買い物・仕込み表・シフト）の挙動は一切変更しない。 */
+.navtabs.navtabs4 #tabOpenClose{
+  white-space:normal!important;
+  word-break:keep-all!important;
+  line-height:1.25!important;
+}
+/* 仕込み表「仕込み操作」の枠に4つ目のボタン（🥬野菜発注）を追加したことで、
+   3列グリッドの2段目に1個だけ残りバランスが悪くなっていたため、
+   このボタンだけ2段目を横いっぱいに使うようにする。他のボタンの配置は変更しない。 */
+.prepActionGroup.prepOperation #prepVegetableBtn{
+  grid-column:1 / -1!important;
+}
+</style>
+<style id="openCloseCheckStyle">
+/* 全体的に文字・タップ領域が小さいという指摘（2026-09-06）を受けて、
+   このページ（開店・閉店チェック）内の文字サイズ・入力欄・ボタンを全体的に大きくした。
+   他ページの文字サイズには影響しない。 */
+.ccListCard h2{margin-top:0}
+.ccHint{font-size:15px;color:#666;margin:0 0 12px;line-height:1.5}
+.ccListToolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin:0 0 12px}
+.ccListToolbar .ccHint{margin:0;flex:1;min-width:200px}
+.ccShowAllBtn{width:auto!important;margin:0!important;white-space:nowrap;padding:9px 14px!important;font-size:14px!important;border-radius:9px}
+.ccShowAllBtn.ccShowAllActive{background:#2867df!important;color:#fff!important;border-color:#2867df!important}
+.ccItem{display:grid;grid-template-columns:38px 28px 1fr;grid-template-areas:"handle check text" "actions actions actions" "panel panel panel";column-gap:10px;row-gap:8px;align-items:center;padding:10px 0;border-bottom:2px solid #c7ced8}
+.ccItem:last-child{border-bottom:0}
+.ccItem .ccDragHandle{grid-area:handle}
+.ccItem input[type="checkbox"]{grid-area:check;width:27px;height:27px;margin:0}
+.ccItem .ccItemTextWrap{grid-area:text}
+.ccItemTextWrap{min-width:0;overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:9px}
+.ccItem.ccChecked .ccItemText{color:#999;text-decoration:line-through}
+.ccItemText{min-width:0;max-width:none;padding:11px;border:1px solid #d5dbe3;border-radius:9px;background:#fff;font-size:17px!important;width:100%;box-sizing:border-box;display:block}
+.ccItemActions{grid-area:actions;display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-start}
+.ccItemActions .ccDaysBtn{flex:1;min-width:0}
+.ccItemActions .ccDeleteBtn{flex:0 0 auto}
+.ccDragHandle{display:flex;align-items:center;justify-content:center;width:38px;height:44px;box-sizing:border-box;font-size:20px;text-align:center;color:#6b7280;border:1px solid #d7dce5;border-radius:9px;background:#fff;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;cursor:grab}
+.ccItem.ccDragging,.ccFreeItem.ccDragging{opacity:.55;transform:scale(.99);box-shadow:0 5px 14px rgba(0,0,0,.14)}
+.ccItem.ccDragOver,.ccFreeItem.ccDragOver{outline:2px dashed #8aaef5;outline-offset:1px}
+.ccDaysBtn{width:auto!important;min-width:44px!important;max-width:120px;height:44px!important;padding:6px 12px!important;margin:0!important;background:#f0f4ff!important;color:#2867df!important;border:1px solid #c7d5f5!important;border-radius:10px;font-size:14px!important;font-weight:800!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ccDaysBtn.ccDaysActive{background:#2867df!important;color:#fff!important;border-color:#2867df!important}
+.ccDeleteBtn{width:44px!important;min-width:44px!important;height:44px!important;padding:0!important;margin:0!important;background:#fff0f0!important;color:#b42318!important;border:1px solid #efc3c3!important;border-radius:10px;font-size:18px!important;font-weight:800!important;line-height:1!important}
+.ccDaysPanel{grid-area:panel;margin-top:10px;padding:12px;background:#f6f8fc;border:1px solid #dbe3f0;border-radius:10px}
+.ccDaysPanel[hidden]{display:none}
+.ccDaysPanelLabel{display:block;font-size:13px;color:#555;font-weight:800;margin-bottom:8px}
+.ccDayChips{display:flex;flex-wrap:wrap;gap:8px}
+.ccDayChip{width:auto!important;min-width:44px!important;height:44px!important;padding:0 14px!important;margin:0!important;background:#fff!important;color:#333!important;border:1px solid #d5dbe3!important;border-radius:9px;font-size:15px!important;font-weight:800!important}
+.ccDayChip.ccDayChipActive{background:#2867df!important;color:#fff!important;border-color:#2867df!important}
+.ccAddRow{display:flex;gap:10px;margin-top:12px}
+.ccAddRow input{flex:1;min-width:0;padding:12px;border:1px solid #d5dbe3;border-radius:10px;background:#fff;font-size:17px!important;box-sizing:border-box;margin:0}
+.ccAddRow button{width:auto!important;margin:0!important;white-space:nowrap;padding:12px 16px!important;font-size:16px!important}
+.ccEmpty{padding:14px;text-align:center;color:#777;background:#f8fafc;border:1px dashed #cbd2da;border-radius:10px;font-size:15px}
+.ccFreeItem{display:grid;grid-template-columns:38px 1fr 190px 210px;gap:10px;align-items:center;padding:12px 0;border-bottom:2px solid #c7ced8}
+.ccFreeItem:last-child{border-bottom:0}
+.ccFreeField{display:flex;flex-direction:column;gap:4px;min-width:0}
+.ccFieldLabel{font-size:13px;color:#777;font-weight:800}
+.ccFreeField input{padding:10px;border:1px solid #d5dbe3;border-radius:9px;background:#fff;font-size:16px!important;width:100%;box-sizing:border-box;margin:0}
+.ccPersonRow{display:flex;gap:8px;align-items:center}
+.ccPersonRow input{flex:1;min-width:0}
+.ccPersonRow .ccDeleteBtn{flex:0 0 auto}
+@media(max-width:600px){
+  .ccFreeItem{grid-template-columns:38px 1fr;grid-template-areas:"handle text" "date date" "person person";row-gap:10px}
+  .ccFreeItem .ccDragHandle{grid-area:handle}
+  .ccFreeItem .ccItemTextWrap{grid-area:text}
+  .ccFreeItem .ccDateField{grid-area:date}
+  .ccFreeItem .ccPersonField{grid-area:person}
+}
+</style>
+<style id="prepSeasonStyle">
+/* 仕込み品目の季節表示機能（2026-09-06追加）。
+   季節設定（開始月〜終了月）がない品目は今まで通り常に表示される。
+   このスタイルは仕込み表ページ内のみに影響し、他ページには影響しない。 */
+.prepSeasonToggle{width:auto!important;margin:10px 0 0!important;padding:9px 14px!important;font-size:14px!important;border-radius:9px;background:#e9eaed;color:#333}
+.prepSeasonToggle.active{background:#2867df!important;color:#fff!important}
+.prepSeasonTag{display:inline-block;margin-left:6px;padding:2px 8px;border-radius:8px;font-size:12px;font-weight:700;white-space:nowrap;vertical-align:middle}
+.prepSeasonTag.prepSeasonUpcoming{background:#fff3a8;color:#7a5200;border:1px solid #e6b800}
+.prepSeasonTag.prepSeasonOff{background:#eee;color:#777;border:1px solid #ddd}
+.prepRow.prepOffSeason{opacity:.6}
+.prepSeasonTag.prepSeasonForce{background:#e6f0ff;color:#2867df;border:1px solid #b9d0f7}
+.seasonEdit{margin:0 0 10px;padding:8px 0 0}
+.seasonEditCheck{display:flex;align-items:center;gap:8px;font-size:14px;color:#444;font-weight:700}
+.seasonEditCheck input[type="checkbox"]{width:22px;height:22px;margin:0}
+.seasonControls{margin-top:10px;padding:12px;background:#f6f8fc;border:1px solid #dbe3f0;border-radius:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.seasonControls[hidden]{display:none}
+.seasonRangeSep{font-size:16px;color:#777;font-weight:700}
+.seasonSelectWrap{display:flex;flex-direction:column;align-items:center;gap:4px}
+.seasonSelectLabel{font-size:11px;color:#777}
+.prepMonthSelect{width:66px;padding:11px 4px!important;text-align:center;text-align-last:center;font-size:16px!important;font-weight:800;border:1px solid #c9cdd3;border-radius:8px;background:#fff;color:#222}
+.seasonSelectUnit{font-size:12px;color:#666}
+.seasonForceBtn{width:auto!important;margin:0 0 0 auto!important;padding:10px 12px!important;font-size:13px!important;font-weight:800!important;border-radius:9px;background:#e9eaed;color:#333;white-space:nowrap}
+.seasonForceBtn.seasonForceActive{background:#2867df!important;color:#fff!important}
+@media(max-width:520px){
+  .seasonControls{gap:8px}
+  .seasonForceBtn{margin-left:0!important;flex:1 1 100%}
+}
+</style>
+<script id="vegPageOpenCloseV1">
+(function(){
+  'use strict';
+  function top(){
+    try{window.scrollTo({top:0,left:0,behavior:'auto'});}catch(e){window.scrollTo(0,0);}
+    try{document.documentElement.scrollTop=0;document.body.scrollTop=0;}catch(e){}
+  }
+  function showVeg(){
+    var veg=document.getElementById('vegetablePage');
+    if(!veg)return;
+    document.querySelectorAll('.page').forEach(function(p){p.hidden=true;});
+    veg.hidden=false;
+    document.querySelectorAll('.navtabs.navtabs4 button').forEach(function(b){b.classList.remove('active');});
+    top();
+    setTimeout(top,30);
+  }
+  function showPrep(){
+    var veg=document.getElementById('vegetablePage'), prep=document.getElementById('prepPage');
+    if(veg)veg.hidden=true;
+    if(prep)prep.hidden=false;
+    var b=document.getElementById('tabPrep');if(b)b.classList.add('active');
+    ['tabShopping','tabOpenClose','tabShift'].forEach(function(id){var x=document.getElementById(id);if(x)x.classList.remove('active');});
+    top();
+  }
+  function bind(){
+    var b=document.getElementById('prepVegetableBtn');
+    if(b && b.dataset.vegV1!=='1'){
+      b.dataset.vegV1='1';
+      b.addEventListener('click',function(e){e.preventDefault();showVeg();});
+    }
+    var c=document.getElementById('vegPageCloseBtn');
+    if(c && c.dataset.vegCloseV1!=='1'){
+      c.dataset.vegCloseV1='1';
+      c.addEventListener('click',function(e){e.preventDefault();showPrep();});
+    }
+    window.__openVegPageV1=showVeg;
+    window.__closeVegPageV1=showPrep;
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bind);else bind();
+  setInterval(bind,1000);
+})();
+</script>
+<script id="openCloseCheckScript">
+(function(){
+  'use strict';
+  const $=id=>document.getElementById(id);
+  const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  function fb(){return window.__fb||null}
+  function todayStr(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
+  function newId(){return 'cc'+Date.now().toString(36)+Math.random().toString(36).slice(2,8)}
+
+  const LIST_KEYS=['lunchOpen','lunchClose','dinnerOpen','dinnerClose','freeTime'];
+  const DAY_KEYS=['lunchOpen','lunchClose','dinnerOpen','dinnerClose'];
+  const DAY_LABELS=['日','月','火','水','木','金','土'];
+  let lists={},checked={},freeRecords={},mode='lunch',bound=false;
+  let showAllState={},openDaysPanel={};
+  function todayDow(){return new Date().getDay()}
+  function matchesToday(item){const d=item&&item.days;return !Array.isArray(d)||d.length===0||d.includes(todayDow())}
+  function dayLabel(item){
+    const days=Array.isArray(item.days)?item.days:[];
+    if(!days.length)return '📅 曜日設定';
+    return '📅 '+[...days].sort((a,b)=>a-b).map(d=>DAY_LABELS[d]).join('・');
+  }
+  function dayChipsHtml(key,item){
+    const days=Array.isArray(item.days)?item.days:[];
+    return DAY_LABELS.map((label,d)=>`<button type="button" class="ccDayChip${days.includes(d)?' ccDayChipActive':''}" data-cc-day-toggle="${esc(item.id)}" data-day="${d}">${label}</button>`).join('');
+  }
+
+  // 項目名（作業名）欄が長い文字列で見えなくなる問題への対応。
+  // 枠（.ccItemTextWrap）の幅は変えず、中のinputだけ内容に合わせて必要な幅に広げることで、
+  // 枠内を横スクロールして全文を確認できるようにする（枠自体は既存のレイアウトのまま）。
+  function autosizeCcText(inp){
+    if(!inp)return;
+    const wrap=inp.parentElement;
+    if(!wrap)return;
+    const wrapWidth=wrap.clientWidth;
+    if(!wrapWidth)return;
+    inp.style.width=wrapWidth+'px';
+    const needed=inp.scrollWidth;
+    inp.style.width=Math.max(wrapWidth,needed+4)+'px';
+  }
+  function bindTextAutosize(container){
+    container.querySelectorAll('.ccItemTextWrap>.ccItemText').forEach(inp=>{
+      autosizeCcText(inp);
+      inp.addEventListener('input',()=>autosizeCcText(inp));
+    });
+  }
+
+  function listsRef(key){const {db,ref}=fb();return ref(db,'openCloseCheck/lists/'+key)}
+
+  async function ccTransaction(key,mutator){
+    const {runTransaction}=fb();
+    await runTransaction(listsRef(key),arr=>{
+      arr=Array.isArray(arr)?arr.slice():[];
+      mutator(arr);
+      return arr;
+    });
+  }
+
+  async function addItem(key){
+    const input=document.querySelector(`[data-cc-input="${key}"]`);
+    const text=(input?.value||'').trim();
+    if(!text)return;
+    await ccTransaction(key,arr=>{arr.push({id:newId(),text})});
+    if(input)input.value='';
+  }
+
+  async function deleteItem(key,id){
+    if(!confirm('この項目を削除しますか？'))return;
+    await ccTransaction(key,arr=>{
+      const i=arr.findIndex(x=>x.id===id);
+      if(i>=0)arr.splice(i,1);
+    });
+    if(key==='freeTime'){
+      try{const {ref,db,remove}=fb();await remove(ref(db,'openCloseCheck/freeTimeRecord/'+id));}catch(_){}
+    }
+  }
+
+  function bindDragReorder(key,container){
+    const rowSelector=key==='freeTime'?'.ccFreeItem':'.ccItem';
+    container.querySelectorAll(rowSelector).forEach(row=>{
+      const handle=row.querySelector('.ccDragHandle');
+      if(!handle)return;
+      let holdTimer=null,holding=false,startY=0,dragFromId=null,dropId=null,dropBefore=true;
+      const getY=e=>e.touches&&e.touches[0]?e.touches[0].clientY:e.clientY;
+      const clearDrag=()=>{
+        if(holdTimer){clearTimeout(holdTimer);holdTimer=null;}
+        holding=false;
+        row.classList.remove('ccDragging');
+        container.querySelectorAll(rowSelector).forEach(r=>r.classList.remove('ccDragOver'));
+        dragFromId=null;dropId=null;dropBefore=true;
+      };
+      const begin=()=>{
+        dragFromId=row.dataset.ccItem;
+        dropId=dragFromId;
+        dropBefore=true;
+        holding=true;
+        row.classList.add('ccDragging');
+      };
+      const update=e=>{
+        if(!holding)return;
+        const y=getY(e);
+        if(y==null)return;
+        if(e.cancelable)e.preventDefault();
+        container.querySelectorAll(rowSelector).forEach(r=>r.classList.remove('ccDragOver'));
+        const rows=[...container.querySelectorAll(rowSelector)].filter(r=>r!==row);
+        let target=null,before=true;
+        for(const r of rows){
+          const rect=r.getBoundingClientRect();
+          if(y<rect.top+rect.height/2){target=r;before=true;break;}
+          if(y<=rect.bottom){target=r;before=false;break;}
+        }
+        if(!target&&rows.length){target=rows[rows.length-1];before=false;}
+        if(target){dropId=target.dataset.ccItem;dropBefore=before;target.classList.add('ccDragOver');}
+      };
+      const finish=async()=>{
+        if(holdTimer){clearTimeout(holdTimer);holdTimer=null;}
+        if(!holding){clearDrag();return;}
+        const from=dragFromId,to=dropId;
+        if(from&&to&&from!==to){
+          try{
+            await ccTransaction(key,arr=>{
+              const fi=arr.findIndex(x=>x.id===from);
+              if(fi<0)return;
+              const item=arr.splice(fi,1)[0];
+              let ti=arr.findIndex(x=>x.id===to);
+              if(ti<0){arr.splice(fi,0,item);return;}
+              if(!dropBefore)ti++;
+              arr.splice(ti,0,item);
+            });
+          }catch(err){console.error(err)}
+        }
+        clearDrag();
+      };
+      handle.addEventListener('touchstart',e=>{
+        if(!e.touches||!e.touches[0])return;
+        startY=e.touches[0].clientY;
+        if(holdTimer)clearTimeout(holdTimer);
+        holdTimer=setTimeout(()=>{begin();holdTimer=null;},300);
+      },{passive:false});
+      handle.addEventListener('touchmove',e=>{
+        if(holdTimer&&!holding){
+          const t=e.touches&&e.touches[0];
+          if(t&&Math.abs(t.clientY-startY)>10){clearTimeout(holdTimer);holdTimer=null;}
+          return;
+        }
+        if(holding){if(e.cancelable)e.preventDefault();update(e);}
+      },{passive:false});
+      handle.addEventListener('touchend',()=>{
+        if(holdTimer){clearTimeout(holdTimer);holdTimer=null;}
+        if(holding)finish();else clearDrag();
+      },{passive:false});
+      handle.addEventListener('touchcancel',()=>clearDrag(),{passive:false});
+      let pointerId=null;
+      handle.addEventListener('pointerdown',e=>{
+        if(e.pointerType==='touch')return;
+        if(e.pointerType==='mouse'&&e.button!==0)return;
+        pointerId=e.pointerId;startY=e.clientY;
+        if(holdTimer)clearTimeout(holdTimer);
+        holdTimer=setTimeout(()=>{begin();try{handle.setPointerCapture(pointerId)}catch(_){}},300);
+      });
+      handle.addEventListener('pointermove',e=>{
+        if(e.pointerType==='touch'||e.pointerId!==pointerId)return;
+        if(!holding){if(Math.abs(e.clientY-startY)>10&&holdTimer){clearTimeout(holdTimer);holdTimer=null;}return;}
+        update(e);
+      });
+      handle.addEventListener('pointerup',e=>{
+        if(e.pointerType==='touch'||e.pointerId!==pointerId)return;
+        finish();pointerId=null;
+      });
+      handle.addEventListener('pointercancel',()=>{clearDrag();pointerId=null;});
+    });
+  }
+
+  function bindListRowEvents(key,container){
+    container.querySelectorAll('[data-cc-check]').forEach(cb=>{
+      cb.onchange=async()=>{
+        const id=cb.dataset.ccCheck;
+        const {ref,db,set,remove}=fb();
+        const path='openCloseCheck/checked/'+key+'/'+todayStr()+'/'+id;
+        try{ if(cb.checked)await set(ref(db,path),true); else await remove(ref(db,path)); }catch(err){console.error(err)}
+      };
+    });
+    container.querySelectorAll('[data-cc-text]').forEach(inp=>{
+      inp.onchange=async()=>{
+        const id=inp.dataset.ccText,val=inp.value.trim();
+        if(!val){inp.value=(lists[key]||[]).find(x=>x.id===id)?.text||'';return;}
+        await ccTransaction(key,arr=>{const it=arr.find(x=>x.id===id);if(it)it.text=val;});
+      };
+    });
+    container.querySelectorAll('[data-cc-del]').forEach(b=>{
+      b.onclick=()=>deleteItem(key,b.dataset.ccDel);
+    });
+    container.querySelectorAll('[data-cc-days-toggle]').forEach(b=>{
+      b.onclick=()=>{
+        const id=b.dataset.ccDaysToggle;
+        openDaysPanel[key]=(openDaysPanel[key]===id)?null:id;
+        renderList(key);
+      };
+    });
+    container.querySelectorAll('[data-cc-day-toggle]').forEach(chip=>{
+      chip.onclick=async()=>{
+        const id=chip.dataset.ccDayToggle;
+        const day=parseInt(chip.dataset.day,10);
+        try{
+          await ccTransaction(key,arr=>{
+            const it=arr.find(x=>x.id===id);
+            if(!it)return;
+            const days=Array.isArray(it.days)?it.days.slice():[];
+            const idx=days.indexOf(day);
+            if(idx>=0)days.splice(idx,1);else days.push(day);
+            it.days=days;
+          });
+        }catch(err){console.error(err)}
+      };
+    });
+  }
+
+  function bindFreeRowEvents(container){
+    container.querySelectorAll('[data-cc-text]').forEach(inp=>{
+      inp.onchange=async()=>{
+        const id=inp.dataset.ccText,val=inp.value.trim();
+        if(!val){inp.value=(lists.freeTime||[]).find(x=>x.id===id)?.text||'';return;}
+        await ccTransaction('freeTime',arr=>{const it=arr.find(x=>x.id===id);if(it)it.text=val;});
+      };
+    });
+    container.querySelectorAll('[data-cc-free-date]').forEach(inp=>{
+      inp.onchange=async()=>{
+        const id=inp.dataset.ccFreeDate;
+        const {ref,db,update}=fb();
+        try{await update(ref(db,'openCloseCheck/freeTimeRecord/'+id),{date:inp.value||''});}catch(err){console.error(err)}
+      };
+    });
+    container.querySelectorAll('.ccFreePerson').forEach(inp=>{
+      inp.onchange=async()=>{
+        const id=inp.dataset.ccFreePerson;
+        const {ref,db,update}=fb();
+        try{await update(ref(db,'openCloseCheck/freeTimeRecord/'+id),{person:inp.value.trim()});}catch(err){console.error(err)}
+      };
+    });
+    container.querySelectorAll('[data-cc-del]').forEach(b=>{
+      b.onclick=()=>deleteItem('freeTime',b.dataset.ccDel);
+    });
+  }
+
+  function renderList(key){
+    const container=document.querySelector(`[data-cc-items="${key}"]`);
+    if(!container)return;
+    const fullArr=lists[key]||[];
+    const showAll=!!showAllState[key];
+    const arr=showAll?fullArr:fullArr.filter(matchesToday);
+    const toolBtn=document.querySelector(`[data-cc-showall="${key}"]`);
+    if(toolBtn){
+      toolBtn.textContent=showAll?'📅 今日の項目のみ表示':'🔎 全項目を表示';
+      toolBtn.classList.toggle('ccShowAllActive',showAll);
+    }
+    const dateKey=todayStr();
+    const checkedForDate=(checked[key]&&checked[key][dateKey])||{};
+    if(!arr.length){
+      container.innerHTML=(!showAll&&fullArr.length)
+        ? '<div class="ccEmpty">今日表示する項目はありません。「🔎 全項目を表示」ですべての項目を確認できます。</div>'
+        : '<div class="ccEmpty">項目がありません。下の「＋ 追加」から登録してください。</div>';
+      return;
+    }
+    // チェック済みの項目は一覧の下部にまとめて表示する（Firebase上の並び順・ドラッグ並び替えの基準となる
+    // 実データの順序は変更しない。表示のときだけ「未チェック→チェック済み」の順に並べ替える）。
+    const uncheckedArr=arr.filter(item=>!checkedForDate[item.id]);
+    const checkedArr=arr.filter(item=>checkedForDate[item.id]);
+    const displayArr=uncheckedArr.concat(checkedArr);
+    container.innerHTML=displayArr.map(item=>{
+      const isChecked=!!checkedForDate[item.id];
+      const hasDays=Array.isArray(item.days)&&item.days.length>0;
+      const panelOpen=openDaysPanel[key]===item.id;
+      return `<div class="ccItem${isChecked?' ccChecked':''}" data-cc-item="${esc(item.id)}"><span class="ccDragHandle">⋮⋮</span><input type="checkbox" data-cc-check="${esc(item.id)}" ${isChecked?'checked':''}><div class="ccItemTextWrap"><input type="text" class="ccItemText" data-cc-text="${esc(item.id)}" value="${esc(item.text)}"></div><div class="ccItemActions"><button type="button" class="ccDaysBtn${hasDays?' ccDaysActive':''}" data-cc-days-toggle="${esc(item.id)}">${dayLabel(item)}</button><button type="button" class="ccDeleteBtn" data-cc-del="${esc(item.id)}" aria-label="削除" title="削除">❎</button></div><div class="ccDaysPanel" data-cc-days-panel="${esc(item.id)}"${panelOpen?'':' hidden'}><span class="ccDaysPanelLabel">表示する曜日を選択（未選択の場合は毎日表示）</span><div class="ccDayChips">${dayChipsHtml(key,item)}</div></div></div>`;
+    }).join('');
+    bindListRowEvents(key,container);
+    bindDragReorder(key,container);
+    bindTextAutosize(container);
+  }
+
+  function renderFree(){
+    const container=$('ccFreeItems');
+    if(!container)return;
+    const arr=lists.freeTime||[];
+    if(!arr.length){
+      container.innerHTML='<div class="ccEmpty">項目がありません。下の「＋ 追加」から登録してください。</div>';
+      return;
+    }
+    container.innerHTML=arr.map(item=>{
+      const rec=freeRecords[item.id]||{};
+      return `<div class="ccFreeItem" data-cc-item="${esc(item.id)}"><span class="ccDragHandle">⋮⋮</span><div class="ccItemTextWrap"><input type="text" class="ccItemText" data-cc-text="${esc(item.id)}" value="${esc(item.text)}"></div><div class="ccFreeField ccDateField"><span class="ccFieldLabel">📅 日付</span><input type="date" data-cc-free-date="${esc(item.id)}" value="${esc(rec.date||'')}"></div><div class="ccFreeField ccPersonField"><span class="ccFieldLabel">👤 担当者</span><div class="ccPersonRow"><input type="text" class="ccFreePerson" data-cc-free-person="${esc(item.id)}" placeholder="担当者名" value="${esc(rec.person||'')}"><button type="button" class="ccDeleteBtn" data-cc-del="${esc(item.id)}" aria-label="削除" title="削除">❎</button></div></div></div>`;
+    }).join('');
+    bindFreeRowEvents(container);
+    bindDragReorder('freeTime',container);
+    bindTextAutosize(container);
+  }
+
+  function setMode(m){
+    mode=m;
+    $('ccTabLunch')?.classList.toggle('active',m==='lunch');
+    $('ccTabDinner')?.classList.toggle('active',m==='dinner');
+    const lo=document.querySelector('[data-cc-list="lunchOpen"]'),lc=document.querySelector('[data-cc-list="lunchClose"]');
+    const do_=document.querySelector('[data-cc-list="dinnerOpen"]'),dc=document.querySelector('[data-cc-list="dinnerClose"]');
+    if(lo)lo.hidden=m!=='lunch'; if(lc)lc.hidden=m!=='lunch';
+    if(do_)do_.hidden=m!=='dinner'; if(dc)dc.hidden=m!=='dinner';
+    // 非表示（幅0）の間にレンダリングされた項目名欄は横幅を正しく測れていないため、
+    // 表示状態に切り替わったタイミングで測り直す。
+    (m==='lunch'?['lunchOpen','lunchClose']:['dinnerOpen','dinnerClose']).forEach(k=>{
+      const c=document.querySelector(`[data-cc-items="${k}"]`);
+      if(c)bindTextAutosize(c);
+    });
+  }
+
+  function bindStaticControls(){
+    $('ccTabLunch')?.addEventListener('click',()=>setMode('lunch'));
+    $('ccTabDinner')?.addEventListener('click',()=>setMode('dinner'));
+    document.querySelectorAll('[data-cc-add]').forEach(b=>{
+      if(b.dataset.ccAddBound==='1')return;
+      b.dataset.ccAddBound='1';
+      b.addEventListener('click',()=>addItem(b.dataset.ccAdd));
+    });
+    document.querySelectorAll('[data-cc-input]').forEach(inp=>{
+      if(inp.dataset.ccInputBound==='1')return;
+      inp.dataset.ccInputBound='1';
+      inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();addItem(inp.dataset.ccInput);}});
+    });
+    document.querySelectorAll('[data-cc-showall]').forEach(b=>{
+      if(b.dataset.ccShowallBound==='1')return;
+      b.dataset.ccShowallBound='1';
+      b.addEventListener('click',()=>{
+        const key=b.dataset.ccShowall;
+        showAllState[key]=!showAllState[key];
+        renderList(key);
+      });
+    });
+    // アコーディオン（<details>）が閉じた状態でレンダリングされた項目名欄は
+    // 横幅0で測ってしまうため、開いたタイミングで測り直す。
+    document.querySelectorAll('#openClosePage details').forEach(d=>{
+      if(d.dataset.ccDetailsBound==='1')return;
+      d.dataset.ccDetailsBound='1';
+      d.addEventListener('toggle',()=>{
+        if(!d.open)return;
+        const itemsEl=d.querySelector('[data-cc-items]');
+        if(itemsEl)bindTextAutosize(itemsEl);
+        const freeEl=d.querySelector('#ccFreeItems');
+        if(freeEl)bindTextAutosize(freeEl);
+      });
+    });
+  }
+
+  function bindFirebase(){
+    if(bound)return;
+    bound=true;
+    const {db,ref,onValue}=fb();
+    LIST_KEYS.forEach(key=>{
+      onValue(ref(db,'openCloseCheck/lists/'+key),s=>{
+        lists[key]=Array.isArray(s.val())?s.val():[];
+        if(key==='freeTime')renderFree();else renderList(key);
+      });
+    });
+    ['lunchOpen','lunchClose','dinnerOpen','dinnerClose'].forEach(key=>{
+      onValue(ref(db,'openCloseCheck/checked/'+key),s=>{
+        checked[key]=s.val()||{};
+        renderList(key);
+      });
+    });
+    onValue(ref(db,'openCloseCheck/freeTimeRecord'),s=>{
+      freeRecords=s.val()||{};
+      renderFree();
+    });
+  }
+
+  function boot(){
+    if(!$('openClosePage'))return;
+    bindStaticControls();
+    if(window.__fb){bindFirebase();}
+    else{
+      const timer=setInterval(()=>{if(window.__fb){clearInterval(timer);bindFirebase();}},100);
+      setTimeout(()=>clearInterval(timer),30000);
+    }
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
 })();
 </script>
