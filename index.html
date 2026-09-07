@@ -6342,8 +6342,10 @@ function renderDay(){
       const v=Number(hasSplit?(type==='lunch'?rec.lunch:rec.dinner)||0:(rec?.amount||0));
       return p ? `前年同曜日売上（${label}）：¥${v.toLocaleString('ja-JP')}${rec?'':'（未登録）'}` : '';
     }
-    const a=$('shiftTodayPrevYearSales'); if(a) a.textContent=calc(today());
-    const b=$('shiftOtherDayPrevYearSales'); if(b) b.textContent=calc(date||today());
+    // 前年同曜日データがまだ準備できていない瞬間は空文字を返すため、
+    // その場合は既存の表示を消さずに残す（他の描画ロジックとの競合による点滅防止）。
+    const at=calc(today()); const a=$('shiftTodayPrevYearSales'); if(a&&at) a.textContent=at;
+    const bt=calc(date||today()); const b=$('shiftOtherDayPrevYearSales'); if(b&&bt) b.textContent=bt;
   }
   window.renderPrevYearSalesUnderDate=renderPrevYearSalesUnderDate;
 
@@ -8546,7 +8548,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     $('tabShopping')?.classList.remove('active');$('tabOpenClose')?.classList.remove('active');$('tabPrep')?.classList.remove('active');
     try{window.dispatchEvent(new CustomEvent('shift-page-opened'));}catch(_){}
   }
-  function init(){if($('salesDate'))$('salesDate').value=today();if($('expenseDate'))$('expenseDate').value=today();if($('salesLaborMonth'))$('salesLaborMonth').value=ym();if($('salesSummaryMonth'))$('salesSummaryMonth').value=ym();$('tabSales')?.addEventListener('click',switchSalesPage);$('salesPageCloseBtn')?.addEventListener('click',closeSalesPage);$('salesDate')?.addEventListener('change',renderCompare);$('salesSave')?.addEventListener('click',saveSales);$('salesImportBtn')?.addEventListener('click',runSalesImport);$('expenseSave')?.addEventListener('click',saveExpense);$('salesLaborCalc')?.addEventListener('click',calcLabor);$('salesSummaryCalc')?.addEventListener('click',calcSummary);$('salesSummaryMonth')?.addEventListener('change',renderExpenses);$('expenseList')?.addEventListener('click',async e=>{const b=e.target.closest('[data-exp-del]');if(!b)return;if(!confirm('この経費を削除しますか？'))return;await fb().remove(fb().ref(fb().db,'expenses/'+b.dataset.expDel));await load()});load().then(augmentShift);setInterval(augmentShift,1500)}
+  function init(){if($('salesDate'))$('salesDate').value=today();if($('expenseDate'))$('expenseDate').value=today();if($('salesLaborMonth'))$('salesLaborMonth').value=ym();if($('salesSummaryMonth'))$('salesSummaryMonth').value=ym();$('tabSales')?.addEventListener('click',switchSalesPage);$('salesPageCloseBtn')?.addEventListener('click',closeSalesPage);$('salesDate')?.addEventListener('change',renderCompare);$('salesSave')?.addEventListener('click',saveSales);$('salesImportBtn')?.addEventListener('click',runSalesImport);$('expenseSave')?.addEventListener('click',saveExpense);$('salesLaborCalc')?.addEventListener('click',calcLabor);$('salesSummaryCalc')?.addEventListener('click',calcSummary);$('salesSummaryMonth')?.addEventListener('change',renderExpenses);$('expenseList')?.addEventListener('click',async e=>{const b=e.target.closest('[data-exp-del]');if(!b)return;if(!confirm('この経費を削除しますか？'))return;await fb().remove(fb().ref(fb().db,'expenses/'+b.dataset.expDel));await load()});function bootLoad(){if(fb()?.get){load().then(augmentShift);}else{setTimeout(bootLoad,200);}}bootLoad();setInterval(augmentShift,1500)}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();
 </script>
