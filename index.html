@@ -1273,8 +1273,7 @@ body{overflow-anchor:none!important;}
 </div>
 
 <style id="receiptManagementStyle">
-#receiptBuyerManage.storeManage button{padding:6px 10px!important;font-size:13px!important;border-radius:10px!important}
-.receiptBuyerNameInput{flex:1;min-width:0;padding:12px!important;border:1px solid #ddd;border-radius:12px;background:#fff;font-size:16px!important;margin:0!important}
+#receiptBuyerManage button{padding:6px 10px!important;font-size:13px!important;border-radius:10px!important}
 .receiptPendingRow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 0;border-bottom:1px solid #eee}
 .receiptPendingRow:last-child{border-bottom:0}
 .receiptPendingInfo{display:flex;flex-direction:column;gap:2px;min-width:0}
@@ -1310,7 +1309,7 @@ body{overflow-anchor:none!important;}
 
   <details style="margin-top:16px">
     <summary style="cursor:pointer;font-weight:800;font-size:15px;color:#777">👤 買う人の管理</summary>
-    <div id="receiptBuyerManage" class="storeManage" style="margin-top:8px"></div>
+    <div id="receiptBuyerManage" style="margin-top:8px"></div>
     <div class="row">
       <input type="text" id="receiptBuyerNewName" placeholder="名前を入力して追加">
       <button type="button" class="gray" id="receiptBuyerAdd">＋ 追加</button>
@@ -8809,17 +8808,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   function renderBuyerManage(){
     const box=$('receiptBuyerManage'); if(!box)return;
     const arr=Object.entries(buyers).sort((a,b)=>(a[1].name||'').localeCompare(b[1].name||'ja'));
-    box.innerHTML=arr.length?arr.map(([id,b])=>`<div class="storeManage"><input type="text" class="receiptBuyerNameInput" data-buyer-name="${esc(id)}" value="${esc(b.name)}"><button class="danger" data-buyer-del="${esc(id)}">削除</button></div>`).join(''):'<div class="small">まだ登録がありません。</div>';
-    box.querySelectorAll('[data-buyer-name]').forEach(inp=>{
-      if(document.activeElement===inp)return;
-      inp.onchange=async()=>{
-        const id=inp.dataset.buyerName;
-        const name=inp.value.trim();
-        if(!name){inp.value=buyers[id]?.name||'';return}
-        const f=fb(); if(!f?.update)return;
-        try{await f.update(f.ref(f.db,'receiptBuyers/'+id),{name});}catch(err){console.error(err);alert('保存に失敗しました。');inp.value=buyers[id]?.name||'';}
-      };
-    });
+    box.innerHTML=arr.length?arr.map(([id,b])=>`<div class="storeManage"><span>${esc(b.name)}</span><button class="danger" data-buyer-del="${esc(id)}">削除</button></div>`).join(''):'<div class="small">まだ登録がありません。</div>';
     box.querySelectorAll('[data-buyer-del]').forEach(btn=>btn.onclick=async()=>{
       const id=btn.dataset.buyerDel, name=buyers[id]?.name||'';
       if(!confirm(`「${name}」を削除しますか？\n記録済みの買い物データは残ります。`))return;
