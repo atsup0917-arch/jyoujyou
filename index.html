@@ -897,6 +897,7 @@ html.recipeModalLocked, body.recipeModalLocked{
 #shiftPage .shiftMemoDay.selected{outline:3px solid #3f6fd9;outline-offset:-2px}
 #shiftPage .shiftMemoDot{position:absolute;right:5px;bottom:4px;width:7px;height:7px;border-radius:50%;background:#e0a800}
 #shiftPage .shiftFreeDueDot{position:absolute;left:5px;top:4px;width:7px;height:7px;border-radius:50%;background:#c62828}
+#shiftPage .shiftFreeDueInfo{margin-top:10px;padding:12px 14px;border-radius:12px;background:#fff0f0;border:1px solid #f0bcbc;color:#a52222;font-weight:700;line-height:1.5}
 #shiftPage .shiftMemoCalendarHint{font-size:13px;color:#666;margin-top:8px}
 #shiftPage .shiftMemoSelected{margin-top:12px;border-radius:12px;background:#f5f7fb;padding:12px;white-space:pre-wrap;line-height:1.6}
 @media(max-width:520px){#shiftPage .shiftAttendanceGrid{grid-template-columns:1fr 1fr;gap:6px 8px}#shiftPage .shiftAttendanceName{padding:8px;font-size:16px}#shiftPage .shiftMemoDay{min-height:44px}}
@@ -1582,6 +1583,7 @@ body{overflow-anchor:none!important;}
 
 <div class="card" id="shiftCalendarCard">
   <div id="shiftMemoCalendar" class="shiftMemoCalendar"></div>
+  <div id="shiftFreeDueInfo" class="shiftFreeDueInfo" hidden></div>
 </div>
 
 <div class="card" id="shiftStaffAddCard" hidden>
@@ -6382,6 +6384,13 @@ function renderDay(){
     if(memoBox){memoBox.hidden=!ma.length;memoBox.textContent=ma.length?`📝 引き継ぎ\n${ma.map(x=>x.text).join('\n\n')}`:'';}
   }
 
+  function renderFreeDueInfo(date){
+    const box=$('shiftFreeDueInfo'); if(!box)return;
+    const tasks=(window.__freeTaskDueDates||{})[date];
+    if(!tasks||!tasks.length){box.hidden=true;box.textContent='';return;}
+    box.hidden=false;
+    box.textContent=`🔴 ${date} は手空き作業の期限日です：${tasks.join('、')}`;
+  }
   function renderMemoCalendar(){
     const box=$('shiftMemoCalendar'); if(!box)return;
     const selected=$('shiftMemoDate')?.value||today();
@@ -6406,11 +6415,12 @@ function renderDay(){
     }
     html+=`</div><div class="shiftMemoCalendarHint">🟨 色が付いた日は引き継ぎメモが登録されています。⬛ 灰色の日は${shiftType()==='lunch'?'ランチ':'ディナー'}の定休日です。🔴 赤丸は手空き作業の期限日です。日付をタップすると確認できます。</div>`;
     box.innerHTML=html;
+    renderFreeDueInfo(selected);
     box.querySelectorAll('[data-memo-day]').forEach(b=>b.addEventListener('click',()=>{
       const d=b.dataset.memoDay;
       if($('shiftMemoDate'))$('shiftMemoDate').value=d;
       if($('shiftViewDate'))$('shiftViewDate').value=d;
-      renderMemos(); renderDay();
+      renderMemos(); renderDay(); renderFreeDueInfo(d);
     }));
     $('shiftMemoPrevMonth')?.addEventListener('click',()=>{
       const d=new Date(y,m-1,1); const iso=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-01`;
