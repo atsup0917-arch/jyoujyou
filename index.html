@@ -8807,7 +8807,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 
   function renderBuyerManage(){
     const box=$('receiptBuyerManage'); if(!box)return;
-    const arr=Object.entries(buyers).sort((a,b)=>(a[1].name||'').localeCompare(b[1].name||'ja'));
+    const arr=Object.entries(buyers).sort((a,b)=>a[0]<b[0]?-1:(a[0]>b[0]?1:0));
     box.innerHTML=arr.length?arr.map(([id,b])=>`<div class="storeManage"><span>${esc(b.name)}</span><button class="danger" data-buyer-del="${esc(id)}">削除</button></div>`).join(''):'<div class="small">まだ登録がありません。</div>';
     box.querySelectorAll('[data-buyer-del]').forEach(btn=>btn.onclick=async()=>{
       const id=btn.dataset.buyerDel, name=buyers[id]?.name||'';
@@ -8819,7 +8819,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 
   function renderBuyerTap(){
     const box=$('receiptBuyerTap'); if(!box)return;
-    const arr=Object.entries(buyers).sort((a,b)=>(a[1].name||'').localeCompare(b[1].name||'ja'));
+    const arr=Object.entries(buyers).sort((a,b)=>a[0]<b[0]?-1:(a[0]>b[0]?1:0));
     if(!buyers[selectedBuyerId]&&arr.length)selectedBuyerId=arr[0][0];
     box.innerHTML=arr.length?arr.map(([id,b])=>`<button type="button" data-buyer-tap="${esc(id)}" class="${id===selectedBuyerId?'active':''}">${esc(b.name)}</button>`).join(''):'<div class="small">下の「👤 買う人の管理」から追加してください。</div>';
     box.querySelectorAll('[data-buyer-tap]').forEach(btn=>btn.onclick=()=>{
@@ -8865,7 +8865,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       if(!byBuyer[bid])byBuyer[bid]={count:0,total:0};
       byBuyer[bid].count++; byBuyer[bid].total+=Number(x.amount||0);
     });
-    const buyerIds=Object.keys(byBuyer);
+    const buyerIds=Object.keys(byBuyer).sort((a,b)=>a<b?-1:(a>b?1:0));
     if(!buyerIds.length){box.innerHTML='<div class="small">未精算の買い物はありません。</div>';return}
     box.innerHTML=buyerIds.map(bid=>{
       const name=buyers[bid]?.name||'(削除済みの買う人)';
@@ -8910,7 +8910,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       count++; total+=Number(x.amount||0);
       monthEntries.push([id,x]);
     });
-    const rows=Object.keys(byBuyer).sort((a,b)=>(buyers[a]?.name||'').localeCompare(buyers[b]?.name||'ja'));
+    const rows=Object.keys(byBuyer).sort((a,b)=>a<b?-1:(a>b?1:0));
     const box=$('receiptSummaryResult');
     box.innerHTML=rows.length?rows.map(bid=>{
       const name=buyers[bid]?.name||'(削除済みの買う人)';
