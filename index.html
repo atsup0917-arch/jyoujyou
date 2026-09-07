@@ -892,6 +892,8 @@ html.recipeModalLocked, body.recipeModalLocked{
 #shiftPage .shiftMemoDay{position:relative;min-height:48px;padding:6px 2px;border:1px solid #e5e7eb;border-radius:10px;background:#fff;color:#222 !important;-webkit-text-fill-color:#222 !important;font-size:15px;font-weight:700;cursor:pointer}
 #shiftPage .shiftMemoDay.empty{border-color:transparent;background:transparent;cursor:default}
 #shiftPage .shiftMemoDay.hasMemo{background:#fff3a8;border-color:#e0c200;color:#222 !important;-webkit-text-fill-color:#222 !important}
+#shiftPage .shiftMemoDay.dayClosed{background:#666;border-color:#444;color:#fff !important;-webkit-text-fill-color:#fff !important}
+#shiftPage .shiftMemoDay.dayClosed .shiftMemoDot{background:#fff3a8}
 #shiftPage .shiftMemoDay.selected{outline:3px solid #3f6fd9;outline-offset:-2px}
 #shiftPage .shiftMemoDot{position:absolute;right:5px;bottom:4px;width:7px;height:7px;border-radius:50%;background:#e0a800}
 #shiftPage .shiftMemoCalendarHint{font-size:13px;color:#666;margin-top:8px}
@@ -5065,6 +5067,7 @@ button, label {
     updateShiftUploadTargetLabel();
     renderShiftRegisteredPeriods();
     renderDay();
+    renderMemoCalendar();
   }
 
   const dateLabel=date=>{const d=new Date(date+'T00:00:00');return `${d.getMonth()+1}/${d.getDate()}（${['日','月','火','水','木','金','土'][d.getDay()]}）`};
@@ -6328,7 +6331,8 @@ function renderDay(){
     function calc(d){
       const p=typeof window.__salesPrevSameWeekday==='function'?window.__salesPrevSameWeekday(d):'';
       const rec=p?daily?.[p]:null;
-      if(rec&&rec.closed) return p ? `前年同曜日売上（${label}）：定休日` : '';
+      const isClosed=type==='lunch'?rec?.closedLunch:rec?.closedDinner;
+      if(rec&&isClosed) return p ? `前年同曜日売上（${label}）：定休日` : '';
       const hasSplit=rec&&(rec.lunch!=null||rec.dinner!=null);
       const v=Number(hasSplit?(type==='lunch'?rec.lunch:rec.dinner)||0:(rec?.amount||0));
       return p ? `前年同曜日売上（${label}）：¥${v.toLocaleString('ja-JP')}${rec?'':'（未登録）'}` : '';
@@ -6339,6 +6343,7 @@ function renderDay(){
     const bt=calc(date||today()); const b=$('shiftOtherDayPrevYearSales'); if(b&&bt) b.textContent=bt;
   }
   window.renderPrevYearSalesUnderDate=renderPrevYearSalesUnderDate;
+  window.renderMemoCalendar=()=>renderMemoCalendar();
 
   function renderTodayQuick(){
     const date=today();
@@ -6382,6 +6387,7 @@ function renderDay(){
     const y=base.getFullYear(), m=base.getMonth();
     const first=new Date(y,m,1), last=new Date(y,m+1,0);
     const memoDates=new Set(Object.values(memos||{}).filter(x=>x?.date&&String(x.text||'').trim()&&shiftMemoScopedKey(x)).map(x=>x.date));
+    const salesDaily=window.__salesDailyData||{};
     const monthLabel=`${y}年${m+1}月`;
     let html=`<div class="shiftMemoCalendarHead"><button type="button" class="gray" id="shiftMemoPrevMonth">‹</button><div class="shiftMemoCalendarTitle">${monthLabel}</div><button type="button" class="gray" id="shiftMemoNextMonth">›</button></div>`;
     html+='<div class="shiftMemoCalendarWeek"><div>日</div><div>月</div><div>火</div><div>水</div><div>木</div><div>金</div><div>土</div></div>';
@@ -6390,9 +6396,10 @@ function renderDay(){
     for(let d=1;d<=last.getDate();d++){
       const iso=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
       const has=memoDates.has(iso), sel=iso===selected;
-      html+=`<button type="button" class="shiftMemoDay${has?' hasMemo':''}${sel?' selected':''}" data-memo-day="${iso}">${d}${has?'<span class="shiftMemoDot"></span>':''}</button>`;
+      const closed=shiftType()==='lunch'?!!salesDaily[iso]?.closedLunch:!!salesDaily[iso]?.closedDinner;
+      html+=`<button type="button" class="shiftMemoDay${has?' hasMemo':''}${closed?' dayClosed':''}${sel?' selected':''}" data-memo-day="${iso}">${d}${has?'<span class="shiftMemoDot"></span>':''}</button>`;
     }
-    html+='</div><div class="shiftMemoCalendarHint">🟨 色が付いた日は引き継ぎメモが登録されています。日付をタップすると確認できます。</div>';
+    html+=`</div><div class="shiftMemoCalendarHint">🟨 色が付いた日は引き継ぎメモが登録されています。⬛ 灰色の日は${shiftType()==='lunch'?'ランチ':'ディナー'}の定休日です。日付をタップすると確認できます。</div>`;
     box.innerHTML=html;
     box.querySelectorAll('[data-memo-day]').forEach(b=>b.addEventListener('click',()=>{
       const d=b.dataset.memoDay;
@@ -7164,7 +7171,6 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 #salesPage .salesStatusBadge.done{background:#eefaf1;color:#176b32}
 #salesPage .salesStatusBadge.missing{background:#fff8e5;color:#805b00}
 #salesPage .salesStatusBadge.closed{background:#f1f1f1;color:#555}
-#salesClosedToggle.active{background:#c62828!important;color:#fff!important;border-color:#c62828!important}
 .ccSalesQuick{margin:12px 0;padding:12px;border:1px solid #d8e2f5;border-radius:14px;background:#f8fbff}
 .ccSalesQuickLabel{font-weight:800;font-size:15px;margin-bottom:8px}
 .ccSalesQuickRow{display:grid;grid-template-columns:1fr auto;gap:8px}
@@ -7174,13 +7180,32 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 .ccSalesQuickStatus.done{color:#176b32}
 .ccSalesQuickStatus.missing{color:#a65f00}
 .ccSalesQuickStatus.closed{color:#777}
-@media(max-width:600px){#salesPage .salesGrid,#salesPage .salesSummary{grid-template-columns:1fr 1fr}#salesPage .salesRow{grid-template-columns:1fr 1fr 72px}#salesPage .salesItem{grid-template-columns:82px 1fr auto}.navtabs4{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
+#salesPage .salesCal{margin-top:12px;border:1px solid #e1e4e8;border-radius:16px;padding:12px;background:#fff}
+#salesPage .salesCalHead{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
+#salesPage .salesCalHead button{margin:0;min-width:48px;padding:9px 12px}
+#salesPage .salesCalTitle{font-size:20px;font-weight:800;text-align:center;flex:1}
+#salesPage .salesCalWeek{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:4px}
+#salesPage .salesCalWeek div{text-align:center;font-size:12px;font-weight:700;color:#666;padding:4px 0}
+#salesPage .salesCalGrid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+#salesPage .salesCalDay{position:relative;min-height:44px;padding:6px 2px;border:1px solid #e5e7eb;border-radius:10px;background:#fff;color:#222!important;-webkit-text-fill-color:#222!important;font-size:15px;font-weight:700;cursor:pointer}
+#salesPage .salesCalDay.empty{border-color:transparent;background:transparent;cursor:default}
+#salesPage .salesCalDay.selected{outline:3px solid #3269df;outline-offset:-2px}
+#salesPage .salesCalDots{position:absolute;left:0;right:0;bottom:4px;display:flex;justify-content:center;gap:4px}
+#salesPage .salesCalDot{width:7px;height:7px;border-radius:50%;background:transparent;border:1px solid #ddd}
+#salesPage .salesCalDot.done{background:#2aa052;border-color:#2aa052}
+#salesPage .salesCalDot.closed{background:#666;border-color:#666}
+#salesPage .salesCalDot.missing{background:#d98a1f;border-color:#d98a1f}
+#salesPage .salesCalHint{font-size:13px;color:#666;margin-top:8px;line-height:1.6}
+#salesPage .salesStatusBadge{margin-bottom:8px}
+.salesClosedBtn.active{background:#c62828!important;color:#fff!important;border-color:#c62828!important}
+@media(max-width:600px){#salesPage .salesGrid,#salesPage .salesSummary{grid-template-columns:1fr 1fr}#salesPage .salesRow{grid-template-columns:1fr 1fr 72px}#salesPage .salesItem{grid-template-columns:82px 1fr auto}#salesPage .salesCalDay{min-height:40px}.navtabs4{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
 </style>
 <div id="salesPage" class="page" hidden>
   <div class="salesPageHeader"><h1 style="margin:0">💰 売上確認</h1><button type="button" id="salesPageCloseBtn" class="salesPageCloseBtn" aria-label="売上確認を閉じる">✕</button></div>
   <div class="card">
     <h2>📊 日別売上を確認・入力</h2>
-    <div class="salesGrid">
+    <div id="salesCalendar" class="salesCal"></div>
+    <div class="salesGrid" style="margin-top:12px">
       <div><label>📅 日付</label><input id="salesDate" type="date"></div>
       <div><label>📝 メモ</label><input id="salesMemo" type="text" placeholder="例：周年イベント"></div>
     </div>
@@ -7189,9 +7214,10 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       <div><label>🌙 ディナー売上</label><input id="salesAmountDinner" type="number" min="0" step="1" placeholder="例：250000"></div>
     </div>
     <div class="salesGrid" style="margin-top:10px">
-      <button id="salesSave">保存</button>
-      <button type="button" class="gray" id="salesClosedToggle">🚫 定休日にする</button>
+      <button type="button" class="gray salesClosedBtn" id="salesClosedLunchToggle">🚫 ランチを定休日に</button>
+      <button type="button" class="gray salesClosedBtn" id="salesClosedDinnerToggle">🚫 ディナーを定休日に</button>
     </div>
+    <div style="margin-top:10px"><button id="salesSave">保存</button></div>
     <div id="salesCompare" style="margin-top:12px"></div>
   </div>
 </div>
@@ -7203,7 +7229,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   const fmt=n=>'¥'+Number(n||0).toLocaleString('ja-JP');
   const esc=s=>String(s??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   let salesData={};
-  let closedState=false;
+  let closedLunchState=false, closedDinnerState=false;
   function dateObj(s){const [y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d)}
   function prevSameWeekday(dateStr){
     const d=dateObj(dateStr), y=d.getFullYear()-1, target=d.getDay();
@@ -7212,31 +7238,78 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     return base.getFullYear()+'-'+String(base.getMonth()+1).padStart(2,'0')+'-'+String(base.getDate()).padStart(2,'0');
   }
   function updateClosedToggleUI(){
-    const btn=$('salesClosedToggle'); if(!btn)return;
-    btn.textContent=closedState?'🚫 定休日（解除する）':'🚫 定休日にする';
-    btn.classList.toggle('active',closedState);
-    if($('salesAmountLunch'))$('salesAmountLunch').disabled=closedState;
-    if($('salesAmountDinner'))$('salesAmountDinner').disabled=closedState;
+    const lb=$('salesClosedLunchToggle'), db=$('salesClosedDinnerToggle');
+    if(lb){lb.textContent=closedLunchState?'🚫 ランチ定休日（解除する）':'🚫 ランチを定休日に';lb.classList.toggle('active',closedLunchState);}
+    if(db){db.textContent=closedDinnerState?'🚫 ディナー定休日（解除する）':'🚫 ディナーを定休日に';db.classList.toggle('active',closedDinnerState);}
+    if($('salesAmountLunch'))$('salesAmountLunch').disabled=closedLunchState;
+    if($('salesAmountDinner'))$('salesAmountDinner').disabled=closedDinnerState;
+  }
+  function statusLine(label,isClosed,amount){
+    if(isClosed)return `<div class="salesStatusBadge closed">🚫 ${label}は定休日として登録されています</div>`;
+    if(amount!=null)return `<div class="salesStatusBadge done">✅ ${label} 入力済み　${fmt(amount||0)}</div>`;
+    return `<div class="salesStatusBadge missing">⬜ ${label}はまだ入力されていません</div>`;
   }
   function renderStatus(d){
     const rec=salesData[d];
     const box=$('salesCompare'); if(!box)return;
-    if(rec&&rec.closed){
-      box.innerHTML=`<div class="salesStatusBadge closed">🚫 この日は定休日として登録されています</div>`;
-    }else if(rec&&(rec.lunch!=null||rec.dinner!=null)){
-      box.innerHTML=`<div class="salesStatusBadge done">✅ 入力済み　ランチ ${fmt(rec.lunch||0)}　／　ディナー ${fmt(rec.dinner||0)}</div>${rec.n?`<div class="small" style="margin-top:6px">⚠️ ${esc(rec.n)}</div>`:''}`;
-    }else{
-      box.innerHTML=`<div class="salesStatusBadge missing">⬜ この日はまだ売上が入力されていません</div>`;
+    let html=statusLine('ランチ',!!(rec&&rec.closedLunch),rec&&rec.lunch!=null?rec.lunch:null)
+      +statusLine('ディナー',!!(rec&&rec.closedDinner),rec&&rec.dinner!=null?rec.dinner:null);
+    if(rec&&rec.n)html+=`<div class="small">⚠️ ${esc(rec.n)}</div>`;
+    box.innerHTML=html;
+  }
+  let calendarAnchor=null;
+  function renderSalesCalendar(){
+    const box=$('salesCalendar'); if(!box)return;
+    const selected=$('salesDate')?.value||today();
+    if(!calendarAnchor){
+      const b=new Date((selected||today())+'T00:00:00');
+      calendarAnchor=new Date(b.getFullYear(),b.getMonth(),1);
     }
+    const y=calendarAnchor.getFullYear(), m=calendarAnchor.getMonth();
+    const first=new Date(y,m,1), last=new Date(y,m+1,0);
+    const todayStr=today();
+    const monthLabel=`${y}年${m+1}月`;
+    let html=`<div class="salesCalHead"><button type="button" class="gray" id="salesCalPrevMonth">‹</button><div class="salesCalTitle">${monthLabel}</div><button type="button" class="gray" id="salesCalNextMonth">›</button></div>`;
+    html+='<div class="salesCalWeek"><div>日</div><div>月</div><div>火</div><div>水</div><div>木</div><div>金</div><div>土</div></div>';
+    html+='<div class="salesCalGrid">';
+    for(let i=0;i<first.getDay();i++)html+='<div class="salesCalDay empty"></div>';
+    function stateOf(iso,closedFlag,amount){
+      if(closedFlag)return 'closed';
+      if(amount!=null)return 'done';
+      if(iso<todayStr)return 'missing';
+      return 'none';
+    }
+    for(let d=1;d<=last.getDate();d++){
+      const iso=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      const rec=salesData[iso];
+      const sel=iso===selected;
+      const lState=stateOf(iso,rec&&rec.closedLunch,rec&&rec.lunch!=null?rec.lunch:null);
+      const dState=stateOf(iso,rec&&rec.closedDinner,rec&&rec.dinner!=null?rec.dinner:null);
+      const dots=`<span class="salesCalDots"><span class="salesCalDot ${lState}"></span><span class="salesCalDot ${dState}"></span></span>`;
+      html+=`<button type="button" class="salesCalDay${sel?' selected':''}" data-sales-day="${iso}">${d}${dots}</button>`;
+    }
+    html+='</div><div class="salesCalHint">🟢 入力済み　⚫ 定休日　🟠 未入力（過去）　左のドット=ランチ／右のドット=ディナー。日付をタップすると下に表示されます。</div>';
+    box.innerHTML=html;
+    box.querySelectorAll('[data-sales-day]').forEach(b=>b.addEventListener('click',()=>{
+      const iso=b.dataset.salesDay;
+      if($('salesDate'))$('salesDate').value=iso;
+      applyDateToForm(iso);
+    }));
+    $('salesCalPrevMonth')?.addEventListener('click',()=>{calendarAnchor=new Date(y,m-1,1);renderSalesCalendar();});
+    $('salesCalNextMonth')?.addEventListener('click',()=>{calendarAnchor=new Date(y,m+1,1);renderSalesCalendar();});
   }
   function applyDateToForm(d){
     const rec=salesData[d];
-    closedState=!!(rec&&rec.closed);
+    closedLunchState=!!(rec&&rec.closedLunch);
+    closedDinnerState=!!(rec&&rec.closedDinner);
     if($('salesAmountLunch'))$('salesAmountLunch').value=(rec&&rec.lunch!=null)?rec.lunch:'';
     if($('salesAmountDinner'))$('salesAmountDinner').value=(rec&&rec.dinner!=null)?rec.dinner:'';
     if($('salesMemo'))$('salesMemo').value=(rec&&rec.memo)?rec.memo:'';
     updateClosedToggleUI();
     renderStatus(d);
+    const base=new Date(d+'T00:00:00');
+    calendarAnchor=new Date(base.getFullYear(),base.getMonth(),1);
+    renderSalesCalendar();
   }
   async function load(){
     if(!fb()?.get)return;
@@ -7244,33 +7317,45 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     salesData=a?.val?.()||{};
     window.__salesDailyData=salesData;
     window.__salesPrevSameWeekday=prevSameWeekday;
+    window.renderMemoCalendar?.();
     applyDateToForm($('salesDate')?.value||today());
   }
   async function saveDailySales(date,patch){
     if(!fb()?.update||!fb()?.get)return false;
     const snap=await fb().get(fb().ref(fb().db,'sales/daily/'+date));
     const existing=snap?.val?.()||{};
-    const lunch=patch.lunch!==undefined?Number(patch.lunch||0):Number(existing.lunch||0);
-    const dinner=patch.dinner!==undefined?Number(patch.dinner||0):Number(existing.dinner||0);
-    const closed=patch.closed!==undefined?!!patch.closed:!!existing.closed;
+    const closedLunch=patch.closedLunch!==undefined?!!patch.closedLunch:!!existing.closedLunch;
+    const closedDinner=patch.closedDinner!==undefined?!!patch.closedDinner:!!existing.closedDinner;
+    let lunch,dinner;
+    if(closedLunch)lunch=0;
+    else if(patch.lunch!==undefined)lunch=Number(patch.lunch||0);
+    else lunch=(existing.lunch!=null)?Number(existing.lunch):null;
+    if(closedDinner)dinner=0;
+    else if(patch.dinner!==undefined)dinner=Number(patch.dinner||0);
+    else dinner=(existing.dinner!=null)?Number(existing.dinner):null;
     const memo=patch.memo!==undefined?String(patch.memo||''):(existing.memo||'');
     const base='sales/daily/'+date+'/';
-    await fb().update(fb().ref(fb().db),{[base+'date']:date,[base+'lunch']:lunch,[base+'dinner']:dinner,[base+'amount']:lunch+dinner,[base+'closed']:closed,[base+'memo']:memo,[base+'updatedAt']:Date.now()});
+    await fb().update(fb().ref(fb().db),{[base+'date']:date,[base+'lunch']:lunch,[base+'dinner']:dinner,[base+'amount']:(lunch||0)+(dinner||0),[base+'closedLunch']:closedLunch,[base+'closedDinner']:closedDinner,[base+'memo']:memo,[base+'updatedAt']:Date.now()});
     await load();
     return true;
   }
   window.saveDailySales=saveDailySales;
   async function saveSales(){
     const d=$('salesDate')?.value||today();
-    if(closedState){
-      await saveDailySales(d,{closed:true,lunch:0,dinner:0});
-      alert('定休日として保存しました。');
+    const lunchRaw=String($('salesAmountLunch').value||'').trim();
+    const dinnerRaw=String($('salesAmountDinner').value||'').trim();
+    const memo=String($('salesMemo').value||'').trim();
+    const patch={closedLunch:closedLunchState,closedDinner:closedDinnerState,memo};
+    if(closedLunchState)patch.lunch=0;
+    else if(lunchRaw!=='')patch.lunch=Number(lunchRaw);
+    if(closedDinnerState)patch.dinner=0;
+    else if(dinnerRaw!=='')patch.dinner=Number(dinnerRaw);
+    if(patch.lunch===undefined&&patch.dinner===undefined&&!closedLunchState&&!closedDinnerState&&!memo){
+      alert('ランチかディナーの売上を入力するか、定休日に設定してください。');
       return;
     }
-    const lunch=Number($('salesAmountLunch').value||0),dinner=Number($('salesAmountDinner').value||0);
-    if(!lunch&&!dinner&&!String($('salesMemo').value||'').trim()&&!confirm('ランチ・ディナーとも0円として保存しますか？'))return;
-    await saveDailySales(d,{closed:false,lunch,dinner,memo:String($('salesMemo').value||'')});
-    alert('売上を保存しました。');
+    await saveDailySales(d,patch);
+    alert('保存しました。');
   }
   function augmentShift(){
     const date=$('shiftViewDate')?.value||today();
@@ -7291,7 +7376,8 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     $('salesPageCloseBtn')?.addEventListener('click',closeSalesPage);
     $('salesDate')?.addEventListener('change',()=>applyDateToForm($('salesDate').value||today()));
     $('salesSave')?.addEventListener('click',saveSales);
-    $('salesClosedToggle')?.addEventListener('click',()=>{closedState=!closedState;updateClosedToggleUI();});
+    $('salesClosedLunchToggle')?.addEventListener('click',()=>{closedLunchState=!closedLunchState;updateClosedToggleUI();});
+    $('salesClosedDinnerToggle')?.addEventListener('click',()=>{closedDinnerState=!closedDinnerState;updateClosedToggleUI();});
     function bootLoad(){if(fb()?.get){load().then(augmentShift);}else{setTimeout(bootLoad,200);}}
     bootLoad();
     setInterval(augmentShift,1500);
@@ -7367,7 +7453,8 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     function calc(d){
       const p=prevSameWeekday(d);
       const rec=p?daily[p]:null;
-      if(rec&&rec.closed) return p?'前年同曜日売上（'+label+'）：定休日':'';
+      const isClosed=type==='lunch'?rec?.closedLunch:rec?.closedDinner;
+      if(rec&&isClosed) return p?'前年同曜日売上（'+label+'）：定休日':'';
       const hasSplit=rec&&(rec.lunch!=null||rec.dinner!=null);
       const amount=Number(hasSplit?(type==='lunch'?rec.lunch:rec.dinner)||0:(rec&&rec.amount!=null?rec.amount:0));
       return p?'前年同曜日売上（'+label+'）：¥'+amount.toLocaleString('ja-JP')+(rec?'':'（未登録）'):'';
@@ -8545,8 +8632,9 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     const input=$('ccSales'+meal+'Input'), status=$('ccSales'+meal+'Status');
     if(!input||!status)return;
     const key=meal==='Lunch'?'lunch':'dinner';
-    if(rec&&rec.closed){
-      status.textContent='🚫 本日は定休日として登録されています';
+    const closedKey=meal==='Lunch'?'closedLunch':'closedDinner';
+    if(rec&&rec[closedKey]){
+      status.textContent='🚫 本日は'+(meal==='Lunch'?'ランチ':'ディナー')+'の定休日として登録されています';
       status.className='ccSalesQuickStatus closed';
       input.disabled=true;
     }else if(rec&&rec[key]!=null){
