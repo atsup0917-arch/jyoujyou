@@ -1753,13 +1753,23 @@ body{overflow-anchor:none!important;}
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
 import {getDatabase,ref,onValue,set,push,remove,update,get,runTransaction} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-database.js";
+import {getAuth,signInAnonymously} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 
 const firebaseConfig={
+  apiKey:"AIzaSyCEO2XJn29724-W6FFB-a1avUlKQBeF8D4",
+  authDomain:"jyoujyou-shop2.firebaseapp.com",
   projectId:"jyoujyou-shop2",
   databaseURL:"https://jyoujyou-shop2-default-rtdb.asia-southeast1.firebasedatabase.app"
 };
-const app=initializeApp(firebaseConfig), db=getDatabase(app);
-window.__fb={db,ref,onValue,set,update,push,remove,get,runTransaction};
+const app=initializeApp(firebaseConfig), db=getDatabase(app), fbAuth=getAuth(app);
+// データベースのセキュリティルールを「認証済みのみ許可」に戻したため、
+// 匿名サインインが完了してから window.__fb を公開する。
+// 各機能側は既存どおり window.__fb の有無だけを見て待機するため、他の画面のコードは変更不要。
+signInAnonymously(fbAuth).then(()=>{
+  window.__fb={db,ref,onValue,set,update,push,remove,get,runTransaction};
+}).catch(e=>{
+  console.error('Firebase匿名認証に失敗しました。',e);
+});
 const storesRef=ref(db,"stores"), productsRef=ref(db,"products"), itemsRef=ref(db,"items");
 const vegProductsRef=ref(db,"vegetableOrder/products");
 const vegUnitsRef=ref(db,"vegetableOrder/units");
