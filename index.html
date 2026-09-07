@@ -1274,36 +1274,33 @@ body{overflow-anchor:none!important;}
 
 <div class="card settingsCard" id="receiptCard">
 <details>
-<summary>🧾 レシート管理</summary>
+<summary>💴 買い物精算</summary>
 <div class="settingsBody">
-  <div class="small">撮影すると合計金額だけを自動で読み取ります（品目は読み取りません）。内容を確認してから保存してください。</div>
-  <input type="file" id="receiptFileInput" accept="image/*" capture="environment" style="display:none">
-  <button type="button" id="receiptAddBtn" style="margin-top:10px">📷 レシートを撮影・追加</button>
-  <div id="receiptPreviewArea" hidden style="margin-top:12px">
-    <img id="receiptPreviewImg" alt="" style="display:block;width:100%;max-height:320px;object-fit:contain;border-radius:12px;background:#f3f5f8;border:1px solid #ddd">
-    <div id="receiptOcrStatus" class="small" style="margin-top:6px"></div>
-    <div class="salesGrid" style="margin-top:8px">
-      <div><label>📅 日付</label><input type="date" id="receiptDateInput"></div>
-      <div><label>💴 合計金額</label><input type="number" id="receiptAmountInput" min="0" step="1" placeholder="例：3200"></div>
-    </div>
-    <div class="salesGrid" style="margin-top:10px">
-      <button type="button" id="receiptSaveBtn">保存</button>
-      <button type="button" class="gray" id="receiptCancelBtn">キャンセル</button>
-    </div>
+  <div class="small">買った人ごとに金額を記録します。写真の読み取りは行いません。</div>
+
+  <div class="settingsHeading">👤 買う人</div>
+  <div id="receiptBuyerManage" class="storeManage"></div>
+  <div class="row">
+    <input type="text" id="receiptBuyerNewName" placeholder="名前を入力して追加">
+    <button type="button" class="gray" id="receiptBuyerAdd">＋ 追加</button>
   </div>
-  <details style="margin-top:16px">
-    <summary style="cursor:pointer;font-weight:800;font-size:16px">⚙️ Gemini APIキー設定（自動読み取り用）</summary>
-    <div class="salesGrid" style="margin-top:8px">
-      <input type="password" id="receiptGeminiKey" autocomplete="off" placeholder="AIza...">
-      <button type="button" class="gray" id="receiptGeminiKeySave">キーを保存</button>
-    </div>
-    <div id="receiptGeminiKeyStatus" class="small"></div>
-    <div class="small">キーが未設定の場合は自動読み取りをスキップし、手入力になります。</div>
-  </details>
-  <h2 style="margin-top:20px">📊 月別集計</h2>
+
+  <div class="settingsHeading">➕ 買い物を記録</div>
+  <div class="salesGrid">
+    <div><label>👤 買った人</label><select id="receiptBuyerSelect"></select></div>
+    <div><label>📅 日付</label><input type="date" id="receiptDateInput"></div>
+  </div>
+  <label>💴 合計金額</label>
+  <input type="number" id="receiptAmountInput" min="0" step="1" placeholder="例：3200">
+  <button type="button" id="receiptSaveBtn">保存</button>
+
+  <div class="settingsHeading">⏸ 途中精算（買う人ごと）</div>
+  <div class="small">その人の未精算分だけを精算し、０に戻します。月末の集計にはこれまで通り含まれます。</div>
+  <div id="receiptPendingList" style="margin-top:10px"></div>
+
+  <div class="settingsHeading">📅 月末の集計</div>
   <div class="salesGrid"><div><label>対象月</label><input type="month" id="receiptSummaryMonth"></div></div>
   <div id="receiptSummaryResult" style="margin-top:10px"></div>
-  <div id="receiptMonthList" style="margin-top:10px"></div>
 </div>
 </details>
 </div>
@@ -8791,151 +8788,126 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   const today=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
   const ym=()=>today().slice(0,7);
   const fmt=n=>'¥'+Number(n||0).toLocaleString('ja-JP');
-  const GEMINI_KEY='jyoujyou_receipt_gemini_api_key_v1';
-  let receipts={};
-  let pendingPhotoDataUrl=null;
+  let buyers={}, receipts={};
 
-  function getGeminiKey(){return String(localStorage.getItem(GEMINI_KEY)||'').trim()}
-  function saveGeminiKey(v){localStorage.setItem(GEMINI_KEY,String(v||'').trim())}
-
-  async function resizeReceiptPhoto(file){
-    const dataUrl=await new Promise((resolve,reject)=>{
-      const reader=new FileReader();
-      reader.onload=()=>resolve(reader.result);
-      reader.onerror=reject;
-      reader.readAsDataURL(file);
+  function renderBuyerManage(){
+    const box=$('receiptBuyerManage'); if(!box)return;
+    const arr=Object.entries(buyers).sort((a,b)=>(a[1].name||'').localeCompare(b[1].name||'ja'));
+    box.innerHTML=arr.length?arr.map(([id,b])=>`<div class="storeManage"><span>${esc(b.name)}</span><button class="danger" data-buyer-del="${esc(id)}">削除</button></div>`).join(''):'<div class="small">まだ登録がありません。</div>';
+    box.querySelectorAll('[data-buyer-del]').forEach(btn=>btn.onclick=async()=>{
+      const id=btn.dataset.buyerDel, name=buyers[id]?.name||'';
+      if(!confirm(`「${name}」を削除しますか？\n記録済みの買い物データは残ります。`))return;
+      const f=fb(); if(!f?.remove)return;
+      try{await f.remove(f.ref(f.db,'receiptBuyers/'+id));}catch(err){console.error(err);alert('削除に失敗しました。');}
     });
-    const img=await new Promise((resolve,reject)=>{
-      const im=new Image();
-      im.onload=()=>resolve(im);
-      im.onerror=reject;
-      im.src=dataUrl;
-    });
-    const max=1280;
-    const scale=Math.min(1,max/Math.max(img.naturalWidth,img.naturalHeight));
-    const canvas=document.createElement('canvas');
-    canvas.width=Math.max(1,Math.round(img.naturalWidth*scale));
-    canvas.height=Math.max(1,Math.round(img.naturalHeight*scale));
-    canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height);
-    return canvas.toDataURL('image/jpeg',0.6);
+    renderBuyerSelect();
   }
 
-  async function ocrTotalFromImage(dataUrl,apiKey){
-    const base64=String(dataUrl||'').split(',')[1]||'';
-    if(!base64)return null;
-    const body={
-      contents:[{role:'user',parts:[
-        {text:'これはレシートまたは領収書の写真です。合計金額（税込・支払い総額）を半角数字のみで1つだけ答えてください。円マークやカンマ、説明文は一切含めないでください。読み取れない場合は 0 と答えてください。'},
-        {inline_data:{mime_type:'image/jpeg',data:base64}}
-      ]}],
-      generationConfig:{temperature:0,maxOutputTokens:20}
-    };
-    const res=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent',{
-      method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':apiKey},body:JSON.stringify(body)
-    });
-    const j=await res.json();
-    if(!res.ok)throw new Error(j?.error?.message||`Geminiエラー（${res.status}）`);
-    const text=(j?.candidates||[]).flatMap(c=>c?.content?.parts||[]).map(p=>p?.text||'').join('').trim();
-    const m=text.match(/\d+/);
-    return m?Number(m[0]):null;
+  function renderBuyerSelect(){
+    const sel=$('receiptBuyerSelect'); if(!sel)return;
+    const keep=sel.value;
+    const arr=Object.entries(buyers).sort((a,b)=>(a[1].name||'').localeCompare(b[1].name||'ja'));
+    sel.innerHTML=arr.length?arr.map(([id,b])=>`<option value="${esc(id)}">${esc(b.name)}</option>`).join(''):'<option value="">先に買う人を追加してください</option>';
+    if(buyers[keep])sel.value=keep;
   }
 
-  function resetForm(){
-    pendingPhotoDataUrl=null;
-    $('receiptPreviewArea').hidden=true;
-    $('receiptPreviewImg').removeAttribute('src');
-    $('receiptOcrStatus').textContent='';
-    $('receiptAmountInput').value='';
-    $('receiptFileInput').value='';
-  }
-
-  async function handleFile(file){
-    if(!file)return;
+  async function addBuyer(){
+    const inp=$('receiptBuyerNewName');
+    const name=inp.value.trim();
+    if(!name)return;
+    const f=fb(); if(!f?.push||!f?.set){alert('準備中です。少し待ってから再度お試しください。');return}
     try{
-      pendingPhotoDataUrl=await resizeReceiptPhoto(file);
-    }catch(err){console.error(err);alert('写真の読み込みに失敗しました。');return}
-    $('receiptPreviewImg').src=pendingPhotoDataUrl;
-    $('receiptPreviewArea').hidden=false;
-    $('receiptDateInput').value=today();
-    $('receiptAmountInput').value='';
-    const key=getGeminiKey();
-    if(!key){
-      $('receiptOcrStatus').textContent='ℹ️ Gemini APIキー未設定のため、金額を手入力してください。';
-      return;
-    }
-    $('receiptOcrStatus').textContent='🤖 金額を読み取り中…';
-    try{
-      const amount=await ocrTotalFromImage(pendingPhotoDataUrl,key);
-      if(amount!=null&&amount>0){
-        $('receiptAmountInput').value=amount;
-        $('receiptOcrStatus').textContent='✅ 読み取り完了。金額を確認して保存してください。';
-      }else{
-        $('receiptOcrStatus').textContent='⚠️ 金額を読み取れませんでした。手入力してください。';
-      }
-    }catch(err){
-      console.error(err);
-      $('receiptOcrStatus').textContent='⚠️ 読み取りに失敗しました。手入力してください（'+(err?.message||'')+'）';
-    }
+      const id=f.push(f.ref(f.db,'receiptBuyers')).key;
+      await f.set(f.ref(f.db,'receiptBuyers/'+id),{name});
+      inp.value='';
+    }catch(err){console.error(err);alert('追加に失敗しました。');}
   }
 
-  async function saveReceipt(){
-    if(!pendingPhotoDataUrl){alert('レシートを撮影してください。');return}
-    const date=$('receiptDateInput').value||today();
+  async function saveEntry(){
+    const buyerId=$('receiptBuyerSelect')?.value;
+    if(!buyerId){alert('買う人を追加・選択してください。');return}
     const amount=Number($('receiptAmountInput').value||0);
     if(!amount){if(!confirm('金額が0円です。このまま保存しますか？'))return}
+    const date=$('receiptDateInput').value||today();
     const f=fb(); if(!f?.push||!f?.set){alert('準備中です。少し待ってから再度お試しください。');return}
     const btn=$('receiptSaveBtn'); if(btn)btn.disabled=true;
     try{
       const id=f.push(f.ref(f.db,'receipts')).key;
-      await f.set(f.ref(f.db,'receipts/'+id),{date,amount,photo:pendingPhotoDataUrl,createdAt:Date.now()});
-      resetForm();
-      alert('レシートを保存しました。');
+      await f.set(f.ref(f.db,'receipts/'+id),{date,buyerId,amount,settled:false,createdAt:Date.now()});
+      $('receiptAmountInput').value='';
+      alert('保存しました。');
     }catch(err){console.error(err);alert('保存に失敗しました。');}
     finally{if(btn)btn.disabled=false;}
   }
 
-  async function deleteReceipt(id){
-    if(!confirm('このレシートを削除しますか？'))return;
-    const f=fb(); if(!f?.remove)return;
-    try{await f.remove(f.ref(f.db,'receipts/'+id));}catch(err){console.error(err);alert('削除に失敗しました。');}
+  function renderPending(){
+    const box=$('receiptPendingList'); if(!box)return;
+    const byBuyer={};
+    Object.entries(receipts).forEach(([id,x])=>{
+      if(x?.settled)return;
+      const bid=x?.buyerId||'';
+      if(!byBuyer[bid])byBuyer[bid]={count:0,total:0};
+      byBuyer[bid].count++; byBuyer[bid].total+=Number(x.amount||0);
+    });
+    const buyerIds=Object.keys(byBuyer);
+    if(!buyerIds.length){box.innerHTML='<div class="small">未精算の買い物はありません。</div>';return}
+    box.innerHTML=buyerIds.map(bid=>{
+      const name=buyers[bid]?.name||'(削除済みの買う人)';
+      const info=byBuyer[bid];
+      return `<div class="salesItem"><span>${esc(name)}</span><span>${info.count}枚<br><small>${fmt(info.total)}</small></span><button type="button" class="gray" data-settle-buyer="${esc(bid)}" style="width:auto;margin:0;padding:9px 12px">清算する</button></div>`;
+    }).join('');
+    box.querySelectorAll('[data-settle-buyer]').forEach(btn=>btn.onclick=()=>settleBuyer(btn.dataset.settleBuyer));
   }
 
-  function renderSummary(){
+  async function settleBuyer(buyerId){
+    const name=buyers[buyerId]?.name||'';
+    const targets=Object.entries(receipts).filter(([,x])=>!x?.settled && x?.buyerId===buyerId);
+    if(!targets.length)return;
+    const total=targets.reduce((sum,[,x])=>sum+Number(x.amount||0),0);
+    if(!confirm(`${name}さんの未精算分（${targets.length}枚 / ${fmt(total)}）を精算しますか？`))return;
+    const f=fb(); if(!f?.update)return;
+    const updates={};
+    targets.forEach(([id])=>{updates['receipts/'+id+'/settled']=true;updates['receipts/'+id+'/settledAt']=Date.now();});
+    try{
+      await f.update(f.ref(f.db),updates);
+      alert(`${name}さんの分を精算しました（${targets.length}枚 / ${fmt(total)}）。`);
+    }catch(err){console.error(err);alert('精算に失敗しました。');}
+  }
+
+  function renderMonthSummary(){
     const monthBox=$('receiptSummaryMonth'); if(!monthBox)return;
     const month=monthBox.value||ym();
-    const arr=Object.entries(receipts).filter(([,x])=>String(x?.date||'').startsWith(month)).sort((a,b)=>String(b[1].date).localeCompare(String(a[1].date)));
-    const count=arr.length;
-    const total=arr.reduce((sum,[,x])=>sum+Number(x.amount||0),0);
-    $('receiptSummaryResult').innerHTML=`<div class="salesSummary"><div class="salesKpi">枚数<b>${count}枚</b></div><div class="salesKpi">合計金額<b>${fmt(total)}</b></div></div>`;
-    const listBox=$('receiptMonthList');
-    listBox.innerHTML=arr.length?arr.map(([id,x])=>`<div class="salesItem"><span>${esc(x.date)}</span><span>${fmt(x.amount)}</span><span style="display:flex;gap:6px;justify-self:end"><button type="button" class="gray" data-receipt-view="${esc(id)}" style="width:auto;margin:0;padding:8px 10px">🔍</button><button type="button" class="gray" data-receipt-del="${esc(id)}" style="width:auto;margin:0;padding:8px 10px">🗑️</button></span></div>`).join(''):'<div class="small">この月のレシートはありません。</div>';
-    listBox.querySelectorAll('[data-receipt-view]').forEach(b=>b.onclick=()=>{
-      const rec=receipts[b.dataset.receiptView];
-      if(rec?.photo)window.openRecipePhotoViewer?.(rec.photo);
+    const byBuyer={};
+    let count=0, total=0;
+    Object.values(receipts).forEach(x=>{
+      if(!String(x?.date||'').startsWith(month))return;
+      const bid=x?.buyerId||'';
+      if(!byBuyer[bid])byBuyer[bid]={count:0,total:0};
+      byBuyer[bid].count++; byBuyer[bid].total+=Number(x.amount||0);
+      count++; total+=Number(x.amount||0);
     });
-    listBox.querySelectorAll('[data-receipt-del]').forEach(b=>b.onclick=()=>deleteReceipt(b.dataset.receiptDel));
+    const rows=Object.keys(byBuyer).sort((a,b)=>(buyers[a]?.name||'').localeCompare(buyers[b]?.name||'ja'));
+    const box=$('receiptSummaryResult');
+    if(!rows.length){box.innerHTML='<div class="small">この月の買い物記録はありません。</div>';return}
+    box.innerHTML=rows.map(bid=>{
+      const name=buyers[bid]?.name||'(削除済みの買う人)';
+      const info=byBuyer[bid];
+      return `<div class="salesItem"><span>${esc(name)}</span><span>${info.count}枚<br><small>${fmt(info.total)}</small></span></div>`;
+    }).join('')+`<div style="font-weight:800;margin-top:10px;padding-top:10px;border-top:1px solid #ddd">合計　${count}枚　／　${fmt(total)}</div>`;
   }
 
   function init(){
+    if($('receiptDateInput'))$('receiptDateInput').value=today();
     if($('receiptSummaryMonth'))$('receiptSummaryMonth').value=ym();
-    const key=getGeminiKey();
-    if($('receiptGeminiKey'))$('receiptGeminiKey').value=key;
-    if($('receiptGeminiKeyStatus'))$('receiptGeminiKeyStatus').textContent=key?'✅ この端末にAPIキーを保存済み':'APIキーはこの端末にのみ保存されます。';
-    $('receiptAddBtn')?.addEventListener('click',()=>$('receiptFileInput')?.click());
-    $('receiptFileInput')?.addEventListener('change',e=>handleFile(e.target.files?.[0]));
-    $('receiptSaveBtn')?.addEventListener('click',saveReceipt);
-    $('receiptCancelBtn')?.addEventListener('click',resetForm);
-    $('receiptSummaryMonth')?.addEventListener('change',renderSummary);
-    $('receiptGeminiKeySave')?.addEventListener('click',()=>{
-      const v=$('receiptGeminiKey').value.trim();
-      if(!v){alert('APIキーを入力してください。');return}
-      saveGeminiKey(v);
-      $('receiptGeminiKeyStatus').textContent='✅ APIキーをこの端末に保存しました。';
-    });
+    $('receiptBuyerAdd')?.addEventListener('click',addBuyer);
+    $('receiptBuyerNewName')?.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();addBuyer();}});
+    $('receiptSaveBtn')?.addEventListener('click',saveEntry);
+    $('receiptSummaryMonth')?.addEventListener('change',renderMonthSummary);
     function bootLoad(){
       const f=fb();
       if(f?.onValue){
-        f.onValue(f.ref(f.db,'receipts'),s=>{receipts=s.val()||{};renderSummary();});
+        f.onValue(f.ref(f.db,'receiptBuyers'),s=>{buyers=s.val()||{};renderBuyerManage();renderPending();renderMonthSummary();});
+        f.onValue(f.ref(f.db,'receipts'),s=>{receipts=s.val()||{};renderPending();renderMonthSummary();});
       }else{
         setTimeout(bootLoad,200);
       }
