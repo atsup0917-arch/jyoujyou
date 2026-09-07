@@ -1272,24 +1272,31 @@ body{overflow-anchor:none!important;}
 <h2>表示する場所</h2><div class="filters" id="filters"></div>
 </div>
 
+<style id="receiptManagementStyle">
+#receiptBuyerManage.storeManage button{padding:6px 10px!important;font-size:13px!important;border-radius:10px!important}
+.receiptPendingRow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 0;border-bottom:1px solid #eee}
+.receiptPendingRow:last-child{border-bottom:0}
+.receiptPendingInfo{display:flex;flex-direction:column;gap:2px;min-width:0}
+.receiptPendingInfo b{font-size:17px}
+.receiptPendingInfo span{font-size:15px;color:#555}
+.receiptSettleBtn{width:auto!important;flex:0 0 auto;margin:0!important;padding:12px 16px!important;font-size:15px!important}
+.receiptEntryRow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid #eee;font-size:15px}
+.receiptEntryRow:last-child{border-bottom:0}
+.receiptEntryInfo{display:flex;gap:10px;color:#333}
+.receiptEntryInfo .receiptEntryDate{color:#777}
+.receiptEntryDelBtn{width:auto!important;flex:0 0 auto;margin:0!important;padding:5px 9px!important;font-size:12px!important;border-radius:8px!important}
+</style>
 <div class="card settingsCard" id="receiptCard">
 <details>
 <summary>💴 買い物精算</summary>
 <div class="settingsBody">
   <div class="small">買った人ごとに金額を記録します。写真の読み取りは行いません。</div>
 
-  <div class="settingsHeading">👤 買う人</div>
-  <div id="receiptBuyerManage" class="storeManage"></div>
-  <div class="row">
-    <input type="text" id="receiptBuyerNewName" placeholder="名前を入力して追加">
-    <button type="button" class="gray" id="receiptBuyerAdd">＋ 追加</button>
-  </div>
-
   <div class="settingsHeading">➕ 買い物を記録</div>
-  <div class="salesGrid">
-    <div><label>👤 買った人</label><select id="receiptBuyerSelect"></select></div>
-    <div><label>📅 日付</label><input type="date" id="receiptDateInput"></div>
-  </div>
+  <label>👤 買った人</label>
+  <div id="receiptBuyerTap" class="filters"></div>
+  <label style="margin-top:12px">📅 日付</label>
+  <input type="date" id="receiptDateInput">
   <label>💴 合計金額</label>
   <input type="number" id="receiptAmountInput" min="0" step="1" placeholder="例：3200">
   <button type="button" id="receiptSaveBtn">保存</button>
@@ -1301,6 +1308,16 @@ body{overflow-anchor:none!important;}
   <div class="settingsHeading">📅 月末の集計</div>
   <div class="salesGrid"><div><label>対象月</label><input type="month" id="receiptSummaryMonth"></div></div>
   <div id="receiptSummaryResult" style="margin-top:10px"></div>
+  <div id="receiptMonthEntries" style="margin-top:8px"></div>
+
+  <details style="margin-top:16px">
+    <summary style="cursor:pointer;font-weight:800;font-size:15px;color:#777">👤 買う人の管理</summary>
+    <div id="receiptBuyerManage" class="storeManage" style="margin-top:8px"></div>
+    <div class="row">
+      <input type="text" id="receiptBuyerNewName" placeholder="名前を入力して追加">
+      <button type="button" class="gray" id="receiptBuyerAdd">＋ 追加</button>
+    </div>
+  </details>
 </div>
 </details>
 </div>
@@ -8789,6 +8806,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   const ym=()=>today().slice(0,7);
   const fmt=n=>'¥'+Number(n||0).toLocaleString('ja-JP');
   let buyers={}, receipts={};
+  let selectedBuyerId='';
 
   function renderBuyerManage(){
     const box=$('receiptBuyerManage'); if(!box)return;
@@ -8800,15 +8818,17 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       const f=fb(); if(!f?.remove)return;
       try{await f.remove(f.ref(f.db,'receiptBuyers/'+id));}catch(err){console.error(err);alert('削除に失敗しました。');}
     });
-    renderBuyerSelect();
   }
 
-  function renderBuyerSelect(){
-    const sel=$('receiptBuyerSelect'); if(!sel)return;
-    const keep=sel.value;
+  function renderBuyerTap(){
+    const box=$('receiptBuyerTap'); if(!box)return;
     const arr=Object.entries(buyers).sort((a,b)=>(a[1].name||'').localeCompare(b[1].name||'ja'));
-    sel.innerHTML=arr.length?arr.map(([id,b])=>`<option value="${esc(id)}">${esc(b.name)}</option>`).join(''):'<option value="">先に買う人を追加してください</option>';
-    if(buyers[keep])sel.value=keep;
+    if(!buyers[selectedBuyerId]&&arr.length)selectedBuyerId=arr[0][0];
+    box.innerHTML=arr.length?arr.map(([id,b])=>`<button type="button" data-buyer-tap="${esc(id)}" class="${id===selectedBuyerId?'active':''}">${esc(b.name)}</button>`).join(''):'<div class="small">下の「👤 買う人の管理」から追加してください。</div>';
+    box.querySelectorAll('[data-buyer-tap]').forEach(btn=>btn.onclick=()=>{
+      selectedBuyerId=btn.dataset.buyerTap;
+      renderBuyerTap();
+    });
   }
 
   async function addBuyer(){
@@ -8824,8 +8844,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   }
 
   async function saveEntry(){
-    const buyerId=$('receiptBuyerSelect')?.value;
-    if(!buyerId){alert('買う人を追加・選択してください。');return}
+    if(!selectedBuyerId||!buyers[selectedBuyerId]){alert('買った人を追加・選択してください。');return}
     const amount=Number($('receiptAmountInput').value||0);
     if(!amount){if(!confirm('金額が0円です。このまま保存しますか？'))return}
     const date=$('receiptDateInput').value||today();
@@ -8833,7 +8852,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     const btn=$('receiptSaveBtn'); if(btn)btn.disabled=true;
     try{
       const id=f.push(f.ref(f.db,'receipts')).key;
-      await f.set(f.ref(f.db,'receipts/'+id),{date,buyerId,amount,settled:false,createdAt:Date.now()});
+      await f.set(f.ref(f.db,'receipts/'+id),{date,buyerId:selectedBuyerId,amount,settled:false,createdAt:Date.now()});
       $('receiptAmountInput').value='';
       alert('保存しました。');
     }catch(err){console.error(err);alert('保存に失敗しました。');}
@@ -8854,7 +8873,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     box.innerHTML=buyerIds.map(bid=>{
       const name=buyers[bid]?.name||'(削除済みの買う人)';
       const info=byBuyer[bid];
-      return `<div class="salesItem"><span>${esc(name)}</span><span>${info.count}枚<br><small>${fmt(info.total)}</small></span><button type="button" class="gray" data-settle-buyer="${esc(bid)}" style="width:auto;margin:0;padding:9px 12px">清算する</button></div>`;
+      return `<div class="receiptPendingRow"><div class="receiptPendingInfo"><b>${esc(name)}</b><span>${info.count}枚　${fmt(info.total)}</span></div><button type="button" class="gray receiptSettleBtn" data-settle-buyer="${esc(bid)}">清算する</button></div>`;
     }).join('');
     box.querySelectorAll('[data-settle-buyer]').forEach(btn=>btn.onclick=()=>settleBuyer(btn.dataset.settleBuyer));
   }
@@ -8874,26 +8893,38 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     }catch(err){console.error(err);alert('精算に失敗しました。');}
   }
 
+  async function deleteEntry(id){
+    if(!confirm('この記録を削除しますか？'))return;
+    const f=fb(); if(!f?.remove)return;
+    try{await f.remove(f.ref(f.db,'receipts/'+id));}catch(err){console.error(err);alert('削除に失敗しました。');}
+  }
+
   function renderMonthSummary(){
     const monthBox=$('receiptSummaryMonth'); if(!monthBox)return;
     const month=monthBox.value||ym();
     const byBuyer={};
     let count=0, total=0;
-    Object.values(receipts).forEach(x=>{
+    const monthEntries=[];
+    Object.entries(receipts).forEach(([id,x])=>{
       if(!String(x?.date||'').startsWith(month))return;
       const bid=x?.buyerId||'';
       if(!byBuyer[bid])byBuyer[bid]={count:0,total:0};
       byBuyer[bid].count++; byBuyer[bid].total+=Number(x.amount||0);
       count++; total+=Number(x.amount||0);
+      monthEntries.push([id,x]);
     });
     const rows=Object.keys(byBuyer).sort((a,b)=>(buyers[a]?.name||'').localeCompare(buyers[b]?.name||'ja'));
     const box=$('receiptSummaryResult');
-    if(!rows.length){box.innerHTML='<div class="small">この月の買い物記録はありません。</div>';return}
-    box.innerHTML=rows.map(bid=>{
+    box.innerHTML=rows.length?rows.map(bid=>{
       const name=buyers[bid]?.name||'(削除済みの買う人)';
       const info=byBuyer[bid];
       return `<div class="salesItem"><span>${esc(name)}</span><span>${info.count}枚<br><small>${fmt(info.total)}</small></span></div>`;
-    }).join('')+`<div style="font-weight:800;margin-top:10px;padding-top:10px;border-top:1px solid #ddd">合計　${count}枚　／　${fmt(total)}</div>`;
+    }).join('')+`<div style="font-weight:800;margin-top:10px;padding-top:10px;border-top:1px solid #ddd">合計　${count}枚　／　${fmt(total)}</div>`:'<div class="small">この月の買い物記録はありません。</div>';
+
+    const listBox=$('receiptMonthEntries');
+    monthEntries.sort((a,b)=>String(b[1].date).localeCompare(String(a[1].date)));
+    listBox.innerHTML=monthEntries.length?`<details><summary style="cursor:pointer;font-weight:800;font-size:14px;color:#777">📋 この月の記録一覧（削除・テストデータの整理用）</summary><div style="margin-top:8px">`+monthEntries.map(([id,x])=>`<div class="receiptEntryRow"><span class="receiptEntryInfo"><span class="receiptEntryDate">${esc(x.date)}</span><span>${esc(buyers[x.buyerId]?.name||'(削除済み)')}</span><span>${fmt(x.amount)}</span></span><button type="button" class="gray receiptEntryDelBtn" data-entry-del="${esc(id)}">削除</button></div>`).join('')+`</div></details>`:'';
+    listBox.querySelectorAll('[data-entry-del]').forEach(btn=>btn.onclick=()=>deleteEntry(btn.dataset.entryDel));
   }
 
   function init(){
@@ -8906,7 +8937,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     function bootLoad(){
       const f=fb();
       if(f?.onValue){
-        f.onValue(f.ref(f.db,'receiptBuyers'),s=>{buyers=s.val()||{};renderBuyerManage();renderPending();renderMonthSummary();});
+        f.onValue(f.ref(f.db,'receiptBuyers'),s=>{buyers=s.val()||{};renderBuyerManage();renderBuyerTap();renderPending();renderMonthSummary();});
         f.onValue(f.ref(f.db,'receipts'),s=>{receipts=s.val()||{};renderPending();renderMonthSummary();});
       }else{
         setTimeout(bootLoad,200);
