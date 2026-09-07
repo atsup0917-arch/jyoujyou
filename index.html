@@ -7198,6 +7198,8 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 #salesPage .salesCalHint{font-size:13px;color:#666;margin-top:8px;line-height:1.6}
 #salesPage .salesStatusBadge{margin-bottom:8px}
 .salesClosedBtn.active{background:#c62828!important;color:#fff!important;border-color:#c62828!important}
+#salesPage label{display:flex;align-items:center;justify-content:space-between;gap:6px}
+.salesClearBtn{width:auto!important;display:inline!important;margin:0!important;padding:2px 8px!important;font-size:12px!important;font-weight:700!important;background:transparent!important;color:#b45309!important;border:1px solid #e6c68a!important;border-radius:999px!important}
 @media(max-width:600px){#salesPage .salesGrid,#salesPage .salesSummary{grid-template-columns:1fr 1fr}#salesPage .salesRow{grid-template-columns:1fr 1fr 72px}#salesPage .salesItem{grid-template-columns:82px 1fr auto}#salesPage .salesCalDay{min-height:40px}.navtabs4{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
 </style>
 <div id="salesPage" class="page" hidden>
@@ -7210,8 +7212,8 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       <div><label>📝 メモ</label><input id="salesMemo" type="text" placeholder="例：周年イベント"></div>
     </div>
     <div class="salesGrid" style="margin-top:10px">
-      <div><label>🍽️ ランチ売上</label><input id="salesAmountLunch" type="number" min="0" step="1" placeholder="例：120000"></div>
-      <div><label>🌙 ディナー売上</label><input id="salesAmountDinner" type="number" min="0" step="1" placeholder="例：250000"></div>
+      <div><label>🍽️ ランチ売上 <button type="button" class="salesClearBtn" id="salesClearLunch" title="未入力に戻す">✕未入力に戻す</button></label><input id="salesAmountLunch" type="number" min="0" step="1" placeholder="例：120000"></div>
+      <div><label>🌙 ディナー売上 <button type="button" class="salesClearBtn" id="salesClearDinner" title="未入力に戻す">✕未入力に戻す</button></label><input id="salesAmountDinner" type="number" min="0" step="1" placeholder="例：250000"></div>
     </div>
     <div class="salesGrid" style="margin-top:10px">
       <button type="button" class="gray salesClosedBtn" id="salesClosedLunchToggle">🚫 ランチを定休日に</button>
@@ -7328,9 +7330,11 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     const closedDinner=patch.closedDinner!==undefined?!!patch.closedDinner:!!existing.closedDinner;
     let lunch,dinner;
     if(closedLunch)lunch=0;
+    else if(patch.lunch===null)lunch=null;
     else if(patch.lunch!==undefined)lunch=Number(patch.lunch||0);
     else lunch=(existing.lunch!=null)?Number(existing.lunch):null;
     if(closedDinner)dinner=0;
+    else if(patch.dinner===null)dinner=null;
     else if(patch.dinner!==undefined)dinner=Number(patch.dinner||0);
     else dinner=(existing.dinner!=null)?Number(existing.dinner):null;
     const memo=patch.memo!==undefined?String(patch.memo||''):(existing.memo||'');
@@ -7357,6 +7361,13 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     await saveDailySales(d,patch);
     alert('保存しました。');
   }
+  async function clearField(which){
+    const d=$('salesDate')?.value||today();
+    const label=which==='lunch'?'ランチ':'ディナー';
+    if(!confirm(`${label}の売上を「未入力」に戻します。よろしいですか？`))return;
+    await saveDailySales(d,{[which]:null});
+    alert(`${label}を未入力に戻しました。`);
+  }
   function augmentShift(){
     const date=$('shiftViewDate')?.value||today();
     if(date) renderPrevYearSalesUnderDate(date);
@@ -7378,6 +7389,8 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     $('salesSave')?.addEventListener('click',saveSales);
     $('salesClosedLunchToggle')?.addEventListener('click',()=>{closedLunchState=!closedLunchState;updateClosedToggleUI();});
     $('salesClosedDinnerToggle')?.addEventListener('click',()=>{closedDinnerState=!closedDinnerState;updateClosedToggleUI();});
+    $('salesClearLunch')?.addEventListener('click',()=>clearField('lunch'));
+    $('salesClearDinner')?.addEventListener('click',()=>clearField('dinner'));
     function bootLoad(){if(fb()?.get){load().then(augmentShift);}else{setTimeout(bootLoad,200);}}
     bootLoad();
     setInterval(augmentShift,1500);
