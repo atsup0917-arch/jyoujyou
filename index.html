@@ -898,6 +898,8 @@ html.recipeModalLocked, body.recipeModalLocked{
 #shiftPage .shiftMemoDot{position:absolute;right:5px;bottom:4px;width:7px;height:7px;border-radius:50%;background:#e0a800}
 #shiftPage .shiftFreeDueDot{position:absolute;left:5px;top:4px;width:7px;height:7px;border-radius:50%;background:#c62828}
 #shiftPage .shiftFreeDueInfo{margin-top:10px;padding:12px 14px;border-radius:12px;background:#fff0f0;border:1px solid #f0bcbc;color:#a52222;font-weight:700;line-height:1.5}
+#shiftPage .shiftHeroMemo{margin-top:8px;padding:10px 12px;border-radius:12px;background:#fff3a8;border:1px solid #e0c200;color:#4a3b00;font-weight:700;font-size:15px;line-height:1.5;white-space:pre-wrap}
+#shiftPage .shiftHeroMemo[hidden]{display:none}
 #shiftPage .shiftMemoCalendarHint{font-size:13px;color:#666;margin-top:8px}
 #shiftPage .shiftMemoSelected{margin-top:12px;border-radius:12px;background:#f5f7fb;padding:12px;white-space:pre-wrap;line-height:1.6}
 @media(max-width:520px){#shiftPage .shiftAttendanceGrid{grid-template-columns:1fr 1fr;gap:6px 8px}#shiftPage .shiftAttendanceName{padding:8px;font-size:16px}#shiftPage .shiftMemoDay{min-height:44px}}
@@ -1619,13 +1621,13 @@ body{overflow-anchor:none!important;}
     <div>
       <div class="shiftSectionTitle">👥 本日の出勤者</div>
       <div id="shiftTodayDateLabel" class="shiftHeroDate"></div>
+      <div id="shiftTodayQuickMemo" class="shiftHeroMemo" hidden></div>
       <div id="shiftTodayPrevYearSales" class="shiftPrevYearSalesUnderDate"></div>
     </div>
   </div>
   <div id="shiftTodayQuickSummary" class="shiftHeroCount">読み込み中…</div>
   <div id="shiftTodayQuickList" class="shiftHeroNames"></div>
   <div class="shiftStaffAddBelowAttendance"><button type="button" class="shiftTodaySmallBtn" id="shiftTodayStaffAddBtn">＋スタッフ追加</button></div>
-  <div id="shiftTodayQuickMemo" class="shiftHeroMemo" hidden></div>
 </div>
 
 <div class="card" id="shiftCalendarCard">
