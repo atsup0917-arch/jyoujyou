@@ -659,16 +659,16 @@ html.recipeModalLocked, body.recipeModalLocked{
   border-radius:20px;
 }
 .prepActionGroup.prepManagement{
-  background:#f1f6ff;
+  background:#f0e6c8;
   border:2px solid #7a2e2e;
-  box-shadow:0 2px 8px rgba(47,111,228,.10);
+  box-shadow:0 2px 8px rgba(122,46,46,.15);
 }
 .prepActionGroup.prepManagement::before{
   content:"💰 原価・管理";
   grid-column:1 / -1;
   display:block;
   padding:2px 4px 3px;
-  color:#1f63d2;
+  color:#7a2e2e;
   font-size:20px;
   font-weight:800;
   line-height:1.2;
@@ -685,7 +685,7 @@ html.recipeModalLocked, body.recipeModalLocked{
   grid-column:1 / -1;
   display:block;
   padding:2px 4px 3px;
-  color:#218944;
+  color:#3f6b4f;
   font-size:20px;
   font-weight:800;
   line-height:1.2;
@@ -711,7 +711,7 @@ html.recipeModalLocked, body.recipeModalLocked{
 }
 .prepActionGroup.prepOperation>button{
   background:#fff!important;
-  color:#218944!important;
+  color:#3f6b4f!important;
   border-color:#c7e4d0!important;
 }
 
@@ -719,7 +719,7 @@ html.recipeModalLocked, body.recipeModalLocked{
 .prepActionGroup.prepOperation #confirmPrep{
   background:#e8f7ed!important;
   border:2px solid #3f6b4f!important;
-  color:#18783a!important;
+  color:#3f6b4f!important;
 }
 
 /* iPhone */
@@ -773,18 +773,18 @@ html.recipeModalLocked, body.recipeModalLocked{
   flex:0 0 auto;
   width:54px;
   height:54px;
-  border:1px solid #cfd8ea;
+  border:1px solid #d9c48a;
   border-radius:16px;
-  background:#f3f6fb;
-  color:#245fca;
+  background:#faf1dc;
+  color:#7a2e2e;
   font-size:27px;
   line-height:1;
   cursor:pointer;
   -webkit-tap-highlight-color:transparent;
 }
 .costVoiceSearchBtn.is-listening{
-  background:#e8f0ff;
-  border-color:#5b84df;
+  background:#f0e6c8;
+  border-color:#8a5a2e;
   transform:scale(1.03);
 }
 .costVoiceSearchBtn:disabled{
@@ -814,10 +814,10 @@ html.recipeModalLocked, body.recipeModalLocked{
   flex:0 0 auto;
   width:54px;
   height:54px;
-  border:1px solid #cfd8ea;
+  border:1px solid #d9c48a;
   border-radius:16px;
-  background:#f3f6fb;
-  color:#245fca;
+  background:#faf1dc;
+  color:#7a2e2e;
   display:flex;
   align-items:center;
   justify-content:center;
@@ -830,8 +830,8 @@ html.recipeModalLocked, body.recipeModalLocked{
   height:22px;
 }
 .voiceSearchAnyBtn.is-listening{
-  background:#e8f0ff;
-  border-color:#5b84df;
+  background:#f0e6c8;
+  border-color:#8a5a2e;
 }
 @media(max-width:600px){
   .voiceSearchAnyBtn{width:52px;height:52px;}
@@ -845,14 +845,14 @@ html.recipeModalLocked, body.recipeModalLocked{
 .shiftImportGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .shiftDateRow{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:end}
 .shiftDateRow button{width:auto;margin:0;white-space:nowrap}
-.shiftStatus{padding:12px 14px;border-radius:14px;background:#f3f6fb;color:#333;white-space:pre-wrap;line-height:1.5}
-.shiftStatus.ok{background:#eefaf1;color:#176b32}.shiftStatus.warn{background:#fff8e5;color:#805b00}.shiftStatus.err{background:#f3e3d9;color:#a52222}
+.shiftStatus{padding:12px 14px;border-radius:14px;background:#faf1dc;color:#333;white-space:pre-wrap;line-height:1.5}
+.shiftStatus.ok{background:#eefaf1;color:#3f6b4f}.shiftStatus.warn{background:#fff8e5;color:#805b00}.shiftStatus.err{background:#f3e3d9;color:#a52222}
 .shiftTableWrap{overflow:auto;border-radius:14px;border:1px solid #ddd}
 .shiftTable{width:100%;border-collapse:collapse;min-width:560px;background:#fff}
 .shiftTable th,.shiftTable td{border:1px solid #ddd;padding:9px 7px;text-align:center;vertical-align:middle;font-size:15px}
 .shiftTable th{background:#f0e6c8;font-weight:800;position:sticky;top:0;z-index:1}.shiftTable td.name{text-align:left;font-weight:800;white-space:nowrap;position:sticky;left:0;background:#fff;z-index:1}
-.shiftCell{min-width:62px}.shiftCell.s{background:#fff1b8}.shiftCell.y{background:#fff1b8}.shiftCell.o{background:#e9f5ff}.shiftCell.unknown{background:#fff8e5}
-.shiftPill{display:inline-block;padding:3px 7px;border-radius:9px;font-weight:800}.shiftPill.s{background:#ffe58a}.shiftPill.y{background:#ffd9a8}.shiftPill.o{background:#cfe8ff}
+.shiftCell{min-width:62px}.shiftCell.s{background:#fff1b8}.shiftCell.y{background:#fff1b8}.shiftCell.o{background:#e7f7ed}.shiftCell.unknown{background:#fff8e5}
+.shiftPill{display:inline-block;padding:3px 7px;border-radius:9px;font-weight:800}.shiftPill.s{background:#ffe58a}.shiftPill.y{background:#ffd9a8}.shiftPill.o{background:#f0e6c8}
 .shiftMemo{min-height:220px;resize:vertical;font-size:20px;line-height:1.6;padding:16px}.shiftMemoItem{border:1px solid #e1e4e8;border-radius:14px;padding:16px;margin-top:12px;background:#fff;white-space:pre-wrap;font-size:20px;line-height:1.6}
 .shiftMemoItem{position:relative}
 .shiftMemoItemText{white-space:pre-wrap}
@@ -880,11 +880,11 @@ html.recipeModalLocked, body.recipeModalLocked{
 #shiftPage .shiftHeroNames{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 12px;margin-top:10px}
 #shiftPage .shiftHeroName{min-height:48px;padding:10px 12px;border:1px solid #e1e4e8;border-radius:12px;background:#fff;box-sizing:border-box;display:flex;align-items:center;font-weight:800}
 #shiftPage button.shiftNameTap{width:100%;margin:0;color:#172033;text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent}
-#shiftPage button.shiftNameTap:active{transform:scale(.99);background:#f5f8ff}
+#shiftPage button.shiftNameTap:active{transform:scale(.99);background:#faf1dc}
 #shiftPage .shiftAttendanceName.shiftNameTap{justify-content:flex-start;border:1px solid #e1e4e8;font-weight:inherit}
 #shiftPage .shiftAttendanceGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 12px;margin-top:10px}
 #shiftPage .shiftAttendanceName{display:flex;align-items:center;gap:8px;min-height:48px;padding:10px 12px;border:1px solid #e1e4e8;border-radius:12px;background:#fff;box-sizing:border-box}
-#shiftPage .shiftAttendanceNo{display:inline-flex;align-items:center;justify-content:center;min-width:28px;height:28px;border-radius:50%;background:#f0e6c8;color:#2864d7;font-weight:800;font-size:14px}
+#shiftPage .shiftAttendanceNo{display:inline-flex;align-items:center;justify-content:center;min-width:28px;height:28px;border-radius:50%;background:#f0e6c8;color:#7a2e2e;font-weight:800;font-size:14px}
 #shiftPage .shiftMemoCalendar{margin-top:14px;border:1px solid #e1e4e8;border-radius:16px;padding:12px;background:#fff}
 #shiftPage .shiftMemoCalendarHead{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
 #shiftPage .shiftMemoCalendarHead button{width:auto;flex:0 0 auto;margin:0;min-width:48px;padding:9px 12px}
@@ -897,7 +897,7 @@ html.recipeModalLocked, body.recipeModalLocked{
 #shiftPage .shiftMemoDay.hasMemo{background:#fff3a8;border-color:#e0c200;color:#222 !important;-webkit-text-fill-color:#222 !important}
 #shiftPage .shiftMemoDay.dayClosed{background:#666;border-color:#444;color:#fff !important;-webkit-text-fill-color:#fff !important}
 #shiftPage .shiftMemoDay.dayClosed .shiftMemoDot{background:#fff3a8}
-#shiftPage .shiftMemoDay.selected{outline:3px solid #3f6fd9;outline-offset:-2px}
+#shiftPage .shiftMemoDay.selected{outline:3px solid #7a2e2e;outline-offset:-2px}
 #shiftPage .shiftMemoDot{position:absolute;right:5px;bottom:4px;width:7px;height:7px;border-radius:50%;background:#e0a800}
 #shiftPage .shiftFreeDueDot{position:absolute;left:5px;top:4px;width:7px;height:7px;border-radius:50%;background:#8a1f1f}
 #shiftPage .shiftFreeDueInfo{margin-top:10px;padding:12px 14px;border-radius:12px;background:#f3e3d9;border:1px solid #d9a98a;color:#a52222;font-weight:700;line-height:1.5}
@@ -933,7 +933,7 @@ html.recipeModalLocked, body.recipeModalLocked{
 .shiftTodayEditRow button{width:auto!important;margin:0!important;padding:10px 12px!important}
 .shiftTodayEditActions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
 .shiftTodayEditActions button{margin:0}
-.shiftOtherDayEditCard{margin-top:12px;padding:12px;border:1px solid #d8e2f5;border-radius:16px;background:#f8fbff}
+.shiftOtherDayEditCard{margin-top:12px;padding:12px;border:1px solid #f0e6c8;border-radius:16px;background:#faf1dc}
 .shiftOtherDayEditList{display:grid;grid-template-columns:1fr;gap:6px;margin-top:10px;max-height:520px;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-right:3px}
 .shiftOtherDayEditRow{display:grid;grid-template-columns:36px minmax(110px,1fr) 150px 130px;gap:7px;align-items:center;padding:8px;border:1px solid #e1e5ea;border-radius:12px;background:#fff}
 .shiftOtherDayEditRow input[type="checkbox"]{width:22px;height:22px;margin:0!important}
@@ -949,13 +949,13 @@ html.recipeModalLocked, body.recipeModalLocked{
 .shiftTimeEditor{width:100%;box-sizing:border-box;padding:8px 0}
 .shiftTimeControl{display:grid;grid-template-columns:48px minmax(180px,1fr) 72px;gap:8px;align-items:center;margin-top:7px;padding:9px 10px;border:1px solid #d9dee7;border-radius:12px;background:#fafbfd;box-sizing:border-box}
 .shiftTimeControl label{font-weight:900;font-size:14px;white-space:nowrap}
-.shiftTimeControl input[type="range"]{width:100%;height:34px;accent-color:#3478db;cursor:pointer}
+.shiftTimeControl input[type="range"]{width:100%;height:34px;accent-color:#7a2e2e;cursor:pointer}
 .shiftTimeValue{min-width:68px;text-align:center;font-weight:900;font-size:17px;white-space:nowrap}
-.shiftTimeLBtn{border:1px solid #bfc9d8;background:#fff;border-radius:10px;padding:8px 10px;font-weight:900;font-size:14px;white-space:nowrap;cursor:pointer}
-.shiftTimeLBtn.active{background:#eaf2ff;border-color:#3478db;color:#1857ad}
+.shiftTimeLBtn{border:1px solid #d9c48a;background:#fff;border-radius:10px;padding:8px 10px;font-weight:900;font-size:14px;white-space:nowrap;cursor:pointer}
+.shiftTimeLBtn.active{background:#f0e6c8;border-color:#7a2e2e;color:#7a2e2e}
 .shiftOtherDayEditTimeWrap,.shiftTodayEditTimeWrap{grid-column:1/-1;min-width:0}
-#shiftPage .shiftOtherDayEditPosition{width:100%;min-width:190px;min-height:50px;box-sizing:border-box;padding:10px 12px;border:1px solid #cbd3df;border-radius:10px;font-size:17px;font-weight:800;background:#fff}
-#shiftPage .shiftTodayEditPosition{width:100%;min-width:0;min-height:50px;box-sizing:border-box;padding:10px 12px;border:1px solid #cbd3df;border-radius:10px;font-size:17px;font-weight:800;background:#fff;color:#172033}
+#shiftPage .shiftOtherDayEditPosition{width:100%;min-width:190px;min-height:50px;box-sizing:border-box;padding:10px 12px;border:1px solid #d9c48a;border-radius:10px;font-size:17px;font-weight:800;background:#fff}
+#shiftPage .shiftTodayEditPosition{width:100%;min-width:0;min-height:50px;box-sizing:border-box;padding:10px 12px;border:1px solid #d9c48a;border-radius:10px;font-size:17px;font-weight:800;background:#fff;color:#172033}
 #shiftPage .shiftTodayEditRow .shiftTodayEditPosition{cursor:pointer}
 @media(max-width:600px){
   .shiftTimeControl{grid-template-columns:46px minmax(0,1fr) 68px;gap:6px;padding:8px}
@@ -993,8 +993,8 @@ body{
   transition:background .15s ease,border-color .15s ease,box-shadow .15s ease,color .15s ease,transform .15s ease;
 }
 .navtabs.navtabs4 button:hover{
-  background:#f8fbff !important;
-  border-color:#b9c9e8 !important;
+  background:#faf1dc !important;
+  border-color:#f0e6c8 !important;
 }
 .navtabs.navtabs4 button:active{
   transform:translateY(1px);
@@ -1040,8 +1040,8 @@ body{
   transition:background .15s ease,border-color .15s ease,color .15s ease,box-shadow .15s ease,transform .15s ease;
 }
 #shoppingPage #filters button:hover{
-  background:#f8fbff !important;
-  border-color:#b9c9e8 !important;
+  background:#faf1dc !important;
+  border-color:#f0e6c8 !important;
 }
 
 /* 通常の選択中 */
@@ -1131,6 +1131,16 @@ input,select,textarea{
   min-width:64px;
 }
 #shoppingPage #filters button .count{font-size:12px}
+#shoppingPage .card:has(> #filters){position:relative}
+#shoppingPage .card:has(> #filters)::after{
+  content:"";
+  position:absolute;
+  top:44px;right:0;bottom:8px;
+  width:32px;
+  background:linear-gradient(to right, rgba(250,241,220,0), rgba(250,241,220,.95));
+  border-radius:0 22px 22px 0;
+  pointer-events:none;
+}
 }
 </style>
 
@@ -1172,11 +1182,11 @@ body{overflow-anchor:none!important;}
 .shiftLaborResult th,.shiftLaborResult td{border-bottom:1px solid #e2e6eb;padding:8px 5px;text-align:right}
 .shiftLaborResult th:first-child,.shiftLaborResult td:first-child{text-align:left}
 .shiftLaborTotal{font-size:24px;font-weight:900;text-align:right;margin-top:10px}
-.shiftLaborAiBox{margin-top:12px;padding:12px;border-radius:14px;background:#f4f8ff;border:1px solid #cddcfb;white-space:pre-wrap;line-height:1.55}
+.shiftLaborAiBox{margin-top:12px;padding:12px;border-radius:14px;background:#f0e6c8;border:1px solid #f0e6c8;white-space:pre-wrap;line-height:1.55}
 @media(max-width:520px){.shiftLaborGrid{grid-template-columns:1fr}.shiftLaborRateRow{grid-template-columns:58px 1fr 105px}.shiftLaborResult{overflow:auto}.shiftLaborResult table{min-width:430px}}
 </style>
 <style id="shiftSalesBridgeStyle">
-#shiftTodayPrevYearSales,#shiftOtherDayPrevYearSales{display:block!important;min-height:22px!important;margin-top:6px!important;padding:4px 10px!important;border-radius:8px!important;background:#f4f8ff!important;color:#245ec7!important;font-size:14px!important;font-weight:800!important;line-height:1.4!important;box-sizing:border-box!important;}
+#shiftTodayPrevYearSales,#shiftOtherDayPrevYearSales{display:block!important;min-height:22px!important;margin-top:6px!important;padding:4px 10px!important;border-radius:8px!important;background:#f0e6c8!important;color:#7a2e2e!important;font-size:14px!important;font-weight:800!important;line-height:1.4!important;box-sizing:border-box!important;}
 </style>
 
 <style id="shiftSalesExpensePlacementStyle">
@@ -2642,7 +2652,7 @@ const op=()=>vals(prepPositions).sort((a,b)=>(a[1].order??9999)-(b[1].order??999
 const oi=pid=>vals(prepItems).filter(([,x])=>x.positionId===pid).sort((a,b)=>(a[1].order??9999)-(b[1].order??9999)||(a[1].name||"").localeCompare(b[1].name||"","ja"));
 function prepPosName(id){return prepPositions[id]?.name||"その他"}
 function renderPrepFilters(){
- $("prepFilters").innerHTML=`<button data-pf="ALL" class="${prepFilter==="ALL"?"active":""}">全体</button>`+op().map(([id,x])=>`<button data-pf="${id}" class="${prepFilter===id?"active":""}" style="${prepFilter===id?'background:#fff3a8;color:#111;border:3px solid #2563eb;box-shadow:0 0 0 2px #bfdbfe;font-weight:700;':oi(id).some(([iid])=>Number(prepState[iid]?.count??0)>0)?'background:#fff3a8;color:#222;border:1px solid #e0c85a;':''}">${esc(x.name)}</button>`).join("");
+ $("prepFilters").innerHTML=`<button data-pf="ALL" class="${prepFilter==="ALL"?"active":""}">全体</button>`+op().map(([id,x])=>`<button data-pf="${id}" class="${prepFilter===id?"active":""}" style="${prepFilter===id?'background:#fff3a8;color:#111;border:3px solid #7a2e2e;box-shadow:0 0 0 2px #f0e6c8;font-weight:700;':oi(id).some(([iid])=>Number(prepState[iid]?.count??0)>0)?'background:#fff3a8;color:#222;border:1px solid #e0c85a;':''}">${esc(x.name)}</button>`).join("");
  document.querySelectorAll("[data-pf]").forEach(b=>b.onclick=()=>{prepFilter=b.dataset.pf;renderPrepFilters();renderPrepList()});
 }
 function renderPrepSelectors(){
@@ -2768,7 +2778,7 @@ $("printWeekend").onclick=e=>{e.preventDefault();printPrep("weekend")};
 .recipeTabs button.active{background:#7a2e2e;color:#fff}
 .recipePanel[hidden]{display:none!important}
 .recipeIngredients{display:grid;gap:7px}
-.recipeIngredient{position:relative;display:grid;grid-template-columns:minmax(0,1fr) 82px 78px 42px;gap:5px;align-items:center;padding:7px 7px 7px 38px;background:#f7f8fa;border:1px solid #e0e3e8;border-radius:12px;touch-action:pan-y;user-select:none;-webkit-user-select:none}.recipeIngredient.dragging{opacity:.55;box-shadow:0 5px 14px rgba(0,0,0,.14);outline:2px solid #8aaef5;touch-action:none}.recipeIngredient.dragOver{outline:2px dashed #8aaef5;outline-offset:1px}
+.recipeIngredient{position:relative;display:grid;grid-template-columns:minmax(0,1fr) 82px 78px 42px;gap:5px;align-items:center;padding:7px 7px 7px 38px;background:#faf1dc;border:1px solid #e0e3e8;border-radius:12px;touch-action:pan-y;user-select:none;-webkit-user-select:none}.recipeIngredient.dragging{opacity:.55;box-shadow:0 5px 14px rgba(0,0,0,.14);outline:2px solid #c9972c;touch-action:none}.recipeIngredient.dragOver{outline:2px dashed #c9972c;outline-offset:1px}
 .recipeIngredient input,.recipeIngredient select{padding:10px 7px;font-size:16px;border-radius:10px;margin:0}
 .recipeIngredient .removeIngredient{width:42px!important;height:42px!important;padding:0!important;margin:0!important;background:#f3e3d9!important;color:#8a1f1f!important;border:1px solid #d9a98a!important;font-size:18px}
 .recipeAddButton{margin:8px 0 0!important;background:#f0e6c8!important;color:#7a2e2e!important;border:1px solid #d9c48a!important}
@@ -2777,13 +2787,13 @@ $("printWeekend").onclick=e=>{e.preventDefault();printPrep("weekend")};
 .recipeQuickCats{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px}
 .recipeQuickCats button{width:auto;min-width:max-content;margin:0;padding:8px 11px;font-size:14px;background:#e9d8ac;color:#333}.recipeQuickCats button.active{background:#7a2e2e;color:#fff;border-color:#7a2e2e;box-shadow:0 1px 3px rgba(50,105,223,.25)}
 .recipeQuickItems{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px}
-.recipeQuickItems button{width:auto;margin:0;padding:8px 10px;font-size:14px;background:#fff;border:1px solid #cfd4dc;color:#222}.recipeQuickEdit{display:none!important;display:block;width:100%;margin:8px 0 0!important;padding:9px!important;font-size:14px!important;background:#fff!important;color:#7a2e2e!important;border:1px solid #d9c48a!important}.recipeCategoryEdit{display:none!important;margin:6px 0 8px!important;width:100%!important;padding:9px!important;font-size:14px!important;background:#fff!important;color:#7a2e2e!important;border:1px solid #d9c48a!important}.recipeCategoryEditor{margin:8px 0;padding:10px;background:#faf1dc;border:1px solid #dfe3e8;border-radius:12px}.recipeCategoryEditor[hidden]{display:none!important}.recipeCategoryEditRow{position:relative;display:grid!important;grid-template-columns:44px minmax(240px,1fr) 44px!important;gap:8px!important;align-items:center!important;width:100%!important;min-width:330px!important;box-sizing:border-box!important;margin-top:8px!important;touch-action:none}.recipeCategoryNameEdit{min-width:0;min-height:40px;margin:0;padding:9px 8px;font-size:15px;line-height:20px;border:1px solid #d8dde5;border-radius:9px;background:#fff;color:#222!important;-webkit-text-fill-color:#222!important;opacity:1!important;outline:none;overflow:hidden;white-space:nowrap}.recipeCategoryNameEdit:focus{border-color:#6d9ff5;box-shadow:0 0 0 2px rgba(50,105,223,.12)}.recipeCategoryEditRow button{width:40px!important;height:40px!important;min-width:40px!important;padding:0!important;margin:0!important;background:#f3e3d9!important;color:#8a1f1f!important;border:1px solid #d9a98a!important}.recipeCategoryEditRow.dragging{opacity:.55;box-shadow:0 4px 12px rgba(0,0,0,.12)}.recipeCategoryEditRow.dragOver{outline:2px dashed #8aaef5;outline-offset:1px}.recipeCategoryEditorActions{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}.recipeCategoryEditorActions button{margin:0!important;padding:10px!important;font-size:14px!important}.recipeMaterialEditor{margin-top:8px;padding:10px;background:#fff;border:1px solid #dfe3e8;border-radius:12px}.recipeMaterialEditor[hidden]{display:none!important}.recipeMaterialEditTabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px}.recipeMaterialEditTabs button{width:auto;min-width:max-content;margin:0;padding:7px 10px;font-size:13px;background:#eef0f3;color:#333}.recipeMaterialEditTabs button.active{background:#7a2e2e;color:#fff}.recipeMaterialEditRow{position:relative;display:grid;grid-template-columns:minmax(0,1fr) 68px 40px;gap:5px;align-items:center;padding-left:34px;margin-top:6px;touch-action:none;transition:transform .12s,opacity .12s}.recipeMaterialEditRow.dragging{opacity:.55;transform:scale(.99);box-shadow:0 4px 12px rgba(0,0,0,.12)}.recipeMaterialEditRow.dragOver{outline:2px dashed #8aaef5;outline-offset:1px}.recipeMaterialEditRow input{min-width:0;margin:0;padding:9px 7px;font-size:15px;border:1px solid #d8dde5;border-radius:9px}.recipeMaterialEditRow select{min-width:0;margin:0;padding:9px 4px;font-size:14px;border:1px solid #d8dde5;border-radius:9px;background:#fff}.recipeMaterialEditRow button{width:40px!important;height:40px!important;min-width:40px!important;padding:0!important;margin:0!important;background:#f3e3d9!important;color:#8a1f1f!important;border:1px solid #d9a98a!important}.recipeMaterialEditorActions{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}.recipeMaterialEditorActions button{margin:0!important;padding:10px!important;font-size:14px!important}
-.recipeDragHandle{position:absolute;left:5px;top:50%;transform:translateY(-50%);width:34px;height:40px;display:flex;align-items:center;justify-content:center;border:1px solid #d7dce5;border-radius:9px;background:#fff;color:#6b7280;font-size:18px;font-weight:700;line-height:1;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;cursor:grab;z-index:2}.recipeDragHandle:active{cursor:grabbing;background:#f0e6c8;color:#7a2e2e;border-color:#9bb7ef}.recipeIngredient.dragging .recipeDragHandle,.recipeMaterialEditRow.dragging .recipeDragHandle{background:#f0e6c8;color:#7a2e2e;border-color:#9bb7ef}
+.recipeQuickItems button{width:auto;margin:0;padding:8px 10px;font-size:14px;background:#fff;border:1px solid #cfd4dc;color:#222}.recipeQuickEdit{display:none!important;display:block;width:100%;margin:8px 0 0!important;padding:9px!important;font-size:14px!important;background:#fff!important;color:#7a2e2e!important;border:1px solid #d9c48a!important}.recipeCategoryEdit{display:none!important;margin:6px 0 8px!important;width:100%!important;padding:9px!important;font-size:14px!important;background:#fff!important;color:#7a2e2e!important;border:1px solid #d9c48a!important}.recipeCategoryEditor{margin:8px 0;padding:10px;background:#faf1dc;border:1px solid #dfe3e8;border-radius:12px}.recipeCategoryEditor[hidden]{display:none!important}.recipeCategoryEditRow{position:relative;display:grid!important;grid-template-columns:44px minmax(240px,1fr) 44px!important;gap:8px!important;align-items:center!important;width:100%!important;min-width:330px!important;box-sizing:border-box!important;margin-top:8px!important;touch-action:none}.recipeCategoryNameEdit{min-width:0;min-height:40px;margin:0;padding:9px 8px;font-size:15px;line-height:20px;border:1px solid #d8dde5;border-radius:9px;background:#fff;color:#222!important;-webkit-text-fill-color:#222!important;opacity:1!important;outline:none;overflow:hidden;white-space:nowrap}.recipeCategoryNameEdit:focus{border-color:#c9a86a;box-shadow:0 0 0 2px rgba(50,105,223,.12)}.recipeCategoryEditRow button{width:40px!important;height:40px!important;min-width:40px!important;padding:0!important;margin:0!important;background:#f3e3d9!important;color:#8a1f1f!important;border:1px solid #d9a98a!important}.recipeCategoryEditRow.dragging{opacity:.55;box-shadow:0 4px 12px rgba(0,0,0,.12)}.recipeCategoryEditRow.dragOver{outline:2px dashed #c9972c;outline-offset:1px}.recipeCategoryEditorActions{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}.recipeCategoryEditorActions button{margin:0!important;padding:10px!important;font-size:14px!important}.recipeMaterialEditor{margin-top:8px;padding:10px;background:#fff;border:1px solid #dfe3e8;border-radius:12px}.recipeMaterialEditor[hidden]{display:none!important}.recipeMaterialEditTabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px}.recipeMaterialEditTabs button{width:auto;min-width:max-content;margin:0;padding:7px 10px;font-size:13px;background:#e9d8ac;color:#333}.recipeMaterialEditTabs button.active{background:#7a2e2e;color:#fff}.recipeMaterialEditRow{position:relative;display:grid;grid-template-columns:minmax(0,1fr) 68px 40px;gap:5px;align-items:center;padding-left:34px;margin-top:6px;touch-action:none;transition:transform .12s,opacity .12s}.recipeMaterialEditRow.dragging{opacity:.55;transform:scale(.99);box-shadow:0 4px 12px rgba(0,0,0,.12)}.recipeMaterialEditRow.dragOver{outline:2px dashed #c9972c;outline-offset:1px}.recipeMaterialEditRow input{min-width:0;margin:0;padding:9px 7px;font-size:15px;border:1px solid #d8dde5;border-radius:9px}.recipeMaterialEditRow select{min-width:0;margin:0;padding:9px 4px;font-size:14px;border:1px solid #d8dde5;border-radius:9px;background:#fff}.recipeMaterialEditRow button{width:40px!important;height:40px!important;min-width:40px!important;padding:0!important;margin:0!important;background:#f3e3d9!important;color:#8a1f1f!important;border:1px solid #d9a98a!important}.recipeMaterialEditorActions{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}.recipeMaterialEditorActions button{margin:0!important;padding:10px!important;font-size:14px!important}
+.recipeDragHandle{position:absolute;left:5px;top:50%;transform:translateY(-50%);width:34px;height:40px;display:flex;align-items:center;justify-content:center;border:1px solid #d7dce5;border-radius:9px;background:#fff;color:#6b7280;font-size:18px;font-weight:700;line-height:1;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;cursor:grab;z-index:2}.recipeDragHandle:active{cursor:grabbing;background:#f0e6c8;color:#7a2e2e;border-color:#c9a86a}.recipeIngredient.dragging .recipeDragHandle,.recipeMaterialEditRow.dragging .recipeDragHandle{background:#f0e6c8;color:#7a2e2e;border-color:#c9a86a}
 .recipeText{width:100%;min-height:300px;box-sizing:border-box;font-size:17px;line-height:1.6;padding:13px;border:1px solid #ccc;border-radius:12px;resize:vertical}
-.recipePhotoArea{margin:0 0 10px}.recipePhotoPreview{display:block;width:100%;max-height:360px;object-fit:contain;border-radius:14px;border:1px solid #ddd;background:#f5f6f8}.recipePhotoEmpty{padding:22px 10px;text-align:center;border:1px dashed #cfd4dc;border-radius:14px;background:#f7f8fa;color:#777}.recipePhotoFile{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+.recipePhotoArea{margin:0 0 10px}.recipePhotoPreview{display:block;width:100%;max-height:360px;object-fit:contain;border-radius:14px;border:1px solid #ddd;background:#f5f6f8}.recipePhotoEmpty{padding:22px 10px;text-align:center;border:1px dashed #cfd4dc;border-radius:14px;background:#faf1dc;color:#777}.recipePhotoFile{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
 .recipePhotoBar{display:flex;justify-content:flex-end;align-items:center;gap:7px;margin-bottom:6px}.recipePhotoIconOnly{width:46px!important;height:46px!important;min-width:46px!important;padding:0!important;margin:0!important;border:1px solid #d8dee8!important;border-radius:12px!important;background:#f0e6c8!important;color:#7a2e2e!important;font-size:22px!important;display:flex!important;align-items:center;justify-content:center;cursor:pointer}.recipePhotoIconOnly:disabled{opacity:.38}.recipePhotoDeleteIcon{background:#fff5f5!important;border-color:#d9a98a!important}
 .recipeBtns{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;position:sticky;bottom:0;background:#fff;padding:9px 0 calc(8px + env(safe-area-inset-bottom));z-index:5}.recipeBtns button{margin:0;min-height:52px}
-.recipeBookList{display:grid;gap:8px;margin:10px 0 14px}.recipeBookItem{width:100%;text-align:left;margin:0;background:#f1f4f8;color:#222;border:1px solid #ddd;padding:13px;border-radius:12px;cursor:pointer;touch-action:pan-y}.recipeBookItem.hasRecipe{background:#f0e6c8;color:#1f55b5}.recipeBookItem.recipeDragging{opacity:.55;transform:scale(.99);box-shadow:0 5px 14px rgba(0,0,0,.14)}.recipeBookItem.recipeDragOver{outline:2px dashed #8aaef5;outline-offset:1px}
+.recipeBookList{display:grid;gap:8px;margin:10px 0 14px}.recipeBookItem{width:100%;text-align:left;margin:0;background:#faf1dc;color:#222;border:1px solid #ddd;padding:13px;border-radius:12px;cursor:pointer;touch-action:pan-y}.recipeBookItem.hasRecipe{background:#f0e6c8;color:#7a2e2e}.recipeBookItem.recipeDragging{opacity:.55;transform:scale(.99);box-shadow:0 5px 14px rgba(0,0,0,.14)}.recipeBookItem.recipeDragOver{outline:2px dashed #c9972c;outline-offset:1px}
 .prepRecipeOpen,.prepRecipeName{cursor:pointer;text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px}
 .recipePhotoViewer{display:none;position:fixed;inset:0;z-index:1000100;background:rgba(0,0,0,.86);padding:12px;align-items:center;justify-content:center}.recipePhotoViewer.open{display:flex}.recipePhotoViewerBox{position:relative;max-width:96vw;max-height:96vh;display:flex;align-items:center;justify-content:center}.recipePhotoViewerBox img{display:block;max-width:96vw;max-height:92vh;width:auto;height:auto;object-fit:contain;border-radius:12px}.recipePhotoViewerClose{position:absolute;right:0;top:-54px;width:46px;height:46px;border:0;border-radius:50%;background:#fff;color:#222;font-size:34px;line-height:1}
 .recipeViewTitle{font-size:22px;font-weight:800;margin-bottom:8px}.recipeViewSection{padding:10px 0;border-top:1px solid #eee}.recipeViewSection h3{font-size:18px;margin:0 0 7px}.recipeViewIngredient{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px dashed #ddd;font-size:17px}.recipeViewIngredient:last-child{border-bottom:0}.recipeViewStep{white-space:pre-wrap;font-size:17px;line-height:1.65}.recipeEditLink{width:auto!important;margin:0!important;padding:8px 12px!important;font-size:14px!important;background:#f0e6c8!important;color:#7a2e2e!important}
@@ -4047,10 +4057,10 @@ function renderNonVegProductManager(){
 .costHeader{display:flex;align-items:center;justify-content:space-between;gap:8px;position:sticky;top:0;background:#fff;z-index:3;padding-bottom:8px}
 .costHeader h2{margin:0;font-size:22px}.costClose{width:46px!important;height:46px!important;padding:0!important;margin:0!important;background:#e9d8ac!important;color:#333!important;font-size:30px!important}
 .costTabs{display:none!important;display:grid;grid-template-columns:1.28fr .72fr;gap:7px;margin:6px 0 12px;align-items:stretch}.costTabs button{margin:0;background:#e9d8ac;color:#333;min-height:46px}.costTabs button#costTabCalc{font-size:17px;font-weight:700}.costTabs button#costTabMaster{font-size:14px}.costTabs button.active{background:#7a2e2e;color:#fff}@media(max-width:520px){.costTabs{grid-template-columns:1.22fr .78fr}.costTabs button#costTabCalc{font-size:16px}}
-.costPanel[hidden]{display:none!important}.costCard{background:#faf1dc;border:1px solid #e1e5ea;border-radius:14px;padding:12px;margin:10px 0}.costGrid{display:grid;grid-template-columns:1.2fr .8fr .8fr;gap:7px}.costGrid2{display:grid;grid-template-columns:1fr 1fr;gap:7px}.costList{display:grid;gap:7px;margin-top:10px}.costItem{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;padding:10px;background:#fff;border:1px solid #e0e3e8;border-radius:11px}.costItem b{overflow-wrap:anywhere}.costSub{font-size:13px;color:#666;margin-top:3px}.costItem button{width:auto;margin:0;padding:8px 10px;font-size:14px}.costPriceBtn{background:#f0e6c8!important;color:#7a2e2e!important;border:1px solid #d9c48a!important}.costDeleteBtn{background:#f3e3d9!important;color:#7a2e2e!important;border:1px solid #d9a98a!important}.costTable{width:100%;border-collapse:collapse;margin-top:8px;font-size:15px}.costTable th,.costTable td{border-bottom:1px solid #ddd;padding:8px 5px;text-align:left;vertical-align:middle}.costTable th:last-child,.costTable td:last-child{text-align:right;white-space:nowrap}.costResult{display:grid;grid-template-columns:1fr 1fr;gap:8px}.costResultBox{background:#f0e6c8;border-radius:12px;padding:11px}.costResultBox .label{font-size:13px;color:#555}.costResultBox strong{display:block;font-size:21px;margin-top:3px}.costWarn{background:#fff7d6;border:1px solid #ead17b;border-radius:12px;padding:10px;font-size:13px;margin-top:8px}.costEmpty{padding:14px;background:#fff;border:1px dashed #ccd2da;border-radius:12px;color:#777;text-align:center}.costHint{font-size:13px;color:#666;line-height:1.5;margin-top:5px}
-.masterManagerHead{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.masterManagerHead h3{margin:0 0 4px}.masterSmallBtn{width:auto!important;margin:0!important;padding:8px 10px!important;white-space:nowrap}.masterActions{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin:10px 0}.masterActions button{margin:0!important;min-height:44px}.masterFilters{display:grid;grid-template-columns:.9fr 1.1fr;gap:7px;margin:8px 0}.masterHelp{font-size:12px;color:#555;background:#f4f6f8;border-radius:10px;padding:9px;margin:8px 0}.masterStatus{min-height:20px;font-size:13px;font-weight:700;color:#7a2e2e;margin:3px 0}.masterList{display:grid;gap:9px}.masterCatBlock{background:#faf1dc;border:1px solid #dfe4ea;border-radius:13px;overflow:hidden}.masterCatHead{display:grid;grid-template-columns:34px minmax(0,1fr) auto;gap:6px;align-items:center;padding:9px;background:#f0e6c8;border-bottom:1px solid #dfe4ea}.masterCatName{font-size:17px;font-weight:800;min-width:0}.masterCatName input{width:100%;box-sizing:border-box;font-size:17px;font-weight:800;padding:7px 8px;border:1px solid #cbd5e1;border-radius:8px;background:#fff}.masterSortBtns{display:flex;gap:4px}.masterSortBtns button{width:38px!important;min-width:38px!important;height:36px!important;padding:0!important;margin:0!important}.masterCatDelete{background:#f3e3d9!important;color:#7a2e2e!important;border:1px solid #d9a98a!important}.masterMaterial{display:grid;grid-template-columns:34px minmax(0,1fr) 88px 78px auto;gap:6px;align-items:center;padding:8px;border-bottom:1px solid #e7eaee;background:#fff}.masterMaterial:last-child{border-bottom:0}.masterMaterial input,.masterMaterial select{min-width:0;margin:0;padding:8px 6px;border:1px solid #d5dbe3;border-radius:8px;background:#fff;font-size:14px}.masterMaterial .materialName{font-weight:700}.masterMaterialBtns{display:flex;gap:4px;align-items:center}.masterMaterialBtns button{width:auto!important;min-width:38px!important;height:36px!important;padding:5px 7px!important;margin:0!important;font-size:13px!important}.masterPriceBtn{background:#f0e6c8!important;color:#7a2e2e!important;border:1px solid #d9c48a!important}.masterPriceBtn.registered{background:#e7f7ed!important;color:#3f6b4f!important;border-color:#9ed8b7!important}.masterDeleteBtn{background:#f3e3d9!important;color:#7a2e2e!important;border:1px solid #d9a98a!important}.masterUnitBlock{background:#faf1dc;border:1px solid #dfe4ea;border-radius:13px;padding:10px;margin-top:10px}.masterUnitHead{font-weight:800;margin-bottom:7px}.masterUnitRow{display:grid;grid-template-columns:34px minmax(0,1fr) auto;gap:6px;align-items:center;margin-top:6px}.masterUnitRow input{min-width:0;margin:0;padding:8px;border:1px solid #d5dbe3;border-radius:8px;background:#fff}.masterEmpty{padding:15px;text-align:center;color:#777;background:#fff;border:1px dashed #cbd2da;border-radius:10px}.masterPriceEditor{grid-column:2/-1;background:#f5f8ff;border:1px solid #d6e1ff;border-radius:9px;padding:8px;display:none}.masterPriceEditor.open{display:grid;grid-template-columns:1fr 1fr;gap:6px}.masterPriceEditor label{font-size:12px;color:#555}.masterPriceEditor input,.masterPriceEditor select{width:100%;box-sizing:border-box;margin:3px 0 0;padding:8px;border:1px solid #ccd5e2;border-radius:7px;background:#fff}.masterPriceActions{grid-column:1/-1;display:flex;gap:6px}.masterPriceActions button{margin:0!important;width:auto!important;padding:8px 12px!important}.masterDragHandle{display:flex;align-items:center;justify-content:center;width:34px;height:40px;box-sizing:border-box;font-size:18px;text-align:center;color:#6b7280;border:1px solid #d7dce5;border-radius:9px;background:#fff;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;cursor:grab}.masterMaterial.masterDragging{opacity:.55;transform:scale(.99);box-shadow:0 5px 14px rgba(0,0,0,.14)}.masterMaterial.masterDragOver{outline:2px dashed #8aaef5;outline-offset:1px}.masterCatFooter{padding:7px 9px;background:#faf1dc;color:#666;font-size:12px}.masterSelected{outline:2px solid #8aaef5;outline-offset:-2px}@media(max-width:600px){.masterActions{grid-template-columns:1fr}.masterFilters{grid-template-columns:1fr}.masterMaterial{grid-template-columns:40px minmax(0,1fr) 70px 65px}.masterMaterialBtns{grid-column:2/-1;justify-content:flex-end}.masterPriceEditor{grid-column:1/-1}.masterCatHead{grid-template-columns:28px minmax(0,1fr);}.masterCatHead .masterSortBtns{grid-column:2;justify-content:flex-end}.masterCatName input{font-size:16px}}
+.costPanel[hidden]{display:none!important}.costCard{background:#faf1dc;border:1px solid #e1e5ea;border-radius:14px;padding:12px;margin:10px 0}.costGrid{display:grid;grid-template-columns:1.2fr .8fr .8fr;gap:7px}.costGrid2{display:grid;grid-template-columns:1fr 1fr;gap:7px}.costList{display:grid;gap:7px;margin-top:10px}.costItem{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;padding:10px;background:#fff;border:1px solid #e0e3e8;border-radius:11px}.costItem b{overflow-wrap:anywhere}.costSub{font-size:13px;color:#666;margin-top:3px}.costItem button{width:auto;margin:0;padding:8px 10px;font-size:14px}.costPriceBtn{background:#f0e6c8!important;color:#7a2e2e!important;border:1px solid #d9c48a!important}.costDeleteBtn{background:#f3e3d9!important;color:#7a2e2e!important;border:1px solid #d9a98a!important}.costTable{width:100%;border-collapse:collapse;margin-top:8px;font-size:15px}.costTable th,.costTable td{border-bottom:1px solid #ddd;padding:8px 5px;text-align:left;vertical-align:middle}.costTable th:last-child,.costTable td:last-child{text-align:right;white-space:nowrap}.costResult{display:grid;grid-template-columns:1fr 1fr;gap:8px}.costResultBox{background:#f0e6c8;border-radius:12px;padding:11px}.costResultBox .label{font-size:13px;color:#555;white-space:nowrap}.costResultBox strong{display:block;font-size:21px;margin-top:3px}.costWarn{background:#fff7d6;border:1px solid #ead17b;border-radius:12px;padding:10px;font-size:13px;margin-top:8px}.costEmpty{padding:14px;background:#fff;border:1px dashed #ccd2da;border-radius:12px;color:#777;text-align:center}.costHint{font-size:13px;color:#666;line-height:1.5;margin-top:5px}
+.masterManagerHead{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.masterManagerHead h3{margin:0 0 4px}.masterSmallBtn{width:auto!important;margin:0!important;padding:8px 10px!important;white-space:nowrap}.masterActions{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin:10px 0}.masterActions button{margin:0!important;min-height:44px}.masterFilters{display:grid;grid-template-columns:.9fr 1.1fr;gap:7px;margin:8px 0}.masterHelp{font-size:12px;color:#555;background:#f4f6f8;border-radius:10px;padding:9px;margin:8px 0}.masterStatus{min-height:20px;font-size:13px;font-weight:700;color:#7a2e2e;margin:3px 0}.masterList{display:grid;gap:9px}.masterCatBlock{background:#faf1dc;border:1px solid #dfe4ea;border-radius:13px;overflow:hidden}.masterCatHead{display:grid;grid-template-columns:34px minmax(0,1fr) auto;gap:6px;align-items:center;padding:9px;background:#f0e6c8;border-bottom:1px solid #dfe4ea}.masterCatName{font-size:17px;font-weight:800;min-width:0}.masterCatName input{width:100%;box-sizing:border-box;font-size:17px;font-weight:800;padding:7px 8px;border:1px solid #d9c48a;border-radius:8px;background:#fff}.masterSortBtns{display:flex;gap:4px}.masterSortBtns button{width:38px!important;min-width:38px!important;height:36px!important;padding:0!important;margin:0!important}.masterCatDelete{background:#f3e3d9!important;color:#7a2e2e!important;border:1px solid #d9a98a!important}.masterMaterial{display:grid;grid-template-columns:34px minmax(0,1fr) 88px 78px auto;gap:6px;align-items:center;padding:8px;border-bottom:1px solid #e7eaee;background:#fff}.masterMaterial:last-child{border-bottom:0}.masterMaterial input,.masterMaterial select{min-width:0;margin:0;padding:8px 6px;border:1px solid #d5dbe3;border-radius:8px;background:#fff;font-size:14px}.masterMaterial .materialName{font-weight:700}.masterMaterialBtns{display:flex;gap:4px;align-items:center}.masterMaterialBtns button{width:auto!important;min-width:38px!important;height:36px!important;padding:5px 7px!important;margin:0!important;font-size:13px!important}.masterPriceBtn{background:#f0e6c8!important;color:#7a2e2e!important;border:1px solid #d9c48a!important}.masterPriceBtn.registered{background:#e7f7ed!important;color:#3f6b4f!important;border-color:#9ed8b7!important}.masterDeleteBtn{background:#f3e3d9!important;color:#7a2e2e!important;border:1px solid #d9a98a!important}.masterUnitBlock{background:#faf1dc;border:1px solid #dfe4ea;border-radius:13px;padding:10px;margin-top:10px}.masterUnitHead{font-weight:800;margin-bottom:7px}.masterUnitRow{display:grid;grid-template-columns:34px minmax(0,1fr) auto;gap:6px;align-items:center;margin-top:6px}.masterUnitRow input{min-width:0;margin:0;padding:8px;border:1px solid #d5dbe3;border-radius:8px;background:#fff}.masterEmpty{padding:15px;text-align:center;color:#777;background:#fff;border:1px dashed #cbd2da;border-radius:10px}.masterPriceEditor{grid-column:2/-1;background:#faf1dc;border:1px solid #f0e6c8;border-radius:9px;padding:8px;display:none}.masterPriceEditor.open{display:grid;grid-template-columns:1fr 1fr;gap:6px}.masterPriceEditor label{font-size:12px;color:#555}.masterPriceEditor input,.masterPriceEditor select{width:100%;box-sizing:border-box;margin:3px 0 0;padding:8px;border:1px solid #d9c48a;border-radius:7px;background:#fff}.masterPriceActions{grid-column:1/-1;display:flex;gap:6px}.masterPriceActions button{margin:0!important;width:auto!important;padding:8px 12px!important}.masterDragHandle{display:flex;align-items:center;justify-content:center;width:34px;height:40px;box-sizing:border-box;font-size:18px;text-align:center;color:#6b7280;border:1px solid #d7dce5;border-radius:9px;background:#fff;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;cursor:grab}.masterMaterial.masterDragging{opacity:.55;transform:scale(.99);box-shadow:0 5px 14px rgba(0,0,0,.14)}.masterMaterial.masterDragOver{outline:2px dashed #c9972c;outline-offset:1px}.masterCatFooter{padding:7px 9px;background:#faf1dc;color:#666;font-size:12px}.masterSelected{outline:2px solid #c9972c;outline-offset:-2px}@media(max-width:600px){.masterActions{grid-template-columns:1fr}.masterFilters{grid-template-columns:1fr}.masterMaterial{grid-template-columns:40px minmax(0,1fr) 70px 65px}.masterMaterialBtns{grid-column:2/-1;justify-content:flex-end}.masterPriceEditor{grid-column:1/-1}.masterCatHead{grid-template-columns:28px minmax(0,1fr);}.masterCatHead .masterSortBtns{grid-column:2;justify-content:flex-end}.masterCatName input{font-size:16px}}
 .costRecipeSelect{width:100%!important;min-height:48px!important;font-size:17px!important;font-weight:600!important;padding:10px 12px!important;background:#fff!important;color:#222!important;-webkit-text-fill-color:#222!important}
-.costSearch{width:100%!important;margin:0!important;min-height:44px!important;box-sizing:border-box}.costCategoryTitle{font-size:15px;font-weight:700;margin:12px 0 6px;padding:6px 8px;background:#eef0f3;border-radius:8px}.costPriceEditor{display:none;margin-top:9px;padding:10px;background:#faf1dc;border:1px solid #dfe3e8;border-radius:10px}.costPriceEditor.open{display:block}.costPriceEditor .costGrid{grid-template-columns:1fr 1fr}.costPriceEditor .costGrid>div:last-child{grid-column:1/-1}.costPriceActions{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:8px}.costPriceActions button{margin:0!important;padding:10px!important}.costRegistered{color:#7a2e2e;font-weight:700}.costNoPrice{color:#9a6700;font-weight:700}
+.costSearch{width:100%!important;margin:0!important;min-height:44px!important;box-sizing:border-box}.costCategoryTitle{font-size:15px;font-weight:700;margin:12px 0 6px;padding:6px 8px;background:#e9d8ac;border-radius:8px}.costPriceEditor{display:none;margin-top:9px;padding:10px;background:#faf1dc;border:1px solid #dfe3e8;border-radius:10px}.costPriceEditor.open{display:block}.costPriceEditor .costGrid{grid-template-columns:1fr 1fr}.costPriceEditor .costGrid>div:last-child{grid-column:1/-1}.costPriceActions{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:8px}.costPriceActions button{margin:0!important;padding:10px!important}.costRegistered{color:#7a2e2e;font-weight:700}.costNoPrice{color:#9a6700;font-weight:700}
 .costCalcModes{display:grid;grid-template-columns:1fr 1fr;gap:7px}.costCalcModes button{margin:0;background:#e9d8ac;color:#333}.costCalcModes button.active{background:#7a2e2e;color:#fff}.freeCostComponents{display:grid;gap:8px}.freeCostRow{display:grid;grid-template-columns:82px minmax(0,1fr) 78px 68px 40px;gap:5px;align-items:center;background:#fff;border:1px solid #e0e3e8;border-radius:10px;padding:7px}.freeCostRow input,.freeCostRow select{min-width:0;font-size:14px;padding:9px 5px}.freeCostRow button{margin:0;width:40px;height:40px;padding:0}.freeCostSummary{display:grid;grid-template-columns:1fr 1fr;gap:8px}.freeCostRegister{margin-top:8px;width:100%}
 .freeCostRow{grid-template-columns:90px 125px minmax(260px,1fr) 78px 68px 40px}.freeCostNameWrap{display:grid;grid-template-columns:minmax(0,1fr) 150px;gap:5px;min-width:0}.freeCostSearch{width:100%;box-sizing:border-box}.freeCostCategory{min-width:0}@media(max-width:760px){.freeCostRow{grid-template-columns:1fr 1fr;gap:6px}.freeCostNameWrap{grid-column:1 / -1;grid-template-columns:minmax(0,1fr) 120px}.freeCostQty,.freeCostUnit{min-width:0}.freeCostRow button{justify-self:end}.freeCostType,.freeCostCategory{width:100%}}
 
@@ -4668,8 +4678,8 @@ import {ref,onValue,set,update,remove,push,runTransaction} from "https://www.gst
 .productCategoryPanel{margin-top:9px}.productCategoryRow{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:6px;align-items:center;margin-top:6px}.productCategoryRow input{min-width:0}
 .productAddPanel{margin-top:9px}.productAddGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.productAddGrid input,.productAddGrid select{width:100%;box-sizing:border-box}
 .productAddActions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:9px}.productAddActions button{margin:0}
-.productSummary{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:9px}.productSummaryBox{background:#faf1dc;border:1px solid #e1e5ea;border-radius:12px;padding:9px;text-align:center}.productSummaryBox .label{font-size:12px;color:#667085}.productSummaryBox strong{font-size:17px}
-.productList{display:grid;gap:8px;margin-top:9px}.productCard{border:1px solid #dfe3e8;border-radius:13px;padding:10px;background:#fff}.productCardHead{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:8px;align-items:start}.productCardName{font-size:17px;font-weight:700;overflow-wrap:anywhere}.productCardMeta{font-size:12px;color:#667085;margin-top:3px}.productCardNums{text-align:right;white-space:nowrap;font-weight:700}.productCardRate{font-size:13px;margin-top:3px;text-align:right}.productCardButtons{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}.productCardButtons button{margin:0}.productSource{display:inline-block;padding:2px 6px;border-radius:999px;background:#eef2ff;color:#334155;font-size:11px;margin-top:4px}
+.productSummary{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:9px}.productSummaryBox{background:#faf1dc;border:1px solid #e1e5ea;border-radius:12px;padding:9px;text-align:center}.productSummaryBox .label{font-size:12px;color:#667085;white-space:nowrap}.productSummaryBox strong{font-size:17px}
+.productList{display:grid;gap:8px;margin-top:9px}.productCard{border:1px solid #dfe3e8;border-radius:13px;padding:10px;background:#fff}.productCardHead{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:8px;align-items:start}.productCardName{font-size:17px;font-weight:700;overflow-wrap:anywhere}.productCardMeta{font-size:12px;color:#667085;margin-top:3px}.productCardNums{text-align:right;white-space:nowrap;font-weight:700}.productCardRate{font-size:13px;margin-top:3px;text-align:right;white-space:nowrap}.productCardButtons{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}.productCardButtons button{margin:0}.productSource{display:inline-block;padding:2px 6px;border-radius:999px;background:#f0e6c8;color:#334155;font-size:11px;margin-top:4px}
 .productEditPanel{display:none;margin-top:9px;padding-top:9px;border-top:1px solid #e5e7eb}.productEditPanel.open{display:block}
 .productCheckedHint{margin-top:7px;font-size:13px;color:#667085}
 @media(max-width:520px){#productCostModal{padding:0}.productCostBox{width:100%;min-height:100dvh;border-radius:0;padding:12px}.productCostFilters{grid-template-columns:1fr}.productAddGrid{grid-template-columns:1fr 1fr}.productSummary{grid-template-columns:1fr 1fr 1fr}.productCardHead{grid-template-columns:28px minmax(0,1fr)}.productCardNums,.productCardRate{text-align:left}.productAddActions,.productActionsTop{grid-template-columns:1fr 1fr}}
@@ -5067,14 +5077,14 @@ button, label {
 
 <style id="prepRecipeSearchAndFreeVoiceStyle">
 .prepRecipeSearchCard{margin-top:10px}
-.prepRecipeVoiceBtn{width:54px!important;height:54px!important;min-width:54px!important;min-height:54px!important;border:1px solid #cfd8ea!important;border-radius:16px!important;background:#f3f6fb!important;color:#245fca!important;display:flex!important;align-items:center!important;justify-content:center!important;padding:0!important;margin:0!important;cursor:pointer!important;-webkit-tap-highlight-color:transparent!important;font-size:0!important}
-.prepRecipeVoiceBtn.is-listening{background:#e8f0ff!important;border-color:#5b84df!important}
+.prepRecipeVoiceBtn{width:54px!important;height:54px!important;min-width:54px!important;min-height:54px!important;border:1px solid #d9c48a!important;border-radius:16px!important;background:#faf1dc!important;color:#7a2e2e!important;display:flex!important;align-items:center!important;justify-content:center!important;padding:0!important;margin:0!important;cursor:pointer!important;-webkit-tap-highlight-color:transparent!important;font-size:0!important}
+.prepRecipeVoiceBtn.is-listening{background:#f0e6c8!important;border-color:#8a5a2e!important}
 .prepRecipeVoiceBtn svg{width:22px!important;height:22px!important}
 .prepRecipeSearchRow{display:grid;grid-template-columns:minmax(0,1fr) 54px;gap:8px;align-items:stretch}
-.prepRecipeSearchRow input{width:100%;box-sizing:border-box;min-height:52px;border:1px solid #cfd8ea;border-radius:16px;padding:0 14px;font-size:17px;background:#fff}
+.prepRecipeSearchRow input{width:100%;box-sizing:border-box;min-height:52px;border:1px solid #d9c48a;border-radius:16px;padding:0 14px;font-size:17px;background:#fff}
 .prepRecipeSearchResults{display:grid;gap:6px;margin-top:8px}
-.prepRecipeSearchResult{width:100%;text-align:left;background:#f1f4f8;color:#222;border:1px solid #ddd;padding:12px 13px;border-radius:12px;cursor:pointer;font-size:16px;font-weight:700}
-.prepRecipeSearchResult.hasRecipe{background:#f0e6c8;color:#1f55b5}
+.prepRecipeSearchResult{width:100%;text-align:left;background:#faf1dc;color:#222;border:1px solid #ddd;padding:12px 13px;border-radius:12px;cursor:pointer;font-size:16px;font-weight:700}
+.prepRecipeSearchResult.hasRecipe{background:#f0e6c8;color:#7a2e2e}
 .prepRecipeSearchResult small{display:block;color:#777;font-weight:400;margin-top:3px}
 .prepRecipeSearchEmpty{font-size:14px;color:#777;padding:5px 2px}
 </style>
@@ -7154,11 +7164,11 @@ function renderDay(){
 </style>
 
 <style id="shiftTodayPositionFinalFix">
-#shiftPage .shiftTodayEditPosition{width:100% !important;min-height:52px !important;box-sizing:border-box;padding:10px 12px !important;font-size:18px !important;font-weight:800 !important;border:1px solid #cbd3df;border-radius:10px}
+#shiftPage .shiftTodayEditPosition{width:100% !important;min-height:52px !important;box-sizing:border-box;padding:10px 12px !important;font-size:18px !important;font-weight:800 !important;border:1px solid #d9c48a;border-radius:10px}
 </style>
 
 <style id="shiftOtherDayCompactEditorFix">
-#shiftPage .shiftOtherDayStaffPicker{margin:10px 0 14px;padding:12px;border:1px solid #dfe3ea;border-radius:14px;background:#f7f8fa}
+#shiftPage .shiftOtherDayStaffPicker{margin:10px 0 14px;padding:12px;border:1px solid #dfe3ea;border-radius:14px;background:#faf1dc}
 #shiftPage .shiftOtherDayStaffPicker label{display:block;font-weight:800;font-size:15px;margin-bottom:7px}
 #shiftPage .shiftOtherDayStaffPickerRow{display:grid;grid-template-columns:minmax(0,1fr) 88px;gap:8px;align-items:center}
 #shiftPage .shiftOtherDayStaffSelect{width:100%;min-height:48px;padding:8px 10px;border:1px solid #cfd4dc;border-radius:10px;background:#fff;font-size:16px}
@@ -7292,7 +7302,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 <style id="salesManagementAddStyle">
 #salesPage .salesGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 #salesPage .salesSummary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
-#salesPage .salesKpi{background:#f7f8fa;border:1px solid #e1e4e8;border-radius:12px;padding:12px;text-align:center}
+#salesPage .salesKpi{background:#faf1dc;border:1px solid #e1e4e8;border-radius:12px;padding:12px;text-align:center}
 #salesPage .salesKpi b{display:block;font-size:20px;margin-top:4px}
 #salesPage .salesRow{display:grid;grid-template-columns:105px 1fr 90px;gap:8px;align-items:end;margin:8px 0}
 #salesPage .salesList{max-height:420px;overflow:auto}
@@ -7301,16 +7311,16 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 #shiftPage .prevYearSalesBadge{display:block;margin-top:3px;font-size:12px;font-weight:700;color:#7a2e2e}
 #shiftPage .shiftPrevYearSalesUnderDate{margin-top:4px;font-size:14px;font-weight:800;color:#7a2e2e;line-height:1.35}
 #salesPage .salesStatusBadge{padding:12px 14px;border-radius:14px;font-weight:800;font-size:15px}
-#salesPage .salesStatusBadge.done{background:#eefaf1;color:#176b32}
+#salesPage .salesStatusBadge.done{background:#eefaf1;color:#3f6b4f}
 #salesPage .salesStatusBadge.missing{background:#fff8e5;color:#805b00}
 #salesPage .salesStatusBadge.closed{background:#f1f1f1;color:#555}
-.ccSalesQuick{margin:12px 0;padding:12px;border:1px solid #d8e2f5;border-radius:14px;background:#f8fbff}
+.ccSalesQuick{margin:12px 0;padding:12px;border:1px solid #f0e6c8;border-radius:14px;background:#faf1dc}
 .ccSalesQuickLabel{font-weight:800;font-size:15px;margin-bottom:8px}
 .ccSalesQuickRow{display:grid;grid-template-columns:1fr auto;gap:8px}
 .ccSalesQuickRow input{margin:0;padding:11px 10px;font-size:17px}
 .ccSalesQuickRow button{width:auto;margin:0;padding:0 18px}
 .ccSalesQuickStatus{margin-top:8px;font-size:13px;font-weight:700}
-.ccSalesQuickStatus.done{color:#176b32}
+.ccSalesQuickStatus.done{color:#3f6b4f}
 .ccSalesQuickStatus.missing{color:#a65f00}
 .ccSalesQuickStatus.closed{color:#777}
 #salesPage .salesCal{margin-top:12px;border:1px solid #e1e4e8;border-radius:16px;padding:12px;background:#fff}
@@ -7657,7 +7667,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 #shiftNameEditorOverlay{position:fixed;inset:0;z-index:99999;background:rgba(245,247,251,.98);overflow:auto;padding:18px;box-sizing:border-box}
 #shiftNameEditorOverlay .shiftNameEditorPanel{max-width:720px;margin:0 auto;background:#fff;border-radius:20px;padding:16px;box-shadow:0 10px 35px rgba(0,0,0,.14)}
 #shiftNameEditorOverlay .shiftNameEditorHeader{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;font-weight:800;font-size:20px}
-#shiftNameEditorOverlay .shiftNameEditorBack{border:0;border-radius:12px;padding:10px 14px;background:#eef1f5;color:#245bb8;font-weight:800}
+#shiftNameEditorOverlay .shiftNameEditorBack{width:auto;flex:0 0 auto;border:0;border-radius:12px;padding:10px 14px;background:#e9d8ac;color:#7a2e2e;font-weight:800}
 #shiftNameEditorOverlay .shiftNameEditRow{display:grid;grid-template-columns:36px 1fr 48px;gap:8px;align-items:center;margin:8px 0}
 #shiftNameEditorOverlay .shiftNameEditRow input{width:100%;box-sizing:border-box;padding:12px;border:1px solid #d8dce3;border-radius:12px;font-size:16px}
 #shiftNameEditorOverlay .shiftNameDelete{border:0;background:#fff;font-size:20px;padding:8px}
@@ -7942,8 +7952,8 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   white-space:nowrap;
 }
 .masterCategoryTag.active{
-  background:#dbe9ff!important;color:#7a2e2e!important;
-  border-color:#8eb4f4!important;
+  background:#f0e6c8!important;color:#7a2e2e!important;
+  border-color:#c9a86a!important;
 }
 .masterCategoryTag span{
   font-size:12px;font-weight:700;margin-left:3px;opacity:.8;
@@ -8287,11 +8297,11 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 .ccItemActions .ccDeleteBtn{flex:0 0 auto}
 .ccDragHandle{display:flex;align-items:center;justify-content:center;width:38px;height:44px;box-sizing:border-box;font-size:20px;text-align:center;color:#6b7280;border:1px solid #d7dce5;border-radius:9px;background:#fff;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;cursor:grab}
 .ccItem.ccDragging,.ccFreeItem.ccDragging{opacity:.55;transform:scale(.99);box-shadow:0 5px 14px rgba(0,0,0,.14)}
-.ccItem.ccDragOver,.ccFreeItem.ccDragOver{outline:2px dashed #8aaef5;outline-offset:1px}
-.ccDaysBtn{width:auto!important;min-width:44px!important;max-width:120px;height:44px!important;padding:6px 12px!important;margin:0!important;background:#f0f4ff!important;color:#7a2e2e!important;border:1px solid #d9c48a!important;border-radius:10px;font-size:14px!important;font-weight:800!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ccItem.ccDragOver,.ccFreeItem.ccDragOver{outline:2px dashed #c9972c;outline-offset:1px}
+.ccDaysBtn{width:auto!important;min-width:44px!important;max-width:120px;height:44px!important;padding:6px 12px!important;margin:0!important;background:#f0e6c8!important;color:#7a2e2e!important;border:1px solid #d9c48a!important;border-radius:10px;font-size:14px!important;font-weight:800!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ccDaysBtn.ccDaysActive{background:#7a2e2e!important;color:#fff!important;border-color:#7a2e2e!important}
 .ccDeleteBtn{width:44px!important;min-width:44px!important;height:44px!important;padding:0!important;margin:0!important;background:#f3e3d9!important;color:#7a2e2e!important;border:1px solid #d9a98a!important;border-radius:10px;font-size:18px!important;font-weight:800!important;line-height:1!important}
-.ccDaysPanel{grid-area:panel;margin-top:10px;padding:12px;background:#f6f8fc;border:1px solid #dbe3f0;border-radius:10px}
+.ccDaysPanel{grid-area:panel;margin-top:10px;padding:12px;background:#f6f8fc;border:1px solid #f0e6c8;border-radius:10px}
 .ccDaysPanel[hidden]{display:none}
 .ccDaysPanelLabel{display:block;font-size:13px;color:#555;font-weight:800;margin-bottom:8px}
 .ccDayChips{display:flex;flex-wrap:wrap;gap:8px}
@@ -8332,11 +8342,11 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 .prepSeasonTag.prepSeasonUpcoming{background:#fff3a8;color:#7a5200;border:1px solid #e6b800}
 .prepSeasonTag.prepSeasonOff{background:#eee;color:#777;border:1px solid #ddd}
 .prepRow.prepOffSeason{opacity:.6}
-.prepSeasonTag.prepSeasonForce{background:#e6f0ff;color:#7a2e2e;border:1px solid #b9d0f7}
+.prepSeasonTag.prepSeasonForce{background:#f0e6c8;color:#7a2e2e;border:1px solid #f0e6c8}
 .seasonEdit{margin:0 0 10px;padding:8px 0 0}
 .seasonEditCheck{display:flex;align-items:center;gap:8px;font-size:14px;color:#444;font-weight:700}
 .seasonEditCheck input[type="checkbox"]{width:22px;height:22px;margin:0}
-.seasonControls{margin-top:10px;padding:12px;background:#f6f8fc;border:1px solid #dbe3f0;border-radius:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.seasonControls{margin-top:10px;padding:12px;background:#f6f8fc;border:1px solid #f0e6c8;border-radius:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .seasonControls[hidden]{display:none}
 .seasonRangeSep{font-size:16px;color:#777;font-weight:700}
 .seasonSelectWrap{display:flex;flex-direction:column;align-items:center;gap:4px}
@@ -9018,6 +9028,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 <style>
 #scrollTopBtn{position:fixed;left:14px;bottom:18px;z-index:500;width:50px;height:50px;border:0;border-radius:50%;background:#7a2e2e;color:#fff;font-size:22px;font-weight:800;line-height:1;box-shadow:0 4px 14px rgba(0,0,0,.28);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transform:translateY(10px);transition:opacity .2s,transform .2s}
 #scrollTopBtn.show{opacity:.88;pointer-events:auto;transform:translateY(0)}
+#scrollTopBtn.show.idle{opacity:.3;pointer-events:none}
 #scrollTopBtn:active{opacity:1;transform:scale(.94)}
 @media print{#scrollTopBtn{display:none!important}}
 </style>
@@ -9025,7 +9036,19 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 <script>
 (function(){
   const btn=document.getElementById('scrollTopBtn');
-  const toggle=()=>{if(window.scrollY>280)btn.classList.add('show');else btn.classList.remove('show')};
+  let idleTimer=null;
+  const toggle=()=>{
+    if(window.scrollY>280){
+      btn.classList.add('show');
+      btn.classList.remove('idle');
+      clearTimeout(idleTimer);
+      idleTimer=setTimeout(()=>btn.classList.add('idle'),1200);
+    }else{
+      btn.classList.remove('show');
+      btn.classList.remove('idle');
+      clearTimeout(idleTimer);
+    }
+  };
   window.addEventListener('scroll',toggle,{passive:true});
   toggle();
   btn.addEventListener('click',()=>window.scrollTo({top:0,behavior:'smooth'}));
