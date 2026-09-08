@@ -8947,4 +8947,20 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();
 </script>
+<style>
+#scrollTopBtn{position:fixed;left:14px;bottom:18px;z-index:500;width:50px;height:50px;border:0;border-radius:50%;background:#3269df;color:#fff;font-size:22px;font-weight:800;line-height:1;box-shadow:0 4px 14px rgba(0,0,0,.28);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transform:translateY(10px);transition:opacity .2s,transform .2s}
+#scrollTopBtn.show{opacity:.88;pointer-events:auto;transform:translateY(0)}
+#scrollTopBtn:active{opacity:1;transform:scale(.94)}
+@media print{#scrollTopBtn{display:none!important}}
+</style>
+<button type="button" id="scrollTopBtn" aria-label="ページの先頭に戻る" title="先頭に戻る">↑</button>
+<script>
+(function(){
+  const btn=document.getElementById('scrollTopBtn');
+  const toggle=()=>{if(window.scrollY>280)btn.classList.add('show');else btn.classList.remove('show')};
+  window.addEventListener('scroll',toggle,{passive:true});
+  toggle();
+  btn.addEventListener('click',()=>window.scrollTo({top:0,behavior:'smooth'}));
+})();
+</script>
 </body></html>
