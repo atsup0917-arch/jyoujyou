@@ -4051,8 +4051,8 @@ function renderNonVegProductManager(){
 </div>
 <script type="module">
 import {ref,onValue,set,update,remove,push,runTransaction} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-database.js";
-(()=>{
- const fb=window.__fb;if(!fb)return;
+(function boot(){
+ const fb=window.__fb;if(!fb){setTimeout(boot,300);return;}
  const db=fb.db, costRef=ref(db,'prep/costMaster'), ingredientMasterRef=ref(db,'prep/ingredientMaster'), recipesRef=ref(db,'prep/recipes'), prepItemsRef=ref(db,'prep/items'), productCostsRef=ref(db,'prep/productCosts'), productCategoriesRef=ref(db,'prep/productCostCategories');
  const $=id=>document.getElementById(id); let recipes={}, prepItems={}, legacyMasters={};
  const unitToBase=(qty,unit,base)=>{let n=Number(qty);if(!Number.isFinite(n))return null;unit=String(unit||'').trim();base=String(base||'').trim();if(unit===base)return n;const mass={g:1,kg:1000},vol={ml:1,L:1000,cc:1};if(mass[unit]&&mass[base])return n*mass[unit]/mass[base];if(vol[unit]&&vol[base])return n*vol[unit]/vol[base];return null;};
@@ -4645,7 +4645,7 @@ import {ref,onValue,set,update,remove,push,runTransaction} from "https://www.gst
   </div>
 </div>
 <script type="module" id="productCostScript">
-import {ref,onValue,set,update,remove,push,runTransaction} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-database.js";
+import {ref,onValue,set,update,remove,push,runTransaction,get} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-database.js";
 (async()=>{
  const fb=await new Promise(resolve=>{
     if(window.__fb){resolve(window.__fb);return;}
