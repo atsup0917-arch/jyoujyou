@@ -4,52 +4,55 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>買い物リスト</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;600;800&family=Zen+Old+Mincho:wght@400;600&display=swap" rel="stylesheet">
 <style>
-:root{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif;color:#171717;background:#f3f5f8}
+:root{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif;color:#171717;background:#f3e6c8}
 *{box-sizing:border-box} body{margin:0;padding:18px 14px 50px}
 .wrap{max-width:760px;margin:auto}.card{background:white;border-radius:22px;padding:18px;margin:0 0 16px}
 h1{font-size:30px;margin:4px 0 18px} h2{font-size:22px;margin:0 0 14px}
 label{font-weight:700;display:block;margin:12px 0 7px}
 input,select,button{width:100%;font-size:18px;border-radius:16px;padding:15px;border:1px solid #c9cdd3;background:white}
-button{font-weight:700;border:0;background:#3269df;color:white;margin-top:12px}
-button.gray{background:#e9eaed;color:#2371df}.danger{background:#fff0f0;color:#c62828;border:1px solid #f0bcbc}
+button{font-weight:700;border:0;background:#7a2e2e;color:white;margin-top:12px}
+button.gray{background:#e9d8ac;color:#7a2e2e}.danger{background:#f3e3d9;color:#8a1f1f;border:1px solid #d9a98a}
 .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .filters{display:flex;flex-wrap:wrap;gap:8px;overflow:visible;padding-bottom:4px;min-width:0}
-.filters button{width:auto;max-width:100%;white-space:normal;overflow-wrap:anywhere;word-break:break-word;padding:10px 15px;margin:0;background:#e9eaed;color:#333;flex:0 1 auto}
-.filters button.active{background:#3269df;color:#fff}
+.filters button{width:auto;max-width:100%;white-space:normal;overflow-wrap:anywhere;word-break:break-word;padding:10px 15px;margin:0;background:#e9d8ac;color:#333;flex:0 1 auto}
+.filters button.active{background:#7a2e2e;color:#fff}
 .filters button.has-items{background:#fff1b8;color:#7a5200;border:2px solid #e6b800}
-.filters button.has-items.active{background:#3269df;color:#fff;border-color:#3269df}
+.filters button.has-items.active{background:#7a2e2e;color:#fff;border-color:#7a2e2e}
 .filters button .count{display:inline-block;margin-left:4px;font-weight:800;vertical-align:middle;white-space:nowrap}
 .storeGroup{background:#fff;border-radius:20px;margin:14px 0;overflow:hidden}
-.storeTitle{font-size:22px;font-weight:800;padding:16px 18px;background:#eef3ff}
+.storeTitle{font-size:22px;font-weight:800;padding:16px 18px;background:#f0e6c8}
 .storeTitle{display:flex;align-items:center;justify-content:space-between;gap:10px}.storeTotal{font-size:18px;font-weight:800;white-space:nowrap}
 .item{display:flex;align-items:center;gap:12px;padding:15px 18px;border-top:1px solid #eee}
 .item input[type=checkbox]{width:26px;height:26px;flex:0 0 26px}
 .itemText{flex:1;font-size:18px}.itemText .small{font-size:18px!important;color:#444;margin-top:5px;line-height:1.35}.item.done .itemText{text-decoration:line-through;opacity:.45}
-.itemDelete{width:auto;margin:0;padding:8px 11px;background:#f1f1f1;color:#b42318;font-size:14px}
+.itemDelete{width:auto;margin:0;padding:8px 11px;background:#f1f1f1;color:#7a2e2e;font-size:14px}
 .empty{background:white;border-radius:20px;padding:20px;font-size:18px}
 .storeManage{display:flex;gap:8px;margin:8px 0}.storeManage span{flex:1;padding:12px;background:#f4f4f4;border-radius:12px}
 .storeManage button{width:auto;margin:0;padding:10px 12px}
 .small{font-size:13px;color:#666;margin-top:8px}
-.settingsCard{padding:0;overflow:hidden}.settingsCard summary{cursor:pointer;padding:20px 18px;font-size:20px;font-weight:800;color:#2867df;list-style:none}.settingsCard summary::-webkit-details-marker{display:none}.settingsCard summary::after{content:"▼";float:right}.settingsCard details[open] summary::after{content:"▲"}.settingsBody{padding:0 18px 20px;border-top:1px solid #eee}.settingsHeading{margin-top:26px!important;padding-top:20px;border-top:1px solid #eee}
+.settingsCard{padding:0;overflow:hidden}.settingsCard summary{cursor:pointer;padding:20px 18px;font-size:20px;font-weight:800;color:#7a2e2e;list-style:none}.settingsCard summary::-webkit-details-marker{display:none}.settingsCard summary::after{content:"▼";float:right}.settingsCard details[open] summary::after{content:"▲"}.settingsBody{padding:0 18px 20px;border-top:1px solid #eee}.settingsHeading{margin-top:26px!important;padding-top:20px;border-top:1px solid #eee}
 .navtabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
-.navtabs button{margin:0;background:#e9eaed;color:#333}
-.navtabs button.active{background:#3269df;color:#fff}
-.navtabs button .count{display:inline-block;margin-left:4px;font-weight:800;background:#c62828;color:#fff;border-radius:10px;padding:1px 7px;font-size:12px}
-.navtabs button.active .count{background:#fff;color:#3269df}
+.navtabs button{margin:0;background:#e9d8ac;color:#333}
+.navtabs button.active{background:#7a2e2e;color:#fff}
+.navtabs button .count{display:inline-block;margin-left:4px;font-weight:800;background:#8a1f1f;color:#fff;border-radius:10px;padding:1px 7px;font-size:12px}
+.navtabs button.active .count{background:#fff;color:#7a2e2e}
 .page[hidden]{display:none!important}
 .orderRow{display:grid;grid-template-columns:90px 1fr 105px;gap:8px;align-items:end;margin:10px 0}
 .orderRow button{margin:0}
 .orderItems{margin-top:14px}
 .orderItem{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;padding:12px 0;border-bottom:1px solid #eee}
-.orderItem button{width:auto;margin:0;padding:8px 11px;background:#f1f1f1;color:#b42318;font-size:14px}
+.orderItem button{width:auto;margin:0;padding:8px 11px;background:#f1f1f1;color:#7a2e2e;font-size:14px}
 .preview{background:#fff;border:2px solid #222;border-radius:10px;padding:24px 20px;margin-top:14px;font-size:21px;line-height:1.75;white-space:pre-wrap}
 .previewTitle{text-align:center;font-size:25px;font-weight:800;margin-bottom:12px}
 .previewActions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .unitManage{display:flex;gap:8px;margin:8px 0}.unitManage span{flex:1;padding:12px;background:#f4f4f4;border-radius:12px}.unitManage button{width:auto;margin:0;padding:10px 12px}
 @media(max-width:520px){.orderRow{grid-template-columns:72px minmax(0,1fr) 92px}.preview{font-size:20px;padding:22px 16px}}
-.moveBtn{width:auto!important;margin:0!important;padding:9px 12px!important;background:#e9eaed!important;color:#2867df!important}.moveBtn:disabled{opacity:.3}.navtabs3{grid-template-columns:1fr 1fr 1fr}.navtabs3 button{font-size:15px;padding:12px 4px;min-width:0;white-space:normal;overflow-wrap:anywhere}
-.prepGroup{background:#fff;border-radius:20px;margin:14px 0;overflow:hidden}.prepTitle{font-size:22px;font-weight:800;padding:15px 18px;background:#eef3ff}.prepRow{display:grid;grid-template-columns:30px 1fr 82px;gap:10px;align-items:center;padding:14px;border-top:1px solid #eee}.prepRow input[type=checkbox]{width:27px;height:27px}.prepCount{padding:11px 5px!important;text-align:center}.manage{display:grid;grid-template-columns:1fr auto auto auto;gap:6px;align-items:center;padding:8px 0;border-bottom:1px solid #eee}.manage span{padding:10px;background:#f4f4f4;border-radius:12px}.manage button{width:auto;margin:0;padding:9px}.needEdit{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px}.needEdit input{padding:10px;font-size:16px}.prepDone{opacity:.48;background:#f5f5f5}.prepDone b{text-decoration:line-through}.prepQtyWrap{display:flex;align-items:center;gap:5px}.prepQtyUnit{font-size:15px;font-weight:700;white-space:nowrap}.prepQtyWrap .prepCount{min-width:58px}
+.moveBtn{width:auto!important;margin:0!important;padding:9px 12px!important;background:#e9d8ac!important;color:#7a2e2e!important}.moveBtn:disabled{opacity:.3}.navtabs3{grid-template-columns:1fr 1fr 1fr}.navtabs3 button{font-size:15px;padding:12px 4px;min-width:0;white-space:normal;overflow-wrap:anywhere}
+.prepGroup{background:#fff;border-radius:20px;margin:14px 0;overflow:hidden}.prepTitle{font-size:22px;font-weight:800;padding:15px 18px;background:#f0e6c8}.prepRow{display:grid;grid-template-columns:30px 1fr 82px;gap:10px;align-items:center;padding:14px;border-top:1px solid #eee}.prepRow input[type=checkbox]{width:27px;height:27px}.prepCount{padding:11px 5px!important;text-align:center}.manage{display:grid;grid-template-columns:1fr auto auto auto;gap:6px;align-items:center;padding:8px 0;border-bottom:1px solid #eee}.manage span{padding:10px;background:#f4f4f4;border-radius:12px}.manage button{width:auto;margin:0;padding:9px}.needEdit{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px}.needEdit input{padding:10px;font-size:16px}.prepDone{opacity:.48;background:#f5f5f5}.prepDone b{text-decoration:line-through}.prepQtyWrap{display:flex;align-items:center;gap:5px}.prepQtyUnit{font-size:15px;font-weight:700;white-space:nowrap}.prepQtyWrap .prepCount{min-width:58px}
 #printSheet{display:none}
 @media print{
  @page{size:A4 portrait;margin:9mm}
@@ -114,10 +117,10 @@ button.gray{background:#e9eaed;color:#2371df}.danger{background:#fff0f0;color:#c
 .shoppingItemModalBox{width:min(520px,100%);max-height:calc(100dvh - 36px);overflow:auto;background:#fff;border-radius:22px;padding:18px}
 .shoppingItemModalHeader{display:flex;align-items:center;justify-content:space-between;gap:10px}
 .shoppingItemModalHeader h2{margin:0;font-size:22px}
-.shoppingModalClose{width:46px!important;height:46px!important;padding:0!important;margin:0!important;background:#e9eaed!important;color:#333!important;font-size:30px!important;line-height:1}
+.shoppingModalClose{width:46px!important;height:46px!important;padding:0!important;margin:0!important;background:#e9d8ac!important;color:#333!important;font-size:30px!important;line-height:1}
 .shoppingPhotoPreviewWrap{margin:8px 0 14px;text-align:center}
-.shoppingPhotoPreviewWrap img{display:block;width:100%;max-height:300px;object-fit:contain;border-radius:14px;background:#f3f5f8;border:1px solid #ddd}
-.purchaseBox{margin:8px 0 14px;padding:12px;border:1px solid #e1e4e8;border-radius:14px;background:#f8fafc}.purchaseHint{font-size:13px;color:#666;margin:4px 0 8px}.purchaseMode{grid-column:1 / -1;display:grid;grid-template-columns:1fr 1fr;gap:6px}.purchaseMode button{margin:0!important;padding:9px!important;font-size:14px!important;border-radius:9px!important}.purchaseMode button.active{background:#3269df!important;color:#fff!important}.purchaseMode button:not(.active){background:#e9edf3!important;color:#333!important}.purchaseCalcNote{grid-column:1 / -1;font-size:12px;color:#666}.purchaseRow{padding:10px;background:#fff;border:1px solid #e1e4e8;border-radius:12px}.purchaseField{min-width:0}.purchaseField label{display:block;font-size:12px;font-weight:700;color:#555;margin:0 0 4px}.purchaseRow input{width:100%!important;min-width:0!important;margin:0!important;padding:11px 10px!important;font-size:18px!important;font-weight:700}.purchaseQtyWrap{grid-column:1 / -1;display:flex;align-items:center;gap:8px}.purchaseQtyWrap .purchaseQtyLabel{font-size:12px;font-weight:700;color:#555;margin-right:auto}.purchaseQtyBtn{width:42px!important;height:42px!important;padding:0!important;margin:0!important;border-radius:10px!important;font-size:22px!important}.purchaseQtyValue{width:72px!important;text-align:center!important}.purchaseRow .purchaseRemove{width:42px!important;height:42px!important;padding:0!important;margin:0!important;grid-column:1 / -1;justify-self:end}.purchaseTotal{display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding-top:10px;border-top:1px solid #ddd;font-size:17px}.purchaseTotal strong{font-size:22px}.shoppingModalActions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.shoppingPhotoPreviewWrap img{display:block;width:100%;max-height:300px;object-fit:contain;border-radius:14px;background:#f3e6c8;border:1px solid #ddd}
+.purchaseBox{margin:8px 0 14px;padding:12px;border:1px solid #e1e4e8;border-radius:14px;background:#faf1dc}.purchaseHint{font-size:13px;color:#666;margin:4px 0 8px}.purchaseMode{grid-column:1 / -1;display:grid;grid-template-columns:1fr 1fr;gap:6px}.purchaseMode button{margin:0!important;padding:9px!important;font-size:14px!important;border-radius:9px!important}.purchaseMode button.active{background:#7a2e2e!important;color:#fff!important}.purchaseMode button:not(.active){background:#e9edf3!important;color:#333!important}.purchaseCalcNote{grid-column:1 / -1;font-size:12px;color:#666}.purchaseRow{padding:10px;background:#fff;border:1px solid #e1e4e8;border-radius:12px}.purchaseField{min-width:0}.purchaseField label{display:block;font-size:12px;font-weight:700;color:#555;margin:0 0 4px}.purchaseRow input{width:100%!important;min-width:0!important;margin:0!important;padding:11px 10px!important;font-size:18px!important;font-weight:700}.purchaseQtyWrap{grid-column:1 / -1;display:flex;align-items:center;gap:8px}.purchaseQtyWrap .purchaseQtyLabel{font-size:12px;font-weight:700;color:#555;margin-right:auto}.purchaseQtyBtn{width:42px!important;height:42px!important;padding:0!important;margin:0!important;border-radius:10px!important;font-size:22px!important}.purchaseQtyValue{width:72px!important;text-align:center!important}.purchaseRow .purchaseRemove{width:42px!important;height:42px!important;padding:0!important;margin:0!important;grid-column:1 / -1;justify-self:end}.purchaseTotal{display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding-top:10px;border-top:1px solid #ddd;font-size:17px}.purchaseTotal strong{font-size:22px}.shoppingModalActions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
 .shoppingModalActions button{margin:0}
 @media(max-width:520px){
 .shoppingItemModal{padding:10px}
@@ -400,7 +403,7 @@ input, select, textarea, button {
 <style id="productMasterPhotoPriceFix">
 .productRegPhotoPreview{margin:8px 0;text-align:center}.productRegPhotoPreview img{width:120px;height:90px;object-fit:cover;border-radius:10px;border:1px solid #ddd}
 .productManagePhoto{display:flex;align-items:center;gap:6px;min-width:0}.productManagePhoto img{width:48px;height:48px;object-fit:cover;border-radius:8px;border:1px solid #ddd;flex:0 0 48px}.productManagePhoto .noPhoto{width:48px;height:48px;border-radius:8px;background:#f3f3f3;display:flex;align-items:center;justify-content:center;font-size:12px;color:#777;flex:0 0 48px}
-.productManagePhoto input[type=file]{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}.photoIconButton{display:inline-flex!important;align-items:center;justify-content:center;width:34px!important;height:34px!important;min-width:34px!important;padding:0!important;margin:0!important;background:#eef3ff!important;color:#2867df!important;border:1px solid #c9d7ff!important;border-radius:9px!important;font-size:17px!important;line-height:1!important;cursor:pointer}.photoDeleteButton{display:inline-flex!important;align-items:center;justify-content:center;width:30px!important;height:30px!important;min-width:30px!important;padding:0!important;margin:0 0 0 3px!important;background:#fff0f0!important;color:#c62828!important;border:1px solid #f0bcbc!important;border-radius:8px!important;font-size:15px!important;line-height:1!important;cursor:pointer}.shoppingTapIcon{width:30px!important;height:30px!important;min-width:30px!important;padding:0!important;margin:0!important;background:transparent!important;color:#2867df!important;border:0!important;border-radius:50%!important;font-size:17px!important;line-height:1!important;cursor:pointer}.itemProductLine{display:flex;align-items:center;gap:6px;min-width:0}.itemProductName{flex:1;min-width:0}.itemProductName b{overflow-wrap:anywhere}.productRegUpload{display:flex;align-items:center;gap:8px}.productRegUpload input[type=file]{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}.productRegUploadLabel{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border:1px solid #c9d7ff;border-radius:9px;background:#eef3ff;color:#2867df;font-size:18px;cursor:pointer}
+.productManagePhoto input[type=file]{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}.photoIconButton{display:inline-flex!important;align-items:center;justify-content:center;width:34px!important;height:34px!important;min-width:34px!important;padding:0!important;margin:0!important;background:#f0e6c8!important;color:#7a2e2e!important;border:1px solid #d9c48a!important;border-radius:9px!important;font-size:17px!important;line-height:1!important;cursor:pointer}.photoDeleteButton{display:inline-flex!important;align-items:center;justify-content:center;width:30px!important;height:30px!important;min-width:30px!important;padding:0!important;margin:0 0 0 3px!important;background:#f3e3d9!important;color:#8a1f1f!important;border:1px solid #d9a98a!important;border-radius:8px!important;font-size:15px!important;line-height:1!important;cursor:pointer}.shoppingTapIcon{width:30px!important;height:30px!important;min-width:30px!important;padding:0!important;margin:0!important;background:transparent!important;color:#7a2e2e!important;border:0!important;border-radius:50%!important;font-size:17px!important;line-height:1!important;cursor:pointer}.itemProductLine{display:flex;align-items:center;gap:6px;min-width:0}.itemProductName{flex:1;min-width:0}.itemProductName b{overflow-wrap:anywhere}.productRegUpload{display:flex;align-items:center;gap:8px}.productRegUpload input[type=file]{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}.productRegUploadLabel{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border:1px solid #d9c48a;border-radius:9px;background:#f0e6c8;color:#7a2e2e;font-size:18px;cursor:pointer}
 @media(max-width:520px){#productManage .productManageRow{grid-template-columns:1fr!important}.productManagePhoto{margin-top:2px}}
 </style>
 
@@ -445,8 +448,8 @@ input, select, textarea, button {
 .recipePhotoArea{margin:0 0 12px !important}
 .recipePhotoBar{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .recipePhotoIconBtn,.recipePhotoAddBtn{
-  min-height:50px;border:0;border-radius:14px;background:#eef3ff;
-  color:#2167d8;font-weight:800;font-size:16px;
+  min-height:50px;border:0;border-radius:14px;background:#f0e6c8;
+  color:#7a2e2e;font-weight:800;font-size:16px;
   display:flex;align-items:center;justify-content:center;
   cursor:pointer;text-decoration:none;box-sizing:border-box
 }
@@ -599,8 +602,8 @@ html.recipeModalLocked, body.recipeModalLocked{
   margin:0 !important;
   border:1px solid #d8dee8 !important;
   border-radius:14px !important;
-  background:#eef3ff !important;
-  color:#2167d8 !important;
+  background:#f0e6c8 !important;
+  color:#7a2e2e !important;
   font-size:24px !important;
   line-height:1 !important;
   display:flex !important;
@@ -616,7 +619,7 @@ html.recipeModalLocked, body.recipeModalLocked{
 }
 #recipeModal .recipePhotoDeleteIcon{
   background:#fff5f5 !important;
-  border-color:#efc3c3 !important;
+  border-color:#d9a98a !important;
 }
 #recipeModal .recipePhotoEmpty{
   margin-top:6px !important;
@@ -657,7 +660,7 @@ html.recipeModalLocked, body.recipeModalLocked{
 }
 .prepActionGroup.prepManagement{
   background:#f1f6ff;
-  border:2px solid #2f6fe4;
+  border:2px solid #7a2e2e;
   box-shadow:0 2px 8px rgba(47,111,228,.10);
 }
 .prepActionGroup.prepManagement::before{
@@ -674,7 +677,7 @@ html.recipeModalLocked, body.recipeModalLocked{
 /* 下段：仕込み操作（緑系） */
 .prepActionGroup.prepOperation{
   background:#f2faf4;
-  border:2px solid #2aa052;
+  border:2px solid #3f6b4f;
   box-shadow:0 2px 8px rgba(42,160,82,.10);
 }
 .prepActionGroup.prepOperation::before{
@@ -703,8 +706,8 @@ html.recipeModalLocked, body.recipeModalLocked{
 }
 .prepActionGroup.prepManagement>button{
   background:#fff!important;
-  color:#2167d8!important;
-  border-color:#c7d8fb!important;
+  color:#7a2e2e!important;
+  border-color:#d9c48a!important;
 }
 .prepActionGroup.prepOperation>button{
   background:#fff!important;
@@ -715,7 +718,7 @@ html.recipeModalLocked, body.recipeModalLocked{
 /* 仕込み確定は最重要ボタン */
 .prepActionGroup.prepOperation #confirmPrep{
   background:#e8f7ed!important;
-  border:2px solid #2aa052!important;
+  border:2px solid #3f6b4f!important;
   color:#18783a!important;
 }
 
@@ -843,11 +846,11 @@ html.recipeModalLocked, body.recipeModalLocked{
 .shiftDateRow{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:end}
 .shiftDateRow button{width:auto;margin:0;white-space:nowrap}
 .shiftStatus{padding:12px 14px;border-radius:14px;background:#f3f6fb;color:#333;white-space:pre-wrap;line-height:1.5}
-.shiftStatus.ok{background:#eefaf1;color:#176b32}.shiftStatus.warn{background:#fff8e5;color:#805b00}.shiftStatus.err{background:#fff0f0;color:#a52222}
+.shiftStatus.ok{background:#eefaf1;color:#176b32}.shiftStatus.warn{background:#fff8e5;color:#805b00}.shiftStatus.err{background:#f3e3d9;color:#a52222}
 .shiftTableWrap{overflow:auto;border-radius:14px;border:1px solid #ddd}
 .shiftTable{width:100%;border-collapse:collapse;min-width:560px;background:#fff}
 .shiftTable th,.shiftTable td{border:1px solid #ddd;padding:9px 7px;text-align:center;vertical-align:middle;font-size:15px}
-.shiftTable th{background:#eef3ff;font-weight:800;position:sticky;top:0;z-index:1}.shiftTable td.name{text-align:left;font-weight:800;white-space:nowrap;position:sticky;left:0;background:#fff;z-index:1}
+.shiftTable th{background:#f0e6c8;font-weight:800;position:sticky;top:0;z-index:1}.shiftTable td.name{text-align:left;font-weight:800;white-space:nowrap;position:sticky;left:0;background:#fff;z-index:1}
 .shiftCell{min-width:62px}.shiftCell.s{background:#fff1b8}.shiftCell.y{background:#fff1b8}.shiftCell.o{background:#e9f5ff}.shiftCell.unknown{background:#fff8e5}
 .shiftPill{display:inline-block;padding:3px 7px;border-radius:9px;font-weight:800}.shiftPill.s{background:#ffe58a}.shiftPill.y{background:#ffd9a8}.shiftPill.o{background:#cfe8ff}
 .shiftMemo{min-height:220px;resize:vertical;font-size:20px;line-height:1.6;padding:16px}.shiftMemoItem{border:1px solid #e1e4e8;border-radius:14px;padding:16px;margin-top:12px;background:#fff;white-space:pre-wrap;font-size:20px;line-height:1.6}
@@ -857,10 +860,10 @@ html.recipeModalLocked, body.recipeModalLocked{
 .shiftMemoInlineEdit textarea{width:100%;min-height:150px;resize:vertical;font-size:20px;line-height:1.6;padding:12px;border:1px solid #c9cdd3;border-radius:12px;box-sizing:border-box}
 .shiftMemoItemActions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
 .shiftMemoItemActions button{margin:0!important}
-.shiftMemoEditBtn{background:#eef3ff!important;color:#2867df!important;border:1px solid #c7d8fb!important}
-.shiftMemoDeleteBtn{background:#fff0f0!important;color:#c62828!important;border:1px solid #f0bcbc!important}
-.shiftMemoSaveBtn{background:#2aa052!important;color:#fff!important}
-.shiftMemoCancelBtn{background:#e9eaed!important;color:#333!important}
+.shiftMemoEditBtn{background:#f0e6c8!important;color:#7a2e2e!important;border:1px solid #d9c48a!important}
+.shiftMemoDeleteBtn{background:#f3e3d9!important;color:#8a1f1f!important;border:1px solid #d9a98a!important}
+.shiftMemoSaveBtn{background:#3f6b4f!important;color:#fff!important}
+.shiftMemoCancelBtn{background:#e9d8ac!important;color:#333!important}
 @media(max-width:600px){
   .shiftMemoItemActions{grid-template-columns:1fr 1fr}
   .shiftMemoInlineEdit textarea{font-size:18px}
@@ -881,7 +884,7 @@ html.recipeModalLocked, body.recipeModalLocked{
 #shiftPage .shiftAttendanceName.shiftNameTap{justify-content:flex-start;border:1px solid #e1e4e8;font-weight:inherit}
 #shiftPage .shiftAttendanceGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 12px;margin-top:10px}
 #shiftPage .shiftAttendanceName{display:flex;align-items:center;gap:8px;min-height:48px;padding:10px 12px;border:1px solid #e1e4e8;border-radius:12px;background:#fff;box-sizing:border-box}
-#shiftPage .shiftAttendanceNo{display:inline-flex;align-items:center;justify-content:center;min-width:28px;height:28px;border-radius:50%;background:#eef3ff;color:#2864d7;font-weight:800;font-size:14px}
+#shiftPage .shiftAttendanceNo{display:inline-flex;align-items:center;justify-content:center;min-width:28px;height:28px;border-radius:50%;background:#f0e6c8;color:#2864d7;font-weight:800;font-size:14px}
 #shiftPage .shiftMemoCalendar{margin-top:14px;border:1px solid #e1e4e8;border-radius:16px;padding:12px;background:#fff}
 #shiftPage .shiftMemoCalendarHead{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
 #shiftPage .shiftMemoCalendarHead button{margin:0;min-width:48px;padding:9px 12px}
@@ -896,8 +899,8 @@ html.recipeModalLocked, body.recipeModalLocked{
 #shiftPage .shiftMemoDay.dayClosed .shiftMemoDot{background:#fff3a8}
 #shiftPage .shiftMemoDay.selected{outline:3px solid #3f6fd9;outline-offset:-2px}
 #shiftPage .shiftMemoDot{position:absolute;right:5px;bottom:4px;width:7px;height:7px;border-radius:50%;background:#e0a800}
-#shiftPage .shiftFreeDueDot{position:absolute;left:5px;top:4px;width:7px;height:7px;border-radius:50%;background:#c62828}
-#shiftPage .shiftFreeDueInfo{margin-top:10px;padding:12px 14px;border-radius:12px;background:#fff0f0;border:1px solid #f0bcbc;color:#a52222;font-weight:700;line-height:1.5}
+#shiftPage .shiftFreeDueDot{position:absolute;left:5px;top:4px;width:7px;height:7px;border-radius:50%;background:#8a1f1f}
+#shiftPage .shiftFreeDueInfo{margin-top:10px;padding:12px 14px;border-radius:12px;background:#f3e3d9;border:1px solid #d9a98a;color:#a52222;font-weight:700;line-height:1.5}
 #shiftPage .shiftHeroMemo{margin-top:8px;padding:10px 12px;border-radius:12px;background:#fff3a8;border:1px solid #e0c200;color:#4a3b00;font-weight:700;font-size:15px;line-height:1.5;white-space:pre-wrap}
 #shiftPage .shiftHeroMemo[hidden]{display:none}
 #shiftPage .shiftMemoCalendarHint{font-size:13px;color:#666;margin-top:8px}
@@ -999,14 +1002,14 @@ body{
 
 /* 選択中だけ色を変更。4項目とも同じデザインルールで統一 */
 .navtabs.navtabs4 #tabShopping.active{
-  background:#2f6fe4 !important;
-  border-color:#2f6fe4 !important;
+  background:#7a2e2e !important;
+  border-color:#7a2e2e !important;
   color:#ffffff !important;
   box-shadow:0 5px 14px rgba(47,111,228,.24) !important;
 }
 .navtabs.navtabs4 #tabOpenClose.active{
-  background:#2aa052 !important;
-  border-color:#2aa052 !important;
+  background:#3f6b4f !important;
+  border-color:#3f6b4f !important;
   color:#ffffff !important;
   box-shadow:0 5px 14px rgba(42,160,82,.22) !important;
 }
@@ -1043,9 +1046,9 @@ body{
 
 /* 通常の選択中 */
 #shoppingPage #filters button.active{
-  background:#2f6fe4 !important;
+  background:#7a2e2e !important;
   color:#ffffff !important;
-  border-color:#2f6fe4 !important;
+  border-color:#7a2e2e !important;
   box-shadow:0 4px 12px rgba(47,111,228,.23) !important;
 }
 
@@ -1095,10 +1098,10 @@ input,select,textarea{
 <style id="shoppingStoreTagQuickAdd">
 #shoppingPage .storeQuickAddButton{
   width:100%;margin:0 0 10px;padding:14px 16px;border:0;border-radius:14px;
-  background:#e9edf3;color:#2f6fe4;font-weight:800;font-size:17px;
+  background:#e9edf3;color:#7a2e2e;font-weight:800;font-size:17px;
 }
 #shoppingPage .storeQuickAddButton:active{transform:scale(.99)}
-#shoppingPage .selectedStoreHint{color:#2f6fe4}
+#shoppingPage .selectedStoreHint{color:#7a2e2e}
 </style>
 
 <style id="shoppingFiltersMobileScroll">
@@ -1254,10 +1257,75 @@ body{overflow-anchor:none!important;}
 </style>
 
 <style id="shiftStaffNameAddBoxFinalFix">
-#shiftPage .shiftNameAddBox,#shiftNameEditorOverlay .shiftNameAddBox{display:flex;gap:8px;align-items:center;margin:10px 0;padding:10px;border:1px solid #d7dce3;border-radius:12px;background:#f8fafc;box-sizing:border-box;}
+#shiftPage .shiftNameAddBox,#shiftNameEditorOverlay .shiftNameAddBox{display:flex;gap:8px;align-items:center;margin:10px 0;padding:10px;border:1px solid #d7dce3;border-radius:12px;background:#faf1dc;box-sizing:border-box;}
 #shiftPage .shiftNameAddInput,#shiftNameEditorOverlay .shiftNameAddInput{flex:1;min-width:0;padding:11px 12px;border:1px solid #cfd5dd;border-radius:10px;background:#fff;font-size:16px;box-sizing:border-box;}
 #shiftPage .shiftNameAddConfirm,#shiftNameEditorOverlay .shiftNameAddConfirm{width:auto;min-width:120px;margin:0;padding:11px 12px;border-radius:10px;font-weight:800;white-space:nowrap;}
 @media(max-width:600px){#shiftNameEditorOverlay .shiftNameAddBox{flex-direction:column;align-items:stretch;}#shiftNameEditorOverlay .shiftNameAddConfirm{width:100%;}}
+</style>
+<style id="questArcadeTheme">
+:root{
+  font-family:'Zen Old Mincho','Hiragino Mincho ProN','Yu Mincho',serif;
+  color:#3f2e1e;
+}
+body{color:#3f2e1e}
+h1,h2,.storeTitle,.prepTitle,.previewTitle,.recipeViewTitle,.m-h1{
+  font-family:'Shippori Mincho',serif;
+}
+
+.card,.storeGroup,.prepGroup,.empty,.preview,.settingsCard,
+.shoppingItemModalBox,.freeCostRow,.recipeCategoryEditor,.recipeMaterialEditor,
+.purchaseRow,.recipeDragHandle,.recipeQuickItems button,.recipeMaterialEditor input,
+.recipeCategoryNameEdit,.recipeMaterialEditRow select{
+  background:#faf1dc;
+}
+.storeTitle,.prepTitle{background:#f0e6c8;color:#3f2e1e}
+
+input,select,textarea{
+  border-color:#c9a86a;
+  background:#faf1dc;
+  color:#3f2e1e;
+}
+input[type=checkbox]{accent-color:#7a2e2e}
+
+button{
+  font-family:'Shippori Mincho',serif;
+  border:2px solid #3f2e1e;
+  box-shadow:3px 3px 0 #3f2e1e;
+  border-radius:6px;
+  transition:transform .07s ease;
+}
+button:active{transform:translate(3px,3px);box-shadow:none}
+button.gray{border:2px solid #8a5a2e;box-shadow:2px 2px 0 #8a5a2e}
+button.gray:active{transform:translate(2px,2px);box-shadow:none}
+.danger{border:2px solid #7a2e2e!important;box-shadow:2px 2px 0 #3f2e1e}
+.danger:active{transform:translate(2px,2px);box-shadow:none}
+
+.itemDelete,.orderItem button{
+  background:#faf1dc!important;color:#7a2e2e!important;
+  border:2px solid #7a2e2e!important;box-shadow:2px 2px 0 #3f2e1e!important;
+}
+.itemDelete:active,.orderItem button:active{transform:translate(2px,2px);box-shadow:none!important}
+
+.filters button,.navtabs button{border:2px solid #8a5a2e;box-shadow:2px 2px 0 #8a5a2e}
+.filters button.active,.navtabs button.active{border:2px solid #3f2117;box-shadow:2px 2px 0 #3f2117}
+.filters button:active,.navtabs button:active{transform:translate(2px,2px);box-shadow:none}
+
+#scrollTopBtn{border:2px solid #3f2117!important;box-shadow:3px 3px 0 #3f2117!important;border-radius:8px!important}
+#scrollTopBtn:active{transform:translate(3px,3px)!important;box-shadow:none!important}
+
+/* 後方の白背景・4色タブ上書きレイヤーを羊皮紙テーマに合わせる */
+html,body{background:#f3e6c8!important}
+.navtabs.navtabs4 button{
+  background:#e9d8ac!important;color:#3f2e1e!important;
+  border:2px solid #8a5a2e!important;box-shadow:2px 2px 0 #8a5a2e!important;
+  font-family:'Shippori Mincho',serif!important;
+}
+.navtabs.navtabs4 button:hover{background:#f0e6c8!important;border-color:#8a5a2e!important}
+.navtabs.navtabs4 #tabPrep.active{background:#b9862e!important;border-color:#3f2117!important;box-shadow:2px 2px 0 #3f2117!important}
+.navtabs.navtabs4 #tabShift.active{background:#5b3a7a!important;border-color:#3f2117!important;box-shadow:2px 2px 0 #3f2117!important}
+.navtabs.navtabs4 #tabShopping.active,.navtabs.navtabs4 #tabOpenClose.active{border-color:#3f2117!important;box-shadow:2px 2px 0 #3f2117!important}
+.navtabs.navtabs4 button.active{transform:none!important}
+.navtabs.navtabs4 button.active:active{transform:translate(2px,2px)!important;box-shadow:none!important}
 </style>
 </head>
 <body><div class="wrap">
@@ -2067,7 +2135,7 @@ const purchaseQty=Array.isArray(x.purchaseDetails)&&x.purchaseDetails.length
   : Math.max(0,Number(x.quantity)||0);
 const qtyText=purchaseQty>0 ? `数量 ${purchaseQty}` : (x.memo||"");
 if(editingItemId===x.id){
-return `<div class="item"><input type="checkbox" ${x.done?"checked":""} data-check="${x.id}"><div class="itemText" style="display:block"><input type="text" value="${esc(x.name)}" data-editname="${x.id}" style="width:100%;margin-bottom:6px;padding:8px;border-radius:8px;border:1px solid #ccc;font-size:16px"><input type="text" value="${esc(x.memo||"")}" placeholder="数量・メモ" data-editmemo="${x.id}" style="width:100%;padding:8px;border-radius:8px;border:1px solid #ccc;font-size:16px"></div><button class="itemDelete" data-editsave="${x.id}" style="background:#3269df;color:#fff">保存</button></div>`;
+return `<div class="item"><input type="checkbox" ${x.done?"checked":""} data-check="${x.id}"><div class="itemText" style="display:block"><input type="text" value="${esc(x.name)}" data-editname="${x.id}" style="width:100%;margin-bottom:6px;padding:8px;border-radius:8px;border:1px solid #ccc;font-size:16px"><input type="text" value="${esc(x.memo||"")}" placeholder="数量・メモ" data-editmemo="${x.id}" style="width:100%;padding:8px;border-radius:8px;border:1px solid #ccc;font-size:16px"></div><button class="itemDelete" data-editsave="${x.id}" style="background:#7a2e2e;color:#fff">保存</button></div>`;
 }
 return `<div class="item ${x.done?"done":""}"><input type="checkbox" ${x.done?"checked":""} data-check="${x.id}"><div class="itemText"><div class="itemProductLine"><span class="itemProductName"><b>${esc(x.name)}</b></span><button type="button" class="shoppingTapIcon" data-edit="${x.id}" title="写真・価格を登録・編集" aria-label="写真・価格を登録・編集">🔍</button></div>${qtyText?`<div class="small itemQuantity">${esc(qtyText)}</div>`:""}${price>0?`<div class="itemPrice">${yen(price)}</div>`:""}</div><button class="itemDelete" data-delitem="${x.id}">削除</button></div>`;
 }).join("")}</section>`;
@@ -2690,35 +2758,35 @@ $("printWeekend").onclick=e=>{e.preventDefault();printPrep("weekend")};
 .recipeBox{background:#fff;width:min(680px,100%);max-width:680px;margin:0 auto;padding:14px;border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.25)}
 /* 画面を開いた後の閉じる操作を右上×に統一 */
 .recipeTopBar{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:flex-end;min-height:46px;margin:-4px -4px 4px;background:#fff}
-.recipeTopClose{width:46px!important;height:46px!important;min-width:46px!important;padding:0!important;margin:0!important;border:0!important;border-radius:50%!important;background:#e9eaed!important;color:#333!important;font-size:30px!important;line-height:1!important;display:flex!important;align-items:center!important;justify-content:center!important;cursor:pointer!important}
+.recipeTopClose{width:46px!important;height:46px!important;min-width:46px!important;padding:0!important;margin:0!important;border:0!important;border-radius:50%!important;background:#e9d8ac!important;color:#333!important;font-size:30px!important;line-height:1!important;display:flex!important;align-items:center!important;justify-content:center!important;cursor:pointer!important}
 .recipeTopClose:active{transform:scale(.96)}
 .recipeBookTopBar{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:flex-end;min-height:46px;margin:-4px -4px 4px;background:#fff}
-.recipeBookTopClose{width:46px!important;height:46px!important;min-width:46px!important;padding:0!important;margin:0!important;border:0!important;border-radius:50%!important;background:#e9eaed!important;color:#333!important;font-size:30px!important;line-height:1!important;display:flex!important;align-items:center;justify-content:center;cursor:pointer!important}
+.recipeBookTopClose{width:46px!important;height:46px!important;min-width:46px!important;padding:0!important;margin:0!important;border:0!important;border-radius:50%!important;background:#e9d8ac!important;color:#333!important;font-size:30px!important;line-height:1!important;display:flex!important;align-items:center;justify-content:center;cursor:pointer!important}
 .recipeBox h2{margin:0 0 10px;font-size:21px}
 .recipeTabs{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin:0 0 10px;position:sticky;top:0;background:#fff;padding-bottom:6px;z-index:2}
-.recipeTabs button{margin:0;padding:11px 6px;font-size:15px;background:#e9eaed;color:#333;border-radius:12px}
-.recipeTabs button.active{background:#3269df;color:#fff}
+.recipeTabs button{margin:0;padding:11px 6px;font-size:15px;background:#e9d8ac;color:#333;border-radius:12px}
+.recipeTabs button.active{background:#7a2e2e;color:#fff}
 .recipePanel[hidden]{display:none!important}
 .recipeIngredients{display:grid;gap:7px}
 .recipeIngredient{position:relative;display:grid;grid-template-columns:minmax(0,1fr) 82px 78px 42px;gap:5px;align-items:center;padding:7px 7px 7px 38px;background:#f7f8fa;border:1px solid #e0e3e8;border-radius:12px;touch-action:pan-y;user-select:none;-webkit-user-select:none}.recipeIngredient.dragging{opacity:.55;box-shadow:0 5px 14px rgba(0,0,0,.14);outline:2px solid #8aaef5;touch-action:none}.recipeIngredient.dragOver{outline:2px dashed #8aaef5;outline-offset:1px}
 .recipeIngredient input,.recipeIngredient select{padding:10px 7px;font-size:16px;border-radius:10px;margin:0}
-.recipeIngredient .removeIngredient{width:42px!important;height:42px!important;padding:0!important;margin:0!important;background:#fff0f0!important;color:#c62828!important;border:1px solid #f0bcbc!important;font-size:18px}
-.recipeAddButton{margin:8px 0 0!important;background:#eef3ff!important;color:#2867df!important;border:1px solid #c9d7ff!important}
-.recipeQuickBox{margin-top:9px;padding:10px;background:#f8fafc;border:1px solid #e1e4e8;border-radius:12px}
+.recipeIngredient .removeIngredient{width:42px!important;height:42px!important;padding:0!important;margin:0!important;background:#f3e3d9!important;color:#8a1f1f!important;border:1px solid #d9a98a!important;font-size:18px}
+.recipeAddButton{margin:8px 0 0!important;background:#f0e6c8!important;color:#7a2e2e!important;border:1px solid #d9c48a!important}
+.recipeQuickBox{margin-top:9px;padding:10px;background:#faf1dc;border:1px solid #e1e4e8;border-radius:12px}
 .recipeQuickTitle{font-size:13px;font-weight:800;color:#555;margin-bottom:5px}.recipeQuickHint{font-size:12px;line-height:1.5;color:#666;margin-bottom:7px}
 .recipeQuickCats{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px}
-.recipeQuickCats button{width:auto;min-width:max-content;margin:0;padding:8px 11px;font-size:14px;background:#e9eaed;color:#333}.recipeQuickCats button.active{background:#3269df;color:#fff;border-color:#3269df;box-shadow:0 1px 3px rgba(50,105,223,.25)}
+.recipeQuickCats button{width:auto;min-width:max-content;margin:0;padding:8px 11px;font-size:14px;background:#e9d8ac;color:#333}.recipeQuickCats button.active{background:#7a2e2e;color:#fff;border-color:#7a2e2e;box-shadow:0 1px 3px rgba(50,105,223,.25)}
 .recipeQuickItems{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px}
-.recipeQuickItems button{width:auto;margin:0;padding:8px 10px;font-size:14px;background:#fff;border:1px solid #cfd4dc;color:#222}.recipeQuickEdit{display:none!important;display:block;width:100%;margin:8px 0 0!important;padding:9px!important;font-size:14px!important;background:#fff!important;color:#2867df!important;border:1px solid #c9d7ff!important}.recipeCategoryEdit{display:none!important;margin:6px 0 8px!important;width:100%!important;padding:9px!important;font-size:14px!important;background:#fff!important;color:#2867df!important;border:1px solid #c9d7ff!important}.recipeCategoryEditor{margin:8px 0;padding:10px;background:#f8fafc;border:1px solid #dfe3e8;border-radius:12px}.recipeCategoryEditor[hidden]{display:none!important}.recipeCategoryEditRow{position:relative;display:grid!important;grid-template-columns:44px minmax(240px,1fr) 44px!important;gap:8px!important;align-items:center!important;width:100%!important;min-width:330px!important;box-sizing:border-box!important;margin-top:8px!important;touch-action:none}.recipeCategoryNameEdit{min-width:0;min-height:40px;margin:0;padding:9px 8px;font-size:15px;line-height:20px;border:1px solid #d8dde5;border-radius:9px;background:#fff;color:#222!important;-webkit-text-fill-color:#222!important;opacity:1!important;outline:none;overflow:hidden;white-space:nowrap}.recipeCategoryNameEdit:focus{border-color:#6d9ff5;box-shadow:0 0 0 2px rgba(50,105,223,.12)}.recipeCategoryEditRow button{width:40px!important;height:40px!important;min-width:40px!important;padding:0!important;margin:0!important;background:#fff0f0!important;color:#c62828!important;border:1px solid #efc3c3!important}.recipeCategoryEditRow.dragging{opacity:.55;box-shadow:0 4px 12px rgba(0,0,0,.12)}.recipeCategoryEditRow.dragOver{outline:2px dashed #8aaef5;outline-offset:1px}.recipeCategoryEditorActions{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}.recipeCategoryEditorActions button{margin:0!important;padding:10px!important;font-size:14px!important}.recipeMaterialEditor{margin-top:8px;padding:10px;background:#fff;border:1px solid #dfe3e8;border-radius:12px}.recipeMaterialEditor[hidden]{display:none!important}.recipeMaterialEditTabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px}.recipeMaterialEditTabs button{width:auto;min-width:max-content;margin:0;padding:7px 10px;font-size:13px;background:#eef0f3;color:#333}.recipeMaterialEditTabs button.active{background:#3269df;color:#fff}.recipeMaterialEditRow{position:relative;display:grid;grid-template-columns:minmax(0,1fr) 68px 40px;gap:5px;align-items:center;padding-left:34px;margin-top:6px;touch-action:none;transition:transform .12s,opacity .12s}.recipeMaterialEditRow.dragging{opacity:.55;transform:scale(.99);box-shadow:0 4px 12px rgba(0,0,0,.12)}.recipeMaterialEditRow.dragOver{outline:2px dashed #8aaef5;outline-offset:1px}.recipeMaterialEditRow input{min-width:0;margin:0;padding:9px 7px;font-size:15px;border:1px solid #d8dde5;border-radius:9px}.recipeMaterialEditRow select{min-width:0;margin:0;padding:9px 4px;font-size:14px;border:1px solid #d8dde5;border-radius:9px;background:#fff}.recipeMaterialEditRow button{width:40px!important;height:40px!important;min-width:40px!important;padding:0!important;margin:0!important;background:#fff0f0!important;color:#c62828!important;border:1px solid #efc3c3!important}.recipeMaterialEditorActions{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}.recipeMaterialEditorActions button{margin:0!important;padding:10px!important;font-size:14px!important}
-.recipeDragHandle{position:absolute;left:5px;top:50%;transform:translateY(-50%);width:34px;height:40px;display:flex;align-items:center;justify-content:center;border:1px solid #d7dce5;border-radius:9px;background:#fff;color:#6b7280;font-size:18px;font-weight:700;line-height:1;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;cursor:grab;z-index:2}.recipeDragHandle:active{cursor:grabbing;background:#eef3ff;color:#2867df;border-color:#9bb7ef}.recipeIngredient.dragging .recipeDragHandle,.recipeMaterialEditRow.dragging .recipeDragHandle{background:#eef3ff;color:#2867df;border-color:#9bb7ef}
+.recipeQuickItems button{width:auto;margin:0;padding:8px 10px;font-size:14px;background:#fff;border:1px solid #cfd4dc;color:#222}.recipeQuickEdit{display:none!important;display:block;width:100%;margin:8px 0 0!important;padding:9px!important;font-size:14px!important;background:#fff!important;color:#7a2e2e!important;border:1px solid #d9c48a!important}.recipeCategoryEdit{display:none!important;margin:6px 0 8px!important;width:100%!important;padding:9px!important;font-size:14px!important;background:#fff!important;color:#7a2e2e!important;border:1px solid #d9c48a!important}.recipeCategoryEditor{margin:8px 0;padding:10px;background:#faf1dc;border:1px solid #dfe3e8;border-radius:12px}.recipeCategoryEditor[hidden]{display:none!important}.recipeCategoryEditRow{position:relative;display:grid!important;grid-template-columns:44px minmax(240px,1fr) 44px!important;gap:8px!important;align-items:center!important;width:100%!important;min-width:330px!important;box-sizing:border-box!important;margin-top:8px!important;touch-action:none}.recipeCategoryNameEdit{min-width:0;min-height:40px;margin:0;padding:9px 8px;font-size:15px;line-height:20px;border:1px solid #d8dde5;border-radius:9px;background:#fff;color:#222!important;-webkit-text-fill-color:#222!important;opacity:1!important;outline:none;overflow:hidden;white-space:nowrap}.recipeCategoryNameEdit:focus{border-color:#6d9ff5;box-shadow:0 0 0 2px rgba(50,105,223,.12)}.recipeCategoryEditRow button{width:40px!important;height:40px!important;min-width:40px!important;padding:0!important;margin:0!important;background:#f3e3d9!important;color:#8a1f1f!important;border:1px solid #d9a98a!important}.recipeCategoryEditRow.dragging{opacity:.55;box-shadow:0 4px 12px rgba(0,0,0,.12)}.recipeCategoryEditRow.dragOver{outline:2px dashed #8aaef5;outline-offset:1px}.recipeCategoryEditorActions{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}.recipeCategoryEditorActions button{margin:0!important;padding:10px!important;font-size:14px!important}.recipeMaterialEditor{margin-top:8px;padding:10px;background:#fff;border:1px solid #dfe3e8;border-radius:12px}.recipeMaterialEditor[hidden]{display:none!important}.recipeMaterialEditTabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px}.recipeMaterialEditTabs button{width:auto;min-width:max-content;margin:0;padding:7px 10px;font-size:13px;background:#eef0f3;color:#333}.recipeMaterialEditTabs button.active{background:#7a2e2e;color:#fff}.recipeMaterialEditRow{position:relative;display:grid;grid-template-columns:minmax(0,1fr) 68px 40px;gap:5px;align-items:center;padding-left:34px;margin-top:6px;touch-action:none;transition:transform .12s,opacity .12s}.recipeMaterialEditRow.dragging{opacity:.55;transform:scale(.99);box-shadow:0 4px 12px rgba(0,0,0,.12)}.recipeMaterialEditRow.dragOver{outline:2px dashed #8aaef5;outline-offset:1px}.recipeMaterialEditRow input{min-width:0;margin:0;padding:9px 7px;font-size:15px;border:1px solid #d8dde5;border-radius:9px}.recipeMaterialEditRow select{min-width:0;margin:0;padding:9px 4px;font-size:14px;border:1px solid #d8dde5;border-radius:9px;background:#fff}.recipeMaterialEditRow button{width:40px!important;height:40px!important;min-width:40px!important;padding:0!important;margin:0!important;background:#f3e3d9!important;color:#8a1f1f!important;border:1px solid #d9a98a!important}.recipeMaterialEditorActions{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}.recipeMaterialEditorActions button{margin:0!important;padding:10px!important;font-size:14px!important}
+.recipeDragHandle{position:absolute;left:5px;top:50%;transform:translateY(-50%);width:34px;height:40px;display:flex;align-items:center;justify-content:center;border:1px solid #d7dce5;border-radius:9px;background:#fff;color:#6b7280;font-size:18px;font-weight:700;line-height:1;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;cursor:grab;z-index:2}.recipeDragHandle:active{cursor:grabbing;background:#f0e6c8;color:#7a2e2e;border-color:#9bb7ef}.recipeIngredient.dragging .recipeDragHandle,.recipeMaterialEditRow.dragging .recipeDragHandle{background:#f0e6c8;color:#7a2e2e;border-color:#9bb7ef}
 .recipeText{width:100%;min-height:300px;box-sizing:border-box;font-size:17px;line-height:1.6;padding:13px;border:1px solid #ccc;border-radius:12px;resize:vertical}
 .recipePhotoArea{margin:0 0 10px}.recipePhotoPreview{display:block;width:100%;max-height:360px;object-fit:contain;border-radius:14px;border:1px solid #ddd;background:#f5f6f8}.recipePhotoEmpty{padding:22px 10px;text-align:center;border:1px dashed #cfd4dc;border-radius:14px;background:#f7f8fa;color:#777}.recipePhotoFile{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
-.recipePhotoBar{display:flex;justify-content:flex-end;align-items:center;gap:7px;margin-bottom:6px}.recipePhotoIconOnly{width:46px!important;height:46px!important;min-width:46px!important;padding:0!important;margin:0!important;border:1px solid #d8dee8!important;border-radius:12px!important;background:#eef3ff!important;color:#2167d8!important;font-size:22px!important;display:flex!important;align-items:center;justify-content:center;cursor:pointer}.recipePhotoIconOnly:disabled{opacity:.38}.recipePhotoDeleteIcon{background:#fff5f5!important;border-color:#efc3c3!important}
+.recipePhotoBar{display:flex;justify-content:flex-end;align-items:center;gap:7px;margin-bottom:6px}.recipePhotoIconOnly{width:46px!important;height:46px!important;min-width:46px!important;padding:0!important;margin:0!important;border:1px solid #d8dee8!important;border-radius:12px!important;background:#f0e6c8!important;color:#7a2e2e!important;font-size:22px!important;display:flex!important;align-items:center;justify-content:center;cursor:pointer}.recipePhotoIconOnly:disabled{opacity:.38}.recipePhotoDeleteIcon{background:#fff5f5!important;border-color:#d9a98a!important}
 .recipeBtns{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;position:sticky;bottom:0;background:#fff;padding:9px 0 calc(8px + env(safe-area-inset-bottom));z-index:5}.recipeBtns button{margin:0;min-height:52px}
-.recipeBookList{display:grid;gap:8px;margin:10px 0 14px}.recipeBookItem{width:100%;text-align:left;margin:0;background:#f1f4f8;color:#222;border:1px solid #ddd;padding:13px;border-radius:12px;cursor:pointer;touch-action:pan-y}.recipeBookItem.hasRecipe{background:#eef3ff;color:#1f55b5}.recipeBookItem.recipeDragging{opacity:.55;transform:scale(.99);box-shadow:0 5px 14px rgba(0,0,0,.14)}.recipeBookItem.recipeDragOver{outline:2px dashed #8aaef5;outline-offset:1px}
+.recipeBookList{display:grid;gap:8px;margin:10px 0 14px}.recipeBookItem{width:100%;text-align:left;margin:0;background:#f1f4f8;color:#222;border:1px solid #ddd;padding:13px;border-radius:12px;cursor:pointer;touch-action:pan-y}.recipeBookItem.hasRecipe{background:#f0e6c8;color:#1f55b5}.recipeBookItem.recipeDragging{opacity:.55;transform:scale(.99);box-shadow:0 5px 14px rgba(0,0,0,.14)}.recipeBookItem.recipeDragOver{outline:2px dashed #8aaef5;outline-offset:1px}
 .prepRecipeOpen,.prepRecipeName{cursor:pointer;text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px}
 .recipePhotoViewer{display:none;position:fixed;inset:0;z-index:1000100;background:rgba(0,0,0,.86);padding:12px;align-items:center;justify-content:center}.recipePhotoViewer.open{display:flex}.recipePhotoViewerBox{position:relative;max-width:96vw;max-height:96vh;display:flex;align-items:center;justify-content:center}.recipePhotoViewerBox img{display:block;max-width:96vw;max-height:92vh;width:auto;height:auto;object-fit:contain;border-radius:12px}.recipePhotoViewerClose{position:absolute;right:0;top:-54px;width:46px;height:46px;border:0;border-radius:50%;background:#fff;color:#222;font-size:34px;line-height:1}
-.recipeViewTitle{font-size:22px;font-weight:800;margin-bottom:8px}.recipeViewSection{padding:10px 0;border-top:1px solid #eee}.recipeViewSection h3{font-size:18px;margin:0 0 7px}.recipeViewIngredient{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px dashed #ddd;font-size:17px}.recipeViewIngredient:last-child{border-bottom:0}.recipeViewStep{white-space:pre-wrap;font-size:17px;line-height:1.65}.recipeEditLink{width:auto!important;margin:0!important;padding:8px 12px!important;font-size:14px!important;background:#eef3ff!important;color:#2867df!important}
+.recipeViewTitle{font-size:22px;font-weight:800;margin-bottom:8px}.recipeViewSection{padding:10px 0;border-top:1px solid #eee}.recipeViewSection h3{font-size:18px;margin:0 0 7px}.recipeViewIngredient{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px dashed #ddd;font-size:17px}.recipeViewIngredient:last-child{border-bottom:0}.recipeViewStep{white-space:pre-wrap;font-size:17px;line-height:1.65}.recipeEditLink{width:auto!important;margin:0!important;padding:8px 12px!important;font-size:14px!important;background:#f0e6c8!important;color:#7a2e2e!important}
 @media(max-width:520px){
   #recipeModal,#recipeBookModal{padding:6px}
   .recipeBox{width:100%;margin:0;padding:12px;border-radius:16px}
@@ -2741,7 +2809,7 @@ $("printWeekend").onclick=e=>{e.preventDefault();printPrep("weekend")};
     <div id="recipeEditPanel" hidden>
       <div class="recipeTabs"><button type="button" class="active" data-rp="ingredients">材料</button><button type="button" data-rp="steps">手順</button><button type="button" data-rp="photo">写真</button></div>
       <div id="recipePanelIngredients" class="recipePanel">
-        <div class="recipeYieldBox" style="background:#f8fafc;border:1px solid #dfe3e8;border-radius:12px;padding:10px;margin-bottom:10px">
+        <div class="recipeYieldBox" style="background:#faf1dc;border:1px solid #dfe3e8;border-radius:12px;padding:10px;margin-bottom:10px">
           <label style="font-weight:700">仕込み品の出来上がり量</label>
           <div style="display:grid;grid-template-columns:minmax(0,1fr) 90px;gap:7px;margin-top:6px">
             <input id="recipeYield" type="number" min="0" step="0.01" inputmode="decimal" placeholder="例：1000">
@@ -3373,7 +3441,7 @@ $("printWeekend").onclick=e=>{e.preventDefault();printPrep("weekend")};
       row.addEventListener("pointercancel",clearDrag);
     });
   }
-  function decoratePrepPhotoButtons(){document.querySelectorAll("#prepList .prepRow").forEach(row=>{const title=row.querySelector("[data-recipe-id]");if(!title)return;const id=title.dataset.recipeId,data=recipeData(recipeCache[id]),old=row.querySelector("[data-prep-photo-view]");if(!data.photo){if(old)old.remove();return}if(old)return;const btn=document.createElement("button");btn.type="button";btn.textContent="📷";btn.setAttribute("data-prep-photo-view",id);btn.setAttribute("aria-label",title.textContent.trim()+"の写真を見る");btn.title="写真を見る";btn.style.cssText="display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;min-width:34px;padding:0;margin:0 0 0 6px;background:#eef3ff;color:#2867df;border:1px solid #c9d7ff;border-radius:9px;font-size:17px;line-height:1;cursor:pointer;vertical-align:middle";btn.onclick=e=>{e.preventDefault();e.stopPropagation();openRecipePhotoViewer(data.photo)};title.insertAdjacentElement("afterend",btn)})}
+  function decoratePrepPhotoButtons(){document.querySelectorAll("#prepList .prepRow").forEach(row=>{const title=row.querySelector("[data-recipe-id]");if(!title)return;const id=title.dataset.recipeId,data=recipeData(recipeCache[id]),old=row.querySelector("[data-prep-photo-view]");if(!data.photo){if(old)old.remove();return}if(old)return;const btn=document.createElement("button");btn.type="button";btn.textContent="📷";btn.setAttribute("data-prep-photo-view",id);btn.setAttribute("aria-label",title.textContent.trim()+"の写真を見る");btn.title="写真を見る";btn.style.cssText="display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;min-width:34px;padding:0;margin:0 0 0 6px;background:#f0e6c8;color:#7a2e2e;border:1px solid #d9c48a;border-radius:9px;font-size:17px;line-height:1;cursor:pointer;vertical-align:middle";btn.onclick=e=>{e.preventDefault();e.stopPropagation();openRecipePhotoViewer(data.photo)};title.insertAdjacentElement("afterend",btn)})}
   function bindPrepRecipeButtons(){decoratePrepPhotoButtons();document.querySelectorAll(".prepRecipeOpen,.prepRecipeName").forEach(el=>{el.onclick=function(e){e.preventDefault();e.stopPropagation();const row=this.closest(".prepRow"),sel=row&&row.querySelector("[data-pn]"),id=this.dataset.recipeId||(sel&&sel.dataset.pn);if(id)openRecipe(id,this.textContent.trim())}})}
   function start(){
     if(started||!window.__fb)return;started=true;const fb=window.__fb,recipesRef=fb.ref(fb.db,"prep/recipes"),prepItemsRef=fb.ref(fb.db,"prep/items");
@@ -3436,7 +3504,7 @@ $("printWeekend").onclick=e=>{e.preventDefault();printPrep("weekend")};
 
 <style id="lineSendStyle">
 #vegLineSend{background:#06c755!important;color:#fff!important}
-#vegLineStatus{margin-top:10px;padding:10px 12px;border-radius:10px;background:#f3f5f8;color:#333;font-size:14px;line-height:1.5;white-space:pre-wrap}
+#vegLineStatus{margin-top:10px;padding:10px 12px;border-radius:10px;background:#f3e6c8;color:#333;font-size:14px;line-height:1.5;white-space:pre-wrap}
 </style>
 
 <script id="lineSendScript">
@@ -3455,8 +3523,8 @@ $("printWeekend").onclick=e=>{e.preventDefault();printPrep("weekend")};
     }
     e.textContent=msg;
     e.style.display="block";
-    e.style.background=error?"#fff0f0":"#f3f5f8";
-    e.style.color=error?"#b42318":"#333";
+    e.style.background=error?"#f3e3d9":"#f3e6c8";
+    e.style.color=error?"#7a2e2e":"#333";
   }
   async function init(){
     if(!window.liff)throw new Error("LINE SDKを読み込めませんでした。");
@@ -3977,13 +4045,13 @@ function renderNonVegProductManager(){
 #costModal[hidden]{display:none!important}
 .costBox{width:min(760px,100%);margin:0 auto;background:#fff;border-radius:18px;padding:14px;min-height:calc(100dvh - 16px);box-sizing:border-box}
 .costHeader{display:flex;align-items:center;justify-content:space-between;gap:8px;position:sticky;top:0;background:#fff;z-index:3;padding-bottom:8px}
-.costHeader h2{margin:0;font-size:22px}.costClose{width:46px!important;height:46px!important;padding:0!important;margin:0!important;background:#e9eaed!important;color:#333!important;font-size:30px!important}
-.costTabs{display:none!important;display:grid;grid-template-columns:1.28fr .72fr;gap:7px;margin:6px 0 12px;align-items:stretch}.costTabs button{margin:0;background:#e9eaed;color:#333;min-height:46px}.costTabs button#costTabCalc{font-size:17px;font-weight:700}.costTabs button#costTabMaster{font-size:14px}.costTabs button.active{background:#3269df;color:#fff}@media(max-width:520px){.costTabs{grid-template-columns:1.22fr .78fr}.costTabs button#costTabCalc{font-size:16px}}
-.costPanel[hidden]{display:none!important}.costCard{background:#f8fafc;border:1px solid #e1e5ea;border-radius:14px;padding:12px;margin:10px 0}.costGrid{display:grid;grid-template-columns:1.2fr .8fr .8fr;gap:7px}.costGrid2{display:grid;grid-template-columns:1fr 1fr;gap:7px}.costList{display:grid;gap:7px;margin-top:10px}.costItem{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;padding:10px;background:#fff;border:1px solid #e0e3e8;border-radius:11px}.costItem b{overflow-wrap:anywhere}.costSub{font-size:13px;color:#666;margin-top:3px}.costItem button{width:auto;margin:0;padding:8px 10px;font-size:14px}.costPriceBtn{background:#eef3ff!important;color:#2167d8!important;border:1px solid #c9d7ff!important}.costDeleteBtn{background:#fff0f0!important;color:#b42318!important;border:1px solid #efc3c3!important}.costTable{width:100%;border-collapse:collapse;margin-top:8px;font-size:15px}.costTable th,.costTable td{border-bottom:1px solid #ddd;padding:8px 5px;text-align:left;vertical-align:middle}.costTable th:last-child,.costTable td:last-child{text-align:right;white-space:nowrap}.costResult{display:grid;grid-template-columns:1fr 1fr;gap:8px}.costResultBox{background:#eef3ff;border-radius:12px;padding:11px}.costResultBox .label{font-size:13px;color:#555}.costResultBox strong{display:block;font-size:21px;margin-top:3px}.costWarn{background:#fff7d6;border:1px solid #ead17b;border-radius:12px;padding:10px;font-size:13px;margin-top:8px}.costEmpty{padding:14px;background:#fff;border:1px dashed #ccd2da;border-radius:12px;color:#777;text-align:center}.costHint{font-size:13px;color:#666;line-height:1.5;margin-top:5px}
-.masterManagerHead{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.masterManagerHead h3{margin:0 0 4px}.masterSmallBtn{width:auto!important;margin:0!important;padding:8px 10px!important;white-space:nowrap}.masterActions{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin:10px 0}.masterActions button{margin:0!important;min-height:44px}.masterFilters{display:grid;grid-template-columns:.9fr 1.1fr;gap:7px;margin:8px 0}.masterHelp{font-size:12px;color:#555;background:#f4f6f8;border-radius:10px;padding:9px;margin:8px 0}.masterStatus{min-height:20px;font-size:13px;font-weight:700;color:#2463cf;margin:3px 0}.masterList{display:grid;gap:9px}.masterCatBlock{background:#f8fafc;border:1px solid #dfe4ea;border-radius:13px;overflow:hidden}.masterCatHead{display:grid;grid-template-columns:34px minmax(0,1fr) auto;gap:6px;align-items:center;padding:9px;background:#eef3ff;border-bottom:1px solid #dfe4ea}.masterCatName{font-size:17px;font-weight:800;min-width:0}.masterCatName input{width:100%;box-sizing:border-box;font-size:17px;font-weight:800;padding:7px 8px;border:1px solid #cbd5e1;border-radius:8px;background:#fff}.masterSortBtns{display:flex;gap:4px}.masterSortBtns button{width:38px!important;min-width:38px!important;height:36px!important;padding:0!important;margin:0!important}.masterCatDelete{background:#fff0f0!important;color:#b42318!important;border:1px solid #efc3c3!important}.masterMaterial{display:grid;grid-template-columns:34px minmax(0,1fr) 88px 78px auto;gap:6px;align-items:center;padding:8px;border-bottom:1px solid #e7eaee;background:#fff}.masterMaterial:last-child{border-bottom:0}.masterMaterial input,.masterMaterial select{min-width:0;margin:0;padding:8px 6px;border:1px solid #d5dbe3;border-radius:8px;background:#fff;font-size:14px}.masterMaterial .materialName{font-weight:700}.masterMaterialBtns{display:flex;gap:4px;align-items:center}.masterMaterialBtns button{width:auto!important;min-width:38px!important;height:36px!important;padding:5px 7px!important;margin:0!important;font-size:13px!important}.masterPriceBtn{background:#eef3ff!important;color:#2167d8!important;border:1px solid #c9d7ff!important}.masterPriceBtn.registered{background:#e7f7ed!important;color:#16834b!important;border-color:#9ed8b7!important}.masterDeleteBtn{background:#fff0f0!important;color:#b42318!important;border:1px solid #efc3c3!important}.masterUnitBlock{background:#f8fafc;border:1px solid #dfe4ea;border-radius:13px;padding:10px;margin-top:10px}.masterUnitHead{font-weight:800;margin-bottom:7px}.masterUnitRow{display:grid;grid-template-columns:34px minmax(0,1fr) auto;gap:6px;align-items:center;margin-top:6px}.masterUnitRow input{min-width:0;margin:0;padding:8px;border:1px solid #d5dbe3;border-radius:8px;background:#fff}.masterEmpty{padding:15px;text-align:center;color:#777;background:#fff;border:1px dashed #cbd2da;border-radius:10px}.masterPriceEditor{grid-column:2/-1;background:#f5f8ff;border:1px solid #d6e1ff;border-radius:9px;padding:8px;display:none}.masterPriceEditor.open{display:grid;grid-template-columns:1fr 1fr;gap:6px}.masterPriceEditor label{font-size:12px;color:#555}.masterPriceEditor input,.masterPriceEditor select{width:100%;box-sizing:border-box;margin:3px 0 0;padding:8px;border:1px solid #ccd5e2;border-radius:7px;background:#fff}.masterPriceActions{grid-column:1/-1;display:flex;gap:6px}.masterPriceActions button{margin:0!important;width:auto!important;padding:8px 12px!important}.masterDragHandle{display:flex;align-items:center;justify-content:center;width:34px;height:40px;box-sizing:border-box;font-size:18px;text-align:center;color:#6b7280;border:1px solid #d7dce5;border-radius:9px;background:#fff;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;cursor:grab}.masterMaterial.masterDragging{opacity:.55;transform:scale(.99);box-shadow:0 5px 14px rgba(0,0,0,.14)}.masterMaterial.masterDragOver{outline:2px dashed #8aaef5;outline-offset:1px}.masterCatFooter{padding:7px 9px;background:#f8fafc;color:#666;font-size:12px}.masterSelected{outline:2px solid #8aaef5;outline-offset:-2px}@media(max-width:600px){.masterActions{grid-template-columns:1fr}.masterFilters{grid-template-columns:1fr}.masterMaterial{grid-template-columns:40px minmax(0,1fr) 70px 65px}.masterMaterialBtns{grid-column:2/-1;justify-content:flex-end}.masterPriceEditor{grid-column:1/-1}.masterCatHead{grid-template-columns:28px minmax(0,1fr);}.masterCatHead .masterSortBtns{grid-column:2;justify-content:flex-end}.masterCatName input{font-size:16px}}
+.costHeader h2{margin:0;font-size:22px}.costClose{width:46px!important;height:46px!important;padding:0!important;margin:0!important;background:#e9d8ac!important;color:#333!important;font-size:30px!important}
+.costTabs{display:none!important;display:grid;grid-template-columns:1.28fr .72fr;gap:7px;margin:6px 0 12px;align-items:stretch}.costTabs button{margin:0;background:#e9d8ac;color:#333;min-height:46px}.costTabs button#costTabCalc{font-size:17px;font-weight:700}.costTabs button#costTabMaster{font-size:14px}.costTabs button.active{background:#7a2e2e;color:#fff}@media(max-width:520px){.costTabs{grid-template-columns:1.22fr .78fr}.costTabs button#costTabCalc{font-size:16px}}
+.costPanel[hidden]{display:none!important}.costCard{background:#faf1dc;border:1px solid #e1e5ea;border-radius:14px;padding:12px;margin:10px 0}.costGrid{display:grid;grid-template-columns:1.2fr .8fr .8fr;gap:7px}.costGrid2{display:grid;grid-template-columns:1fr 1fr;gap:7px}.costList{display:grid;gap:7px;margin-top:10px}.costItem{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;padding:10px;background:#fff;border:1px solid #e0e3e8;border-radius:11px}.costItem b{overflow-wrap:anywhere}.costSub{font-size:13px;color:#666;margin-top:3px}.costItem button{width:auto;margin:0;padding:8px 10px;font-size:14px}.costPriceBtn{background:#f0e6c8!important;color:#7a2e2e!important;border:1px solid #d9c48a!important}.costDeleteBtn{background:#f3e3d9!important;color:#7a2e2e!important;border:1px solid #d9a98a!important}.costTable{width:100%;border-collapse:collapse;margin-top:8px;font-size:15px}.costTable th,.costTable td{border-bottom:1px solid #ddd;padding:8px 5px;text-align:left;vertical-align:middle}.costTable th:last-child,.costTable td:last-child{text-align:right;white-space:nowrap}.costResult{display:grid;grid-template-columns:1fr 1fr;gap:8px}.costResultBox{background:#f0e6c8;border-radius:12px;padding:11px}.costResultBox .label{font-size:13px;color:#555}.costResultBox strong{display:block;font-size:21px;margin-top:3px}.costWarn{background:#fff7d6;border:1px solid #ead17b;border-radius:12px;padding:10px;font-size:13px;margin-top:8px}.costEmpty{padding:14px;background:#fff;border:1px dashed #ccd2da;border-radius:12px;color:#777;text-align:center}.costHint{font-size:13px;color:#666;line-height:1.5;margin-top:5px}
+.masterManagerHead{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.masterManagerHead h3{margin:0 0 4px}.masterSmallBtn{width:auto!important;margin:0!important;padding:8px 10px!important;white-space:nowrap}.masterActions{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin:10px 0}.masterActions button{margin:0!important;min-height:44px}.masterFilters{display:grid;grid-template-columns:.9fr 1.1fr;gap:7px;margin:8px 0}.masterHelp{font-size:12px;color:#555;background:#f4f6f8;border-radius:10px;padding:9px;margin:8px 0}.masterStatus{min-height:20px;font-size:13px;font-weight:700;color:#7a2e2e;margin:3px 0}.masterList{display:grid;gap:9px}.masterCatBlock{background:#faf1dc;border:1px solid #dfe4ea;border-radius:13px;overflow:hidden}.masterCatHead{display:grid;grid-template-columns:34px minmax(0,1fr) auto;gap:6px;align-items:center;padding:9px;background:#f0e6c8;border-bottom:1px solid #dfe4ea}.masterCatName{font-size:17px;font-weight:800;min-width:0}.masterCatName input{width:100%;box-sizing:border-box;font-size:17px;font-weight:800;padding:7px 8px;border:1px solid #cbd5e1;border-radius:8px;background:#fff}.masterSortBtns{display:flex;gap:4px}.masterSortBtns button{width:38px!important;min-width:38px!important;height:36px!important;padding:0!important;margin:0!important}.masterCatDelete{background:#f3e3d9!important;color:#7a2e2e!important;border:1px solid #d9a98a!important}.masterMaterial{display:grid;grid-template-columns:34px minmax(0,1fr) 88px 78px auto;gap:6px;align-items:center;padding:8px;border-bottom:1px solid #e7eaee;background:#fff}.masterMaterial:last-child{border-bottom:0}.masterMaterial input,.masterMaterial select{min-width:0;margin:0;padding:8px 6px;border:1px solid #d5dbe3;border-radius:8px;background:#fff;font-size:14px}.masterMaterial .materialName{font-weight:700}.masterMaterialBtns{display:flex;gap:4px;align-items:center}.masterMaterialBtns button{width:auto!important;min-width:38px!important;height:36px!important;padding:5px 7px!important;margin:0!important;font-size:13px!important}.masterPriceBtn{background:#f0e6c8!important;color:#7a2e2e!important;border:1px solid #d9c48a!important}.masterPriceBtn.registered{background:#e7f7ed!important;color:#3f6b4f!important;border-color:#9ed8b7!important}.masterDeleteBtn{background:#f3e3d9!important;color:#7a2e2e!important;border:1px solid #d9a98a!important}.masterUnitBlock{background:#faf1dc;border:1px solid #dfe4ea;border-radius:13px;padding:10px;margin-top:10px}.masterUnitHead{font-weight:800;margin-bottom:7px}.masterUnitRow{display:grid;grid-template-columns:34px minmax(0,1fr) auto;gap:6px;align-items:center;margin-top:6px}.masterUnitRow input{min-width:0;margin:0;padding:8px;border:1px solid #d5dbe3;border-radius:8px;background:#fff}.masterEmpty{padding:15px;text-align:center;color:#777;background:#fff;border:1px dashed #cbd2da;border-radius:10px}.masterPriceEditor{grid-column:2/-1;background:#f5f8ff;border:1px solid #d6e1ff;border-radius:9px;padding:8px;display:none}.masterPriceEditor.open{display:grid;grid-template-columns:1fr 1fr;gap:6px}.masterPriceEditor label{font-size:12px;color:#555}.masterPriceEditor input,.masterPriceEditor select{width:100%;box-sizing:border-box;margin:3px 0 0;padding:8px;border:1px solid #ccd5e2;border-radius:7px;background:#fff}.masterPriceActions{grid-column:1/-1;display:flex;gap:6px}.masterPriceActions button{margin:0!important;width:auto!important;padding:8px 12px!important}.masterDragHandle{display:flex;align-items:center;justify-content:center;width:34px;height:40px;box-sizing:border-box;font-size:18px;text-align:center;color:#6b7280;border:1px solid #d7dce5;border-radius:9px;background:#fff;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;cursor:grab}.masterMaterial.masterDragging{opacity:.55;transform:scale(.99);box-shadow:0 5px 14px rgba(0,0,0,.14)}.masterMaterial.masterDragOver{outline:2px dashed #8aaef5;outline-offset:1px}.masterCatFooter{padding:7px 9px;background:#faf1dc;color:#666;font-size:12px}.masterSelected{outline:2px solid #8aaef5;outline-offset:-2px}@media(max-width:600px){.masterActions{grid-template-columns:1fr}.masterFilters{grid-template-columns:1fr}.masterMaterial{grid-template-columns:40px minmax(0,1fr) 70px 65px}.masterMaterialBtns{grid-column:2/-1;justify-content:flex-end}.masterPriceEditor{grid-column:1/-1}.masterCatHead{grid-template-columns:28px minmax(0,1fr);}.masterCatHead .masterSortBtns{grid-column:2;justify-content:flex-end}.masterCatName input{font-size:16px}}
 .costRecipeSelect{width:100%!important;min-height:48px!important;font-size:17px!important;font-weight:600!important;padding:10px 12px!important;background:#fff!important;color:#222!important;-webkit-text-fill-color:#222!important}
-.costSearch{width:100%!important;margin:0!important;min-height:44px!important;box-sizing:border-box}.costCategoryTitle{font-size:15px;font-weight:700;margin:12px 0 6px;padding:6px 8px;background:#eef0f3;border-radius:8px}.costPriceEditor{display:none;margin-top:9px;padding:10px;background:#f8fafc;border:1px solid #dfe3e8;border-radius:10px}.costPriceEditor.open{display:block}.costPriceEditor .costGrid{grid-template-columns:1fr 1fr}.costPriceEditor .costGrid>div:last-child{grid-column:1/-1}.costPriceActions{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:8px}.costPriceActions button{margin:0!important;padding:10px!important}.costRegistered{color:#2167d8;font-weight:700}.costNoPrice{color:#9a6700;font-weight:700}
-.costCalcModes{display:grid;grid-template-columns:1fr 1fr;gap:7px}.costCalcModes button{margin:0;background:#e9eaed;color:#333}.costCalcModes button.active{background:#3269df;color:#fff}.freeCostComponents{display:grid;gap:8px}.freeCostRow{display:grid;grid-template-columns:82px minmax(0,1fr) 78px 68px 40px;gap:5px;align-items:center;background:#fff;border:1px solid #e0e3e8;border-radius:10px;padding:7px}.freeCostRow input,.freeCostRow select{min-width:0;font-size:14px;padding:9px 5px}.freeCostRow button{margin:0;width:40px;height:40px;padding:0}.freeCostSummary{display:grid;grid-template-columns:1fr 1fr;gap:8px}.freeCostRegister{margin-top:8px;width:100%}
+.costSearch{width:100%!important;margin:0!important;min-height:44px!important;box-sizing:border-box}.costCategoryTitle{font-size:15px;font-weight:700;margin:12px 0 6px;padding:6px 8px;background:#eef0f3;border-radius:8px}.costPriceEditor{display:none;margin-top:9px;padding:10px;background:#faf1dc;border:1px solid #dfe3e8;border-radius:10px}.costPriceEditor.open{display:block}.costPriceEditor .costGrid{grid-template-columns:1fr 1fr}.costPriceEditor .costGrid>div:last-child{grid-column:1/-1}.costPriceActions{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:8px}.costPriceActions button{margin:0!important;padding:10px!important}.costRegistered{color:#7a2e2e;font-weight:700}.costNoPrice{color:#9a6700;font-weight:700}
+.costCalcModes{display:grid;grid-template-columns:1fr 1fr;gap:7px}.costCalcModes button{margin:0;background:#e9d8ac;color:#333}.costCalcModes button.active{background:#7a2e2e;color:#fff}.freeCostComponents{display:grid;gap:8px}.freeCostRow{display:grid;grid-template-columns:82px minmax(0,1fr) 78px 68px 40px;gap:5px;align-items:center;background:#fff;border:1px solid #e0e3e8;border-radius:10px;padding:7px}.freeCostRow input,.freeCostRow select{min-width:0;font-size:14px;padding:9px 5px}.freeCostRow button{margin:0;width:40px;height:40px;padding:0}.freeCostSummary{display:grid;grid-template-columns:1fr 1fr;gap:8px}.freeCostRegister{margin-top:8px;width:100%}
 .freeCostRow{grid-template-columns:90px 125px minmax(260px,1fr) 78px 68px 40px}.freeCostNameWrap{display:grid;grid-template-columns:minmax(0,1fr) 150px;gap:5px;min-width:0}.freeCostSearch{width:100%;box-sizing:border-box}.freeCostCategory{min-width:0}@media(max-width:760px){.freeCostRow{grid-template-columns:1fr 1fr;gap:6px}.freeCostNameWrap{grid-column:1 / -1;grid-template-columns:minmax(0,1fr) 120px}.freeCostQty,.freeCostUnit{min-width:0}.freeCostRow button{justify-self:end}.freeCostType,.freeCostCategory{width:100%}}
 
 /* レシピ編集：既存ボタンを覆わず、画面全体を縦スクロール可能にする安定化 */
@@ -4149,7 +4217,7 @@ import {ref,onValue,set,update,remove,push,runTransaction} from "https://www.gst
    return await job;
  }
 
- function masterMsg(text,ok=true){const el=$('masterStatus');if(!el)return;el.textContent=(ok?'✓ ':'⚠️ ')+text;el.style.color=ok?'#2463cf':'#b42318';clearTimeout(masterMsg._t);masterMsg._t=setTimeout(()=>{el.textContent=''},2200);}
+ function masterMsg(text,ok=true){const el=$('masterStatus');if(!el)return;el.textContent=(ok?'✓ ':'⚠️ ')+text;el.style.color=ok?'#7a2e2e':'#7a2e2e';clearTimeout(masterMsg._t);masterMsg._t=setTimeout(()=>{el.textContent=''},2200);}
  function masterEscName(name){return CSS.escape(String(name));}
  function renderMasterCategoryTags(){
    const el=$('masterCategoryTags');if(!el)return;
@@ -4595,12 +4663,12 @@ import {ref,onValue,set,update,remove,push,runTransaction} from "https://www.gst
 .productCostFilters{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}.productCostFilters input,.productCostFilters select{width:100%;box-sizing:border-box}
 .productCostActionsTop{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(150px,.8fr);gap:8px;margin-top:9px;align-items:stretch}.productCostActionsTop button{margin:0;min-width:0}
 /* 商品原価：操作中のボタンだけ青色。直接登録とカテゴリー管理は独立して切り替える */
-#productDirectAdd,#productCategoryManage{background:#e9eaed!important;color:#2371df!important}
-#productDirectAdd.is-open,#productCategoryManage.is-open{background:#2f6fe4!important;color:#fff!important}
+#productDirectAdd,#productCategoryManage{background:#e9d8ac!important;color:#7a2e2e!important}
+#productDirectAdd.is-open,#productCategoryManage.is-open{background:#7a2e2e!important;color:#fff!important}
 .productCategoryPanel{margin-top:9px}.productCategoryRow{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:6px;align-items:center;margin-top:6px}.productCategoryRow input{min-width:0}
 .productAddPanel{margin-top:9px}.productAddGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.productAddGrid input,.productAddGrid select{width:100%;box-sizing:border-box}
 .productAddActions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:9px}.productAddActions button{margin:0}
-.productSummary{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:9px}.productSummaryBox{background:#f8fafc;border:1px solid #e1e5ea;border-radius:12px;padding:9px;text-align:center}.productSummaryBox .label{font-size:12px;color:#667085}.productSummaryBox strong{font-size:17px}
+.productSummary{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:9px}.productSummaryBox{background:#faf1dc;border:1px solid #e1e5ea;border-radius:12px;padding:9px;text-align:center}.productSummaryBox .label{font-size:12px;color:#667085}.productSummaryBox strong{font-size:17px}
 .productList{display:grid;gap:8px;margin-top:9px}.productCard{border:1px solid #dfe3e8;border-radius:13px;padding:10px;background:#fff}.productCardHead{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:8px;align-items:start}.productCardName{font-size:17px;font-weight:700;overflow-wrap:anywhere}.productCardMeta{font-size:12px;color:#667085;margin-top:3px}.productCardNums{text-align:right;white-space:nowrap;font-weight:700}.productCardRate{font-size:13px;margin-top:3px;text-align:right}.productCardButtons{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}.productCardButtons button{margin:0}.productSource{display:inline-block;padding:2px 6px;border-radius:999px;background:#eef2ff;color:#334155;font-size:11px;margin-top:4px}
 .productEditPanel{display:none;margin-top:9px;padding-top:9px;border-top:1px solid #e5e7eb}.productEditPanel.open{display:block}
 .productCheckedHint{margin-top:7px;font-size:13px;color:#667085}
@@ -5006,7 +5074,7 @@ button, label {
 .prepRecipeSearchRow input{width:100%;box-sizing:border-box;min-height:52px;border:1px solid #cfd8ea;border-radius:16px;padding:0 14px;font-size:17px;background:#fff}
 .prepRecipeSearchResults{display:grid;gap:6px;margin-top:8px}
 .prepRecipeSearchResult{width:100%;text-align:left;background:#f1f4f8;color:#222;border:1px solid #ddd;padding:12px 13px;border-radius:12px;cursor:pointer;font-size:16px;font-weight:700}
-.prepRecipeSearchResult.hasRecipe{background:#eef3ff;color:#1f55b5}
+.prepRecipeSearchResult.hasRecipe{background:#f0e6c8;color:#1f55b5}
 .prepRecipeSearchResult small{display:block;color:#777;font-weight:400;margin-top:3px}
 .prepRecipeSearchEmpty{font-size:14px;color:#777;padding:5px 2px}
 </style>
@@ -7040,9 +7108,9 @@ function renderDay(){
 </style>
 <style id="shiftRequestedFix">
 #shiftPage .shiftTodaySmallBtn{min-height:44px;padding:8px 12px;font-weight:800}
-#shiftPage #shiftTodayEditBtn,#shiftPage #shiftOtherDayEditBtn{color:#1769d1}
+#shiftPage #shiftTodayEditBtn,#shiftPage #shiftOtherDayEditBtn{color:#7a2e2e}
 #shiftPage #shiftTargetMonth{width:100%;min-height:52px;box-sizing:border-box;padding:10px 12px;border:1px solid #cfd4dc;border-radius:12px;background:#fff;font-size:17px;font-weight:700}
-#shiftPage #shiftTargetMonthPrev,#shiftPage #shiftTargetMonthNext{font-size:28px;font-weight:900;color:#1769d1}
+#shiftPage #shiftTargetMonthPrev,#shiftPage #shiftTargetMonthNext{font-size:28px;font-weight:900;color:#7a2e2e}
 #shiftPage #shiftStaffAddCard{border:2px solid #e78ab0;background:#fff8fb}
 #shiftPage #shiftStaffAddCard button{margin:0}
 #shiftPage #shiftStaffAddRegisteredList{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:8px}
@@ -7051,9 +7119,9 @@ function renderDay(){
 #shiftPage .shiftStaffAddFreeRowFixed{display:grid!important;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:stretch}
 #shiftPage .shiftStaffAddNameEditor{margin-top:8px;padding:8px;border:1px solid #d8dce3;border-radius:12px;background:#f8f9fb}
 #shiftPage .shiftStaffAddNameEditRow{display:flex;align-items:center;gap:8px;margin:6px 0}
-#shiftPage .shiftStaffAddNameEditRow span{width:28px;text-align:center;font-weight:800;color:#1769d1}
+#shiftPage .shiftStaffAddNameEditRow span{width:28px;text-align:center;font-weight:800;color:#7a2e2e}
 #shiftPage .shiftStaffAddNameEditRow input{flex:1;min-width:0;min-height:44px;box-sizing:border-box;border:1px solid #cfd4dc;border-radius:10px;padding:8px 10px;font-size:16px;font-weight:700;background:#fff}
-#shiftPage .shiftStaffAddNameDelete{width:44px!important;min-width:44px!important;height:44px!important;min-height:44px!important;padding:0!important;margin:0!important;border:1px solid #efc3c3!important;border-radius:10px!important;background:#fff5f5!important;color:#c62828!important;font-size:16px!important;display:flex!important;align-items:center;justify-content:center}
+#shiftPage .shiftStaffAddNameDelete{width:44px!important;min-width:44px!important;height:44px!important;min-height:44px!important;padding:0!important;margin:0!important;border:1px solid #d9a98a!important;border-radius:10px!important;background:#fff5f5!important;color:#8a1f1f!important;font-size:16px!important;display:flex!important;align-items:center;justify-content:center}
 #shiftPage .shiftStaffAddNameEditorActions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
 #shiftPage .shiftStaffAddFreeRowFixed .shiftTodayEditFreeName{width:100%;min-width:0;min-height:52px;box-sizing:border-box;font-size:18px;padding:10px 12px}
 #shiftPage .shiftStaffAddFreeRowFixed button{min-height:52px;padding:0 18px;font-size:17px}
@@ -7105,7 +7173,7 @@ function renderDay(){
 /* 出勤者一覧：名前・ポジション・入り／終了時間を明確に3ブロック表示 */
 #shiftPage .shiftHeroNames{display:grid;grid-template-columns:1fr;gap:8px;margin-top:10px}
 #shiftPage .shiftHeroName{display:grid!important;grid-template-columns:42px minmax(0,1fr) minmax(180px,auto)!important;align-items:center!important;gap:10px!important;min-height:68px!important;padding:10px 14px!important;text-align:left!important}
-#shiftPage .shiftHeroNo{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#eef3f8;color:#1769d1;font-weight:900;font-size:15px}
+#shiftPage .shiftHeroNo{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#eef3f8;color:#7a2e2e;font-weight:900;font-size:15px}
 #shiftPage .shiftHeroMain{min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:3px;line-height:1.2}
 #shiftPage .shiftHeroMain b{font-size:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 #shiftPage .shiftHeroPosition{font-size:15px!important;font-weight:800!important;color:#555!important;white-space:nowrap!important}
@@ -7229,9 +7297,9 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 #salesPage .salesRow{display:grid;grid-template-columns:105px 1fr 90px;gap:8px;align-items:end;margin:8px 0}
 #salesPage .salesList{max-height:420px;overflow:auto}
 #salesPage .salesItem{display:grid;grid-template-columns:100px 1fr auto;gap:8px;align-items:center;padding:9px 0;border-bottom:1px solid #eee}
-#salesPage .salesBadge{display:inline-block;margin:4px 4px 0 0;padding:4px 8px;border-radius:999px;background:#eef3ff;font-size:13px;font-weight:700}
-#shiftPage .prevYearSalesBadge{display:block;margin-top:3px;font-size:12px;font-weight:700;color:#3269df}
-#shiftPage .shiftPrevYearSalesUnderDate{margin-top:4px;font-size:14px;font-weight:800;color:#3269df;line-height:1.35}
+#salesPage .salesBadge{display:inline-block;margin:4px 4px 0 0;padding:4px 8px;border-radius:999px;background:#f0e6c8;font-size:13px;font-weight:700}
+#shiftPage .prevYearSalesBadge{display:block;margin-top:3px;font-size:12px;font-weight:700;color:#7a2e2e}
+#shiftPage .shiftPrevYearSalesUnderDate{margin-top:4px;font-size:14px;font-weight:800;color:#7a2e2e;line-height:1.35}
 #salesPage .salesStatusBadge{padding:12px 14px;border-radius:14px;font-weight:800;font-size:15px}
 #salesPage .salesStatusBadge.done{background:#eefaf1;color:#176b32}
 #salesPage .salesStatusBadge.missing{background:#fff8e5;color:#805b00}
@@ -7254,15 +7322,15 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 #salesPage .salesCalGrid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
 #salesPage .salesCalDay{position:relative;min-height:44px;padding:6px 2px;border:1px solid #e5e7eb;border-radius:10px;background:#fff;color:#222!important;-webkit-text-fill-color:#222!important;font-size:15px;font-weight:700;cursor:pointer}
 #salesPage .salesCalDay.empty{border-color:transparent;background:transparent;cursor:default}
-#salesPage .salesCalDay.selected{outline:3px solid #3269df;outline-offset:-2px}
+#salesPage .salesCalDay.selected{outline:3px solid #7a2e2e;outline-offset:-2px}
 #salesPage .salesCalDots{position:absolute;left:0;right:0;bottom:4px;display:flex;justify-content:center;gap:4px}
 #salesPage .salesCalDot{width:7px;height:7px;border-radius:50%;background:transparent;border:1px solid #ddd}
-#salesPage .salesCalDot.done{background:#2aa052;border-color:#2aa052}
+#salesPage .salesCalDot.done{background:#3f6b4f;border-color:#3f6b4f}
 #salesPage .salesCalDot.closed{background:#666;border-color:#666}
 #salesPage .salesCalDot.missing{background:#d98a1f;border-color:#d98a1f}
 #salesPage .salesCalHint{font-size:13px;color:#666;margin-top:8px;line-height:1.6}
 #salesPage .salesStatusBadge{margin-bottom:8px}
-.salesClosedBtn.active{background:#c62828!important;color:#fff!important;border-color:#c62828!important}
+.salesClosedBtn.active{background:#8a1f1f!important;color:#fff!important;border-color:#8a1f1f!important}
 #salesPage label{display:flex;align-items:center;justify-content:space-between;gap:6px}
 .salesClearBtn{width:auto!important;display:inline!important;margin:0!important;padding:2px 8px!important;font-size:12px!important;font-weight:700!important;background:transparent!important;color:#b45309!important;border:1px solid #e6c68a!important;border-radius:999px!important}
 @media(max-width:600px){#salesPage .salesGrid,#salesPage .salesSummary{grid-template-columns:1fr 1fr}#salesPage .salesRow{grid-template-columns:1fr 1fr 72px}#salesPage .salesItem{grid-template-columns:82px 1fr auto}#salesPage .salesCalDay{min-height:40px}.navtabs4{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
@@ -7874,7 +7942,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   white-space:nowrap;
 }
 .masterCategoryTag.active{
-  background:#dbe9ff!important;color:#2167d8!important;
+  background:#dbe9ff!important;color:#7a2e2e!important;
   border-color:#8eb4f4!important;
 }
 .masterCategoryTag span{
@@ -8205,7 +8273,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 .ccListToolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin:0 0 12px}
 .ccListToolbar .ccHint{margin:0;flex:1;min-width:200px}
 .ccShowAllBtn{width:auto!important;margin:0!important;white-space:nowrap;padding:9px 14px!important;font-size:14px!important;border-radius:9px}
-.ccShowAllBtn.ccShowAllActive{background:#2867df!important;color:#fff!important;border-color:#2867df!important}
+.ccShowAllBtn.ccShowAllActive{background:#7a2e2e!important;color:#fff!important;border-color:#7a2e2e!important}
 .ccItem{display:grid;grid-template-columns:38px 28px 1fr;grid-template-areas:"handle check text" "actions actions actions" "panel panel panel";column-gap:10px;row-gap:8px;align-items:center;padding:10px 0;border-bottom:2px solid #c7ced8}
 .ccItem:last-child{border-bottom:0}
 .ccItem .ccDragHandle{grid-area:handle}
@@ -8220,19 +8288,19 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 .ccDragHandle{display:flex;align-items:center;justify-content:center;width:38px;height:44px;box-sizing:border-box;font-size:20px;text-align:center;color:#6b7280;border:1px solid #d7dce5;border-radius:9px;background:#fff;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;cursor:grab}
 .ccItem.ccDragging,.ccFreeItem.ccDragging{opacity:.55;transform:scale(.99);box-shadow:0 5px 14px rgba(0,0,0,.14)}
 .ccItem.ccDragOver,.ccFreeItem.ccDragOver{outline:2px dashed #8aaef5;outline-offset:1px}
-.ccDaysBtn{width:auto!important;min-width:44px!important;max-width:120px;height:44px!important;padding:6px 12px!important;margin:0!important;background:#f0f4ff!important;color:#2867df!important;border:1px solid #c7d5f5!important;border-radius:10px;font-size:14px!important;font-weight:800!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ccDaysBtn.ccDaysActive{background:#2867df!important;color:#fff!important;border-color:#2867df!important}
-.ccDeleteBtn{width:44px!important;min-width:44px!important;height:44px!important;padding:0!important;margin:0!important;background:#fff0f0!important;color:#b42318!important;border:1px solid #efc3c3!important;border-radius:10px;font-size:18px!important;font-weight:800!important;line-height:1!important}
+.ccDaysBtn{width:auto!important;min-width:44px!important;max-width:120px;height:44px!important;padding:6px 12px!important;margin:0!important;background:#f0f4ff!important;color:#7a2e2e!important;border:1px solid #d9c48a!important;border-radius:10px;font-size:14px!important;font-weight:800!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ccDaysBtn.ccDaysActive{background:#7a2e2e!important;color:#fff!important;border-color:#7a2e2e!important}
+.ccDeleteBtn{width:44px!important;min-width:44px!important;height:44px!important;padding:0!important;margin:0!important;background:#f3e3d9!important;color:#7a2e2e!important;border:1px solid #d9a98a!important;border-radius:10px;font-size:18px!important;font-weight:800!important;line-height:1!important}
 .ccDaysPanel{grid-area:panel;margin-top:10px;padding:12px;background:#f6f8fc;border:1px solid #dbe3f0;border-radius:10px}
 .ccDaysPanel[hidden]{display:none}
 .ccDaysPanelLabel{display:block;font-size:13px;color:#555;font-weight:800;margin-bottom:8px}
 .ccDayChips{display:flex;flex-wrap:wrap;gap:8px}
 .ccDayChip{width:auto!important;min-width:44px!important;height:44px!important;padding:0 14px!important;margin:0!important;background:#fff!important;color:#333!important;border:1px solid #d5dbe3!important;border-radius:9px;font-size:15px!important;font-weight:800!important}
-.ccDayChip.ccDayChipActive{background:#2867df!important;color:#fff!important;border-color:#2867df!important}
+.ccDayChip.ccDayChipActive{background:#7a2e2e!important;color:#fff!important;border-color:#7a2e2e!important}
 .ccAddRow{display:flex;gap:10px;margin-top:12px}
 .ccAddRow input{flex:1;min-width:0;padding:12px;border:1px solid #d5dbe3;border-radius:10px;background:#fff;font-size:17px!important;box-sizing:border-box;margin:0}
 .ccAddRow button{width:auto!important;margin:0!important;white-space:nowrap;padding:12px 16px!important;font-size:16px!important}
-.ccEmpty{padding:14px;text-align:center;color:#777;background:#f8fafc;border:1px dashed #cbd2da;border-radius:10px;font-size:15px}
+.ccEmpty{padding:14px;text-align:center;color:#777;background:#faf1dc;border:1px dashed #cbd2da;border-radius:10px;font-size:15px}
 .ccFreeItem{display:grid;grid-template-columns:38px 1fr 190px 210px;gap:10px;align-items:center;padding:12px 0;border-bottom:2px solid #c7ced8}
 .ccFreeItem:last-child{border-bottom:0}
 .ccFreeField{display:flex;flex-direction:column;gap:4px;min-width:0}
@@ -8244,8 +8312,8 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 .ccFreeThresholdRow{display:flex;align-items:center;gap:10px;margin:10px 0}
 .ccFreeThresholdRow .ccFieldLabel{white-space:nowrap}
 .ccFreeThresholdRow select{width:auto;margin:0;padding:9px 12px;font-size:15px}
-.ccFreeItem.ccFreeOverdue{background:#fff0f0;border-radius:12px;padding-left:8px;padding-right:8px;border-bottom-color:#f0bcbc;box-shadow:inset 0 0 0 2px #f0bcbc}
-.ccOverdueBadge{display:inline-block;margin-top:4px;padding:2px 8px;border-radius:999px;background:#c62828;color:#fff;font-size:12px;font-weight:800;white-space:nowrap}
+.ccFreeItem.ccFreeOverdue{background:#f3e3d9;border-radius:12px;padding-left:8px;padding-right:8px;border-bottom-color:#d9a98a;box-shadow:inset 0 0 0 2px #d9a98a}
+.ccOverdueBadge{display:inline-block;margin-top:4px;padding:2px 8px;border-radius:999px;background:#8a1f1f;color:#fff;font-size:12px;font-weight:800;white-space:nowrap}
 @media(max-width:600px){
   .ccFreeItem{grid-template-columns:38px 1fr;grid-template-areas:"handle text" "date date" "person person";row-gap:10px}
   .ccFreeItem .ccDragHandle{grid-area:handle}
@@ -8258,13 +8326,13 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 /* 仕込み品目の季節表示機能（2026-09-06追加）。
    季節設定（開始月〜終了月）がない品目は今まで通り常に表示される。
    このスタイルは仕込み表ページ内のみに影響し、他ページには影響しない。 */
-.prepSeasonToggle{width:auto!important;margin:10px 0 0!important;padding:9px 14px!important;font-size:14px!important;border-radius:9px;background:#e9eaed;color:#333}
-.prepSeasonToggle.active{background:#2867df!important;color:#fff!important}
+.prepSeasonToggle{width:auto!important;margin:10px 0 0!important;padding:9px 14px!important;font-size:14px!important;border-radius:9px;background:#e9d8ac;color:#333}
+.prepSeasonToggle.active{background:#7a2e2e!important;color:#fff!important}
 .prepSeasonTag{display:inline-block;margin-left:6px;padding:2px 8px;border-radius:8px;font-size:12px;font-weight:700;white-space:nowrap;vertical-align:middle}
 .prepSeasonTag.prepSeasonUpcoming{background:#fff3a8;color:#7a5200;border:1px solid #e6b800}
 .prepSeasonTag.prepSeasonOff{background:#eee;color:#777;border:1px solid #ddd}
 .prepRow.prepOffSeason{opacity:.6}
-.prepSeasonTag.prepSeasonForce{background:#e6f0ff;color:#2867df;border:1px solid #b9d0f7}
+.prepSeasonTag.prepSeasonForce{background:#e6f0ff;color:#7a2e2e;border:1px solid #b9d0f7}
 .seasonEdit{margin:0 0 10px;padding:8px 0 0}
 .seasonEditCheck{display:flex;align-items:center;gap:8px;font-size:14px;color:#444;font-weight:700}
 .seasonEditCheck input[type="checkbox"]{width:22px;height:22px;margin:0}
@@ -8275,8 +8343,8 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 .seasonSelectLabel{font-size:11px;color:#777}
 .prepMonthSelect{width:66px;padding:11px 4px!important;text-align:center;text-align-last:center;font-size:16px!important;font-weight:800;border:1px solid #c9cdd3;border-radius:8px;background:#fff;color:#222}
 .seasonSelectUnit{font-size:12px;color:#666}
-.seasonForceBtn{width:auto!important;margin:0 0 0 auto!important;padding:10px 12px!important;font-size:13px!important;font-weight:800!important;border-radius:9px;background:#e9eaed;color:#333;white-space:nowrap}
-.seasonForceBtn.seasonForceActive{background:#2867df!important;color:#fff!important}
+.seasonForceBtn{width:auto!important;margin:0 0 0 auto!important;padding:10px 12px!important;font-size:13px!important;font-weight:800!important;border-radius:9px;background:#e9d8ac;color:#333;white-space:nowrap}
+.seasonForceBtn.seasonForceActive{background:#7a2e2e!important;color:#fff!important}
 @media(max-width:520px){
   .seasonControls{gap:8px}
   .seasonForceBtn{margin-left:0!important;flex:1 1 100%}
@@ -8948,7 +9016,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 })();
 </script>
 <style>
-#scrollTopBtn{position:fixed;left:14px;bottom:18px;z-index:500;width:50px;height:50px;border:0;border-radius:50%;background:#3269df;color:#fff;font-size:22px;font-weight:800;line-height:1;box-shadow:0 4px 14px rgba(0,0,0,.28);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transform:translateY(10px);transition:opacity .2s,transform .2s}
+#scrollTopBtn{position:fixed;left:14px;bottom:18px;z-index:500;width:50px;height:50px;border:0;border-radius:50%;background:#7a2e2e;color:#fff;font-size:22px;font-weight:800;line-height:1;box-shadow:0 4px 14px rgba(0,0,0,.28);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transform:translateY(10px);transition:opacity .2s,transform .2s}
 #scrollTopBtn.show{opacity:.88;pointer-events:auto;transform:translateY(0)}
 #scrollTopBtn:active{opacity:1;transform:scale(.94)}
 @media print{#scrollTopBtn{display:none!important}}
