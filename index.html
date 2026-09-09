@@ -7326,6 +7326,12 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 #salesPage .salesCal{margin-top:12px;border:1px solid #e1e4e8;border-radius:16px;padding:12px;background:#fff}
 #salesPage .salesCalHead{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
 #salesPage .salesCalHead button{width:auto;flex:0 0 auto;margin:0;min-width:48px;padding:9px 12px}
+.salesTrendModeBtn,.salesTrendTargetBtn{width:auto!important;margin:0 0 0 6px!important;padding:8px 14px!important}
+.salesTrendTargetBtn{margin:0!important;flex:1}
+.salesTrendModeBtn.active,.salesTrendTargetBtn.active{background:#5b3a7a!important;color:#fff!important;border-color:#5b3a7a!important}
+#salesTrendDailyNav{gap:8px}
+#salesTrendDailyNav button{width:auto!important;flex:0 0 auto!important;min-width:48px;margin:0!important;padding:9px 12px!important}
+#salesTrendDailyLabel{flex:1 1 auto;text-align:center;white-space:nowrap}
 #salesPage .salesCalTitle{font-size:20px;font-weight:800;text-align:center;flex:1}
 #salesPage .salesCalWeek{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:4px}
 #salesPage .salesCalWeek div{text-align:center;font-size:12px;font-weight:700;color:#666;padding:4px 0}
@@ -7364,6 +7370,25 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     </div>
     <div style="margin-top:10px"><button id="salesSave">保存</button></div>
     <div id="salesCompare" style="margin-top:12px"></div>
+  </div>
+  <div class="card">
+    <div class="salesPageHeader"><h2 style="margin:0">📈 売上推移</h2>
+      <div>
+        <button type="button" id="salesTrendModeMonthly" class="gray salesTrendModeBtn active">月別</button>
+        <button type="button" id="salesTrendModeDaily" class="gray salesTrendModeBtn">日別</button>
+      </div>
+    </div>
+    <div style="display:flex;gap:6px;margin:8px 0 4px">
+      <button type="button" id="salesTrendTargetTotal" class="gray salesTrendTargetBtn active">合計</button>
+      <button type="button" id="salesTrendTargetLunch" class="gray salesTrendTargetBtn">ランチ</button>
+      <button type="button" id="salesTrendTargetDinner" class="gray salesTrendTargetBtn">夜</button>
+    </div>
+    <div id="salesTrendDailyNav" hidden style="display:flex;align-items:center;justify-content:space-between;margin:8px 0">
+      <button type="button" class="gray" id="salesTrendDailyPrev">‹</button>
+      <div id="salesTrendDailyLabel" style="font-weight:800"></div>
+      <button type="button" class="gray" id="salesTrendDailyNext">›</button>
+    </div>
+    <div id="salesMonthlyChart"></div>
   </div>
 </div>
 <script id="salesManagementAddScript">
@@ -7456,12 +7481,188 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     calendarAnchor=new Date(base.getFullYear(),base.getMonth(),1);
     renderSalesCalendar();
   }
+  function manEn(n){return (Number(n||0)/10000).toLocaleString('ja-JP',{maximumFractionDigits:1})+'万';}
+  function valueOf(rec,target){
+    if(!rec)return null;
+    if(target==='lunch')return rec.lunch!=null?Number(rec.lunch):null;
+    if(target==='dinner')return rec.dinner!=null?Number(rec.dinner):null;
+    return rec.amount!=null?Number(rec.amount):null;
+  }
+  let salesTrendMode='monthly';
+  let salesTrendTarget='total'; // 'total' | 'lunch' | 'dinner'
+  let salesTrendDailyAnchor=null;
+  function monthlyTotalsFromDaily(target){
+    const totals={};
+    Object.entries(salesData||{}).forEach(([date,rec])=>{
+      const v=valueOf(rec,target);
+      if(v==null)return;
+      const ym=date.slice(0,7).replace('-','');
+      totals[ym]=(totals[ym]||0)+v;
+    });
+    return totals;
+  }
+  function targetLabel(t){return t==='lunch'?'ランチ':(t==='dinner'?'夜':'合計');}
+  async function renderMonthlySalesChart(){
+    const box=$('salesMonthlyChart'); if(!box)return;
+    $('salesTrendDailyNav').hidden=(salesTrendMode!=='daily');
+    if(salesTrendMode==='daily'){ await renderDailyTrendChart(box); return; }
+    const totals=monthlyTotalsFromDaily(salesTrendTarget);
+    const allYm=Object.keys(totals);
+    if(!allYm.length){box.innerHTML='<div class="small" style="color:#666">売上データがまだ登録されていません。</div>';return;}
+    const years=[...new Set(allYm.map(p=>p.slice(0,4)))].sort();
+    const thisYear=years[years.length-1];
+    const lastYear=String(Number(thisYear)-1);
+    const hasLastYear=years.includes(lastYear);
+    const thisVals=[], lastVals=[];
+    for(let m=1;m<=12;m++){
+      const ym=thisYear+String(m).padStart(2,'0');
+      const ymLast=lastYear+String(m).padStart(2,'0');
+      thisVals.push(totals[ym]!=null?totals[ym]:null);
+      lastVals.push(hasLastYear?(totals[ymLast]!=null?totals[ymLast]:null):null);
+    }
+    const max=Math.max(1,...thisVals.filter(v=>v!=null),...lastVals.filter(v=>v!=null));
+    const W=700,H=290,padB=34,padT=42,padL=36,padR=36;
+    const plotW=W-padL-padR, plotH=H-padB-padT;
+    const xOf=i=>padL+plotW*(i/11);
+    const yOf=v=>H-padB-(v/max)*plotH;
+    let grid='';
+    [0,0.5,1].forEach(f=>{
+      const gy=H-padB-plotH*f;
+      grid+=`<line x1="${padL}" y1="${gy}" x2="${W-padR}" y2="${gy}" stroke="#e5e9eb" stroke-width="1"></line>`;
+      grid+=`<text x="2" y="${gy-3}" font-size="9" fill="#999">${manEn(max*f)}</text>`;
+    });
+    function lineOf(vals,color,width){
+      let segs='',cur=[];
+      vals.forEach((v,i)=>{
+        if(v!=null)cur.push(`${xOf(i)},${yOf(v)}`);
+        else{if(cur.length>1)segs+=`<polyline points="${cur.join(' ')}" fill="none" stroke="${color}" stroke-width="${width}" stroke-linejoin="round" stroke-linecap="round"/>`;cur=[];}
+      });
+      if(cur.length>1)segs+=`<polyline points="${cur.join(' ')}" fill="none" stroke="${color}" stroke-width="${width}" stroke-linejoin="round" stroke-linecap="round"/>`;
+      return segs;
+    }
+    let bars=grid;
+    bars+=lineOf(lastVals,'#c9c3d1',2);
+    bars+=lineOf(thisVals,'#5b3a7a',3);
+    for(let i=0;i<12;i++){
+      const lv=lastVals[i], tv=thisVals[i];
+      if(lv!=null){
+        bars+=`<circle cx="${xOf(i)}" cy="${yOf(lv)}" r="3" fill="#c9c3d1" data-tap="${lastYear}年${i+1}月：¥${lv.toLocaleString('ja-JP')}"></circle>`;
+      }
+      if(tv!=null){
+        bars+=`<circle cx="${xOf(i)}" cy="${yOf(tv)}" r="4.5" fill="#5b3a7a" stroke="#fff" stroke-width="1.5" data-tap="${thisYear}年${i+1}月：¥${tv.toLocaleString('ja-JP')}"></circle>`;
+        bars+=`<text x="${xOf(i)}" y="${yOf(tv)-10}" text-anchor="middle" font-size="11" font-weight="700" fill="#3f2760">${manEn(tv)}</text>`;
+      }
+      bars+=`<text x="${xOf(i)}" y="${H-padB+16}" text-anchor="middle" font-size="12" fill="#555">${i+1}月</text>`;
+    }
+    const thisTotal=thisVals.filter(v=>v!=null).reduce((a,b)=>a+b,0);
+    const sameSpanLastTotal=thisVals.reduce((sum,v,i)=>sum+(v!=null&&lastVals[i]!=null?lastVals[i]:0),0);
+    const diff=sameSpanLastTotal? Math.round((thisTotal-sameSpanLastTotal)/sameSpanLastTotal*1000)/10 : null;
+    const legend=`<div class="small" style="display:flex;gap:14px;align-items:center;margin-bottom:4px">`+
+      (hasLastYear?`<span><span style="display:inline-block;width:10px;height:10px;background:#c9c3d1;border-radius:2px;margin-right:4px"></span>${lastYear}年</span>`:'')+
+      `<span><span style="display:inline-block;width:10px;height:10px;background:#5b3a7a;border-radius:2px;margin-right:4px"></span>${thisYear}年（${targetLabel(salesTrendTarget)}）</span></div>`;
+    box.innerHTML=`<div id="salesDailyTapInfo" style="min-height:22px;font-weight:800;color:#3f2760;margin-bottom:4px">点をタップすると金額が表示されます</div>`+
+      legend+`<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block">${bars}</svg>`+
+      `<div class="small" style="margin-top:8px;color:#555">${thisYear}年 累計：¥${thisTotal.toLocaleString('ja-JP')}`+
+      (hasLastYear?`　（${lastYear}年同期間比 ${diff>=0?'+':''}${diff}%）`:'')+`</div>`;
+  }
+  function dailyValsForMonth(y,m,target){
+    const last=new Date(y,m+1,0).getDate();
+    const vals=[];
+    for(let d=1;d<=last;d++){
+      const iso=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      vals.push(valueOf(salesData[iso],target));
+    }
+    return {vals,last};
+  }
+  async function renderDailyTrendChart(box){
+    if(!salesTrendDailyAnchor){
+      const keys=Object.keys(salesData||{});
+      const b=keys.length ? new Date(keys.sort().slice(-1)[0]+'T00:00:00') : new Date();
+      salesTrendDailyAnchor=new Date(b.getFullYear(),b.getMonth(),1);
+    }
+    const y=salesTrendDailyAnchor.getFullYear(), m=salesTrendDailyAnchor.getMonth();
+    $('salesTrendDailyLabel').textContent=`${y}年${m+1}月`;
+    const {vals,last}=dailyValsForMonth(y,m,salesTrendTarget);
+    const {vals:lastVals}=dailyValsForMonth(y-1,m,salesTrendTarget);
+    const present=vals.filter(v=>v!=null);
+    const lastPresent=lastVals.filter(v=>v!=null);
+    if(!present.length&&!lastPresent.length){box.innerHTML='<div class="small" style="color:#666">この月の売上入力データがまだありません。</div>';return;}
+    const max=Math.max(1,...present,...lastPresent);
+    const W=700,H=270,padB=30,padT=36,padL=36,padR=36;
+    const plotW=W-padL-padR, plotH=H-padB-padT;
+    const xOf=i=>padL+plotW*(i/(last-1));
+    const yOf=v=>H-padB-(v/max)*plotH;
+    let grid='';
+    [0,0.5,1].forEach(f=>{
+      const gy=H-padB-plotH*f;
+      grid+=`<line x1="${padL}" y1="${gy}" x2="${W-padR}" y2="${gy}" stroke="#e5e9eb" stroke-width="1"></line>`;
+      grid+=`<text x="2" y="${gy-3}" font-size="9" fill="#999">${manEn(max*f)}</text>`;
+    });
+    function lineOf(arr,color,width){
+      let segs='',cur=[];
+      arr.forEach((v,i)=>{
+        if(v!=null)cur.push(`${xOf(i)},${yOf(v)}`);
+        else{if(cur.length>1)segs+=`<polyline points="${cur.join(' ')}" fill="none" stroke="${color}" stroke-width="${width}" stroke-linejoin="round" stroke-linecap="round"/>`;cur=[];}
+      });
+      if(cur.length>1)segs+=`<polyline points="${cur.join(' ')}" fill="none" stroke="${color}" stroke-width="${width}" stroke-linejoin="round" stroke-linecap="round"/>`;
+      return segs;
+    }
+    let segs=lineOf(lastVals,'#c9c3d1',2)+lineOf(vals,'#5b3a7a',2.5);
+    let dots='';
+    lastVals.forEach((v,i)=>{
+      if(v==null)return;
+      dots+=`<circle cx="${xOf(i)}" cy="${yOf(v)}" r="2.5" fill="#c9c3d1" data-tap="${y-1}年${m+1}月${i+1}日：${v===0?'定休日':'¥'+v.toLocaleString('ja-JP')}"></circle>`;
+    });
+    vals.forEach((v,i)=>{
+      const showLabel=(i===0||i===last-1||(i+1)%5===0)&&v!=null;
+      if(v==null)return;
+      dots+=`<circle cx="${xOf(i)}" cy="${yOf(v)}" r="${v===0?2.5:3.5}" fill="${v===0?'#ccc':'#5b3a7a'}" stroke="#fff" stroke-width="1" data-tap="${y}年${m+1}月${i+1}日：${v===0?'定休日':'¥'+v.toLocaleString('ja-JP')}"></circle>`;
+      if(showLabel)dots+=`<text x="${xOf(i)}" y="${yOf(v)-8}" text-anchor="middle" font-size="10" font-weight="700" fill="#3f2760">${v===0?'休':manEn(v)}</text>`;
+      dots+=`<text x="${xOf(i)}" y="${H-padB+14}" text-anchor="middle" font-size="9" fill="#777">${(i===0||i===last-1||(i+1)%5===0)?(i+1):''}</text>`;
+    });
+    const total=present.reduce((a,b)=>a+b,0), workDays=present.filter(v=>v>0).length;
+    const lastTotal=lastPresent.reduce((a,b)=>a+b,0);
+    const legend=`<div class="small" style="display:flex;gap:14px;align-items:center;margin-bottom:4px">`+
+      (lastPresent.length?`<span><span style="display:inline-block;width:10px;height:10px;background:#c9c3d1;border-radius:2px;margin-right:4px"></span>${y-1}年${m+1}月</span>`:'')+
+      `<span><span style="display:inline-block;width:10px;height:10px;background:#5b3a7a;border-radius:2px;margin-right:4px"></span>${y}年${m+1}月（${targetLabel(salesTrendTarget)}）</span></div>`;
+    let compareLine='';
+    if(lastTotal>0){
+      const gap=lastTotal-total;
+      compareLine=gap>0
+        ? `<div class="small" style="margin-top:4px;color:#c65a1f;font-weight:700">🎯 ${y-1}年${m+1}月（¥${lastTotal.toLocaleString('ja-JP')}）まであと ¥${gap.toLocaleString('ja-JP')}</div>`
+        : `<div class="small" style="margin-top:4px;color:#176b32;font-weight:700">🎉 ${y-1}年${m+1}月（¥${lastTotal.toLocaleString('ja-JP')}）を ¥${Math.abs(gap).toLocaleString('ja-JP')} 上回っています</div>`;
+    }
+    box.innerHTML=`<div id="salesDailyTapInfo" style="min-height:22px;font-weight:800;color:#3f2760;margin-bottom:4px">点をタップすると金額が表示されます</div>`+
+      legend+`<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block">${grid}${segs}${dots}</svg>`+
+      `<div class="small" style="margin-top:8px;color:#555">月合計：¥${total.toLocaleString('ja-JP')}　営業日数：${workDays}日${workDays?'　平均：¥'+Math.round(total/workDays).toLocaleString('ja-JP'):''}</div>`+compareLine;
+  }
+  function initSalesTrendControls(){
+    $('salesTrendModeMonthly')?.addEventListener('click',()=>{salesTrendMode='monthly';$('salesTrendModeMonthly').classList.add('active');$('salesTrendModeDaily').classList.remove('active');renderMonthlySalesChart();});
+    $('salesTrendModeDaily')?.addEventListener('click',()=>{salesTrendMode='daily';$('salesTrendModeDaily').classList.add('active');$('salesTrendModeMonthly').classList.remove('active');renderMonthlySalesChart();});
+    $('salesTrendDailyPrev')?.addEventListener('click',()=>{salesTrendDailyAnchor=new Date(salesTrendDailyAnchor.getFullYear(),salesTrendDailyAnchor.getMonth()-1,1);renderMonthlySalesChart();});
+    $('salesTrendDailyNext')?.addEventListener('click',()=>{salesTrendDailyAnchor=new Date(salesTrendDailyAnchor.getFullYear(),salesTrendDailyAnchor.getMonth()+1,1);renderMonthlySalesChart();});
+    const targetBtns={total:'salesTrendTargetTotal',lunch:'salesTrendTargetLunch',dinner:'salesTrendTargetDinner'};
+    Object.entries(targetBtns).forEach(([t,id])=>{
+      $(id)?.addEventListener('click',()=>{
+        salesTrendTarget=t;
+        Object.values(targetBtns).forEach(bid=>$(bid)?.classList.toggle('active',bid===id));
+        renderMonthlySalesChart();
+      });
+    });
+    $('salesMonthlyChart')?.addEventListener('click',(e)=>{
+      const t=e.target.closest('[data-tap]');
+      const info=$('salesDailyTapInfo');
+      if(t&&info)info.textContent=t.dataset.tap;
+    });
+  }
+  window.renderMonthlySalesChart=renderMonthlySalesChart;
   async function load(){
     if(!fb()?.get)return;
     const a=await fb().get(fb().ref(fb().db,'sales/daily'));
     salesData=a?.val?.()||{};
     window.__salesDailyData=salesData;
     window.__salesPrevSameWeekday=prevSameWeekday;
+    renderMonthlySalesChart();
     window.renderMemoCalendar?.();
     applyDateToForm($('salesDate')?.value||today());
   }
@@ -7534,6 +7735,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     $('salesClosedDinnerToggle')?.addEventListener('click',()=>{closedDinnerState=!closedDinnerState;updateClosedToggleUI();});
     $('salesClearLunch')?.addEventListener('click',()=>clearField('lunch'));
     $('salesClearDinner')?.addEventListener('click',()=>clearField('dinner'));
+    initSalesTrendControls();
     function bootLoad(){if(fb()?.get){load().then(augmentShift);}else{setTimeout(bootLoad,200);}}
     bootLoad();
     setInterval(augmentShift,1500);
