@@ -7624,6 +7624,18 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       if(!(i===0||i===last-1||(i+1)%2===0))continue;
       dots+=`<text x="${xOf(i)}" y="${H-padB+14}" text-anchor="middle" font-size="9" fill="#777">${i+1}</text>`;
     }
+    // スマホで点(・)を正確にタップしにくいため、各日1本ずつ縦に伸びる透明な帯を上に重ねて
+    // タップ判定領域を広げる（Y座標を気にせずその日の列をタップすれば金額が表示される）
+    const bandW=plotW/Math.max(1,last-1);
+    let bands='';
+    for(let i=0;i<last;i++){
+      const cx=xOf(i);
+      const bx=Math.max(padL,cx-bandW/2), bw=Math.min(W-padR,cx+bandW/2)-bx;
+      const thisRaw=vals[i], lastRaw=lastVals[i];
+      const thisText=thisRaw==null?'未入力':(thisRaw===0?'定休日':'¥'+thisRaw.toLocaleString('ja-JP'));
+      const lastText=lastRaw==null?'データなし':(lastRaw===0?'定休日':'¥'+lastRaw.toLocaleString('ja-JP'));
+      bands+=`<rect x="${bx}" y="${padT}" width="${bw}" height="${H-padB-padT}" fill="transparent" pointer-events="all" data-tap="${y}年${m+1}月${i+1}日：${thisText}（${y-1}年：${lastText}）"></rect>`;
+    }
     const total=present.reduce((a,b)=>a+b,0), workDays=present.filter(v=>v>0).length;
     const lastTotal=lastPresent.reduce((a,b)=>a+b,0);
     const legend=`<div class="small" style="display:flex;gap:14px;align-items:center;margin-bottom:4px">`+
@@ -7637,7 +7649,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
         : `<div class="small" style="margin-top:4px;color:#176b32;font-weight:700">🎉 ${y-1}年${m+1}月（¥${lastTotal.toLocaleString('ja-JP')}）を ¥${Math.abs(gap).toLocaleString('ja-JP')} 上回っています</div>`;
     }
     box.innerHTML=`<div id="salesDailyTapInfo" style="min-height:22px;font-weight:800;color:#3f2760;margin-bottom:4px">点をタップすると金額が表示されます</div>`+
-      legend+`<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block">${grid}${segs}${dots}</svg>`+
+      legend+`<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block">${grid}${segs}${dots}${bands}</svg>`+
       `<div class="small" style="margin-top:8px;color:#555">月合計：¥${total.toLocaleString('ja-JP')}　営業日数：${workDays}日${workDays?'　平均：¥'+Math.round(total/workDays).toLocaleString('ja-JP'):''}</div>`+compareLine;
   }
   function initSalesTrendControls(){
