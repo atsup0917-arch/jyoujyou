@@ -7378,7 +7378,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
         <button type="button" id="salesTrendModeDaily" class="gray salesTrendModeBtn">日別</button>
       </div>
     </div>
-    <div style="display:flex;gap:6px;margin:8px 0 4px">
+    <div id="salesTrendTargetRow" style="display:flex;gap:6px;margin:8px 0 4px">
       <button type="button" id="salesTrendTargetTotal" class="gray salesTrendTargetBtn active">合計</button>
       <button type="button" id="salesTrendTargetLunch" class="gray salesTrendTargetBtn">ランチ</button>
       <button type="button" id="salesTrendTargetDinner" class="gray salesTrendTargetBtn">夜</button>
@@ -7618,8 +7618,12 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       if(v==null)return;
       dots+=`<circle cx="${xOf(i)}" cy="${yOf(v)}" r="${v===0?2.5:3.5}" fill="${v===0?'#ccc':'#5b3a7a'}" stroke="#fff" stroke-width="1" data-tap="${y}年${m+1}月${i+1}日：${v===0?'定休日':'¥'+v.toLocaleString('ja-JP')}"></circle>`;
       if(showLabel)dots+=`<text x="${xOf(i)}" y="${yOf(v)-8}" text-anchor="middle" font-size="10" font-weight="700" fill="#3f2760">${v===0?'休':manEn(v)}</text>`;
-      dots+=`<text x="${xOf(i)}" y="${H-padB+14}" text-anchor="middle" font-size="9" fill="#777">${(i===0||i===last-1||(i+1)%5===0)?(i+1):''}</text>`;
     });
+    // 横軸の日付は、その日の売上有無に関わらず一定間隔で表示する（間隔を5日→2日に詰めて見やすく）
+    for(let i=0;i<last;i++){
+      if(!(i===0||i===last-1||(i+1)%2===0))continue;
+      dots+=`<text x="${xOf(i)}" y="${H-padB+14}" text-anchor="middle" font-size="9" fill="#777">${i+1}</text>`;
+    }
     const total=present.reduce((a,b)=>a+b,0), workDays=present.filter(v=>v>0).length;
     const lastTotal=lastPresent.reduce((a,b)=>a+b,0);
     const legend=`<div class="small" style="display:flex;gap:14px;align-items:center;margin-bottom:4px">`+
