@@ -1870,7 +1870,7 @@ html,body{background:#f3e6c8!important}
   </div>
   <div class="prepActionGroup prepOperation">
     <button class="gray" id="confirmPrep">仕込み確定</button>
-    <button class="gray" id="clearPrep">仕込み数を全て0</button>
+    <button class="gray" id="clearPrep">仕込みリセット</button>
     <button class="gray" id="uncheckPrep">チェックを全て外す</button>
     <button class="gray" id="prepVegetableBtn" type="button">🥬 野菜発注</button>
   </div>
@@ -2717,7 +2717,12 @@ $("prepPos").onchange=renderPrepManage;
 $("addPos").onclick=async()=>{const name=$("newPos").value.trim();if(!name)return;await push(prepPositionsRef,{name,order:op().length});$("newPos").value=""};
 $("addPrep").onclick=async()=>{const positionId=$("prepPos").value,name=$("newPrep").value.trim();if(!positionId||!name)return alert("ポジションと品目を入力してください");await push(prepItemsRef,{positionId,name,weekday:Number($("wdNeed").value)||0,weekend:Number($("weNeed").value)||0,unit:$("prepUnit").value.trim(),order:oi(positionId).length});$("newPrep").value="";$("prepUnit").value="";$("wdNeed").value=0;$("weNeed").value=0};
 async function setNeeds(k){const u={};vals(prepItems).forEach(([id,x])=>u[`prep/state/${id}/count`]=Number(x[k])||0);await update(ref(db),u)}
-$("clearPrep").onclick=async()=>{const u={};vals(prepItems).forEach(([id])=>u[`prep/state/${id}/count`]=0);prepConfirmed=false;await update(ref(db),u);renderPrepFilters();renderPrepList()};
+$("clearPrep").onclick=async()=>{
+  // 選択中のポジション（「全体」なら全ポジション）の仕込みを、選択前の状態（選択ボタン側）に戻す。
+  const targets=prepFilter==="ALL"?vals(prepItems):oi(prepFilter);
+  const u={};targets.forEach(([id])=>u[`prep/state/${id}`]=null);
+  prepConfirmed=false;await update(ref(db),u);renderPrepFilters();renderPrepList();
+};
 $("uncheckPrep").onclick=async()=>{const u={};vals(prepItems).forEach(([id])=>u[`prep/state/${id}/done`]=false);await update(ref(db),u);renderPrepFilters();renderPrepList()};
 
 if($("confirmPrep"))$("confirmPrep").onclick=()=>{
