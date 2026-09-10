@@ -1846,7 +1846,9 @@ html,body{background:#f3e6c8!important}
 
 <div id="prepPage" class="page" hidden>
 <h1>🔪 仕込み表</h1>
-<div class="card"><h2>表示するポジション</h2><div class="filters" id="prepFilters"></div><button type="button" id="prepSeasonAllToggle" class="prepSeasonToggle">🔎 季節を問わず全品目表示</button></div><div class="card prepRecipeSearchCard" id="prepRecipeSearchCard">
+<div class="card"><h2>表示するポジション</h2><div class="filters" id="prepFilters"></div><button type="button" id="prepSeasonAllToggle" class="prepSeasonToggle">🔎 季節を問わず全品目表示</button></div>
+<div id="prepList"></div>
+<div class="card prepRecipeSearchCard" id="prepRecipeSearchCard">
   <h2>📖 仕込みレシピを検索</h2>
   <div class="prepRecipeSearchRow">
     <input id="prepRecipeSearch" type="search" placeholder="🔎 仕込みレシピ名を検索" autocomplete="off" aria-label="仕込みレシピを検索">
@@ -1859,7 +1861,6 @@ html,body{background:#f3e6c8!important}
   </div>
   <div id="prepRecipeSearchResults" class="prepRecipeSearchResults" aria-live="polite"></div>
 </div>
-<div id="prepList"></div>
 <div class="card prepMainActions">
   <div class="prepActionGroup prepOperation">
     <button class="gray" id="confirmPrep">仕込み確定</button>
