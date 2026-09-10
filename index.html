@@ -8541,8 +8541,8 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 .ccFreeItemTop .ccItemTextWrap{flex:1;min-width:0}
 .ccFreeFieldsRow{display:flex;flex-wrap:wrap;gap:10px}
 .ccFreeField{display:flex;flex-direction:column;gap:4px;min-width:0;flex:0 1 150px}
-.ccFreeFieldsRow .ccDateField{flex-basis:140px}
-.ccFreeFieldsRow .ccPersonField{flex-basis:190px}
+.ccFreeFieldsRow .ccDateField{flex-basis:170px}
+.ccFreeFieldsRow .ccPersonField{flex-basis:240px}
 .ccFieldLabel{font-size:13px;color:#777;font-weight:800}
 .ccFreeField input,.ccFreeField select{padding:10px;border:1px solid #d5dbe3;border-radius:9px;background:#fff;font-size:16px!important;width:100%;box-sizing:border-box;margin:0}
 .ccPersonRow{display:flex;gap:8px;align-items:center}
@@ -8551,10 +8551,10 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 .ccFreeItem.ccFreeOverdue{background:#f3e3d9;border-radius:12px;padding-left:8px;padding-right:8px;border-bottom-color:#d9a98a;box-shadow:inset 0 0 0 2px #d9a98a}
 .ccOverdueBadge{display:inline-block;margin-top:4px;padding:2px 8px;border-radius:999px;background:#8a1f1f;color:#fff;font-size:12px;font-weight:800;white-space:nowrap}
 @media(max-width:600px){
-  /* スマホ幅では3つの欄を少し狭めて、入る分だけ横に並べる（重ならない範囲で自然に折り返す）。 */
-  .ccFreeFieldsRow .ccThresholdField{flex-basis:125px}
-  .ccFreeFieldsRow .ccDateField{flex-basis:120px}
-  .ccFreeFieldsRow .ccPersonField{flex-basis:150px}
+  /* スマホ幅では期限・日付を並べて上段、担当者は読みやすいよう1行まるごと使う。 */
+  .ccFreeFieldsRow .ccThresholdField{flex-basis:130px}
+  .ccFreeFieldsRow .ccDateField{flex-basis:140px}
+  .ccFreeFieldsRow .ccPersonField{flex-basis:100%}
 }
 @media(min-width:601px){
   /* iPad幅ではチェック以外のボタンをテキストの右側に並べ、下段への折り返しをやめる（スマホ表示は変更しない）。 */
