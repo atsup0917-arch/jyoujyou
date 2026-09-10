@@ -8536,7 +8536,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 .ccAddRow input{flex:1;min-width:0;padding:12px;border:1px solid #d5dbe3;border-radius:10px;background:#fff;font-size:17px!important;box-sizing:border-box;margin:0}
 .ccAddRow button{width:auto!important;margin:0!important;white-space:nowrap;padding:12px 16px!important;font-size:16px!important}
 .ccEmpty{padding:14px;text-align:center;color:#777;background:#faf1dc;border:1px dashed #cbd2da;border-radius:10px;font-size:15px}
-.ccFreeItem{display:grid;grid-template-columns:38px 1fr 170px 190px 210px;gap:10px;align-items:center;padding:12px 0;border-bottom:2px solid #c7ced8}
+.ccFreeItem{display:grid;grid-template-columns:38px 1fr 150px 140px 170px;gap:10px;align-items:center;padding:12px 0;border-bottom:2px solid #c7ced8}
 .ccFreeItem:last-child{border-bottom:0}
 .ccFreeField{display:flex;flex-direction:column;gap:4px;min-width:0}
 .ccFieldLabel{font-size:13px;color:#777;font-weight:800}
@@ -8556,6 +8556,11 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   .ccFreeItem .ccThresholdField{grid-area:threshold}
   .ccFreeItem .ccDateField{grid-area:date}
   .ccFreeItem .ccPersonField{grid-area:person}
+}
+@media(min-width:601px){
+  /* iPad幅ではチェック以外のボタンをテキストの右側に並べ、下段への折り返しをやめる（スマホ表示は変更しない）。 */
+  .ccItem{grid-template-columns:38px 44px 1fr auto;grid-template-areas:"handle check text actions" "panel panel panel panel"}
+  .ccItem .ccItemActions{justify-content:flex-end}
 }
 </style>
 <style id="prepSeasonStyle">
