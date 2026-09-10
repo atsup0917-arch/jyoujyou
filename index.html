@@ -1367,6 +1367,38 @@ html,body{background:#f3e6c8!important}
 .receiptEntryInfo .receiptEntryDate{color:#777}
 .receiptEntryDelBtn{width:auto!important;flex:0 0 auto;margin:0!important;padding:5px 9px!important;font-size:12px!important;border-radius:8px!important}
 </style>
+<div id="list"></div>
+
+<div class="card row">
+<button class="gray" id="deleteDone">購入済みを削除</button>
+<button class="gray" id="uncheckAll">チェックを全て外す</button>
+</div>
+
+<div class="card settingsCard" id="shoppingAddCard"><details><summary id="shoppingAddTitle">買う物を追加</summary><div class="settingsBody">
+<div id="selectedStoreHint" class="small" style="display:none;margin:-4px 0 10px;font-weight:800"></div>
+<div id="shoppingAddStorePicker"><label>買う場所</label><select id="storeSelect"></select></div>
+<label>商品</label><input id="productSearch" placeholder="商品名・ふりがなで検索" autocomplete="off">
+<div id="productSuggestions" style="display:none;background:#fff;border:1px solid #ccc;border-radius:10px;margin:-4px 0 8px;padding:4px;max-height:220px;overflow:auto"></div>
+<select id="productSelect"></select>
+<label>数量</label><select id="itemQty"></select>
+<label>自由入力</label><input id="freeProduct" placeholder="商品リストにない物を入力">
+<label>メモ</label><input id="memo" placeholder="例：大サイズ / 特売">
+<button id="addItem">＋ 買う物に追加</button>
+</div></details></div>
+
+<div class="card settingsCard" id="productAddCard"><details><summary>➕ 商品の登録</summary><div class="settingsBody">
+<label>商品を登録する場所</label><select id="regStore"></select>
+<label>新しい商品</label><input id="newProduct" placeholder="例：玉子"><label>ふりがな（検索用）</label><input id="newProductKana" placeholder="例：たまご"><label>価格の種類</label><select id="newProductPriceMode"><option value="pack">商品単価</option><option value="gram">g単価</option></select><label>価格</label><input id="newProductPrice" type="number" min="0" step="0.01" inputmode="decimal" placeholder="例：175"><label>商品写真</label><div class="productRegUpload"><label for="newProductPhoto" class="productRegUploadLabel" title="写真を選択" aria-label="写真を選択">📷</label><input id="newProductPhoto" type="file" accept="image/*,.heic,.heif,.jpg,.jpeg,.png,.webp"><span class="small" style="margin:0">写真を選択</span></div><div id="newProductPhotoPreview" class="productRegPhotoPreview" hidden><img id="newProductPhotoImg" alt="商品写真"></div><div class="small">登録した価格・写真は、買い物リストにも自動反映されます。</div>
+<button id="addProduct">＋ 商品を登録</button><div id="productManage"></div>
+</div></details></div>
+
+<div class="card settingsCard"><details><summary>⚙️ 買う場所の登録・削除</summary><div class="settingsBody">
+<h2>買う場所の管理</h2>
+<label>新しい買う場所</label><input id="newStore" placeholder="例：魚屋">
+<button id="addStore">＋ 買う場所を追加</button><div id="storeManage"></div>
+<div class="small">買う場所を削除すると、その場所に登録した商品も削除します。すでに買い物リストへ追加した品は残ります。</div>
+</div></details></div>
+
 <div class="card settingsCard" id="receiptCard">
 <details>
 <summary>💴 買い物精算</summary>
@@ -1399,38 +1431,6 @@ html,body{background:#f3e6c8!important}
 </div>
 </details>
 </div>
-
-<div id="list"></div>
-
-<div class="card row">
-<button class="gray" id="deleteDone">購入済みを削除</button>
-<button class="gray" id="uncheckAll">チェックを全て外す</button>
-</div>
-
-<div class="card settingsCard" id="shoppingAddCard"><details><summary id="shoppingAddTitle">買う物を追加</summary><div class="settingsBody">
-<div id="selectedStoreHint" class="small" style="display:none;margin:-4px 0 10px;font-weight:800"></div>
-<div id="shoppingAddStorePicker"><label>買う場所</label><select id="storeSelect"></select></div>
-<label>商品</label><input id="productSearch" placeholder="商品名・ふりがなで検索" autocomplete="off">
-<div id="productSuggestions" style="display:none;background:#fff;border:1px solid #ccc;border-radius:10px;margin:-4px 0 8px;padding:4px;max-height:220px;overflow:auto"></div>
-<select id="productSelect"></select>
-<label>数量</label><select id="itemQty"></select>
-<label>自由入力</label><input id="freeProduct" placeholder="商品リストにない物を入力">
-<label>メモ</label><input id="memo" placeholder="例：大サイズ / 特売">
-<button id="addItem">＋ 買う物に追加</button>
-</div></details></div>
-
-<div class="card settingsCard" id="productAddCard"><details><summary>➕ 商品の登録</summary><div class="settingsBody">
-<label>商品を登録する場所</label><select id="regStore"></select>
-<label>新しい商品</label><input id="newProduct" placeholder="例：玉子"><label>ふりがな（検索用）</label><input id="newProductKana" placeholder="例：たまご"><label>価格の種類</label><select id="newProductPriceMode"><option value="pack">商品単価</option><option value="gram">g単価</option></select><label>価格</label><input id="newProductPrice" type="number" min="0" step="0.01" inputmode="decimal" placeholder="例：175"><label>商品写真</label><div class="productRegUpload"><label for="newProductPhoto" class="productRegUploadLabel" title="写真を選択" aria-label="写真を選択">📷</label><input id="newProductPhoto" type="file" accept="image/*,.heic,.heif,.jpg,.jpeg,.png,.webp"><span class="small" style="margin:0">写真を選択</span></div><div id="newProductPhotoPreview" class="productRegPhotoPreview" hidden><img id="newProductPhotoImg" alt="商品写真"></div><div class="small">登録した価格・写真は、買い物リストにも自動反映されます。</div>
-<button id="addProduct">＋ 商品を登録</button><div id="productManage"></div>
-</div></details></div>
-
-<div class="card settingsCard"><details><summary>⚙️ 買う場所の登録・削除</summary><div class="settingsBody">
-<h2>買う場所の管理</h2>
-<label>新しい買う場所</label><input id="newStore" placeholder="例：魚屋">
-<button id="addStore">＋ 買う場所を追加</button><div id="storeManage"></div>
-<div class="small">買う場所を削除すると、その場所に登録した商品も削除します。すでに買い物リストへ追加した品は残ります。</div>
-</div></details></div>
 </div>
 
 <!-- 買い物商品 詳細・写真・価格 -->
