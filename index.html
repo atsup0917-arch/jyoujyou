@@ -1865,7 +1865,6 @@ html,body{background:#f3e6c8!important}
   <div class="prepActionGroup prepOperation">
     <button class="gray" id="confirmPrep">仕込み確定</button>
     <button class="gray" id="clearPrep">仕込みリセット</button>
-    <button class="gray" id="uncheckPrep">チェックを全て外す</button>
     <button class="gray" id="prepVegetableBtn" type="button">🥬 野菜発注</button>
   </div>
   <div class="prepActionGroup prepManagement">
@@ -2702,8 +2701,6 @@ $("clearPrep").onclick=async()=>{
   const u={};targets.forEach(([id])=>u[`prep/state/${id}`]=null);
   prepConfirmed=false;await update(ref(db),u);renderPrepFilters();renderPrepList();
 };
-$("uncheckPrep").onclick=async()=>{const u={};vals(prepItems).forEach(([id])=>u[`prep/state/${id}/done`]=false);await update(ref(db),u);renderPrepFilters();renderPrepList()};
-
 if($("confirmPrep"))$("confirmPrep").onclick=()=>{
   prepConfirmed=!prepConfirmed;
   $("confirmPrep").textContent=prepConfirmed?"仕込み確定を解除":"仕込み確定";
@@ -8504,12 +8501,6 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   white-space:normal!important;
   word-break:keep-all!important;
   line-height:1.25!important;
-}
-/* 仕込み表「仕込み操作」の枠に4つ目のボタン（🥬野菜発注）を追加したことで、
-   3列グリッドの2段目に1個だけ残りバランスが悪くなっていたため、
-   このボタンだけ2段目を横いっぱいに使うようにする。他のボタンの配置は変更しない。 */
-.prepActionGroup.prepOperation #prepVegetableBtn{
-  grid-column:1 / -1!important;
 }
 </style>
 <style id="openCloseCheckStyle">
