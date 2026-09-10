@@ -1619,6 +1619,11 @@ html,body{background:#f3e6c8!important}
 <button type="button" id="ccTabDinner">🌙 ディナー</button>
 </div>
 
+<div class="navtabs" id="ccRoleTabs">
+<button type="button" id="ccRoleHall" class="active">🙋 ホール</button>
+<button type="button" id="ccRoleKitchen">🍳 キッチン</button>
+</div>
+
 <div class="card ccListCard settingsCard" data-cc-list="lunchOpen">
 <details open>
 <summary>🌞 ランチ 開店準備</summary>
@@ -8518,6 +8523,8 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 .ccItem.ccDragOver,.ccFreeItem.ccDragOver{outline:2px dashed #c9972c;outline-offset:1px}
 .ccDaysBtn{width:auto!important;min-width:44px!important;max-width:120px;height:44px!important;padding:6px 12px!important;margin:0!important;background:#f0e6c8!important;color:#7a2e2e!important;border:1px solid #d9c48a!important;border-radius:10px;font-size:14px!important;font-weight:800!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ccDaysBtn.ccDaysActive{background:#7a2e2e!important;color:#fff!important;border-color:#7a2e2e!important}
+.ccItemActions .ccRoleMoveBtn{flex:1;min-width:0}
+.ccRoleMoveBtn{width:auto!important;min-width:44px!important;max-width:120px;height:44px!important;padding:6px 12px!important;margin:0!important;background:#e6efe0!important;color:#2f5d2f!important;border:1px solid #b9d3ac!important;border-radius:10px;font-size:14px!important;font-weight:800!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ccDeleteBtn{width:44px!important;min-width:44px!important;height:44px!important;padding:0!important;margin:0!important;background:#f3e3d9!important;color:#7a2e2e!important;border:1px solid #d9a98a!important;border-radius:10px;font-size:18px!important;font-weight:800!important;line-height:1!important}
 .ccDaysPanel{grid-area:panel;margin-top:10px;padding:12px;background:#f6f8fc;border:1px solid #f0e6c8;border-radius:10px}
 .ccDaysPanel[hidden]{display:none}
@@ -8633,7 +8640,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   const LIST_KEYS=['lunchOpen','lunchClose','dinnerOpen','dinnerClose','freeTime'];
   const DAY_KEYS=['lunchOpen','lunchClose','dinnerOpen','dinnerClose'];
   const DAY_LABELS=['日','月','火','水','木','金','土'];
-  let lists={},checked={},freeRecords={},mode='lunch',bound=false;
+  let lists={},checked={},freeRecords={},mode='lunch',roleMode='hall',bound=false;
   let freeThresholdDays=30;
   const THRESHOLD_LABELS={7:'1週間',14:'2週間',30:'1ヶ月',60:'2ヶ月',90:'3ヶ月',180:'6ヶ月'};
   function freeThresholdDaysLabel(){return THRESHOLD_LABELS[freeThresholdDays]||(freeThresholdDays+'日');}
@@ -8667,6 +8674,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   let showAllState={},openDaysPanel={};
   function todayDow(){return new Date().getDay()}
   function matchesToday(item){const d=item&&item.days;return !Array.isArray(d)||d.length===0||d.includes(todayDow())}
+  function matchesRole(item){return (item&&item.role==='kitchen'?'kitchen':'hall')===roleMode}
   function dayLabel(item){
     const days=Array.isArray(item.days)?item.days:[];
     if(!days.length)return '📅 曜日設定';
@@ -8712,7 +8720,8 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     const input=document.querySelector(`[data-cc-input="${key}"]`);
     const text=(input?.value||'').trim();
     if(!text)return;
-    await ccTransaction(key,arr=>{arr.push({id:newId(),text})});
+    const extra=key==='freeTime'?{}:{role:roleMode};
+    await ccTransaction(key,arr=>{arr.push({id:newId(),text,...extra})});
     if(input)input.value='';
   }
 
@@ -8865,6 +8874,18 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
         }catch(err){console.error(err)}
       };
     });
+    container.querySelectorAll('[data-cc-role-toggle]').forEach(b=>{
+      b.onclick=async()=>{
+        const id=b.dataset.ccRoleToggle;
+        try{
+          await ccTransaction(key,arr=>{
+            const it=arr.find(x=>x.id===id);
+            if(!it)return;
+            it.role=(it.role==='kitchen')?'hall':'kitchen';
+          });
+        }catch(err){console.error(err)}
+      };
+    });
   }
 
   function bindFreeRowEvents(container){
@@ -8910,9 +8931,9 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   function renderList(key){
     const container=document.querySelector(`[data-cc-items="${key}"]`);
     if(!container)return;
-    const fullArr=lists[key]||[];
+    const roleArr=(lists[key]||[]).filter(matchesRole);
     const showAll=!!showAllState[key];
-    const arr=showAll?fullArr:fullArr.filter(matchesToday);
+    const arr=showAll?roleArr:roleArr.filter(matchesToday);
     const toolBtn=document.querySelector(`[data-cc-showall="${key}"]`);
     if(toolBtn){
       toolBtn.textContent=showAll?'📅 今日の項目のみ表示':'🔎 全項目を表示';
@@ -8921,7 +8942,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     const dateKey=todayStr();
     const checkedForDate=(checked[key]&&checked[key][dateKey])||{};
     if(!arr.length){
-      container.innerHTML=(!showAll&&fullArr.length)
+      container.innerHTML=(!showAll&&roleArr.length)
         ? '<div class="ccEmpty">今日表示する項目はありません。「🔎 全項目を表示」ですべての項目を確認できます。</div>'
         : '<div class="ccEmpty">項目がありません。下の「＋ 追加」から登録してください。</div>';
       return;
@@ -8935,7 +8956,8 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       const isChecked=!!checkedForDate[item.id];
       const hasDays=Array.isArray(item.days)&&item.days.length>0;
       const panelOpen=openDaysPanel[key]===item.id;
-      return `<div class="ccItem${isChecked?' ccChecked':''}" data-cc-item="${esc(item.id)}"><span class="ccDragHandle">⋮⋮</span><input type="checkbox" data-cc-check="${esc(item.id)}" ${isChecked?'checked':''}><div class="ccItemTextWrap"><input type="text" class="ccItemText" data-cc-text="${esc(item.id)}" value="${esc(item.text)}"></div><div class="ccItemActions"><button type="button" class="ccDaysBtn${hasDays?' ccDaysActive':''}" data-cc-days-toggle="${esc(item.id)}">${dayLabel(item)}</button><button type="button" class="ccDeleteBtn" data-cc-del="${esc(item.id)}" aria-label="削除" title="削除">❎</button></div><div class="ccDaysPanel" data-cc-days-panel="${esc(item.id)}"${panelOpen?'':' hidden'}><span class="ccDaysPanelLabel">表示する曜日を選択（未選択の場合は毎日表示）</span><div class="ccDayChips">${dayChipsHtml(key,item)}</div></div></div>`;
+      const roleBtnLabel=item.role==='kitchen'?'🙋 ホールへ':'🍳 キッチンへ';
+      return `<div class="ccItem${isChecked?' ccChecked':''}" data-cc-item="${esc(item.id)}"><span class="ccDragHandle">⋮⋮</span><input type="checkbox" data-cc-check="${esc(item.id)}" ${isChecked?'checked':''}><div class="ccItemTextWrap"><input type="text" class="ccItemText" data-cc-text="${esc(item.id)}" value="${esc(item.text)}"></div><div class="ccItemActions"><button type="button" class="ccDaysBtn${hasDays?' ccDaysActive':''}" data-cc-days-toggle="${esc(item.id)}">${dayLabel(item)}</button><button type="button" class="ccRoleMoveBtn" data-cc-role-toggle="${esc(item.id)}">${roleBtnLabel}</button><button type="button" class="ccDeleteBtn" data-cc-del="${esc(item.id)}" aria-label="削除" title="削除">❎</button></div><div class="ccDaysPanel" data-cc-days-panel="${esc(item.id)}"${panelOpen?'':' hidden'}><span class="ccDaysPanelLabel">表示する曜日を選択（未選択の場合は毎日表示）</span><div class="ccDayChips">${dayChipsHtml(key,item)}</div></div></div>`;
     }).join('');
     bindListRowEvents(key,container);
     bindDragReorder(key,container);
@@ -8982,9 +9004,18 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     });
   }
 
+  function setRoleMode(r){
+    roleMode=r;
+    $('ccRoleHall')?.classList.toggle('active',r==='hall');
+    $('ccRoleKitchen')?.classList.toggle('active',r==='kitchen');
+    DAY_KEYS.forEach(k=>renderList(k));
+  }
+
   function bindStaticControls(){
     $('ccTabLunch')?.addEventListener('click',()=>setMode('lunch'));
     $('ccTabDinner')?.addEventListener('click',()=>setMode('dinner'));
+    $('ccRoleHall')?.addEventListener('click',()=>setRoleMode('hall'));
+    $('ccRoleKitchen')?.addEventListener('click',()=>setRoleMode('kitchen'));
     $('ccFreeThreshold')?.addEventListener('change',async()=>{
       const v=Number($('ccFreeThreshold').value)||30;
       const f=fb(); if(!f)return;
