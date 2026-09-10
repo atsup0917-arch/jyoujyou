@@ -1101,6 +1101,7 @@ input,select,textarea{
   background:#e9edf3;color:#7a2e2e;font-weight:800;font-size:17px;
 }
 #shoppingPage .storeQuickAddButton:active{transform:scale(.99)}
+#shoppingPage .storeQuickRegisterButton{background:#eef4e8;color:#3f6b3f}
 #shoppingPage .selectedStoreHint{color:#7a2e2e}
 </style>
 
@@ -1418,7 +1419,7 @@ html,body{background:#f3e6c8!important}
 <button id="addItem">＋ 買う物に追加</button>
 </div></details></div>
 
-<div class="card settingsCard"><details><summary>➕ 商品の登録</summary><div class="settingsBody">
+<div class="card settingsCard" id="productAddCard"><details><summary>➕ 商品の登録</summary><div class="settingsBody">
 <label>商品を登録する場所</label><select id="regStore"></select>
 <label>新しい商品</label><input id="newProduct" placeholder="例：玉子"><label>ふりがな（検索用）</label><input id="newProductKana" placeholder="例：たまご"><label>価格の種類</label><select id="newProductPriceMode"><option value="pack">商品単価</option><option value="gram">g単価</option></select><label>価格</label><input id="newProductPrice" type="number" min="0" step="0.01" inputmode="decimal" placeholder="例：175"><label>商品写真</label><div class="productRegUpload"><label for="newProductPhoto" class="productRegUploadLabel" title="写真を選択" aria-label="写真を選択">📷</label><input id="newProductPhoto" type="file" accept="image/*,.heic,.heif,.jpg,.jpeg,.png,.webp"><span class="small" style="margin:0">写真を選択</span></div><div id="newProductPhotoPreview" class="productRegPhotoPreview" hidden><img id="newProductPhotoImg" alt="商品写真"></div><div class="small">登録した価格・写真は、買い物リストにも自動反映されます。</div>
 <button id="addProduct">＋ 商品を登録</button><div id="productManage"></div>
@@ -2130,12 +2131,23 @@ function renderStoreQuickAddButton(){
  const list=$("list");
  if(!list)return;
  const old=$("storeQuickAddButton"); if(old)old.remove();
+ const oldReg=$("storeQuickRegisterButton"); if(oldReg)oldReg.remove();
  if(filter==="ALL"||!stores[filter])return;
  const btn=document.createElement("button");
  btn.type="button";btn.id="storeQuickAddButton";btn.className="storeQuickAddButton";
  btn.textContent=`＋ ${stores[filter].name} に買う物を追加`;
  btn.onclick=()=>{const card=$("shoppingAddCard");if(!card)return;const details=card.querySelector("details");if(details)details.open=true;card.scrollIntoView({behavior:"smooth",block:"start"});};
  list.parentNode.insertBefore(btn,list);
+ const regBtn=document.createElement("button");
+ regBtn.type="button";regBtn.id="storeQuickRegisterButton";regBtn.className="storeQuickAddButton storeQuickRegisterButton";
+ regBtn.textContent=`🏷️ ${stores[filter].name} の商品を登録`;
+ regBtn.onclick=()=>{
+   const card=$("productAddCard");if(!card)return;
+   const details=card.querySelector("details");if(details)details.open=true;
+   const reg=$("regStore");if(reg){reg.value=filter;renderProductManage();}
+   card.scrollIntoView({behavior:"smooth",block:"start"});
+ };
+ list.parentNode.insertBefore(regBtn,list);
 }
 
 
