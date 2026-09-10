@@ -56,6 +56,9 @@ button.gray{background:#e9d8ac;color:#7a2e2e}.danger{background:#f3e3d9;color:#8
 .prepPickRow{display:flex;flex-wrap:wrap;gap:8px;padding:14px;border-top:1px solid #eee}
 .prepPickBtn{width:auto;margin:0;padding:11px 14px;background:#e9d8ac;color:#333;border-radius:10px;font-weight:700;font-size:15px}
 .prepPickBtn:active{transform:scale(.98)}
+.productPickRow{display:flex;flex-wrap:wrap;gap:8px;margin:-4px 0 10px}
+.productPickBtn{width:auto;margin:0;padding:11px 14px;background:#e9d8ac;color:#333;border-radius:10px;font-weight:700;font-size:15px}
+.productPickBtn:active{transform:scale(.98)}
 #printSheet{display:none}
 @media print{
  @page{size:A4 portrait;margin:9mm}
@@ -1380,9 +1383,8 @@ html,body{background:#f3e6c8!important}
 <div class="card settingsCard" id="shoppingAddCard"><details><summary id="shoppingAddTitle">買う物を追加</summary><div class="settingsBody">
 <div id="selectedStoreHint" class="small" style="display:none;margin:-4px 0 10px;font-weight:800"></div>
 <div id="shoppingAddStorePicker"><label>買う場所</label><select id="storeSelect"></select></div>
-<label>商品</label><input id="productSearch" placeholder="商品名・ふりがなで検索" autocomplete="off">
-<div id="productSuggestions" style="display:none;background:#fff;border:1px solid #ccc;border-radius:10px;margin:-4px 0 8px;padding:4px;max-height:220px;overflow:auto"></div>
-<select id="productSelect"></select>
+<label>商品（タップで追加）</label><input id="productSearch" placeholder="商品名・ふりがなで検索" autocomplete="off">
+<div id="productPickList" class="productPickRow"></div>
 <label>数量</label><select id="itemQty"></select>
 <label>自由入力</label><input id="freeProduct" placeholder="商品リストにない物を入力">
 <label>メモ</label><input id="memo" placeholder="例：大サイズ / 特売">
@@ -2002,32 +2004,32 @@ function renderProducts(){
    return name.includes(q)||kana.includes(q);
  }):all;
 
- $("productSelect").innerHTML=`<option value="">${q ? "検索結果を選択" : "商品を選択"}</option>`+
-   ps.map(([id,p])=>`<option value="${id}">${esc(p.name)}</option>`).join("");
-
- const box=$("productSuggestions");
- if(box){
-   if(!q || !ps.length){
-     box.innerHTML="";
-     box.style.display="none";
-   }else{
-     box.innerHTML=ps.slice(0,12).map(([id,p])=>{
-       const kana=p.kana||p.furigana||p.reading||"";
-       return `<button type="button" data-suggest-id="${esc(id)}" style="display:block;width:100%;text-align:left;background:#fff;color:#222;border:0;border-bottom:1px solid #eee;padding:11px 10px;margin:0;font-size:16px">
-         <b>${esc(p.name)}</b>${kana?`<span style="font-size:13px;color:#777;margin-left:8px">${esc(kana)}</span>`:""}
-       </button>`;
-     }).join("");
-     box.style.display="block";
-     box.querySelectorAll("[data-suggest-id]").forEach(btn=>{
-       btn.onclick=()=>{
-         $("productSelect").value=btn.dataset.suggestId;
-         $("productSearch").value=btn.querySelector("b").textContent;
-         box.style.display="none";
-       };
-     });
-   }
+ const pickBox=$("productPickList");
+ if(pickBox){
+   pickBox.innerHTML=ps.length
+     ? ps.map(([id,p])=>`<button type="button" class="productPickBtn" data-product-pick="${esc(id)}">＋ ${esc(p.name)}</button>`).join("")
+     : `<div class="small" style="padding:4px 2px">${q?"該当する商品がありません":"商品がありません（下の設定から登録できます）"}</div>`;
+   pickBox.querySelectorAll("[data-product-pick]").forEach(btn=>{
+     btn.onclick=()=>addShoppingProductDirect(btn.dataset.productPick);
+   });
  }
  renderProductManage();
+}
+
+// タップした商品を、数量欄・メモ欄の現在値で即座に買い物リストへ追加する。
+async function addShoppingProductDirect(pid){
+ const sid=$("storeSelect").value;if(!sid)return alert("買う場所を選んでください");
+ const product=products[sid]?.[pid];if(!product)return;
+ const qty=Math.max(1,Number($("itemQty").value)||1);
+ const itemData={storeId:sid,storeName:stores[sid]?.name||"",name:product.name,memo:$("memo").value.trim(),quantity:qty,done:false,createdAt:Date.now(),productId:pid};
+ const masterPrice=Number(product.price||0);
+ const masterMode=product.priceMode||"pack";
+ itemData.unitPrice=masterPrice;
+ itemData.priceMode=masterMode;
+ itemData.price=masterMode==="pack" ? Math.round(masterPrice*qty) : 0;
+ if(product.photo)itemData.photo=product.photo;
+ await push(itemsRef,itemData);
+ $("memo").value="";$("itemQty").value="1";
 }
 
 function renderStoreManage(){
@@ -2399,11 +2401,6 @@ $("productSearch").oninput=renderProducts;
 $("productSearch").onkeyup=renderProducts;
 $("productSearch").addEventListener("compositionend",renderProducts);
 $("productSearch").addEventListener("change",renderProducts);
-document.addEventListener("click",e=>{
- const box=$("productSuggestions"), input=$("productSearch");
- if(box && input && !box.contains(e.target) && e.target!==input) box.style.display="none";
-});
-
 $("addStore").onclick=async()=>{const name=$("newStore").value.trim();if(!name)return;await push(storesRef,{name});$("newStore").value=""};
 $("addProduct").onclick=async()=>{
  const sid=$("regStore").value,name=$("newProduct").value.trim(),kana=$("newProductKana").value.trim();
@@ -2424,22 +2421,12 @@ $("newProductPhoto").addEventListener("change",async e=>{
 });
 $("addItem").onclick=async()=>{
  const sid=$("storeSelect").value;if(!sid)return alert("買う場所を選んでください");
- const free=$("freeProduct").value.trim(), pid=$("productSelect").value;
- const product=pid?products[sid]?.[pid]:null;
- const name=free||(product?.name||"");if(!name)return alert("商品を選ぶか入力してください");
+ const free=$("freeProduct").value.trim();
+ if(!free)return alert("商品名を入力するか、上の商品ボタンをタップしてください");
  const qty=Math.max(1,Number($("itemQty").value)||1);
- const itemData={storeId:sid,storeName:stores[sid]?.name||"",name,memo:$("memo").value.trim(),quantity:qty,done:false,createdAt:Date.now()};
- if(product){
-   itemData.productId=pid;
-   const masterPrice=Number(product.price||0);
-   const masterMode=product.priceMode||"pack";
-   itemData.unitPrice=masterPrice;
-   itemData.priceMode=masterMode;
-   itemData.price=masterMode==="pack" ? Math.round(masterPrice*qty) : 0;
-   if(product.photo)itemData.photo=product.photo;
- }
+ const itemData={storeId:sid,storeName:stores[sid]?.name||"",name:free,memo:$("memo").value.trim(),quantity:qty,done:false,createdAt:Date.now()};
  await push(itemsRef,itemData);
- $("freeProduct").value="";$("memo").value="";$("productSelect").value="";$("itemQty").value="1";
+ $("freeProduct").value="";$("memo").value="";$("itemQty").value="1";
 };
 $("deleteDone").onclick=async()=>{if(!confirm("購入済みを削除しますか？"))return;for(const [id,x] of vals(items))if(x.done)await remove(ref(db,"items/"+id))};
 $("uncheckAll").onclick=async()=>{for(const [id,x] of vals(items))if(x.done)await update(ref(db,"items/"+id),{done:false})};
