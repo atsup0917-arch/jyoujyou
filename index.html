@@ -1679,7 +1679,6 @@ html,body{background:#f3e6c8!important}
 <details open>
 <summary>🙌 手空き作業</summary>
 <div class="settingsBody">
-  <div class="ccHint">チェックはありません。やったら日付と担当者を記入してください（次の人が上書きします）。期限の目安は項目ごとに設定できます（未設定の場合は1ヶ月）。</div>
   <div class="ccFreeItems" id="ccFreeItems"></div>
   <div class="ccAddRow"><input type="text" id="ccFreeInput" data-cc-input="freeTime" placeholder="項目を入力して追加"><button type="button" class="gray" id="ccFreeAdd" data-cc-add="freeTime">＋ 追加</button></div>
 </div>
@@ -8540,8 +8539,8 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 .ccFreeItemTop{display:flex;gap:10px;align-items:center}
 .ccFreeItemTop .ccItemTextWrap{flex:1;min-width:0}
 .ccFreeFieldsRow{display:flex;flex-wrap:wrap;gap:10px}
-.ccFreeField{display:flex;flex-direction:column;gap:4px;min-width:0;flex:0 1 150px}
-.ccFreeFieldsRow .ccDateField{flex-basis:170px}
+.ccFreeField{display:flex;flex-direction:column;gap:4px;min-width:0;flex:0 1 130px}
+.ccFreeFieldsRow .ccDateField{flex-basis:150px}
 .ccFreeFieldsRow .ccPersonField{flex-basis:240px}
 .ccFieldLabel{font-size:13px;color:#777;font-weight:800}
 .ccFreeField input,.ccFreeField select{padding:10px;border:1px solid #d5dbe3;border-radius:9px;background:#fff;font-size:16px!important;width:100%;box-sizing:border-box;margin:0}
@@ -8560,6 +8559,8 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   /* iPad幅ではチェック以外のボタンをテキストの右側に並べ、下段への折り返しをやめる（スマホ表示は変更しない）。 */
   .ccItem{grid-template-columns:38px 44px 1fr auto;grid-template-areas:"handle check text actions" "panel panel panel panel"}
   .ccItem .ccItemActions{justify-content:flex-end}
+  /* 担当者欄を日付欄から少し離して右へずらす（スマホ表示は変更しない）。 */
+  .ccFreeFieldsRow .ccPersonField{margin-left:24px}
 }
 </style>
 <style id="prepSeasonStyle">
