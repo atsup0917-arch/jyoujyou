@@ -2652,7 +2652,16 @@ const op=()=>vals(prepPositions).sort((a,b)=>(a[1].order??9999)-(b[1].order??999
 const oi=pid=>vals(prepItems).filter(([,x])=>x.positionId===pid).sort((a,b)=>(a[1].order??9999)-(b[1].order??9999)||(a[1].name||"").localeCompare(b[1].name||"","ja"));
 function prepPosName(id){return prepPositions[id]?.name||"その他"}
 function renderPrepFilters(){
- $("prepFilters").innerHTML=`<button data-pf="ALL" class="${prepFilter==="ALL"?"active":""}">全体</button>`+op().map(([id,x])=>`<button data-pf="${id}" class="${prepFilter===id?"active":""}" style="${prepFilter===id?'background:#fff3a8;color:#111;border:3px solid #7a2e2e;box-shadow:0 0 0 2px #f0e6c8;font-weight:700;':oi(id).some(([iid])=>prepIsActiveToday(iid)&&Number(prepState[iid]?.count??0)>0)?'background:#fff3a8;color:#222;border:1px solid #e0c85a;':''}">${esc(x.name)}</button>`).join("");
+ // 買い物リストの「表示する場所」と同じ見た目・仕組みで、今日選択中かつ未完了の品目数をバッジ表示する。
+ const counts={};
+ vals(prepItems).forEach(([id,x])=>{
+   if(!prepIsActiveToday(id))return;
+   if(prepState[id]?.done)return;
+   if(x.positionId)counts[x.positionId]=(counts[x.positionId]||0)+1;
+ });
+ const total=Object.values(counts).reduce((a,b)=>a+b,0);
+ $("prepFilters").innerHTML=`<button data-pf="ALL" class="${prepFilter==="ALL"?"active":""} ${total?"has-items":""}">全体${total?` <span class="count">${total}</span>`:""}</button>`+
+   op().map(([id,x])=>`<button data-pf="${id}" class="${prepFilter===id?"active":""} ${counts[id]?"has-items":""}">${esc(x.name)}${counts[id]?` <span class="count">${counts[id]}</span>`:""}</button>`).join("");
  document.querySelectorAll("[data-pf]").forEach(b=>b.onclick=()=>{prepFilter=b.dataset.pf;renderPrepFilters();renderPrepList()});
 }
 function renderPrepSelectors(){
@@ -2716,6 +2725,7 @@ onValue(prepItemsRef,s=>{
   const beforeTop=anchor?anchor.getBoundingClientRect().top:null;
   prepItems=s.val()||{};
   renderPrepManage();
+  renderPrepFilters();
   renderPrepList();
   updatePrepBadge();
   if(beforeTop!==null){
@@ -2728,9 +2738,9 @@ onValue(prepItemsRef,s=>{
     });
   }
 });
-onValue(prepStateRef,s=>{prepState=s.val()||{};renderPrepList();updatePrepBadge()});
+onValue(prepStateRef,s=>{prepState=s.val()||{};renderPrepFilters();renderPrepList();updatePrepBadge()});
 function updatePrepBadge(){
- const remaining=vals(prepItems).filter(([id])=>Number(prepState[id]?.count??0)>0&&!prepState[id]?.done).length;
+ const remaining=vals(prepItems).filter(([id])=>prepIsActiveToday(id)&&Number(prepState[id]?.count??0)>0&&!prepState[id]?.done).length;
  $("tabPrep").innerHTML=`🔪 仕込み表${remaining?` <span class="count">${remaining}</span>`:""}`;
 }
 
