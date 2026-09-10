@@ -1759,27 +1759,6 @@ html,body{background:#f3e6c8!important}
   <button type="button" class="gray" id="shiftTodayEditCancel" style="margin-top:8px">キャンセル</button>
 </div>
 
-<div class="card" id="shiftMemoCard">
-  <div class="shiftSectionTitle" style="display:flex;align-items:center;justify-content:space-between;gap:8px">
-    <span>📝 引き継ぎメモ</span>
-    <button type="button" class="gray" id="shiftMemoToggle" style="width:auto;margin:0;padding:8px 12px">▲</button>
-  </div>
-  <div id="shiftMemoBody">
-  <div class="shiftHint">先の日付も登録できます。例：8/30 テイクアウトあり。</div>
-  <div class="shiftDateRow" style="margin-top:10px">
-    <div><label>登録する日</label><input id="shiftMemoDate" type="date"></div>
-    <button type="button" class="gray" id="shiftMemoTodayBtn">今日</button>
-  </div>
-  <label style="margin-top:10px">メモ</label>
-  <textarea id="shiftMemoText" class="shiftMemo shiftFutureMemo" placeholder="例：8/30 テイクアウトあり。
-明日の予約多め。
-仕込み確認。"></textarea>
-  <button type="button" id="shiftMemoSave">＋ 引き継ぎメモを保存</button>
-  <div id="shiftMemoSelected" class="shiftMemoSelected" hidden></div>
-  <div id="shiftMemoList" class="shiftMemoListBig" style="margin-top:10px"></div>
-  </div>
-</div>
-
 <div class="card" id="shiftOtherDaySectionCard">
   <div class="shiftSectionTitle" style="display:flex;align-items:center;justify-content:space-between;gap:8px">
     <span>📅 別の日を見る・編集</span>
@@ -1802,6 +1781,27 @@ html,body{background:#f3e6c8!important}
       <button type="button" id="shiftOtherDayEditSave">💾 この日の変更を保存</button>
     </div>
   </div>
+  </div>
+</div>
+
+<div class="card" id="shiftMemoCard">
+  <div class="shiftSectionTitle" style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+    <span>📝 引き継ぎメモ</span>
+    <button type="button" class="gray" id="shiftMemoToggle" style="width:auto;margin:0;padding:8px 12px">▲</button>
+  </div>
+  <div id="shiftMemoBody">
+  <div class="shiftHint">先の日付も登録できます。例：8/30 テイクアウトあり。</div>
+  <div class="shiftDateRow" style="margin-top:10px">
+    <div><label>登録する日</label><input id="shiftMemoDate" type="date"></div>
+    <button type="button" class="gray" id="shiftMemoTodayBtn">今日</button>
+  </div>
+  <label style="margin-top:10px">メモ</label>
+  <textarea id="shiftMemoText" class="shiftMemo shiftFutureMemo" placeholder="例：8/30 テイクアウトあり。
+明日の予約多め。
+仕込み確認。"></textarea>
+  <button type="button" id="shiftMemoSave">＋ 引き継ぎメモを保存</button>
+  <div id="shiftMemoSelected" class="shiftMemoSelected" hidden></div>
+  <div id="shiftMemoList" class="shiftMemoListBig" style="margin-top:10px"></div>
   </div>
 </div>
 
