@@ -8537,13 +8537,12 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 .ccEmpty{padding:14px;text-align:center;color:#777;background:#faf1dc;border:1px dashed #cbd2da;border-radius:10px;font-size:15px}
 .ccFreeItem{display:flex;flex-direction:column;gap:10px;padding:12px 0;border-bottom:2px solid #c7ced8}
 .ccFreeItem:last-child{border-bottom:0}
-.ccFreeItemTop{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-.ccFreeItemTop .ccItemTextWrap{flex:1 1 160px;min-width:0}
-.ccFreeItemTop .ccThresholdField{flex:0 1 150px}
+.ccFreeItemTop{display:flex;gap:10px;align-items:center}
+.ccFreeItemTop .ccItemTextWrap{flex:1;min-width:0}
 .ccFreeFieldsRow{display:flex;flex-wrap:wrap;gap:10px}
 .ccFreeField{display:flex;flex-direction:column;gap:4px;min-width:0;flex:0 1 150px}
-.ccFreeFieldsRow .ccDateField{flex-basis:150px}
-.ccFreeFieldsRow .ccPersonField{flex-basis:220px}
+.ccFreeFieldsRow .ccDateField{flex-basis:140px}
+.ccFreeFieldsRow .ccPersonField{flex-basis:190px}
 .ccFieldLabel{font-size:13px;color:#777;font-weight:800}
 .ccFreeField input,.ccFreeField select{padding:10px;border:1px solid #d5dbe3;border-radius:9px;background:#fff;font-size:16px!important;width:100%;box-sizing:border-box;margin:0}
 .ccPersonRow{display:flex;gap:8px;align-items:center}
@@ -8552,9 +8551,10 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 .ccFreeItem.ccFreeOverdue{background:#f3e3d9;border-radius:12px;padding-left:8px;padding-right:8px;border-bottom-color:#d9a98a;box-shadow:inset 0 0 0 2px #d9a98a}
 .ccOverdueBadge{display:inline-block;margin-top:4px;padding:2px 8px;border-radius:999px;background:#8a1f1f;color:#fff;font-size:12px;font-weight:800;white-space:nowrap}
 @media(max-width:600px){
-  /* 横に並べると重なって見えるため、スマホ幅では項目名・期限・日付・担当者を1列ずつ縦に並べる。 */
-  .ccFreeItemTop .ccThresholdField{flex-basis:100%}
-  .ccFreeFieldsRow .ccFreeField{flex-basis:100%}
+  /* スマホ幅では3つの欄を少し狭めて、入る分だけ横に並べる（重ならない範囲で自然に折り返す）。 */
+  .ccFreeFieldsRow .ccThresholdField{flex-basis:125px}
+  .ccFreeFieldsRow .ccDateField{flex-basis:120px}
+  .ccFreeFieldsRow .ccPersonField{flex-basis:150px}
 }
 @media(min-width:601px){
   /* iPad幅ではチェック以外のボタンをテキストの右側に並べ、下段への折り返しをやめる（スマホ表示は変更しない）。 */
@@ -8981,7 +8981,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       const overdue=isOverdue(rec.date,days);
       const thresholdOptions=[['7','1週間'],['14','2週間'],['30','1ヶ月'],['60','2ヶ月'],['90','3ヶ月'],['180','6ヶ月']]
         .map(([v,label])=>`<option value="${v}"${days===Number(v)?' selected':''}>${label}</option>`).join('');
-      return `<div class="ccFreeItem${overdue?' ccFreeOverdue':''}" data-cc-item="${esc(item.id)}"><div class="ccFreeItemTop"><span class="ccDragHandle">⋮⋮</span><div class="ccItemTextWrap"><input type="text" class="ccItemText" data-cc-text="${esc(item.id)}" value="${esc(item.text)}"></div><div class="ccFreeField ccThresholdField"><span class="ccFieldLabel">⏰ 期限の目安</span><select data-cc-free-threshold="${esc(item.id)}">${thresholdOptions}</select></div></div><div class="ccFreeFieldsRow"><div class="ccFreeField ccDateField"><span class="ccFieldLabel">📅 日付</span><input type="date" data-cc-free-date="${esc(item.id)}" value="${esc(rec.date||'')}">${overdue?'<span class="ccOverdueBadge">⚠️ 期限切れ</span>':''}</div><div class="ccFreeField ccPersonField"><span class="ccFieldLabel">👤 担当者</span><div class="ccPersonRow"><input type="text" class="ccFreePerson" data-cc-free-person="${esc(item.id)}" placeholder="担当者名" value="${esc(rec.person||'')}"><button type="button" class="ccDeleteBtn" data-cc-del="${esc(item.id)}" aria-label="削除" title="削除">❎</button></div></div></div></div>`;
+      return `<div class="ccFreeItem${overdue?' ccFreeOverdue':''}" data-cc-item="${esc(item.id)}"><div class="ccFreeItemTop"><span class="ccDragHandle">⋮⋮</span><div class="ccItemTextWrap"><input type="text" class="ccItemText" data-cc-text="${esc(item.id)}" value="${esc(item.text)}"></div></div><div class="ccFreeFieldsRow"><div class="ccFreeField ccThresholdField"><span class="ccFieldLabel">⏰ 期限の目安</span><select data-cc-free-threshold="${esc(item.id)}">${thresholdOptions}</select></div><div class="ccFreeField ccDateField"><span class="ccFieldLabel">📅 日付</span><input type="date" data-cc-free-date="${esc(item.id)}" value="${esc(rec.date||'')}">${overdue?'<span class="ccOverdueBadge">⚠️ 期限切れ</span>':''}</div><div class="ccFreeField ccPersonField"><span class="ccFieldLabel">👤 担当者</span><div class="ccPersonRow"><input type="text" class="ccFreePerson" data-cc-free-person="${esc(item.id)}" placeholder="担当者名" value="${esc(rec.person||'')}"><button type="button" class="ccDeleteBtn" data-cc-del="${esc(item.id)}" aria-label="削除" title="削除">❎</button></div></div></div></div>`;
     }).join('');
     bindFreeRowEvents(container);
     bindDragReorder('freeTime',container);
