@@ -2409,7 +2409,13 @@ $("addItem").onclick=async()=>{
  const sid=$("storeSelect").value;if(!sid)return alert("買う場所を選んでください");
  const free=$("freeProduct").value.trim();
  if(!free)return alert("商品名を入力するか、上の商品ボタンをタップしてください");
- const itemData={storeId:sid,storeName:stores[sid]?.name||"",name:free,memo:$("memo").value.trim(),quantity:1,done:false,createdAt:Date.now()};
+ // 自由入力した商品も、次回からタップ選択できるように商品マスターへ登録する
+ let pid=vals(products[sid]||{}).find(([,p])=>(p.name||"").trim()===free)?.[0]||null;
+ if(!pid){
+   const newProductRef=push(ref(db,"products/"+sid),{name:free,price:0,priceMode:"pack"});
+   pid=newProductRef.key;
+ }
+ const itemData={storeId:sid,storeName:stores[sid]?.name||"",name:free,memo:$("memo").value.trim(),quantity:1,done:false,createdAt:Date.now(),productId:pid};
  await push(itemsRef,itemData);
  $("freeProduct").value="";$("memo").value="";
 };
