@@ -1984,7 +1984,9 @@ function normalizeProductSearch(s){
 function renderProducts(){
  const sid=$("storeSelect").value;
  const q=normalizeProductSearch($("productSearch")?.value||"");
- const all=vals(products[sid]||{}).sort((a,b)=>(a[1].name||"").localeCompare(b[1].name||"ja"));
+ // 既に買い物リストに入っている（未購入の）商品は、選択肢から外して二重選択を防ぐ。
+ const queuedProductIds=new Set(vals(items).filter(([,x])=>x.storeId===sid && !x.done && x.productId).map(([,x])=>x.productId));
+ const all=vals(products[sid]||{}).filter(([id])=>!queuedProductIds.has(id)).sort((a,b)=>(a[1].name||"").localeCompare(b[1].name||"ja"));
  const ps=q?all.filter(([,p])=>{
    const name=normalizeProductSearch(p.name);
    const kana=normalizeProductSearch(p.kana||p.furigana||p.reading||"");
@@ -2376,7 +2378,7 @@ async function migrateShoppingPricePhotoMasters(){
    if(Object.keys(patch).length)await update(ref(db,`products/${x.storeId}/${found.id}`),patch);
  }
 }
-onValue(itemsRef,s=>{items=s.val()||{};renderList();renderFilters();updateShoppingBadge();renderShoppingTotals();migrateShoppingPricePhotoMasters()});
+onValue(itemsRef,s=>{items=s.val()||{};renderList();renderFilters();renderProducts();updateShoppingBadge();renderShoppingTotals();migrateShoppingPricePhotoMasters()});
 function updateShoppingBadge(){
  const remaining=vals(items).filter(([,x])=>!x.done).length;
  $("tabShopping").innerHTML=`🛒 買い物${remaining?` <span class="count">${remaining}</span>`:""}`;
