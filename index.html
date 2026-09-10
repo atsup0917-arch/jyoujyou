@@ -1679,8 +1679,7 @@ html,body{background:#f3e6c8!important}
 <details open>
 <summary>🙌 手空き作業</summary>
 <div class="settingsBody">
-  <div class="ccHint">チェックはありません。やったら日付と担当者を記入してください（次の人が上書きします）。期限の目安は項目ごとに設定でき、未設定の項目には下の共通設定が使われます。</div>
-  <div class="ccFreeThresholdRow"><span class="ccFieldLabel">⏰ 期限の目安（共通設定）</span><select id="ccFreeThreshold"><option value="7">1週間</option><option value="14">2週間</option><option value="30">1ヶ月</option><option value="60">2ヶ月</option><option value="90">3ヶ月</option><option value="180">6ヶ月</option></select></div>
+  <div class="ccHint">チェックはありません。やったら日付と担当者を記入してください（次の人が上書きします）。期限の目安は項目ごとに設定できます（未設定の場合は1ヶ月）。</div>
   <div class="ccFreeItems" id="ccFreeItems"></div>
   <div class="ccAddRow"><input type="text" id="ccFreeInput" data-cc-input="freeTime" placeholder="項目を入力して追加"><button type="button" class="gray" id="ccFreeAdd" data-cc-add="freeTime">＋ 追加</button></div>
 </div>
@@ -8536,26 +8535,24 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 .ccAddRow input{flex:1;min-width:0;padding:12px;border:1px solid #d5dbe3;border-radius:10px;background:#fff;font-size:17px!important;box-sizing:border-box;margin:0}
 .ccAddRow button{width:auto!important;margin:0!important;white-space:nowrap;padding:12px 16px!important;font-size:16px!important}
 .ccEmpty{padding:14px;text-align:center;color:#777;background:#faf1dc;border:1px dashed #cbd2da;border-radius:10px;font-size:15px}
-.ccFreeItem{display:grid;grid-template-columns:38px 1fr 150px 140px 170px;gap:10px;align-items:center;padding:12px 0;border-bottom:2px solid #c7ced8}
+.ccFreeItem{display:flex;flex-direction:column;gap:10px;padding:12px 0;border-bottom:2px solid #c7ced8}
 .ccFreeItem:last-child{border-bottom:0}
-.ccFreeField{display:flex;flex-direction:column;gap:4px;min-width:0}
+.ccFreeItemTop{display:flex;gap:10px;align-items:center}
+.ccFreeItemTop .ccItemTextWrap{flex:1;min-width:0}
+.ccFreeFieldsRow{display:flex;flex-wrap:wrap;gap:10px}
+.ccFreeField{display:flex;flex-direction:column;gap:4px;min-width:0;flex:1 1 150px}
+.ccFreeField.ccDateField{flex-basis:140px}
+.ccFreeField.ccPersonField{flex-basis:170px}
 .ccFieldLabel{font-size:13px;color:#777;font-weight:800}
 .ccFreeField input,.ccFreeField select{padding:10px;border:1px solid #d5dbe3;border-radius:9px;background:#fff;font-size:16px!important;width:100%;box-sizing:border-box;margin:0}
 .ccPersonRow{display:flex;gap:8px;align-items:center}
 .ccPersonRow input{flex:1;min-width:0}
 .ccPersonRow .ccDeleteBtn{flex:0 0 auto}
-.ccFreeThresholdRow{display:flex;align-items:center;gap:10px;margin:10px 0}
-.ccFreeThresholdRow .ccFieldLabel{white-space:nowrap}
-.ccFreeThresholdRow select{width:auto;margin:0;padding:9px 12px;font-size:15px}
 .ccFreeItem.ccFreeOverdue{background:#f3e3d9;border-radius:12px;padding-left:8px;padding-right:8px;border-bottom-color:#d9a98a;box-shadow:inset 0 0 0 2px #d9a98a}
 .ccOverdueBadge{display:inline-block;margin-top:4px;padding:2px 8px;border-radius:999px;background:#8a1f1f;color:#fff;font-size:12px;font-weight:800;white-space:nowrap}
 @media(max-width:600px){
-  .ccFreeItem{grid-template-columns:38px 1fr;grid-template-areas:"handle text" "threshold threshold" "date date" "person person";row-gap:10px}
-  .ccFreeItem .ccDragHandle{grid-area:handle}
-  .ccFreeItem .ccItemTextWrap{grid-area:text}
-  .ccFreeItem .ccThresholdField{grid-area:threshold}
-  .ccFreeItem .ccDateField{grid-area:date}
-  .ccFreeItem .ccPersonField{grid-area:person}
+  /* 横に並べると重なって見えるため、スマホ幅では項目名・各欄を1列ずつ縦に並べる。 */
+  .ccFreeFieldsRow .ccFreeField{flex-basis:100%}
 }
 @media(min-width:601px){
   /* iPad幅ではチェック以外のボタンをテキストの右側に並べ、下段への折り返しをやめる（スマホ表示は変更しない）。 */
@@ -8646,9 +8643,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   const DAY_KEYS=['lunchOpen','lunchClose','dinnerOpen','dinnerClose'];
   const DAY_LABELS=['日','月','火','水','木','金','土'];
   let lists={},checked={},freeRecords={},mode='lunch',roleMode='hall',bound=false;
-  let freeThresholdDays=30;
-  const THRESHOLD_LABELS={7:'1週間',14:'2週間',30:'1ヶ月',60:'2ヶ月',90:'3ヶ月',180:'6ヶ月'};
-  function freeThresholdDaysLabel(){return THRESHOLD_LABELS[freeThresholdDays]||(freeThresholdDays+'日');}
+  const freeThresholdDays=30;
   function itemThresholdDays(item){
     const v=Number(item&&item.thresholdDays);
     return v>0?v:freeThresholdDays;
@@ -8911,12 +8906,12 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     container.querySelectorAll('[data-cc-free-threshold]').forEach(sel=>{
       sel.onchange=async()=>{
         const id=sel.dataset.ccFreeThreshold;
-        const v=Number(sel.value)||0;
+        const v=Number(sel.value)||30;
         try{
           await ccTransaction('freeTime',arr=>{
             const it=arr.find(x=>x.id===id);
             if(!it)return;
-            if(v>0)it.thresholdDays=v;else delete it.thresholdDays;
+            it.thresholdDays=v;
           });
         }catch(err){console.error(err)}
       };
@@ -8973,7 +8968,6 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     const container=$('ccFreeItems');
     if(!container)return;
     const arr=lists.freeTime||[];
-    if($('ccFreeThreshold')&&document.activeElement!==$('ccFreeThreshold'))$('ccFreeThreshold').value=String(freeThresholdDays);
     updateFreeDueDates();
     if(!arr.length){
       container.innerHTML='<div class="ccEmpty">項目がありません。下の「＋ 追加」から登録してください。</div>';
@@ -8983,10 +8977,9 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       const rec=freeRecords[item.id]||{};
       const days=itemThresholdDays(item);
       const overdue=isOverdue(rec.date,days);
-      const thresholdVal=Number(item.thresholdDays)>0?String(item.thresholdDays):'';
-      const thresholdOptions=[['',`共通設定（${freeThresholdDaysLabel()}）`],['7','1週間'],['14','2週間'],['30','1ヶ月'],['60','2ヶ月'],['90','3ヶ月'],['180','6ヶ月']]
-        .map(([v,label])=>`<option value="${v}"${thresholdVal===v?' selected':''}>${label}</option>`).join('');
-      return `<div class="ccFreeItem${overdue?' ccFreeOverdue':''}" data-cc-item="${esc(item.id)}"><span class="ccDragHandle">⋮⋮</span><div class="ccItemTextWrap"><input type="text" class="ccItemText" data-cc-text="${esc(item.id)}" value="${esc(item.text)}"></div><div class="ccFreeField ccThresholdField"><span class="ccFieldLabel">⏰ 期限の目安</span><select data-cc-free-threshold="${esc(item.id)}">${thresholdOptions}</select></div><div class="ccFreeField ccDateField"><span class="ccFieldLabel">📅 日付</span><input type="date" data-cc-free-date="${esc(item.id)}" value="${esc(rec.date||'')}">${overdue?'<span class="ccOverdueBadge">⚠️ 期限切れ</span>':''}</div><div class="ccFreeField ccPersonField"><span class="ccFieldLabel">👤 担当者</span><div class="ccPersonRow"><input type="text" class="ccFreePerson" data-cc-free-person="${esc(item.id)}" placeholder="担当者名" value="${esc(rec.person||'')}"><button type="button" class="ccDeleteBtn" data-cc-del="${esc(item.id)}" aria-label="削除" title="削除">❎</button></div></div></div>`;
+      const thresholdOptions=[['7','1週間'],['14','2週間'],['30','1ヶ月'],['60','2ヶ月'],['90','3ヶ月'],['180','6ヶ月']]
+        .map(([v,label])=>`<option value="${v}"${days===Number(v)?' selected':''}>${label}</option>`).join('');
+      return `<div class="ccFreeItem${overdue?' ccFreeOverdue':''}" data-cc-item="${esc(item.id)}"><div class="ccFreeItemTop"><span class="ccDragHandle">⋮⋮</span><div class="ccItemTextWrap"><input type="text" class="ccItemText" data-cc-text="${esc(item.id)}" value="${esc(item.text)}"></div></div><div class="ccFreeFieldsRow"><div class="ccFreeField ccThresholdField"><span class="ccFieldLabel">⏰ 期限の目安</span><select data-cc-free-threshold="${esc(item.id)}">${thresholdOptions}</select></div><div class="ccFreeField ccDateField"><span class="ccFieldLabel">📅 日付</span><input type="date" data-cc-free-date="${esc(item.id)}" value="${esc(rec.date||'')}">${overdue?'<span class="ccOverdueBadge">⚠️ 期限切れ</span>':''}</div><div class="ccFreeField ccPersonField"><span class="ccFieldLabel">👤 担当者</span><div class="ccPersonRow"><input type="text" class="ccFreePerson" data-cc-free-person="${esc(item.id)}" placeholder="担当者名" value="${esc(rec.person||'')}"><button type="button" class="ccDeleteBtn" data-cc-del="${esc(item.id)}" aria-label="削除" title="削除">❎</button></div></div></div></div>`;
     }).join('');
     bindFreeRowEvents(container);
     bindDragReorder('freeTime',container);
@@ -9021,11 +9014,6 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     $('ccTabDinner')?.addEventListener('click',()=>setMode('dinner'));
     $('ccRoleHall')?.addEventListener('click',()=>setRoleMode('hall'));
     $('ccRoleKitchen')?.addEventListener('click',()=>setRoleMode('kitchen'));
-    $('ccFreeThreshold')?.addEventListener('change',async()=>{
-      const v=Number($('ccFreeThreshold').value)||30;
-      const f=fb(); if(!f)return;
-      try{await f.set(f.ref(f.db,'openCloseCheck/freeTimeThresholdDays'),v);}catch(err){console.error(err)}
-    });
     document.querySelectorAll('[data-cc-add]').forEach(b=>{
       if(b.dataset.ccAddBound==='1')return;
       b.dataset.ccAddBound='1';
@@ -9078,10 +9066,6 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     });
     onValue(ref(db,'openCloseCheck/freeTimeRecord'),s=>{
       freeRecords=s.val()||{};
-      renderFree();
-    });
-    onValue(ref(db,'openCloseCheck/freeTimeThresholdDays'),s=>{
-      freeThresholdDays=Number(s.val())||30;
       renderFree();
     });
   }
