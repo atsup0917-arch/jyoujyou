@@ -60,7 +60,7 @@ button.gray{background:#e9d8ac;color:#7a2e2e}.danger{background:#f3e3d9;color:#8
 .prepFreeAddRow input{flex:1;min-width:0;margin:0;padding:11px;border:1px solid #d5dbe3;border-radius:9px;background:#fff;font-size:16px!important;box-sizing:border-box}
 .prepFreeAddRow button{width:auto;margin:0;white-space:nowrap;padding:11px 14px}
 .prepDateRow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px}
-.prepDateRow:last-child{margin-bottom:0}
+.prepDateRow:last-of-type{margin-bottom:0}
 .prepDateRow input[type=date]{flex:1;min-width:140px;margin:0;padding:11px;border:1px solid #d5dbe3;border-radius:9px;background:#fff;font-size:16px!important;box-sizing:border-box}
 .prepDateRow button{width:auto;margin:0;padding:11px 14px;white-space:nowrap}
 #prepDateLabel{font-weight:700}
@@ -1854,11 +1854,11 @@ html,body{background:#f3e6c8!important}
 
 <div id="prepPage" class="page" hidden>
 <h1>🔪 仕込み表</h1>
-<div class="card"><h2>📅 対象日</h2>
+<div class="card settingsCard"><details open><summary>📅 対象日</summary><div class="settingsBody">
 <div class="prepDateRow"><button type="button" class="gray" id="prepDatePrev">◀ 前日</button><input type="date" id="prepDateInput"><button type="button" class="gray" id="prepDateNext">翌日 ▶</button></div>
 <div class="prepDateRow"><button type="button" class="gray" id="prepDateToday">📍 今日に戻す</button><span id="prepDateLabel" class="small"></span></div>
 <div class="small">日付ごとに仕込み内容が保存されます。前日のうちに翌日分を入力しておけます（自動では消えません。消したい時は下の「仕込みリセット」を使ってください）。</div>
-</div>
+</div></details></div>
 <div class="card"><h2>表示するポジション</h2><div class="filters" id="prepFilters"></div><button type="button" id="prepSeasonAllToggle" class="prepSeasonToggle">🔎 季節を問わず全品目表示</button></div>
 <div id="prepList"></div>
 <div class="card prepRecipeSearchCard" id="prepRecipeSearchCard">
