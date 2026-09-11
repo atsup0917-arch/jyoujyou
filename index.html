@@ -2735,7 +2735,6 @@ function renderPrepList(){
  if(!prepShowAllSeasons)a=a.filter(([,x])=>prepSeasonState(x).visible);
  let active=a.filter(([id])=>prepIsActiveToday(id));
  const pickable=prepConfirmed?[]:a.filter(([id])=>!prepIsActiveToday(id));
- if(prepConfirmed)active=active.filter(([id])=>Number(prepState[id]?.count??0)>0);
  if(!active.length && !pickable.length)continue;
  active=active.sort((A,B)=>Number(!!prepState[A[0]]?.done)-Number(!!prepState[B[0]]?.done));
  h+=`<section class="prepGroup"><div class="prepTitle">${esc(p.name)}</div>`;
@@ -2829,7 +2828,7 @@ subscribePrepState();
 // タブのバッジ（残り件数）は画面で選んでいる日付に関わらず、常に実際の「今日」の件数を出す。
 onValue(ref(db,"prep/state/"+prepTodayStr()),s=>{prepTodayState=s.val()||{};updatePrepBadge()});
 function updatePrepBadge(){
- const remaining=vals(prepItems).filter(([id])=>prepTodayState[id]&&Number(prepTodayState[id]?.count??0)>0&&!prepTodayState[id]?.done).length;
+ const remaining=vals(prepItems).filter(([id])=>prepTodayState[id]&&!prepTodayState[id]?.done).length;
  $("tabPrep").innerHTML=`🔪 仕込み表${remaining?` <span class="count">${remaining}</span>`:""}`;
 }
 function prepDateWeekdayLabel(dateStr){return ["日","月","火","水","木","金","土"][new Date(dateStr+"T00:00:00").getDay()]}
