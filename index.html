@@ -2481,6 +2481,11 @@ $("uncheckAll").onclick=async()=>{for(const [id,x] of vals(items))if(x.done)awai
 const weekdays=["日","月","火","水","木","金","土"];
 function switchPage(which){
  $("shoppingPage").hidden=which!=="shopping"; $("openClosePage").hidden=which!=="openclose"; $("prepPage").hidden=which!=="prep"; $("shiftPage").hidden=which!=="shift";
+ // シフト内の「売上確認」ページ・仕込み表内の「発注」ページは4大タブの管理外の
+ // ページなので、開いたまま他のタブに切り替えると重なって表示され続けていた。
+ // タブ切り替え時は必ず閉じる。
+ const salesPage=$("salesPage"); if(salesPage)salesPage.hidden=true;
+ const vegPage=$("vegetablePage"); if(vegPage)vegPage.hidden=true;
  $("tabShopping").classList.toggle("active",which==="shopping");
  $("tabOpenClose").classList.toggle("active",which==="openclose");
  $("tabPrep").classList.toggle("active",which==="prep");
@@ -7348,6 +7353,10 @@ function renderDay(){
       Object.entries(tabs).forEach(([key,id])=>{
         const el=$(id);if(el)el.classList.toggle('active',key===which);
       });
+      // シフト内の「売上確認」ページ・仕込み表内の「発注」ページは4大タブの管理外の
+      // ページなので、開いたまま他のタブに切り替えると重なって表示され続けていた。
+      const salesPage=$('salesPage');if(salesPage)salesPage.hidden=true;
+      const vegPage=$('vegetablePage');if(vegPage)vegPage.hidden=true;
 
       if(which==='shift'){
         const d=new Date();
