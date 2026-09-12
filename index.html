@@ -3054,7 +3054,11 @@ $("printWeekend").onclick=e=>{e.preventDefault();printPrep("weekend")};
   function normalizeIngredient(x){const u=String(x?.unit??"").trim();return {name:String(x?.name??""),qty:String(x?.qty??""),unit:u||"g"}}
   // 数量は「1/2」のような分数をそのまま表示・保存し、計算時だけ数値化できます。
   function parseRecipeQuantity(value){
-    const v=String(value??"").trim();
+    // 全角数字・全角句読点や桁区切りのカンマを入力しても数値として扱えるようにする
+    // （全角のままだとNumber()がNaNを返し、入力したのに「未登録」扱いになっていた）。
+    const v=String(value??"").trim()
+      .replace(/[０-９．，]/g,c=>String.fromCharCode(c.charCodeAt(0)-0xFEE0))
+      .replace(/,/g,"");
     if(!v)return null;
     const m=v.match(/^(\d+(?:\.\d+)?)\s*\/\s*(\d+(?:\.\d+)?)$/);
     if(m){const a=Number(m[1]),b=Number(m[2]);return b===0?null:a/b;}
@@ -3110,6 +3114,7 @@ $("printWeekend").onclick=e=>{e.preventDefault();printPrep("weekend")};
       }
       const unit=document.getElementById("recipeQuickAddUnit").value||defaultUnitForIngredient(name);
       submit.disabled=true;const oldLabel=submit.textContent;submit.textContent="登録中…";
+      const hadDefault=Object.prototype.hasOwnProperty.call(ingredientDefaults,name);
       try{
         if(!ingredientCategories[cat])ingredientCategories[cat]=[];
         ingredientCategories[cat].push(name);
@@ -3119,6 +3124,11 @@ $("printWeekend").onclick=e=>{e.preventDefault();printPrep("weekend")};
         addIngredient(name,unit);
         form.hidden=true;
       }catch(e){
+        // 保存に失敗した時はローカルに仮追加した内容を戻す。戻さないと、次に同じ
+        // 食材名で登録し直そうとした時に「すでに登録されています」と誤表示されていた。
+        const idx=(ingredientCategories[cat]||[]).indexOf(name);
+        if(idx>=0)ingredientCategories[cat].splice(idx,1);
+        if(!hadDefault)delete ingredientDefaults[name];
         alert("食材の登録に失敗しました。\n"+(e?.message||e));
       }finally{
         submit.disabled=false;submit.textContent=oldLabel;
@@ -3349,6 +3359,19 @@ $("printWeekend").onclick=e=>{e.preventDefault();printPrep("weekend")};
   // 以前はこの関数が「レシピ側モジュールのローカル変数」を読んでいたため、
   // 食材管理表側で追加・単価変更した直後に、古い状態でFirebaseを上書きすることがあった。
   // 保存時は必ず現在の共有マスターを読む。
+  // 空カテゴリーもFirebase上で消えないよう保存専用形式に変換する
+  // （食材管理表側の masterEncodeForFirebase と同じ変換だが、あちらは別スクリプトの
+  // ローカル関数で参照できないため、ここに同じ変換をそのまま用意する。以前はここで
+  // 存在しない関数を呼んでおり、レシピ編集から新しい食材を登録すると必ず
+  // 「masterEncodeForFirebase is not defined」で保存が失敗していた）。
+  function encodeMasterPayloadForFirebase(payload){
+    const categories={};
+    Object.keys(payload.categories||{}).forEach(c=>{
+      const arr=payload.categories[c];
+      categories[c]=(Array.isArray(arr)&&arr.length===0)?{__emptyCategory:true}:arr;
+    });
+    return {...payload,categories};
+  }
   function ingredientMasterPayload(){
     const cats=(window.ingredientCategories&&typeof window.ingredientCategories==='object')?window.ingredientCategories:ingredientCategories;
     const defs=(window.ingredientDefaults&&typeof window.ingredientDefaults==='object')?window.ingredientDefaults:ingredientDefaults;
@@ -3391,7 +3414,7 @@ $("printWeekend").onclick=e=>{e.preventDefault();printPrep("weekend")};
         // set()+get()の比較ではなく、Realtime Databaseのtransaction結果を
         // 「サーバーにコミットされた値」として利用する。これなら配列/型の
         // 正規化差で「保存内容を確認できませんでした」と誤判定しない。
-        const result=await window.__fb.runTransaction(masterRef,()=>masterEncodeForFirebase(payload));
+        const result=await window.__fb.runTransaction(masterRef,()=>encodeMasterPayloadForFirebase(payload));
         if(!result?.committed)throw new Error('Firebaseへの保存が確定しませんでした。');
         const saved=result.snapshot?.val();
         if(!saved || typeof saved!=='object' || !saved.categories || typeof saved.categories!=='object'){
@@ -4420,7 +4443,9 @@ import {ref,onValue,set,update,remove,push,runTransaction} from "https://www.gst
  const db=fb.db, costRef=ref(db,'prep/costMaster'), ingredientMasterRef=ref(db,'prep/ingredientMaster'), recipesRef=ref(db,'prep/recipes'), prepItemsRef=ref(db,'prep/items'), productCostsRef=ref(db,'prep/productCosts'), productCategoriesRef=ref(db,'prep/productCostCategories');
  const $=id=>document.getElementById(id); let recipes={}, prepItems={}, legacyMasters={};
  const unitToBase=(qty,unit,base)=>{let n=Number(qty);if(!Number.isFinite(n))return null;unit=String(unit||'').trim();base=String(base||'').trim();if(unit===base)return n;const mass={g:1,kg:1000},vol={ml:1,L:1000,cc:1};if(mass[unit]&&mass[base])return n*mass[unit]/mass[base];if(vol[unit]&&vol[base])return n*vol[unit]/vol[base];return null;};
- const parseQ=v=>{let s=String(v??'').trim().replace(/ＣＣ/gi,'cc');if(!s)return null;if(/^\d+(?:\.\d+)?\s*\/\s*\d+(?:\.\d+)?$/.test(s)){let[a,b]=s.split('/').map(Number);return b?a/b:null}let n=Number(s);return Number.isFinite(n)?n:null};
+ // 全角数字・桁区切りのカンマを入力しても数値として扱えるようにする
+ // （全角のままだとNumber()がNaNを返し、入力したのに未入力扱いになっていた）。
+ const parseQ=v=>{let s=String(v??'').trim().replace(/ＣＣ/gi,'cc').replace(/[０-９．，]/g,c=>String.fromCharCode(c.charCodeAt(0)-0xFEE0)).replace(/,/g,'');if(!s)return null;if(/^\d+(?:\.\d+)?\s*\/\s*\d+(?:\.\d+)?$/.test(s)){let[a,b]=s.split('/').map(Number);return b?a/b:null}let n=Number(s);return Number.isFinite(n)?n:null};
  const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
  const fallbackUnits=['L','ml','kg','g','個','本','枚','袋','パック','ケース'];
  const MASTER_DEFAULT_CATEGORIES={"よく使う":["塩","砂糖","醤油","酒","味醂","酢","味噌","白だし","だし","ごま油","サラダ油","オリーブオイル","マヨネーズ","ポン酢"],"野菜":["大根","人参","玉ねぎ","長ねぎ","キャベツ","白菜","きゅうり","トマト","生姜","にんにく","大葉"],"魚・食材":["マグロ","鯛","サーモン","ブリ","海老","イカ","鶏肉","豚肉","牛肉","豆腐"],"その他":["水","だし汁","片栗粉","小麦粉","ごま","塩昆布","レモン","その他"]};
@@ -4839,7 +4864,7 @@ import {ref,onValue,set,update,remove,push,runTransaction} from "https://www.gst
    box.querySelectorAll('[data-mat-delete]').forEach(b=>b.onclick=async()=>{const row=b.closest('.masterMaterial'),cat=row.dataset.masterCat,name=b.dataset.matDelete;if(!confirm(`「${name}」を食材マスターから削除しますか？\nレシピに登録済みの材料名は残りますが、今後マスターから呼び出せなくなります。`))return;try{await masterTransaction(m=>{m.categories[cat]=(m.categories[cat]||[]).filter(n=>n!==name);delete m.defaults[name];delete m.prices[name];return m});masterMsg(`「${name}」を削除しました`)}catch(e){masterMsg(e.message,false)}});
    box.querySelectorAll('[data-price-edit]').forEach(b=>b.onclick=()=>{const ed=box.querySelector(`[data-price-editor="${masterEscName(b.dataset.priceEdit)}"]`);if(ed)ed.classList.toggle('open')});
    box.querySelectorAll('[data-price-cancel]').forEach(b=>b.onclick=()=>b.closest('.masterPriceEditor').classList.remove('open'));
-   box.querySelectorAll('[data-price-save]').forEach(b=>b.onclick=async()=>{const row=b.closest('.masterMaterial'),name=b.dataset.priceSave,ed=row.querySelector(`[data-price-editor="${masterEscName(name)}"]`)||row.querySelector('.masterPriceEditor'),qty=Number(ed.querySelector('[data-mpe="qty"]').value),price=Number(ed.querySelector('[data-mpe="price"]').value),pack=ed.querySelector('[data-mpe="pack"]').value,base=ed.querySelector('[data-mpe="base"]').value;if(!Number.isFinite(qty)||qty<=0)return alert('仕入量を入力してください。');if(!Number.isFinite(price)||price<0)return alert('仕入価格を入力してください。');try{await masterTransaction(m=>{m.prices[name]={packQty:qty,packUnit:pack,packPrice:price,baseUnit:base};return m});window.dispatchEvent(new CustomEvent('ingredientMasterPriceChanged',{detail:{name,price:{packQty:qty,packUnit:pack,packPrice:price,baseUnit:base}}}));masterMsg(`「${name}」の単価を保存しました`)}catch(e){masterMsg(e.message||'単価保存に失敗しました',false)}});
+   box.querySelectorAll('[data-price-save]').forEach(b=>b.onclick=async()=>{const row=b.closest('.masterMaterial'),name=b.dataset.priceSave,ed=row.querySelector(`[data-price-editor="${masterEscName(name)}"]`)||row.querySelector('.masterPriceEditor'),qty=parseQ(ed.querySelector('[data-mpe="qty"]').value),price=parseQ(ed.querySelector('[data-mpe="price"]').value),pack=ed.querySelector('[data-mpe="pack"]').value,base=ed.querySelector('[data-mpe="base"]').value;if(!Number.isFinite(qty)||qty<=0)return alert('仕入量を入力してください。');if(!Number.isFinite(price)||price<0)return alert('仕入価格を入力してください。');try{await masterTransaction(m=>{m.prices[name]={packQty:qty,packUnit:pack,packPrice:price,baseUnit:base};return m});window.dispatchEvent(new CustomEvent('ingredientMasterPriceChanged',{detail:{name,price:{packQty:qty,packUnit:pack,packPrice:price,baseUnit:base}}}));masterMsg(`「${name}」の単価を保存しました`)}catch(e){masterMsg(e.message||'単価保存に失敗しました',false)}});
    box.querySelectorAll('[data-unit-input]').forEach(inp=>inp.addEventListener('change',async()=>{const row=inp.closest('[data-unit-row]'),i=Number(row.dataset.unitRow),old=getMasterUnits()[i],n=inp.value.trim();if(!n||n===old){inp.value=old;return;}try{await masterTransaction(m=>{if(m.units.some((x,j)=>j!==i&&x===n))throw new Error('同じ単位がすでにあります。');const affected=Object.keys(m.defaults).filter(k=>m.defaults[k]===old);m.units[i]=n;affected.forEach(k=>m.defaults[k]=n);Object.values(m.prices).forEach(p=>{if(p?.packUnit===old)p.packUnit=n;if(p?.baseUnit===old)p.baseUnit=n});return m});if(recipes&&typeof recipes==='object'){const changes={};Object.entries(recipes).forEach(([rid,r])=>{if(Array.isArray(r?.ingredients)){const ing=r.ingredients.map(x=>String(x?.unit||'').trim()===old?{...x,unit:n}:x);if(JSON.stringify(ing)!==JSON.stringify(r.ingredients))changes[`prep/recipes/${rid}/ingredients`]=ing;}});if(Object.keys(changes).length)await update(ref(db),changes);}masterMsg(`単位「${n}」を保存しました`)}catch(e){inp.value=old;masterMsg(e.message||'単位保存に失敗しました',false)}}));
    box.querySelectorAll('[data-unit-up]').forEach(b=>b.onclick=async()=>{const i=Number(b.dataset.unitUp);if(i<=0)return;try{await masterTransaction(m=>{[m.units[i-1],m.units[i]]=[m.units[i],m.units[i-1]];return m});masterMsg('単位の並び順を保存しました')}catch(e){masterMsg(e.message,false)}});
    box.querySelectorAll('[data-unit-down]').forEach(b=>b.onclick=async()=>{const i=Number(b.dataset.unitDown),len=getMasterUnits().length;if(i>=len-1)return;try{await masterTransaction(m=>{[m.units[i],m.units[i+1]]=[m.units[i+1],m.units[i]];return m});masterMsg('単位の並び順を保存しました')}catch(e){masterMsg(e.message,false)}});
