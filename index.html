@@ -4382,7 +4382,7 @@ function renderNonVegProductManager(){
 .costRecipeSelect{width:100%!important;min-height:48px!important;font-size:17px!important;font-weight:600!important;padding:10px 12px!important;background:#fff!important;color:#222!important;-webkit-text-fill-color:#222!important}
 .costSearch{width:100%!important;margin:0!important;min-height:44px!important;box-sizing:border-box}.costCategoryTitle{font-size:15px;font-weight:700;margin:12px 0 6px;padding:6px 8px;background:#e9d8ac;border-radius:8px}.costPriceEditor{display:none;margin-top:9px;padding:10px;background:#faf1dc;border:1px solid #dfe3e8;border-radius:10px}.costPriceEditor.open{display:block}.costPriceEditor .costGrid{grid-template-columns:1fr 1fr}.costPriceEditor .costGrid>div:last-child{grid-column:1/-1}.costPriceActions{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:8px}.costPriceActions button{margin:0!important;padding:10px!important}.costRegistered{color:#7a2e2e;font-weight:700}.costNoPrice{color:#9a6700;font-weight:700}
 .costCalcModes{display:grid;grid-template-columns:1fr 1fr;gap:7px}.costCalcModes button{margin:0;background:#e9d8ac;color:#333}.costCalcModes button.active{background:#7a2e2e;color:#fff}.freeCostComponents{display:grid;gap:8px}.freeCostRow{display:grid;grid-template-columns:82px minmax(0,1fr) 78px 68px 40px;gap:5px;align-items:center;background:#fff;border:1px solid #e0e3e8;border-radius:10px;padding:7px}.freeCostRow input,.freeCostRow select{min-width:0;font-size:14px;padding:9px 5px}.freeCostRow button{margin:0;width:40px;height:40px;padding:0}.freeCostSummary{display:grid;grid-template-columns:1fr 1fr;gap:8px}.freeCostRegister{margin-top:8px;width:100%}
-.freeCostRow{grid-template-columns:90px minmax(200px,1fr) 78px 68px 40px}@media(max-width:760px){.freeCostRow{grid-template-columns:1fr 1fr;gap:6px}.freeCostName{grid-column:1 / -1}.freeCostQty,.freeCostUnit{min-width:0}.freeCostRow button{justify-self:end}.freeCostType{width:100%}}
+.freeCostRow{grid-template-columns:90px minmax(200px,1fr) 78px 68px 40px}.freeCostNameWrap{position:relative;min-width:0}.freeCostNameResults{position:absolute;top:100%;left:0;right:0;z-index:60;margin-top:4px;background:#fff;border:1px solid #d8dde5;border-radius:10px;max-height:240px;overflow-y:auto;box-shadow:0 6px 18px rgba(0,0,0,.18)}.freeCostNameResults button{display:block;width:100%;margin:0;padding:10px 12px;border:0;border-bottom:1px solid #eee;border-radius:0;box-shadow:none;background:#fff;color:#222;text-align:left;font-size:14px}.freeCostNameResults button:last-child{border-bottom:0}.freeCostNameResults button:active{background:#faf1dc}.freeCostNameEmpty{padding:10px 12px;font-size:13px;color:#888}@media(max-width:760px){.freeCostRow{grid-template-columns:1fr 1fr;gap:6px}.freeCostNameWrap{grid-column:1 / -1}.freeCostQty,.freeCostUnit{min-width:0}.freeCostRow button{justify-self:end}.freeCostType{width:100%}}
 
 /* レシピ編集：既存ボタンを覆わず、画面全体を縦スクロール可能にする安定化 */
 #recipeModal{overflow-y:auto!important;-webkit-overflow-scrolling:touch!important;touch-action:pan-y!important;padding:8px!important}
@@ -4452,7 +4452,7 @@ import {ref,onValue,set,update,remove,push,runTransaction} from "https://www.gst
 (function boot(){
  const fb=window.__fb;if(!fb){setTimeout(boot,300);return;}
  const db=fb.db, costRef=ref(db,'prep/costMaster'), ingredientMasterRef=ref(db,'prep/ingredientMaster'), recipesRef=ref(db,'prep/recipes'), prepItemsRef=ref(db,'prep/items'), productCostsRef=ref(db,'prep/productCosts'), productCategoriesRef=ref(db,'prep/productCostCategories');
- const $=id=>document.getElementById(id); let recipes={}, prepItems={}, legacyMasters={}, freeCostRowSeq=0;
+ const $=id=>document.getElementById(id); let recipes={}, prepItems={}, legacyMasters={};
  const unitToBase=(qty,unit,base)=>{let n=Number(qty);if(!Number.isFinite(n))return null;unit=String(unit||'').trim();base=String(base||'').trim();if(unit===base)return n;const mass={g:1,kg:1000},vol={ml:1,L:1000,cc:1};if(mass[unit]&&mass[base])return n*mass[unit]/mass[base];if(vol[unit]&&vol[base])return n*vol[unit]/vol[base];return null;};
  // 全角数字・桁区切りのカンマを入力しても数値として扱えるようにする
  // （全角のままだとNumber()がNaNを返し、入力したのに未入力扱いになっていた）。
@@ -4934,19 +4934,26 @@ import {ref,onValue,set,update,remove,push,runTransaction} from "https://www.gst
  // 候補（datalist）から選べる1つの入力欄にまとめた。
  function addFreeRow(type='material',name='',qty='',unit=''){
   const box=$('freeCostComponents');if(!box)return;
-  const listId='freeCostNameList'+(freeCostRowSeq++);
   const row=document.createElement('div');row.className='freeCostRow';
-  row.innerHTML=`<select class="freeCostType"><option value="material">📦 材料</option><option value="prep">🔪 仕込み品</option></select><input class="freeCostName" list="${listId}" placeholder="🔍 材料名で検索" autocomplete="off" value="${esc(name)}"><datalist id="${listId}"></datalist><input class="freeCostQty" inputmode="decimal" placeholder="使用量" value="${esc(qty)}"><select class="freeCostUnit"></select><button type="button" class="gray" aria-label="削除">×</button>`;
+  row.innerHTML=`<select class="freeCostType"><option value="material">📦 材料</option><option value="prep">🔪 仕込み品</option></select><div class="freeCostNameWrap"><input class="freeCostName" type="text" placeholder="🔍 材料名で検索" autocomplete="off" value="${esc(name)}"><div class="freeCostNameResults" hidden></div></div><input class="freeCostQty" inputmode="decimal" placeholder="使用量" value="${esc(qty)}"><select class="freeCostUnit"></select><button type="button" class="gray" aria-label="削除">×</button>`;
   box.appendChild(row);
-  const t=row.querySelector('.freeCostType'),n=row.querySelector('.freeCostName'),dl=row.querySelector('datalist'),q=row.querySelector('.freeCostQty'),u=row.querySelector('.freeCostUnit');
+  const t=row.querySelector('.freeCostType'),n=row.querySelector('.freeCostName'),results=row.querySelector('.freeCostNameResults'),q=row.querySelector('.freeCostQty'),u=row.querySelector('.freeCostUnit');
   const units=['ml','cc','L','g','kg','個','本','枚','袋','パック'];
   const renderUnits=()=>{u.innerHTML=units.map(x=>`<option value="${x}">${x}</option>`).join('');if(unit)u.value=unit;};
-  const renderNames=()=>{
-   dl.innerHTML=freeOptions().filter(x=>x.type===t.value).map(x=>`<option value="${esc(x.name)}">`).join('');
+  // 候補は検索しながらタップして選ぶ方式（<datalist>はスマホのブラウザによって
+  // 候補が出にくく「検索欄しかない」ように見えてしまうため使わない）。
+  const renderResults=()=>{
+   const query=String(n.value||'').trim().toLowerCase();
+   const opts=freeOptions().filter(x=>x.type===t.value && (!query||x.name.toLowerCase().includes(query))).slice(0,40);
+   results.innerHTML=opts.length?opts.map(x=>`<button type="button" data-pick-name="${esc(x.name)}">${esc(x.name)}</button>`).join(''):'<div class="freeCostNameEmpty">該当する候補がありません</div>';
+   results.hidden=false;
+   results.querySelectorAll('[data-pick-name]').forEach(b=>b.onclick=()=>{n.value=b.dataset.pickName;results.hidden=true;updateFreeCalc()});
   };
-  renderUnits();t.value=type;renderNames();
-  t.onchange=()=>{n.value='';renderNames();updateFreeCalc()};
-  n.oninput=updateFreeCalc;
+  renderUnits();t.value=type;
+  t.onchange=()=>{n.value='';renderResults();updateFreeCalc()};
+  n.oninput=()=>{renderResults();updateFreeCalc()};
+  n.addEventListener('focus',renderResults);
+  n.addEventListener('blur',()=>setTimeout(()=>{results.hidden=true},150));
   q.oninput=updateFreeCalc;u.onchange=updateFreeCalc;
   row.querySelector('button').onclick=()=>{row.remove();updateFreeCalc()};
  }
