@@ -1482,10 +1482,12 @@ button.gray:active{transform:translateY(2px)!important;box-shadow:inset 0 2px 4p
 
 /* 数量変更：②近藤家アプリと同じ、＋／−ボタン方式に統一。ダブルタップでの誤ズームも防ぐ */
 html,body{touch-action:manipulation}
-.itemQtyWrap{display:flex;align-items:center;gap:6px;flex:0 0 auto}
-.itemQtyBtn{width:28px!important;height:28px!important;min-height:0!important;padding:0!important;margin:0!important;font-size:16px!important;line-height:1!important;border-radius:50%!important;display:inline-flex;align-items:center;justify-content:center;touch-action:manipulation}
+.itemProductLine{justify-content:space-between;align-self:stretch!important;width:100%!important}
+.itemProductName{flex:1 1 auto!important;min-width:0!important}
+.itemQtyWrap{display:flex;align-items:center;gap:6px;flex:0 0 auto;margin-left:auto}
+.itemQtyBtn{width:28px!important;height:28px!important;min-height:0!important;padding:0!important;margin:0!important;font-size:16px!important;line-height:1!important;border-radius:50%!important;display:inline-flex;align-items:center;justify-content:center;touch-action:manipulation;background:var(--terracotta-tint)!important;color:var(--terracotta-deep)!important;box-shadow:none!important;border:1px solid var(--line)!important}
 .itemQtyValue{min-width:22px;text-align:center;font-size:16px;font-weight:800;color:var(--sumi)}
-.prepQtyBtn{width:26px!important;height:26px!important;min-height:0!important;padding:0!important;margin:0!important;font-size:15px!important;line-height:1!important;border-radius:50%!important;display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;touch-action:manipulation}
+.prepQtyBtn{width:26px!important;height:26px!important;min-height:0!important;padding:0!important;margin:0!important;font-size:15px!important;line-height:1!important;border-radius:50%!important;display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;touch-action:manipulation;background:var(--terracotta-tint)!important;color:var(--terracotta-deep)!important;box-shadow:none!important;border:1px solid var(--line)!important}
 .prepQtyWrap .prepCount{flex:0 1 auto!important;width:auto!important;min-width:22px;text-align:center;font-weight:800;font-size:16px!important;color:var(--sumi);padding:0!important;background:transparent;border:0!important}
 </style>
 </head>
@@ -2364,7 +2366,7 @@ return `<div class="item ${x.done?"done":""}"><input type="checkbox" ${x.done?"c
 document.querySelectorAll("[data-check]").forEach(c=>c.onchange=()=>update(ref(db,"items/"+c.dataset.check),{done:c.checked}));
 document.querySelectorAll("[data-itemqminus]").forEach(b=>b.onclick=()=>{const id=b.dataset.itemqminus,cur=Math.max(1,Number(items[id]?.quantity)||1);update(ref(db,"items/"+id),{quantity:Math.max(1,cur-1)})});
 document.querySelectorAll("[data-itemqplus]").forEach(b=>b.onclick=()=>{const id=b.dataset.itemqplus,cur=Math.max(1,Number(items[id]?.quantity)||1);update(ref(db,"items/"+id),{quantity:cur+1})});
-document.querySelectorAll("[data-delitem]").forEach(b=>b.onclick=()=>remove(ref(db,"items/"+b.dataset.delitem)));
+document.querySelectorAll("[data-delitem]").forEach(b=>b.onclick=()=>{const id=b.dataset.delitem,name=items[id]?.name||"この商品";if(confirm(`「${name}」を買い物リストから削除しますか？`))remove(ref(db,"items/"+id))});
 document.querySelectorAll("[data-edit]").forEach(d=>d.onclick=()=>openShoppingItemModal(d.dataset.edit));
 document.querySelectorAll("[data-editsave]").forEach(b=>b.onclick=async()=>{
 const id=b.dataset.editsave;
