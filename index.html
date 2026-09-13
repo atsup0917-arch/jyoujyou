@@ -2932,13 +2932,11 @@ $("clearPrep").onclick=async()=>{
   // 他の日付のデータには影響しない（手動操作でのみ実行される）。
   const targets=prepFilter==="ALL"?vals(prepItems):oi(prepFilter);
   const u={};targets.forEach(([id])=>u[`prep/state/${prepSelectedDate}/${id}`]=null);
-  prepConfirmed=false;await update(ref(db),u);renderPrepFilters();renderPrepList();
+  u[`prep/state/${prepSelectedDate}/_confirmed`]=null;
+  await update(ref(db),u);
 };
-if($("confirmPrep"))$("confirmPrep").onclick=()=>{
-  prepConfirmed=!prepConfirmed;
-  $("confirmPrep").textContent=prepConfirmed?"仕込み確定を解除":"仕込み確定";
-  renderPrepFilters();
-  renderPrepList();
+if($("confirmPrep"))$("confirmPrep").onclick=async()=>{
+  await update(ref(db,"prep/state/"+prepSelectedDate),{_confirmed:!prepConfirmed});
 };
 if($("prepSeasonAllToggle"))$("prepSeasonAllToggle").onclick=()=>{
   prepShowAllSeasons=!prepShowAllSeasons;
@@ -2976,9 +2974,10 @@ onValue(prepItemsRef,s=>{
 });
 // 選択中の日付のデータだけを購読する。日付を切り替えたら購読し直す。
 let prepStateUnsub=null;
+function updateConfirmPrepButton(){const b=$("confirmPrep");if(b)b.textContent=prepConfirmed?"仕込み確定を解除":"仕込み確定"}
 function subscribePrepState(){
   if(prepStateUnsub)prepStateUnsub();
-  prepStateUnsub=onValue(ref(db,"prep/state/"+prepSelectedDate),s=>{prepState=s.val()||{};renderPrepFilters();renderPrepList();updatePrepBadge()});
+  prepStateUnsub=onValue(ref(db,"prep/state/"+prepSelectedDate),s=>{prepState=s.val()||{};prepConfirmed=!!prepState._confirmed;updateConfirmPrepButton();renderPrepFilters();renderPrepList();updatePrepBadge()});
 }
 subscribePrepState();
 // タブのバッジ（残り件数）は画面で選んでいる日付に関わらず、常に実際の「今日」の件数を出す。
