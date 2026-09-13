@@ -697,6 +697,7 @@ html.recipeModalLocked, body.recipeModalLocked{
   background:#f2faf4;
   border:2px solid #3f6b4f;
   box-shadow:0 2px 8px rgba(42,160,82,.10);
+  grid-template-columns:repeat(4,minmax(0,1fr));
 }
 .prepActionGroup.prepOperation::before{
   content:"🔪 仕込み操作";
@@ -768,7 +769,7 @@ html.recipeModalLocked, body.recipeModalLocked{
     padding:8px 3px;
   }
   .prepActionGroup.prepOperation{
-    grid-template-columns:repeat(3,minmax(0,1fr));
+    grid-template-columns:repeat(4,minmax(0,1fr));
   }
   .prepActionGroup.prepOperation>button{
     font-size:13px;
@@ -1489,6 +1490,20 @@ html,body{touch-action:manipulation}
 .itemQtyValue{min-width:22px;text-align:center;font-size:16px;font-weight:800;color:var(--sumi)}
 .prepQtyBtn{width:26px!important;height:26px!important;min-height:0!important;padding:0!important;margin:0!important;font-size:15px!important;line-height:1!important;border-radius:50%!important;display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;touch-action:manipulation;background:var(--terracotta-tint)!important;color:var(--terracotta-deep)!important;box-shadow:none!important;border:1px solid var(--line)!important}
 .prepQtyWrap .prepCount{flex:0 1 auto!important;width:auto!important;min-width:22px;text-align:center;font-weight:800;font-size:16px!important;color:var(--sumi);padding:0!important;background:transparent;border:0!important}
+
+/* 仕込み：確定内容まとめ表示 */
+.prepSummaryModal{position:fixed;inset:0;background:rgba(0,0,0,.48);z-index:12000;padding:18px;display:flex;align-items:center;justify-content:center}
+.prepSummaryModal[hidden]{display:none!important}
+.prepSummaryBox{width:min(1400px,97vw);max-height:calc(100dvh - 20px);overflow:auto;background:var(--paper);border-radius:22px;padding:16px 20px}
+.prepSummaryHeader{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+.prepSummaryHeader h2{margin:0;font-size:19px;font-family:"Zen Kaku Gothic New",sans-serif}
+#prepSummaryContent{column-width:190px;column-gap:22px}
+.prepSummarySection{margin:0 0 14px;break-inside:avoid;-webkit-column-break-inside:avoid}
+.prepSummarySection h3{margin:0 0 4px;font-size:14px;font-weight:800;color:var(--terracotta-deep);border-bottom:2px solid var(--line);padding-bottom:4px}
+.prepSummaryRow{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:5px 0;border-bottom:1px dashed var(--line);font-size:13px}
+.prepSummaryRow b{font-weight:700;color:var(--sumi)}
+.prepSummaryRow span{font-weight:800;color:var(--terracotta-deep);white-space:nowrap}
+.prepSummaryEmpty{text-align:center;color:var(--sumi-soft);padding:24px 0}
 </style>
 </head>
 <body><div class="wrap">
@@ -2017,8 +2032,9 @@ html,body{touch-action:manipulation}
 <div class="card prepMainActions">
   <div class="prepActionGroup prepOperation">
     <button class="gray" id="confirmPrep">仕込み確定</button>
-    <button class="gray" id="clearPrep">仕込みリセット</button>
+    <button class="gray" id="openPrepSummary" type="button">📋 確定内容をまとめて見る</button>
     <button class="gray" id="prepVegetableBtn" type="button">🥬 野菜発注</button>
+    <button class="gray" id="clearPrep">仕込みリセット</button>
   </div>
   <div class="prepActionGroup prepManagement">
     <button class="gray" id="openCostSheet" type="button">💰 原価計算表</button>
@@ -2032,6 +2048,16 @@ html,body{touch-action:manipulation}
 <div class="small">iPhoneの印刷画面からプリンターで印刷、またはPDFとして保存できます。</div>
 </div>
 <div id="printSheet"></div>
+
+<div id="prepSummaryModal" class="prepSummaryModal" hidden>
+  <div class="prepSummaryBox">
+    <div class="prepSummaryHeader">
+      <h2 id="prepSummaryTitle">仕込み確定内容</h2>
+      <button type="button" id="prepSummaryClose" class="shoppingModalClose" aria-label="閉じる">×</button>
+    </div>
+    <div id="prepSummaryContent"></div>
+  </div>
+</div>
 
 <div class="card settingsCard"><details><summary>⚙️ 仕込み品目・ポジションの登録・並び替え</summary><div class="settingsBody">
 <h2>ポジション管理</h2><input id="newPos" placeholder="例：刺場"><button id="addPos">＋ ポジション追加</button><div id="posManage"></div>
@@ -3040,6 +3066,30 @@ $("printWeekday").type="button";
 $("printWeekend").type="button";
 $("printWeekday").onclick=e=>{e.preventDefault();printPrep("weekday")};
 $("printWeekend").onclick=e=>{e.preventDefault();printPrep("weekend")};
+
+function renderPrepSummary(){
+ const box=$("prepSummaryContent"); if(!box)return;
+ const d=new Date(prepSelectedDate+"T00:00:00");
+ const dateLabel=`${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日（${["日","月","火","水","木","金","土"][d.getDay()]}）`;
+ const scopeLabel=prepFilter==="ALL"?"全体":(prepPositions[prepFilter]?.name||"");
+ $("prepSummaryTitle").textContent=`仕込み確定内容　${scopeLabel}`;
+ const selectedPositions=prepFilter==="ALL"?op():op().filter(([pid])=>pid===prepFilter);
+ let html=`<div class="small" style="margin-bottom:14px">${dateLabel}</div>`;
+ let hasItems=false;
+ for(const [pid,p] of selectedPositions){
+   const a=oi(pid).filter(([id])=>Number(prepState[id]?.count??0)>0);
+   if(!a.length)continue;
+   hasItems=true;
+   html+=`<div class="prepSummarySection"><h3>${esc(p.name)}</h3>${a.map(([id,x])=>{
+     const st=prepState[id]||{},count=Number(st.count??0)||0,unit=esc(x.unit||"");
+     return `<div class="prepSummaryRow"><b>${esc(x.name)}</b><span>${count}${unit}</span></div>`;
+   }).join("")}</div>`;
+ }
+ if(!hasItems)html+=`<div class="prepSummaryEmpty">仕込み数が1以上の品目はありません。</div>`;
+ box.innerHTML=html;
+}
+if($("openPrepSummary"))$("openPrepSummary").onclick=()=>{renderPrepSummary();$("prepSummaryModal").hidden=false;document.body.style.overflow="hidden"};
+if($("prepSummaryClose"))$("prepSummaryClose").onclick=()=>{$("prepSummaryModal").hidden=true;document.body.style.overflow=""};
 
 </script>
 
