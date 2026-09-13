@@ -1366,6 +1366,7 @@ html,body{background:#f3e6c8!important}
   --terracotta-tint:#f1ddc9;
   --aizome:#33505e;
   --aizome-deep:#22333a;
+  --aizome-tint:#dbe6e8;
   --sumi:#2a2118;
   --sumi-soft:#5a4c3f;
   --paper:#faf6ef;
@@ -1450,6 +1451,10 @@ button.gray:active{transform:translateY(2px)!important;box-shadow:inset 0 2px 4p
 .navtabs button .count{background:var(--terracotta-deep)!important;color:var(--paper)!important}
 .navtabs button.active .count{background:var(--paper)!important;color:var(--terracotta)!important}
 
+/* 開店・閉店：「ランチ/ディナー」＝テラコッタ、「ホール/キッチン」＝藍色で見分けやすく */
+#ccRoleTabs button.active{background:var(--aizome-tint)!important;border-color:var(--aizome)!important;color:var(--aizome-deep)!important}
+#ccRoleTabs button.active .count{background:var(--aizome)!important;color:var(--paper)!important}
+
 #scrollTopBtn{border:none!important;box-shadow:var(--shadow)!important;border-radius:50%!important;background:var(--terracotta)!important;color:var(--paper)!important}
 #scrollTopBtn:active{transform:translateY(2px)!important;box-shadow:inset 0 2px 4px rgba(0,0,0,.25)!important}
 
@@ -1462,8 +1467,8 @@ button.gray:active{transform:translateY(2px)!important;box-shadow:inset 0 2px 4p
   border-radius:14px!important;
 }
 .navtabs.navtabs4 button:hover{background:var(--terracotta-tint)!important;border-color:var(--terracotta)!important}
-.navtabs.navtabs4 #tabPrep.active{background:var(--aizome)!important;color:var(--paper)!important;border-color:var(--aizome-deep)!important;box-shadow:var(--shadow)!important}
-.navtabs.navtabs4 #tabShift.active{background:var(--sumi-soft)!important;color:var(--paper)!important;border-color:var(--sumi)!important;box-shadow:var(--shadow)!important}
+.navtabs.navtabs4 #tabPrep.active{background:var(--terracotta)!important;color:var(--paper)!important;border-color:var(--terracotta-deep)!important;box-shadow:var(--shadow)!important}
+.navtabs.navtabs4 #tabShift.active{background:var(--terracotta)!important;color:var(--paper)!important;border-color:var(--terracotta-deep)!important;box-shadow:var(--shadow)!important}
 .navtabs.navtabs4 #tabShopping.active,.navtabs.navtabs4 #tabOpenClose.active{
   background:var(--terracotta)!important;color:var(--paper)!important;border-color:var(--terracotta-deep)!important;box-shadow:var(--shadow)!important;
 }
