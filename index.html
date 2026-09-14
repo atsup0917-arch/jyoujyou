@@ -1503,6 +1503,8 @@ html,body{touch-action:manipulation}
 .prepSummaryRow{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:5px 0;border-bottom:1px dashed var(--line);font-size:13px}
 .prepSummaryRow b{font-weight:700;color:var(--sumi)}
 .prepSummaryRow span{font-weight:800;color:var(--terracotta-deep);white-space:nowrap}
+.prepSummaryRow.done{opacity:.5}
+.prepSummaryRow.done b{text-decoration:line-through}
 .prepSummaryEmpty{text-align:center;color:var(--sumi-soft);padding:24px 0}
 </style>
 </head>
@@ -3082,7 +3084,7 @@ function renderPrepSummary(){
    hasItems=true;
    html+=`<div class="prepSummarySection"><h3>${esc(p.name)}</h3>${a.map(([id,x])=>{
      const st=prepState[id]||{},count=Number(st.count??0)||0,unit=esc(x.unit||"");
-     return `<div class="prepSummaryRow"><b>${esc(x.name)}</b><span>${count}${unit}</span></div>`;
+     return `<div class="prepSummaryRow${st.done?" done":""}"><b>${esc(x.name)}</b><span>${count}${unit}</span></div>`;
    }).join("")}</div>`;
  }
  if(!hasItems)html+=`<div class="prepSummaryEmpty">仕込み数が1以上の品目はありません。</div>`;
