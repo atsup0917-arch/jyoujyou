@@ -33,7 +33,7 @@ exports.handler = async (event) => {
       },
       body: JSON.stringify({
         app_id: appId,
-        included_segments: ["Subscribed Users"],
+        included_segments: ["Total Subscriptions"],
         headings: { en: title, ja: title },
         contents: { en: message, ja: message },
       }),
