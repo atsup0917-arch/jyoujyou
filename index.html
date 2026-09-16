@@ -4,6 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>買い物リスト</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="assets/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;600;800&family=Zen+Old+Mincho:wght@400;600&display=swap" rel="stylesheet">
@@ -1507,6 +1511,29 @@ html,body{touch-action:manipulation}
 .prepSummaryRow.done b{text-decoration:line-through}
 .prepSummaryEmpty{text-align:center;color:var(--sumi-soft);padding:24px 0}
 </style>
+<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+<script>
+// 引き継ぎメモ・シフト変更をプッシュ通知で知らせる仕組み（OneSignal）。
+// ONESIGNAL_APP_IDは OneSignal管理画面の「Web Push」設定から取得して置き換える。
+window.ONESIGNAL_APP_ID = "c7931048-cd92-46ad-bd7d-8933cdfd323a";
+window.OneSignalDeferred = window.OneSignalDeferred || [];
+window.OneSignalDeferred.push(async (OneSignal) => {
+  if (!window.ONESIGNAL_APP_ID || window.ONESIGNAL_APP_ID.startsWith("REPLACE_")) return;
+  await OneSignal.init({ appId: window.ONESIGNAL_APP_ID });
+});
+// 保存処理から呼び出す通知送信ヘルパー。Netlify Functions経由でAPIキーを秘匿する。
+window.notifyStaffOfChange = async function notifyStaffOfChange(message, title) {
+  try {
+    await fetch("/.netlify/functions/notify", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title: title || "上々 業務アプリ", message }),
+    });
+  } catch (e) {
+    console.warn("notifyStaffOfChange failed", e);
+  }
+};
+</script>
 </head>
 <body><div class="wrap">
 <header class="brandHeader">
@@ -1955,6 +1982,7 @@ html,body{touch-action:manipulation}
     <button type="button" class="gray" id="shiftMemoToggle" style="width:auto;margin:0;padding:8px 12px">▲</button>
   </div>
   <div id="shiftMemoBody">
+  <button type="button" class="gray" id="pushNotifyEnableBtn" style="margin-top:0">🔔 このスマホで通知を受け取る</button>
   <div class="shiftHint">先の日付も登録できます。例：8/30 テイクアウトあり。</div>
   <div class="shiftDateRow" style="margin-top:10px">
     <div><label>登録する日</label><input id="shiftMemoDate" type="date"></div>
@@ -6806,6 +6834,7 @@ function renderDay(){
       await fb().set(newRef,item);
       // DB保存成功後、ローカル表示にも同じレコードを即時反映。
       schedules={...schedules,[newRef.key]:item};
+      window.notifyStaffOfChange?.(`${dateLabel(date)}のシフトに${name}さんが追加されました。`,'🗓️ シフト変更');
       return true;
     }catch(e){
       console.error('staff add save error',e);
@@ -6861,6 +6890,7 @@ function renderDay(){
         if(newKey)schedules[newKey]=updates[`shift/schedules/${newKey}`];
       }
       closeOtherDayEditor();renderDay();renderTodayQuick();
+      window.notifyStaffOfChange?.(checked?`${dateLabel(date)}の${name}さんのシフトが変更されました。`:`${dateLabel(date)}の${originalName}さんのシフトが削除されました。`,'🗓️ シフト変更');
       alert(checked?`${name}の変更を保存しました。`:`${originalName}を削除しました。`);
     }catch(e){console.error(e);alert('保存に失敗しました。\n'+(e?.message||e))}
   }
@@ -6971,6 +7001,7 @@ function renderDay(){
       await fb().update(fb().ref(fb().db),updates);
       Object.keys(updates).forEach(k=>{const m=k.match(/^shift\/schedules\/(.+)$/);if(m){if(updates[k]===null)delete schedules[m[1]];else schedules[m[1]]=updates[k]}});
       closeTodayEditor();renderTodayQuick();renderDay();
+      window.notifyStaffOfChange?.(`本日のシフトが変更されました。${originalName===name?name:originalName+'→'+name}`,'🗓️ シフト変更');
       alert(`${name}の変更を保存しました。`);
     }catch(e){console.error(e);alert('保存に失敗しました。\n'+(e?.message||e));}
   }
@@ -7152,6 +7183,7 @@ function renderDay(){
         }
         shiftMemoEditingId=null;
         renderMemos();renderTodayQuick();
+        window.notifyStaffOfChange?.(`${dateLabel(next.date||'')}の引き継ぎメモが更新されました。\n${nextText}`,'📝 引き継ぎメモ');
       }catch(e){
         alert('引き継ぎメモの編集に失敗しました。\n'+(e?.message||String(e)));
       }
@@ -7206,6 +7238,7 @@ function renderDay(){
       memos={...memos,[newRef.key]:item};
       $('shiftMemoText').value='';
       renderMemos();renderTodayQuick();renderMemoCalendar();
+      window.notifyStaffOfChange?.(`${dateLabel(date)}の引き継ぎメモが追加されました。\n${text}`,'📝 引き継ぎメモ');
       alert(`${dateLabel(date)}の引き継ぎメモをFirebaseに保存しました。`);
     }catch(e){
       console.error('saveMemo Firebase error',e);
@@ -7392,6 +7425,27 @@ function renderDay(){
 
     $('shiftMemoDate')?.addEventListener('change',renderMemos);
     $('shiftMemoSave')?.addEventListener('click',saveMemo);
+    $('pushNotifyEnableBtn')?.addEventListener('click',async()=>{
+      const btn=$('pushNotifyEnableBtn');
+      if(!window.ONESIGNAL_APP_ID||window.ONESIGNAL_APP_ID.startsWith('REPLACE_')){alert('通知機能はまだ設定が完了していません（管理者にOneSignalの設定を確認してください）。');return}
+      if(!window.OneSignal){alert('通知機能の読み込みに失敗しました。通信状況を確認し、もう一度お試しください。');return}
+      try{
+        btn.disabled=true;
+        await window.OneSignal.Notifications.requestPermission();
+        const granted=window.OneSignal.Notifications.permission;
+        if(granted){
+          await window.OneSignal.User.PushSubscription.optIn();
+          btn.textContent='🔔 通知は有効です';
+        }else{
+          alert('通知が許可されませんでした。iPhone/iPadの「設定」アプリからこのアプリの通知を許可してください。');
+          btn.disabled=false;
+        }
+      }catch(e){
+        console.error('push notify enable error',e);
+        alert('通知の設定に失敗しました。\n'+(e?.message||String(e))+'\n\niPhoneの場合は、事前にこのサイトを「ホーム画面に追加」してから開き直す必要があります。');
+        btn.disabled=false;
+      }
+    });
     $('shiftMemoTodayBtn')?.addEventListener('click',()=>{if($('shiftMemoDate'))$('shiftMemoDate').value=today();renderMemos()});
     try{const a=JSON.parse(localStorage.getItem('karuya_shift_memos_v1')||'[]');a.forEach((x,i)=>memos[`local-${x.createdAt||i}`]=x)}catch(e){}
     loadStaff();renderShiftRegisteredPeriods();renderDay();renderMemoCalendar();
