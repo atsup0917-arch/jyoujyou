@@ -1522,17 +1522,40 @@ window.OneSignalDeferred.push(async (OneSignal) => {
   await OneSignal.init({ appId: window.ONESIGNAL_APP_ID });
 });
 // 保存処理から呼び出す通知送信ヘルパー。Netlify Functions経由でAPIキーを秘匿する。
-window.notifyStaffOfChange = async function notifyStaffOfChange(message, title) {
-  try {
-    await fetch("/.netlify/functions/notify", {
+// 短時間に連続で呼ばれた場合（例：当日シフトの削除→追加）は1件にまとめて送信する。
+window.notifyStaffOfChange = (function () {
+  const DEBOUNCE_MS = 15000;
+  let pending = [];
+  let timer = null;
+  function send(body, useBeacon) {
+    if (useBeacon && navigator.sendBeacon) {
+      navigator.sendBeacon("/.netlify/functions/notify", new Blob([body], { type: "application/json" }));
+      return;
+    }
+    fetch("/.netlify/functions/notify", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title: title || "上々 業務アプリ", message }),
-    });
-  } catch (e) {
-    console.warn("notifyStaffOfChange failed", e);
+      body,
+      keepalive: true,
+    }).catch((e) => console.warn("notifyStaffOfChange failed", e));
   }
-};
+  function flush(useBeacon) {
+    if (!pending.length) return;
+    const items = pending;
+    pending = [];
+    if (timer) { clearTimeout(timer); timer = null; }
+    const titles = [...new Set(items.map((x) => x.title || "上々 業務アプリ"))];
+    const title = titles.length === 1 ? titles[0] : `📋 更新のお知らせ（${items.length}件）`;
+    const message = items.map((x) => x.message).join("\n\n");
+    send(JSON.stringify({ title, message }), useBeacon);
+  }
+  window.addEventListener("pagehide", () => flush(true));
+  return function notifyStaffOfChange(message, title) {
+    pending.push({ message, title });
+    if (timer) clearTimeout(timer);
+    timer = setTimeout(() => flush(false), DEBOUNCE_MS);
+  };
+})();
 </script>
 </head>
 <body><div class="wrap">
