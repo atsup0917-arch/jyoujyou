@@ -1223,6 +1223,9 @@ body{overflow-anchor:none!important;}
 
 <style id="makanaiFeatureStyle">
 .makanaiOpenBtn{background:#f4faf0!important;border:1px solid #a6d4a0!important;color:#3f6b4f!important;margin-top:10px!important;}
+#makanaiPeriodCard{padding:12px 14px!important;}
+#makanaiPeriodCard h2{font-size:16px!important;margin:0 0 8px!important;}
+#makanaiPeriodCard .prepDateRow{margin-bottom:0!important;}
 .makanaiTableWrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
 .makanaiTable{width:auto;border-collapse:collapse;font-size:14px;}
 .makanaiTable th,.makanaiTable td{border:1px solid #e1e4e8;padding:6px 4px;text-align:center;white-space:nowrap;}
@@ -7422,15 +7425,13 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 
 <div id="makanaiPage" class="page" hidden>
   <div class="salesPageHeader"><h1 style="margin:0">🍚 まかないチェック表</h1><button type="button" id="makanaiCloseBtn" class="salesPageCloseBtn" aria-label="まかないチェック表を閉じる">✕</button></div>
-  <div class="card">
+  <div class="card" id="makanaiPeriodCard">
     <h2>📅 対象期間</h2>
     <div class="prepDateRow">
       <button type="button" class="gray" id="makanaiMonthPrev">◀ 前月</button>
       <input type="month" id="makanaiMonth">
       <button type="button" class="gray" id="makanaiMonthNext">翌月 ▶</button>
     </div>
-    <div class="small" id="makanaiRangeLabel"></div>
-    <div class="small" style="margin-top:8px">シフトに登録されている出勤日・名前をもとにスタッフ一覧を作成します（ランチ／ディナーで一覧は変わります）。薄い黄土色のマスが出勤日で、未選択は黄色い？で表示されます。出勤日でないマスは－（グレー）ですが、タップすれば同じように○・❌へ変更できます。セルをタップするたびに ○（食べた）→ ❌（食べていない）→ 未選択（？・－） の順で切り替わります。名前の左のチェックを外すと、そのスタッフは印刷対象から外れます。</div>
   </div>
   <div class="card" id="makanaiServiceCard">
     <h2>🍽️ チェックする時間帯</h2>
@@ -9502,7 +9503,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   }
 
   function renderTable(){
-    const wrap=$('makanaiTableWrap'), label=$('makanaiRangeLabel');
+    const wrap=$('makanaiTableWrap');
     if(!wrap) return;
     renderExcludedList();
     const ym=currentYM(), service=currentService();
@@ -9510,7 +9511,6 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     const scheduleIndex=buildScheduleIndex(ym);
     const roster=buildRoster(scheduleIndex,service);
     const hasAnySchedule=Object.keys(scheduleIndex[service]).length>0;
-    if(label) label.textContent = roster.length? `${ym}（${serviceLabel(service)}）：スタッフ ${roster.length}人・${dates.length}日` : `${ym}：この期間の${serviceLabel(service)}シフトは登録されていません。`;
     if(!roster.length){
       wrap.innerHTML = hasAnySchedule
         ? '<div class="empty">対象のスタッフは全員「非表示」に設定されています。下の「非表示にしたスタッフ」から戻せます。</div>'
