@@ -1243,21 +1243,6 @@ button.makanaiNo{background:#fdecec!important;color:#b33b3b!important;border-col
 .makanaiPrintSelectBar button{width:auto!important;margin:0!important;padding:8px 12px!important;font-size:13px!important;}
 .makanaiPrintCheckLabel{display:flex;align-items:center;gap:6px;cursor:pointer;white-space:nowrap;}
 .makanaiPrintCheckLabel input{width:auto!important;margin:0!important;padding:0!important;flex:0 0 auto;}
-#makanaiPrintSheet{display:none}
-@media print{
- .wrap>.navtabs{display:none!important}
- #makanaiPage>*:not(#makanaiPrintSheet){display:none!important}
- #makanaiPage{display:block!important;margin:0!important;padding:0!important}
- #makanaiPrintSheet{display:block!important;color:#000;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
- @page{size:A4 landscape;margin:8mm}
- #makanaiPrintSheet h1{text-align:center;font-size:18pt;margin:0 0 4mm}
- #makanaiPrintSheet h2{font-size:13pt;margin:6mm 0 2mm;padding:1.5mm 2.5mm;background:#eee;border:1px solid #555;break-after:avoid}
- #makanaiPrintSheet h2:first-of-type{margin-top:0}
- #makanaiPrintSheet table{width:100%;border-collapse:collapse;table-layout:auto;break-inside:avoid}
- #makanaiPrintSheet th,#makanaiPrintSheet td{border:1px solid #555;padding:1.2mm 1.6mm;font-size:9pt;text-align:center}
- #makanaiPrintSheet th:first-child,#makanaiPrintSheet td.mkName{text-align:left;white-space:nowrap}
- #makanaiPrintSheet td.mkTotal,#makanaiPrintSheet th:last-child{font-weight:800}
-}
 </style>
 
 <style id="topTabCountPositionFixV7">
@@ -7471,11 +7456,10 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   </div>
   <div class="card printControls">
     <h2>🖨️ 紙で見る・PDF保存</h2>
-    <div class="small">チェックが入っているスタッフだけを、ランチ・ディナーまとめて1枚に印刷します。</div>
+    <div class="small">チェックが入っているスタッフだけを、ランチ・ディナーまとめて1枚に印刷します（この画面のタブなどは印刷されません）。</div>
     <div class="row"><button type="button" id="makanaiPrintBtn">A4印刷</button></div>
-    <div class="small">スマホでは印刷ボタンを押すと共有シートが開きます。プリンターで印刷する以外に「PDFを作成」または印刷プレビューを長押し（iPhoneの場合）すればPDFとして保存できます。日数が多いと横に長い表になるため、プレビュー画面で向きを「横」にすると全体が収まりやすくなります。</div>
+    <div class="small">タップするとそのまま印刷画面（共有シート）が開きます。プリンターで印刷する以外に「PDFを作成」または印刷プレビューを長押し（iPhoneの場合）すればPDFとして保存できます。</div>
   </div>
-  <div id="makanaiPrintSheet"></div>
 </div>
 
 <script id="salesManagementAddScript">
@@ -9580,7 +9564,14 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   }
 
   // ランチ・ディナーは別々にチェックするが、印刷は両方まとめて1枚に出力する。
-  function buildPrintHtml(){
+  // 印刷内容は現在のアプリ画面とは完全に切り離した別ウィンドウ(別タブ)に書き出す。
+  // アプリ本体のCSS/DOMに一切依存しないため、端末やブラウザによって
+  // @media print が効かず上部タブなどが印刷に写り込む問題が起きない。
+  // 画面上は「9/1(火)」で分かりやすくするが、印刷は列数が多いほど幅が厳しいため、
+  // 月をタイトル側に出す前提で「1(火)」のように詰めた表記にする。
+  function printDateLabel(d){const dt=new Date(d+'T00:00:00');return `${dt.getDate()}(${weekdayNames[dt.getDay()]})`}
+
+  function buildPrintBodyHtml(){
     const ym=currentYM();
     const dates=monthDates(ym);
     const scheduleIndex=buildScheduleIndex(ym);
@@ -9589,19 +9580,18 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     let html=`<h1>上々　まかないチェック表（${esc(ymLabel)}）</h1>`;
     const anyRoster=SERVICES.some(s=>buildRoster(scheduleIndex,s).length);
     if(!anyRoster){
-      html+='<p style="text-align:center;font-size:16pt">この期間のシフトは登録されていません。</p>';
-      $('makanaiPrintSheet').innerHTML=html;
-      return;
+      html+='<p class="mkEmpty">この期間のシフトは登録されていません。</p>';
+      return {html,colCount:dates.length};
     }
     SERVICES.forEach(service=>{
       const roster=buildRoster(scheduleIndex,service);
       const filtered=roster.filter(name=>isSelectedForPrint(service,name,dates));
       html+=`<h2>${esc(serviceLabel(service))}</h2>`;
       if(!filtered.length){
-        html+='<p style="font-size:11pt;margin:0 0 4mm">印刷対象として選択されているスタッフがいません。</p>';
+        html+='<p class="mkEmpty">印刷対象として選択されているスタッフがいません。</p>';
         return;
       }
-      html+=`<table><thead><tr><th>スタッフ</th>${dates.map(d=>`<th>${esc(dateLabel(d))}</th>`).join('')}<th>合計</th></tr></thead><tbody>`;
+      html+=`<table><thead><tr><th class="mkName">スタッフ</th>${dates.map(d=>`<th>${esc(printDateLabel(d))}</th>`).join('')}<th class="mkTotal">合計</th></tr></thead><tbody>`;
       filtered.forEach(name=>{
         let total=0;
         const key=keyForName(name);
@@ -9615,15 +9605,64 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       });
       html+='</tbody></table>';
     });
-    $('makanaiPrintSheet').innerHTML=html;
+    return {html,colCount:dates.length};
   }
 
+  // アプリ本体のCSSカスケード（@media print の効き方が端末・ブラウザによって
+  // 不安定なため、上部タブ等が印刷に写り込む事故が実際に起きた）には一切頼らず、
+  // 印刷の瞬間だけ body 直下の既存要素をJSで強制的に隠し、印刷用の内容だけを
+  // 一時的に追加する。印刷後（またはタイムアウト後）は表示状態を厳密に元へ戻すだけで、
+  // DOMの再生成やイベント再バインドが不要なぶん、より安全・確実。
   function printMakanai(){
-    buildPrintHtml();
-    const oldTitle=document.title;
-    document.title='上々 まかないチェック表';
+    const {html,colCount}=buildPrintBodyHtml();
+    // 日数(列数)が多い月ほど文字・余白を詰める。table-layout:fixed＋%幅指定で
+    // 表の合計幅が必ずページ内に収まるようにし、以前あった「右側の日付が
+    // ページ外にはみ出して消える」事故が起きないようにする。
+    const fontPt = colCount<=15?11:colCount<=20?9.5:colCount<=25?8:7;
+    const padMm = colCount<=15?2:colCount<=20?1.6:colCount<=25?1.3:1;
+    const nameColPct=9, totalColPct=5;
+    const dateColPct=Math.max(1,(100-nameColPct-totalColPct)/Math.max(1,colCount));
+
+    const styleEl=document.createElement('style');
+    styleEl.id='makanaiPrintStyle';
+    styleEl.textContent=`
+@media print{@page{size:A4 landscape;margin:8mm}}
+#makanaiPrintRoot{display:block;background:#fff;color:#000;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
+#makanaiPrintRoot h1{text-align:center;font-size:18pt;margin:0 0 4mm}
+#makanaiPrintRoot h2{font-size:13pt;margin:6mm 0 2mm;padding:1.5mm 2.5mm;background:#eee;border:1px solid #555}
+#makanaiPrintRoot h2:first-of-type{margin-top:0}
+#makanaiPrintRoot table{width:100%;border-collapse:collapse;table-layout:fixed}
+#makanaiPrintRoot th,#makanaiPrintRoot td{border:1px solid #555;padding:${padMm}mm 0.8mm;font-size:${fontPt}pt;text-align:center;overflow:hidden;word-break:break-all}
+#makanaiPrintRoot th,#makanaiPrintRoot td{width:${dateColPct}%}
+#makanaiPrintRoot th.mkName,#makanaiPrintRoot td.mkName{width:${nameColPct}%;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#makanaiPrintRoot th.mkTotal,#makanaiPrintRoot td.mkTotal{width:${totalColPct}%;font-weight:800}
+#makanaiPrintRoot .mkEmpty{text-align:center;font-size:16pt}
+`;
+    document.head.appendChild(styleEl);
+
+    const root=document.createElement('div');
+    root.id='makanaiPrintRoot';
+    root.innerHTML=html;
+
+    const bodyChildren=[...document.body.children];
+    const prevDisplay=bodyChildren.map(el=>el.style.display);
+    bodyChildren.forEach(el=>{el.style.setProperty('display','none','important')});
+    document.body.appendChild(root);
+
+    let restored=false;
+    function restore(){
+      if(restored)return; restored=true;
+      root.remove();
+      bodyChildren.forEach((el,i)=>{
+        if(prevDisplay[i])el.style.display=prevDisplay[i];
+        else el.style.removeProperty('display');
+      });
+      styleEl.remove();
+      window.removeEventListener('afterprint',restore);
+    }
+    window.addEventListener('afterprint',restore);
     window.print();
-    setTimeout(()=>{document.title=oldTitle;},500);
+    setTimeout(restore,5000);
   }
 
   // 旧仕様（ランチ・ディナー区別なし、makanai/checks/{date}/{name}）で保存された
