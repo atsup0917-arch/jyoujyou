@@ -1227,7 +1227,8 @@ body{overflow-anchor:none!important;}
 .makanaiTable{width:auto;border-collapse:collapse;font-size:14px;}
 .makanaiTable th,.makanaiTable td{border:1px solid #e1e4e8;padding:6px 4px;text-align:center;white-space:nowrap;}
 .makanaiTable thead th{background:#f0e6c8;font-weight:800;position:sticky;top:0;}
-.makanaiStaffCol{position:sticky;left:0;background:#fff;z-index:1;text-align:left!important;padding:6px 10px!important;font-weight:700;}
+.makanaiStaffCol{position:sticky;left:0;background:#fff;z-index:1;text-align:left!important;padding:6px 10px!important;font-weight:700;display:flex;align-items:center;gap:6px;}
+.makanaiExcludeBtn{width:auto!important;flex:0 0 auto;margin:0!important;padding:5px 9px!important;font-size:12px!important;}
 .makanaiTable thead .makanaiStaffCol{background:#f0e6c8;z-index:2;}
 .makanaiTotalCol{background:#faf1dc;font-weight:800;}
 .makanaiTable thead .makanaiTotalCol{background:#e9d8ac;}
@@ -8058,12 +8059,23 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   </div>
   <div class="card" id="makanaiTableCard">
     <div id="makanaiTableWrap" class="makanaiTableWrap"></div>
+    <div class="small" style="margin-top:8px">チェックしなくていいスタッフは、名前の右の✕でまかない一覧から外せます。</div>
+  </div>
+  <div class="card" id="makanaiExcludedCard" hidden>
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+      <h2 style="margin:0">🙈 非表示にしたスタッフ</h2>
+      <button type="button" class="gray" id="makanaiExcludedToggle" style="width:auto;margin:0;padding:8px 12px">▲</button>
+    </div>
+    <div id="makanaiExcludedBody">
+      <div class="small">まかない一覧から外したスタッフです。「戻す」で再表示できます（データは削除されません）。</div>
+      <div id="makanaiExcludedList" style="margin-top:10px"></div>
+    </div>
   </div>
   <div class="card printControls">
     <h2>🖨️ 紙で見る・PDF保存</h2>
     <div class="small">チェックが入っているスタッフだけを、ランチ・ディナーまとめて1枚に印刷します。</div>
     <div class="row"><button type="button" id="makanaiPrintBtn">A4印刷</button></div>
-    <div class="small">iPhoneの印刷画面からプリンターで印刷、またはPDFとして保存できます。</div>
+    <div class="small">スマホでは印刷ボタンを押すと共有シートが開きます。プリンターで印刷する以外に「PDFを作成」または印刷プレビューを長押し（iPhoneの場合）すればPDFとして保存できます。日数が多いと横に長い表になるため、プレビュー画面で向きを「横」にすると全体が収まりやすくなります。</div>
   </div>
   <div id="makanaiPrintSheet"></div>
 </div>
@@ -10019,7 +10031,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     return `${y}-${String(mo).padStart(2,'0')}`;
   }
 
-  let schedules={},checks={},staffOrder=[];
+  let schedules={},checks={},staffOrder=[],excludedStaff={};
   const SERVICES=['lunch','dinner'];
   const serviceLabel=s=>s==='lunch'?'☀️ ランチ':'🌙 ディナー';
   // 印刷対象の選択状態。未指定(undefined)の場合は「一件でも○/❌が記録されている」を既定値として使う。
@@ -10070,24 +10082,57 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 
   // スタッフ一覧は「選択中の時間帯（ランチ／ディナー）にその月一度でも出勤があった人」に絞る。
   // 出勤日そのものによるセルのロックは行わない（出勤日でなくてもタップして選択できる）。
+  function isExcluded(name){
+    return !!excludedStaff[keyForName(name)];
+  }
+
   function buildRoster(scheduleIndex,service){
     const all=new Set();
-    Object.values(scheduleIndex[service]).forEach(set=>set.forEach(n=>all.add(n)));
+    Object.values(scheduleIndex[service]).forEach(set=>set.forEach(n=>{if(!isExcluded(n))all.add(n);}));
     const ordered=staffOrder.filter(n=>all.has(n));
     const rest=[...all].filter(n=>!ordered.includes(n)).sort((a,b)=>a.localeCompare(b,'ja'));
     return [...ordered,...rest];
   }
 
+  async function excludeStaff(name){
+    if(!fb()) return;
+    if(!confirm(`「${name}」をまかない一覧から外しますか？\n（記録済みのチェックは削除されません。「非表示にしたスタッフ」からいつでも戻せます）`)) return;
+    try{
+      await fb().set(ref('makanai/excludedStaff/'+keyForName(name)),name);
+    }catch(e){console.error('makanai exclude',e)}
+  }
+
+  async function restoreStaff(key){
+    if(!fb()) return;
+    try{
+      await fb().remove(ref('makanai/excludedStaff/'+key));
+    }catch(e){console.error('makanai restore',e)}
+  }
+
+  function renderExcludedList(){
+    const card=$('makanaiExcludedCard'), list=$('makanaiExcludedList');
+    if(!card||!list) return;
+    const entries=Object.entries(excludedStaff);
+    card.hidden=!entries.length;
+    if(!entries.length){list.innerHTML='';return;}
+    list.innerHTML=entries.map(([key,name])=>`<div class="storeManage"><span>${esc(name)}</span><button type="button" class="gray" data-restore-key="${esc(key)}">戻す</button></div>`).join('');
+    list.querySelectorAll('[data-restore-key]').forEach(b=>{b.onclick=()=>restoreStaff(b.dataset.restoreKey);});
+  }
+
   function renderTable(){
     const wrap=$('makanaiTableWrap'), label=$('makanaiRangeLabel');
     if(!wrap) return;
+    renderExcludedList();
     const ym=currentYM(), service=currentService();
     const dates=monthDates(ym);
     const scheduleIndex=buildScheduleIndex(ym);
     const roster=buildRoster(scheduleIndex,service);
+    const hasAnySchedule=Object.keys(scheduleIndex[service]).length>0;
     if(label) label.textContent = roster.length? `${ym}（${serviceLabel(service)}）：スタッフ ${roster.length}人・${dates.length}日` : `${ym}：この期間の${serviceLabel(service)}シフトは登録されていません。`;
     if(!roster.length){
-      wrap.innerHTML='<div class="empty">この期間のシフトが登録されていません。「シフト」タブで出勤日を登録してください。</div>';
+      wrap.innerHTML = hasAnySchedule
+        ? '<div class="empty">対象のスタッフは全員「非表示」に設定されています。下の「非表示にしたスタッフ」から戻せます。</div>'
+        : '<div class="empty">この期間のシフトが登録されていません。「シフト」タブで出勤日を登録してください。</div>';
       return;
     }
     const printBar=`<div class="makanaiPrintSelectBar">
@@ -10108,7 +10153,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
         return `<td${tdClass}><button type="button" class="makanaiCell makanaiUnset" data-date="${esc(d)}" data-name="${esc(name)}">${worked?'？':'－'}</button></td>`;
       }).join('');
       const checked=isSelectedForPrint(service,name,dates)?' checked':'';
-      return `<tr><td class="makanaiStaffCol"><label class="makanaiPrintCheckLabel"><input type="checkbox" class="makanaiPrintCheck" data-print-name="${esc(name)}"${checked}> ${esc(name)}</label></td>${cells}<td class="makanaiTotalCol">${total}</td></tr>`;
+      return `<tr><td class="makanaiStaffCol"><label class="makanaiPrintCheckLabel"><input type="checkbox" class="makanaiPrintCheck" data-print-name="${esc(name)}"${checked}> ${esc(name)}</label><button type="button" class="itemDelete makanaiExcludeBtn" data-exclude-name="${esc(name)}" aria-label="${esc(name)}をまかない一覧から外す" title="まかない一覧から外す">✕</button></td>${cells}<td class="makanaiTotalCol">${total}</td></tr>`;
     }).join('');
     wrap.innerHTML=`${printBar}<table class="makanaiTable"><thead>${thead}</thead><tbody>${rows}</tbody></table>`;
     wrap.querySelectorAll('.makanaiCell').forEach(b=>{
@@ -10116,6 +10161,9 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     });
     wrap.querySelectorAll('.makanaiPrintCheck').forEach(cb=>{
       cb.onchange=()=>{printSelection[service][cb.dataset.printName]=cb.checked;};
+    });
+    wrap.querySelectorAll('.makanaiExcludeBtn').forEach(b=>{
+      b.onclick=()=>excludeStaff(b.dataset.excludeName);
     });
     $('makanaiSelectAll').onclick=e=>{e.preventDefault();roster.forEach(n=>printSelection[service][n]=true);renderTable();};
     $('makanaiSelectNone').onclick=e=>{e.preventDefault();roster.forEach(n=>printSelection[service][n]=false);renderTable();};
@@ -10214,6 +10262,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       renderTable();
     });
     fb().onValue(ref('makanai/checks'),s=>{checks=s.val()||{};renderTable();});
+    fb().onValue(ref('makanai/excludedStaff'),s=>{excludedStaff=s.val()||{};renderTable();});
   }
   subscribe();
 
@@ -10254,6 +10303,16 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     const lunchBtn=$('makanaiServiceLunch'), dinnerBtn=$('makanaiServiceDinner');
     if(lunchBtn && lunchBtn.dataset.bound!=='1'){lunchBtn.dataset.bound='1';lunchBtn.addEventListener('click',e=>{e.preventDefault();lunchBtn.classList.add('active');dinnerBtn?.classList.remove('active');renderTable();});}
     if(dinnerBtn && dinnerBtn.dataset.bound!=='1'){dinnerBtn.dataset.bound='1';dinnerBtn.addEventListener('click',e=>{e.preventDefault();dinnerBtn.classList.add('active');lunchBtn?.classList.remove('active');renderTable();});}
+    const excludedToggle=$('makanaiExcludedToggle'), excludedBody=$('makanaiExcludedBody');
+    if(excludedToggle && excludedToggle.dataset.bound!=='1'){
+      excludedToggle.dataset.bound='1';
+      excludedToggle.addEventListener('click',e=>{
+        e.preventDefault();
+        const isOpen=!excludedBody.hidden;
+        excludedBody.hidden=isOpen;
+        excludedToggle.textContent=isOpen?'▼':'▲';
+      });
+    }
   }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',bind); else bind();
   setInterval(bind,1000);
