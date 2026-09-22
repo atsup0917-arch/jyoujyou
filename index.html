@@ -7459,7 +7459,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     <h2>🖨️ 紙で見る・PDF保存</h2>
     <div class="small">チェックが入っているスタッフだけを、ランチ・ディナーまとめて1枚に印刷します（この画面のタブなどは印刷されません）。</div>
     <div class="row"><button type="button" id="makanaiPrintBtn">A4印刷</button></div>
-    <div class="small">タップするとそのまま印刷画面（共有シート）が開きます。プリンターで印刷する以外に「PDFを作成」または印刷プレビューを長押し（iPhoneの場合）すればPDFとして保存できます。</div>
+    <div class="small">タップするとそのまま印刷画面（共有シート）が開きます。プリンターで印刷する以外に「PDFを作成」または印刷プレビューを長押し（iPhoneの場合）すればPDFとして保存できます。印刷が終わったら、画面右上の「✕印刷画面を閉じる」をタップしてアプリに戻ってください。</div>
   </div>
 </div>
 
@@ -9569,7 +9569,10 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   // @media print が効かず上部タブなどが印刷に写り込む問題が起きない。
   // 画面上は「9/1(火)」で分かりやすくするが、印刷は列数が多いほど幅が厳しいため、
   // 月をタイトル側に出す前提で「1(火)」のように詰めた表記にする。
-  function printDateLabel(d){const dt=new Date(d+'T00:00:00');return `${dt.getDate()}(${weekdayNames[dt.getDay()]})`}
+  // 日付・曜日をどの列でも必ず2行（日付／曜日）に固定して表示する。
+  // 自然な折り返しに任せると、列幅の都合で行によって1行になったり
+  // 2行になったりして見た目が揃わないため、常に明示的に改行する。
+  function printDateLabel(d){const dt=new Date(d+'T00:00:00');return `${dt.getDate()}<br>(${weekdayNames[dt.getDay()]})`}
 
   function buildPrintBodyHtml(){
     const ym=currentYM();
@@ -9591,7 +9594,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
         html+='<p class="mkEmpty">印刷対象として選択されているスタッフがいません。</p>';
         return;
       }
-      html+=`<table><thead><tr><th class="mkName">スタッフ</th>${dates.map(d=>`<th>${esc(printDateLabel(d))}</th>`).join('')}<th class="mkTotal">合計</th></tr></thead><tbody>`;
+      html+=`<table><thead><tr><th class="mkName">スタッフ</th>${dates.map(d=>`<th>${printDateLabel(d)}</th>`).join('')}<th class="mkTotal">合計</th></tr></thead><tbody>`;
       filtered.forEach(name=>{
         let total=0;
         const key=keyForName(name);
@@ -9632,11 +9635,13 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 #makanaiPrintRoot h2{font-size:13pt;margin:6mm 0 2mm;padding:1.5mm 2.5mm;background:#eee;border:1px solid #555}
 #makanaiPrintRoot h2:first-of-type{margin-top:0}
 #makanaiPrintRoot table{width:100%;border-collapse:collapse;table-layout:fixed}
-#makanaiPrintRoot th,#makanaiPrintRoot td{border:1px solid #555;padding:${padMm}mm 0.8mm;font-size:${fontPt}pt;text-align:center;overflow:hidden;word-break:break-all}
+#makanaiPrintRoot th,#makanaiPrintRoot td{border:1px solid #555;padding:${padMm}mm 0.8mm;font-size:${fontPt}pt;text-align:center;overflow:hidden;white-space:nowrap;line-height:1.3}
 #makanaiPrintRoot th,#makanaiPrintRoot td{width:${dateColPct}%}
 #makanaiPrintRoot th.mkName,#makanaiPrintRoot td.mkName{width:${nameColPct}%;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #makanaiPrintRoot th.mkTotal,#makanaiPrintRoot td.mkTotal{width:${totalColPct}%;font-weight:800}
 #makanaiPrintRoot .mkEmpty{text-align:center;font-size:16pt}
+#makanaiPrintCloseBtn{position:fixed;top:10px;right:10px;width:auto;z-index:99999;padding:12px 16px;background:#7a2e2e;color:#fff;border-radius:14px;font-weight:800;box-shadow:0 2px 10px rgba(0,0,0,.3)}
+@media print{#makanaiPrintCloseBtn{display:none!important}}
 `;
     document.head.appendChild(styleEl);
 
@@ -9649,6 +9654,18 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     bodyChildren.forEach(el=>{el.style.setProperty('display','none','important')});
     document.body.appendChild(root);
 
+    // iOSの印刷オプション画面（共有シート）は、開いた直後にまだ何も終わって
+    // いなくてもafterprintを発火させることがあり、それを信じて早く復元すると
+    // 「あとから向きを横に変える」等の操作をした時に元のアプリ画面が
+    // 印刷に写り込んでしまう（実機で確認済みの不具合）。そのためafterprintには
+    // 頼らず、印刷シートを開いている間は明示的に閉じるまで（または長めの
+    // タイムアウトで）表示したままにする。
+    const closeBtn=document.createElement('button');
+    closeBtn.type='button';
+    closeBtn.id='makanaiPrintCloseBtn';
+    closeBtn.textContent='✕ 印刷画面を閉じる';
+    root.appendChild(closeBtn);
+
     let restored=false;
     function restore(){
       if(restored)return; restored=true;
@@ -9658,11 +9675,16 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
         else el.style.removeProperty('display');
       });
       styleEl.remove();
-      window.removeEventListener('afterprint',restore);
     }
-    window.addEventListener('afterprint',restore);
-    window.print();
-    setTimeout(restore,5000);
+    closeBtn.addEventListener('click',e=>{e.preventDefault();restore();});
+    // 一部のスマホのブラウザ（iOS Safari等）は、直前に行った同期的なDOM変更
+    // （タブなどを非表示化）が実際の描画に反映される前にwindow.print()を呼ぶと、
+    // 変更前の画面（タブが写った状態）をそのまま印刷してしまうことがある。
+    // requestAnimationFrameは印刷ダイアログを開く直前にタブの描画が一時停止
+    // していると発火しないことがあるため使わず、素直なsetTimeoutで
+    // 確実に一度描画を挟んでから印刷を呼び出す。
+    setTimeout(()=>{window.print();},120);
+    setTimeout(restore,120000);
   }
 
   // 旧仕様（ランチ・ディナー区別なし、makanai/checks/{date}/{name}）で保存された
