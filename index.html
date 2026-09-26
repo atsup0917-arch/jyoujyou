@@ -4213,14 +4213,22 @@ if($("prepSummaryClose"))$("prepSummaryClose").onclick=()=>{$("prepSummaryModal"
     s.innerHTML='<option value="">業者を選択</option>'+
       Object.entries(suppliers).sort((a,b)=>(a[1].name||"").localeCompare(b[1].name||"ja"))
       .map(([k,v])=>`<option value="${esc(k)}">${esc(v.name)}</option>`).join("");
-    if(suppliers[keep])s.value=keep;
+    if(suppliers[keep]){
+      s.value=keep;
+    }else{
+      const assist=Object.entries(suppliers).find(([,v])=>String(v.name||"").trim()==="アシスト");
+      if(assist)s.value=assist[0];
+    }
     renderProducts();
   }
 
   function renderProducts(){
     const sid=$("nonVegSupplier").value;
     const q=norm($("nonVegProductSearch").value);
+    // 野菜発注と同様、今回の発注リストに追加済みの商品は選択候補から一時的に外す
+    const selectedNames=new Set((order||[]).map(x=>norm(x.name)));
     const all=Object.entries(products[sid]||{}).filter(([,p])=>{
+      if(selectedNames.has(norm(p.name)))return false;
       if(!q)return true;
       return norm(p.name).includes(q)||norm(p.kana||"").includes(q);
     }).sort((a,b)=>(Number(a[1].order??999999)-Number(b[1].order??999999))||(a[1].name||"").localeCompare(b[1].name||"ja"));
@@ -4425,6 +4433,7 @@ function renderNonVegProductManager(){
     document.querySelectorAll("[data-nonveg-del]").forEach(b=>b.onclick=()=>{
       order.splice(Number(b.dataset.nonvegDel),1);renderOrder();
     });
+    renderProducts();
   }
 
   function switchMode(mode){
