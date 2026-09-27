@@ -1226,15 +1226,18 @@ body{overflow-anchor:none!important;}
 #makanaiPeriodCard{padding:12px 14px!important;}
 #makanaiPeriodCard h2{font-size:16px!important;margin:0 0 8px!important;}
 #makanaiPeriodCard .prepDateRow{margin-bottom:0!important;}
-.makanaiTableWrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
-.makanaiTable{width:auto;border-collapse:collapse;font-size:14px;}
-.makanaiTable th,.makanaiTable td{border:1px solid #e1e4e8;padding:6px 4px;text-align:center;white-space:nowrap;}
-.makanaiTable thead th{background:#f0e6c8;font-weight:800;position:sticky;top:0;}
-.makanaiStaffCol{position:sticky;left:0;background:#fff;z-index:1;text-align:left!important;padding:6px 10px!important;font-weight:700;display:flex;align-items:center;gap:6px;transform:translateZ(0);-webkit-transform:translateZ(0);will-change:transform;}
+.makanaiTableWrap{}
+.makanaiSplitWrap{display:flex;align-items:flex-start;}
+.makanaiStaffTableWrap{flex:0 0 auto;}
+.makanaiDatesTableWrap{flex:1 1 auto;min-width:0;overflow-x:auto;-webkit-overflow-scrolling:touch;}
+.makanaiStaffTable,.makanaiDatesTable{width:auto;border-collapse:collapse;font-size:14px;}
+.makanaiStaffTable th,.makanaiStaffTable td,.makanaiDatesTable th,.makanaiDatesTable td{border:1px solid #e1e4e8;padding:6px 4px;text-align:center;white-space:nowrap;box-sizing:border-box;height:48px;}
+.makanaiStaffTable thead th,.makanaiDatesTable thead th{background:#f0e6c8;font-weight:800;position:sticky;top:0;}
+.makanaiStaffCol{text-align:left!important;padding:6px 10px!important;font-weight:700;display:flex;align-items:center;gap:6px;background:#fff;}
+.makanaiStaffTable thead .makanaiStaffCol{background:#f0e6c8;}
 .makanaiExcludeBtn{width:auto!important;flex:0 0 auto;margin:0!important;padding:5px 9px!important;font-size:12px!important;}
-.makanaiTable thead .makanaiStaffCol{background:#f0e6c8;z-index:2;}
 .makanaiTotalCol{background:#faf1dc;font-weight:800;}
-.makanaiTable thead .makanaiTotalCol{background:#e9d8ac;}
+.makanaiDatesTable thead .makanaiTotalCol{background:#e9d8ac;}
 td.makanaiWorkday{background:#fdf6e3;}
 button.makanaiCell{width:34px!important;height:34px!important;min-width:34px!important;margin:0!important;padding:0!important;border-radius:8px!important;font-size:16px!important;font-weight:800!important;line-height:1!important;border:1px solid transparent!important;}
 button.makanaiUnset{background:#f2f2f2!important;color:#aaa!important;border-color:#e2e2e2!important;}
@@ -9538,8 +9541,11 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       <button type="button" class="gray" id="makanaiSelectAll">全て選択</button>
       <button type="button" class="gray" id="makanaiSelectNone">全て解除</button>
     </div>`;
-    const thead=`<tr><th class="makanaiStaffCol">印刷　スタッフ</th>${dates.map(d=>`<th>${esc(dateLabel(d))}</th>`).join('')}<th class="makanaiTotalCol">合計</th></tr>`;
-    const rows=roster.map(name=>{
+    const staffThead=`<tr><th class="makanaiStaffCol">印刷　スタッフ</th></tr>`;
+    const datesThead=`<tr>${dates.map(d=>`<th>${esc(dateLabel(d))}</th>`).join('')}<th class="makanaiTotalCol">合計</th></tr>`;
+    const staffRows=[];
+    const datesRows=[];
+    roster.forEach(name=>{
       let total=0;
       const key=keyForName(name);
       const cells=dates.map(d=>{
@@ -9551,9 +9557,13 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
         return `<td${tdClass}><button type="button" class="makanaiCell makanaiUnset" data-date="${esc(d)}" data-name="${esc(name)}">${worked?'？':'－'}</button></td>`;
       }).join('');
       const checked=isSelectedForPrint(service,name,dates)?' checked':'';
-      return `<tr><td class="makanaiStaffCol"><label class="makanaiPrintCheckLabel"><input type="checkbox" class="makanaiPrintCheck" data-print-name="${esc(name)}"${checked}> ${esc(name)}</label><button type="button" class="itemDelete makanaiExcludeBtn" data-exclude-name="${esc(name)}" aria-label="${esc(name)}をまかない一覧から外す" title="まかない一覧から外す">✕</button></td>${cells}<td class="makanaiTotalCol">${total}</td></tr>`;
-    }).join('');
-    wrap.innerHTML=`${printBar}<table class="makanaiTable"><thead>${thead}</thead><tbody>${rows}</tbody></table>`;
+      staffRows.push(`<tr><td class="makanaiStaffCol"><label class="makanaiPrintCheckLabel"><input type="checkbox" class="makanaiPrintCheck" data-print-name="${esc(name)}"${checked}> ${esc(name)}</label><button type="button" class="itemDelete makanaiExcludeBtn" data-exclude-name="${esc(name)}" aria-label="${esc(name)}をまかない一覧から外す" title="まかない一覧から外す">✕</button></td></tr>`);
+      datesRows.push(`<tr>${cells}<td class="makanaiTotalCol">${total}</td></tr>`);
+    });
+    wrap.innerHTML=`${printBar}<div class="makanaiSplitWrap">
+      <div class="makanaiStaffTableWrap"><table class="makanaiStaffTable"><thead>${staffThead}</thead><tbody>${staffRows.join('')}</tbody></table></div>
+      <div class="makanaiDatesTableWrap"><table class="makanaiDatesTable"><thead>${datesThead}</thead><tbody>${datesRows.join('')}</tbody></table></div>
+    </div>`;
     wrap.querySelectorAll('.makanaiCell').forEach(b=>{
       b.onclick=()=>toggleCell(service,b.dataset.date,b.dataset.name);
     });
