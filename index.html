@@ -1241,6 +1241,7 @@ body{overflow-anchor:none!important;}
 td.makanaiWorkday{background:#fdf6e3;}
 .makanaiDualCell{display:flex;flex-direction:column;gap:3px;align-items:center;}
 button.makanaiCell{width:46px!important;height:30px!important;min-width:46px!important;margin:0!important;padding:0!important;border-radius:7px!important;font-size:12px!important;font-weight:800!important;line-height:1!important;border:1px solid transparent!important;display:flex!important;align-items:center;justify-content:center;gap:2px;}
+button.makanaiCellSingle{width:56px!important;height:52px!important;min-width:56px!important;border-radius:10px!important;font-size:16px!important;gap:3px;}
 button.makanaiUnset{background:#f2f2f2!important;color:#aaa!important;border-color:#e2e2e2!important;}
 td.makanaiWorkday button.makanaiUnset{background:#fff3cd!important;color:#8a6d00!important;border-color:#e6c46c!important;}
 button.makanaiYes{background:#eefaf1!important;color:#3f6b4f!important;border-color:#a6d4a0!important;}
@@ -9551,12 +9552,17 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     list.querySelectorAll('[data-restore-key]').forEach(b=>{b.onclick=()=>restoreStaff(b.dataset.restoreKey);});
   }
 
-  // 1マス分の○/❌/？/－ボタンを作る（昼・夜どちらの時間帯かはserviceで区別）。
-  function makanaiCellButton(service,date,key,value,worked){
-    let cls='makanaiUnset', label=worked?'？':'－';
+  // 1マス分の○/❌/？/・ボタンを作る（昼・夜どちらの時間帯かはserviceで区別）。
+  // sizeMod（''か' makanaiCellSingle'）で、昼夜両方入っている人用の小さい
+  // 2段ボタンと、片方しか入っていない人用の大きい1個ボタンを切り替える。
+  function makanaiCellButton(service,date,key,value,worked,sizeMod){
+    // 「未チェック・出勤日でもない」と「未チェック・出勤日」が見分けにくいという
+    // フィードバックにより、前者は「・」（目立たない）、後者は「？」（要チェックを
+    // 強調）とはっきり違う記号にする。
+    let cls='makanaiUnset', label=worked?'？':'・';
     if(value==='yes'){cls='makanaiYes';label='○';}
     else if(value==='no'){cls='makanaiNo';label='❌';}
-    return `<button type="button" class="makanaiCell ${cls}" data-service="${service}" data-date="${esc(date)}" data-key="${esc(key)}">${serviceIcon(service)}${label}</button>`;
+    return `<button type="button" class="makanaiCell${sizeMod||''} ${cls}" data-service="${service}" data-date="${esc(date)}" data-key="${esc(key)}">${serviceIcon(service)}${label}</button>`;
   }
 
   function renderTable(){
@@ -9589,6 +9595,10 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     const staffRows=[];
     const datesRows=[];
     roster.forEach(entry=>{
+      // 昼・夜どちらも入っている人だけ2段の小さいボタンにし、
+      // 片方しか入っていない人は大きいボタン1個だけにする
+      // （「昼夜入ってる子以外は2つあると分かりづらい」というフィードバックへの対応）。
+      const dual=!!(entry.lunchName && entry.dinnerName);
       let lunchTotal=0, dinnerTotal=0;
       const lunchKey=lunchKeyOf(entry), dinnerKey=dinnerKeyOf(entry);
       const cells=dates.map(d=>{
@@ -9599,13 +9609,22 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
         if(lv==='yes')lunchTotal++;
         if(dv==='yes')dinnerTotal++;
         const tdClass=(lunchWorked||dinnerWorked)?' class="makanaiWorkday"':'';
-        const lunchBtn=makanaiCellButton('lunch',d,lunchKey,lv,lunchWorked);
-        const dinnerBtn=makanaiCellButton('dinner',d,dinnerKey,dv,dinnerWorked);
-        return `<td${tdClass}><div class="makanaiDualCell">${lunchBtn}${dinnerBtn}</div></td>`;
+        if(dual){
+          const lunchBtn=makanaiCellButton('lunch',d,lunchKey,lv,lunchWorked);
+          const dinnerBtn=makanaiCellButton('dinner',d,dinnerKey,dv,dinnerWorked);
+          return `<td${tdClass}><div class="makanaiDualCell">${lunchBtn}${dinnerBtn}</div></td>`;
+        }
+        const soloService=entry.lunchName?'lunch':'dinner';
+        const soloKey=soloService==='lunch'?lunchKey:dinnerKey;
+        const soloWorked=soloService==='lunch'?lunchWorked:dinnerWorked;
+        const soloVal=soloService==='lunch'?lv:dv;
+        return `<td${tdClass}>${makanaiCellButton(soloService,d,soloKey,soloVal,soloWorked,' makanaiCellSingle')}</td>`;
       }).join('');
       const checked=isSelectedForPrint(entry,dates)?' checked':'';
       staffRows.push(`<tr><td class="makanaiStaffCol"><label class="makanaiPrintCheckLabel"><input type="checkbox" class="makanaiPrintCheck" data-print-name="${esc(entry.displayName)}"${checked}> ${esc(entry.displayName)}</label><button type="button" class="itemDelete makanaiExcludeBtn" data-exclude-name="${esc(entry.displayName)}" aria-label="${esc(entry.displayName)}をまかない一覧から外す" title="まかない一覧から外す">✕</button></td></tr>`);
-      datesRows.push(`<tr>${cells}<td class="makanaiTotalCol">${lunchTotal}</td><td class="makanaiTotalCol">${dinnerTotal}</td></tr>`);
+      const lunchTotalCell=entry.lunchName?lunchTotal:'・';
+      const dinnerTotalCell=entry.dinnerName?dinnerTotal:'・';
+      datesRows.push(`<tr>${cells}<td class="makanaiTotalCol">${lunchTotalCell}</td><td class="makanaiTotalCol">${dinnerTotalCell}</td></tr>`);
     });
     wrap.innerHTML=`${printBar}<div class="makanaiSplitWrap">
       <div class="makanaiStaffTableWrap"><table class="makanaiStaffTable"><thead>${staffThead}</thead><tbody>${staffRows.join('')}</tbody></table></div>
@@ -9668,6 +9687,9 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     html+='<p class="mkNote">各日の欄は上段＝☀️ランチ／下段＝🌙ディナー</p>';
     html+=`<table><thead><tr><th class="mkName">スタッフ</th>${dates.map(d=>`<th>${printDateLabel(d)}</th>`).join('')}<th class="mkTotal">☀️昼</th><th class="mkTotal">🌙夜</th></tr></thead><tbody>`;
     filtered.forEach(entry=>{
+      // 画面と同じく、昼夜どちらも入っている人だけ上下2段で表示し、
+      // 片方しか入っていない人は1段だけにする（空の段が並んで分かりづらいのを防ぐ）。
+      const dual=!!(entry.lunchName && entry.dinnerName);
       let lunchTotal=0, dinnerTotal=0;
       const lunchKey=lunchKeyOf(entry), dinnerKey=dinnerKeyOf(entry);
       const tds=dates.map(d=>{
@@ -9677,9 +9699,12 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
         if(dv==='yes')dinnerTotal++;
         const lm=lv==='yes'?'○':lv==='no'?'❌':'　';
         const dm=dv==='yes'?'○':dv==='no'?'❌':'　';
-        return `<td class="mkDual">${lm}<br>${dm}</td>`;
+        if(dual) return `<td class="mkDual">${lm}<br>${dm}</td>`;
+        return `<td>${entry.lunchName?lm:dm}</td>`;
       }).join('');
-      html+=`<tr><td class="mkName">${esc(entry.displayName)}</td>${tds}<td class="mkTotal">${lunchTotal}</td><td class="mkTotal">${dinnerTotal}</td></tr>`;
+      const lunchTotalCell=entry.lunchName?lunchTotal:'';
+      const dinnerTotalCell=entry.dinnerName?dinnerTotal:'';
+      html+=`<tr><td class="mkName">${esc(entry.displayName)}</td>${tds}<td class="mkTotal">${lunchTotalCell}</td><td class="mkTotal">${dinnerTotalCell}</td></tr>`;
     });
     html+='</tbody></table>';
     return {html,colCount:dates.length};
