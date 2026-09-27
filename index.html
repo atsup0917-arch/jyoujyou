@@ -1584,6 +1584,13 @@ window.notifyStaffOfChange = (function () {
   };
 })();
 </script>
+<style id="makanaiKioskMode">
+/* ?makanai=1 で開いた「まかない専用リンク」表示時、上部タブ・ヘッダーを隠す */
+html.makanaiKiosk .navtabs.navtabs4,
+html.makanaiKiosk .brandHeader{
+  display:none!important;
+}
+</style>
 </head>
 <body><div class="wrap">
 <header class="brandHeader">
@@ -9784,6 +9791,16 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',bind); else bind();
   setInterval(bind,1000);
+
+  // URLに ?makanai=1 を付けて開いた場合は、まかないチェック表だけを表示する
+  // 「まかないページ専用リンク」モード。LINEなどでこのリンクだけをスタッフに
+  // 共有し、他のタブ（買い物・シフトなど）に触れさせずに入力してもらうための機能。
+  const MAKANAI_KIOSK=new URLSearchParams(location.search).get('makanai')==='1';
+  if(MAKANAI_KIOSK){
+    document.documentElement.classList.add('makanaiKiosk');
+    showMakanai();
+    const closeBtn=$('makanaiCloseBtn'); if(closeBtn) closeBtn.hidden=true;
+  }
 })();
 </script>
 </body></html>
