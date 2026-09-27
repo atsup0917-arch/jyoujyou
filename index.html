@@ -5770,6 +5770,17 @@ button, label {
   display:none!important;
 }
 </style>
+<script id="staffDisplayNameUtil">
+// ランチ・ディナー両方に入るスタッフは、シフト登録時の慣習で名前の末尾に
+// 「昼」を付けて区別することがある（例：同じ人物が「さくら」「さくら昼」）。
+// データ（元の名前文字列）はそのまま保持しつつ、画面表示だけ末尾の「昼」を
+// 取り除いて同一人物として見えるようにする共通ヘルパー。
+window.mkDisplayStaffName = function(name){
+  const s = String(name||'').trim();
+  if(s.length>1 && s.endsWith('昼')) return s.slice(0,-1).trim() || s;
+  return s;
+};
+</script>
 <script id="shiftStandaloneFixed">
 (function(){
   'use strict';
@@ -5958,7 +5969,7 @@ function renderDay(){
     });
     const names=window.sortShiftDisplayByPosition(Object.values(byName));
     sum.textContent=names.length?`${dateLabel(date)}　出勤 ${names.length}人`:'この日のシフトはありません。';
-    list.innerHTML=names.length?`<div class="shiftAttendanceGrid">${names.map((x,i)=>{const te=shiftDisplayStartEnd(x.time,x.startTime,x.endTime);return `<button type="button" class="shiftAttendanceName shiftNameTap" data-shift-edit-name="${esc(x.name)}" data-shift-edit-date="${esc(date)}"><span class="shiftAttendanceNo">${i+1}</span><span class="shiftAttendancePerson"><b>${esc(x.name)}</b>${shiftType()==='dinner'&&x.position?`<span class="shiftAttendancePosition">${esc(x.position)}</span>`:''}</span><span class="shiftAttendanceTime"><span><small>開始</small><strong>${esc(te.start||'--:--')}</strong></span><span><small>終了</small><strong>${esc(te.end||'--:--')}</strong></span></span></button>`}).join('')}</div>`:'';
+    list.innerHTML=names.length?`<div class="shiftAttendanceGrid">${names.map((x,i)=>{const te=shiftDisplayStartEnd(x.time,x.startTime,x.endTime);return `<button type="button" class="shiftAttendanceName shiftNameTap" data-shift-edit-name="${esc(x.name)}" data-shift-edit-date="${esc(date)}"><span class="shiftAttendanceNo">${i+1}</span><span class="shiftAttendancePerson"><b>${esc(window.mkDisplayStaffName(x.name))}</b>${shiftType()==='dinner'&&x.position?`<span class="shiftAttendancePosition">${esc(x.position)}</span>`:''}</span><span class="shiftAttendanceTime"><span><small>開始</small><strong>${esc(te.start||'--:--')}</strong></span><span><small>終了</small><strong>${esc(te.end||'--:--')}</strong></span></span></button>`}).join('')}</div>`:'';
     renderTodayQuick();
     renderMemos();
   }
@@ -6552,7 +6563,7 @@ function renderDay(){
     // ポジションを確定してから並び替える。これまでポジション設定前に並び替えていたため、順番が反映されなかった。
     const names=window.sortShiftDisplayByPosition(Object.values(byName));
     sum.textContent=names.length?`出勤 ${names.length}人`:'本日のシフトはまだ登録されていません。';
-    list.innerHTML=names.length?names.map((x,i)=>{const te=shiftDisplayStartEnd(x.time,x.startTime,x.endTime);return `<button type="button" class="shiftHeroName shiftNameTap" data-shift-edit-name="${esc(x.name)}" data-shift-edit-date="${esc(date)}"><span class="shiftHeroNo">${i+1}</span><span class="shiftHeroMain"><b>${esc(x.name)}</b>${shiftType()==='dinner'&&x.position?`<span class="shiftHeroPosition">${esc(x.position)}</span>`:''}</span><span class="shiftHeroTimeBox"><span><small>開始</small><strong>${esc(te.start||'--:--')}</strong></span><span><small>終了</small><strong>${esc(te.end||'--:--')}</strong></span></span></button>`}).join(''):'';
+    list.innerHTML=names.length?names.map((x,i)=>{const te=shiftDisplayStartEnd(x.time,x.startTime,x.endTime);return `<button type="button" class="shiftHeroName shiftNameTap" data-shift-edit-name="${esc(x.name)}" data-shift-edit-date="${esc(date)}"><span class="shiftHeroNo">${i+1}</span><span class="shiftHeroMain"><b>${esc(window.mkDisplayStaffName(x.name))}</b>${shiftType()==='dinner'&&x.position?`<span class="shiftHeroPosition">${esc(x.position)}</span>`:''}</span><span class="shiftHeroTimeBox"><span><small>開始</small><strong>${esc(te.start||'--:--')}</strong></span><span><small>終了</small><strong>${esc(te.end||'--:--')}</strong></span></span></button>`}).join(''):'';
     const ma=Object.values(memos).filter(x=>x?.date===date && shiftMemoScopedKey(x)).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
     if(memoBox){memoBox.hidden=!ma.length;memoBox.textContent=ma.length?`📝 引き継ぎ\n${ma.map(x=>x.text).join('\n\n')}`:'';}
   }
@@ -9498,7 +9509,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 
   async function excludeStaff(name){
     if(!fb()) return;
-    if(!confirm(`「${name}」をまかない一覧から外しますか？\n（記録済みのチェックは削除されません。「非表示にしたスタッフ」からいつでも戻せます）`)) return;
+    if(!confirm(`「${window.mkDisplayStaffName(name)}」をまかない一覧から外しますか？\n（記録済みのチェックは削除されません。「非表示にしたスタッフ」からいつでも戻せます）`)) return;
     try{
       await fb().set(ref('makanai/excludedStaff/'+keyForName(name)),name);
     }catch(e){console.error('makanai exclude',e)}
@@ -9517,7 +9528,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     const entries=Object.entries(excludedStaff);
     card.hidden=!entries.length;
     if(!entries.length){list.innerHTML='';return;}
-    list.innerHTML=entries.map(([key,name])=>`<div class="storeManage"><span>${esc(name)}</span><button type="button" class="gray" data-restore-key="${esc(key)}">戻す</button></div>`).join('');
+    list.innerHTML=entries.map(([key,name])=>`<div class="storeManage"><span>${esc(window.mkDisplayStaffName(name))}</span><button type="button" class="gray" data-restore-key="${esc(key)}">戻す</button></div>`).join('');
     list.querySelectorAll('[data-restore-key]').forEach(b=>{b.onclick=()=>restoreStaff(b.dataset.restoreKey);});
   }
 
@@ -9557,7 +9568,8 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
         return `<td${tdClass}><button type="button" class="makanaiCell makanaiUnset" data-date="${esc(d)}" data-name="${esc(name)}">${worked?'？':'－'}</button></td>`;
       }).join('');
       const checked=isSelectedForPrint(service,name,dates)?' checked':'';
-      staffRows.push(`<tr><td class="makanaiStaffCol"><label class="makanaiPrintCheckLabel"><input type="checkbox" class="makanaiPrintCheck" data-print-name="${esc(name)}"${checked}> ${esc(name)}</label><button type="button" class="itemDelete makanaiExcludeBtn" data-exclude-name="${esc(name)}" aria-label="${esc(name)}をまかない一覧から外す" title="まかない一覧から外す">✕</button></td></tr>`);
+      const displayName=window.mkDisplayStaffName(name);
+      staffRows.push(`<tr><td class="makanaiStaffCol"><label class="makanaiPrintCheckLabel"><input type="checkbox" class="makanaiPrintCheck" data-print-name="${esc(name)}"${checked}> ${esc(displayName)}</label><button type="button" class="itemDelete makanaiExcludeBtn" data-exclude-name="${esc(name)}" aria-label="${esc(displayName)}をまかない一覧から外す" title="まかない一覧から外す">✕</button></td></tr>`);
       datesRows.push(`<tr>${cells}<td class="makanaiTotalCol">${total}</td></tr>`);
     });
     wrap.innerHTML=`${printBar}<div class="makanaiSplitWrap">
@@ -9630,7 +9642,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
           if(v==='no') return '<td>❌</td>';
           return '<td></td>';
         }).join('');
-        html+=`<tr><td class="mkName">${esc(name)}</td>${tds}<td class="mkTotal">${total}</td></tr>`;
+        html+=`<tr><td class="mkName">${esc(window.mkDisplayStaffName(name))}</td>${tds}<td class="mkTotal">${total}</td></tr>`;
       });
       html+='</tbody></table>';
     });
