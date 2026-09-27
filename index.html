@@ -9562,6 +9562,11 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   function renderTable(){
     const wrap=$('makanaiTableWrap');
     if(!wrap) return;
+    // チェックするたびにFirebaseの再同期でrenderTable()が呼び直され、
+    // wrap.innerHTMLを丸ごと作り直すため、何もしないと横スクロール位置が
+    // 毎回リセットされて「1日目」に戻って見えるバグになる。再描画の前後で
+    // 日付テーブルの横スクロール位置を保存・復元する。
+    const prevDatesScrollLeft=wrap.querySelector('.makanaiDatesTableWrap')?.scrollLeft || 0;
     renderExcludedList();
     const ym=currentYM();
     const dates=monthDates(ym);
@@ -9606,6 +9611,8 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       <div class="makanaiStaffTableWrap"><table class="makanaiStaffTable"><thead>${staffThead}</thead><tbody>${staffRows.join('')}</tbody></table></div>
       <div class="makanaiDatesTableWrap"><table class="makanaiDatesTable"><thead>${datesThead}</thead><tbody>${datesRows.join('')}</tbody></table></div>
     </div>`;
+    const datesWrapEl=wrap.querySelector('.makanaiDatesTableWrap');
+    if(datesWrapEl) datesWrapEl.scrollLeft=prevDatesScrollLeft;
     wrap.querySelectorAll('.makanaiCell').forEach(b=>{
       b.onclick=()=>toggleCell(b.dataset.service,b.dataset.date,b.dataset.key);
     });
