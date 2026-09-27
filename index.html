@@ -9668,9 +9668,9 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
         const dv=checks.dinner?.[d]?.[dinnerKey];
         if(lv==='yes')lunchTotal++;
         if(dv==='yes')dinnerTotal++;
-        const lm=lv==='yes'?'○':lv==='no'?'❌':'';
-        const dm=dv==='yes'?'○':dv==='no'?'❌':'';
-        return `<td class="mkDual"><span>${lm}</span><span>${dm}</span></td>`;
+        const lm=lv==='yes'?'○':lv==='no'?'❌':'　';
+        const dm=dv==='yes'?'○':dv==='no'?'❌':'　';
+        return `<td class="mkDual">${lm}<br>${dm}</td>`;
       }).join('');
       html+=`<tr><td class="mkName">${esc(entry.displayName)}</td>${tds}<td class="mkTotal">${lunchTotal}</td><td class="mkTotal">${dinnerTotal}</td></tr>`;
     });
@@ -9705,8 +9705,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 #makanaiPrintRoot th,#makanaiPrintRoot td{width:${dateColPct}%}
 #makanaiPrintRoot th.mkName,#makanaiPrintRoot td.mkName{width:${nameColPct}%;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #makanaiPrintRoot th.mkTotal,#makanaiPrintRoot td.mkTotal{width:${totalColEachPct}%;font-weight:800}
-#makanaiPrintRoot td.mkDual{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0.5mm;padding-top:0.3mm;padding-bottom:0.3mm}
-#makanaiPrintRoot td.mkDual span{display:block;line-height:1.15}
+#makanaiPrintRoot td.mkDual{line-height:1.15}
 #makanaiPrintRoot .mkEmpty{text-align:center;font-size:16pt}
 #makanaiPrintCloseBtn{position:fixed;top:10px;right:10px;width:auto;z-index:99999;padding:12px 16px;background:#7a2e2e;color:#fff;border-radius:14px;font-weight:800;box-shadow:0 2px 10px rgba(0,0,0,.3)}
 @media print{#makanaiPrintCloseBtn{display:none!important}}
