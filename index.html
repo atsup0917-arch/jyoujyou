@@ -1231,7 +1231,7 @@ body{overflow-anchor:none!important;}
 .makanaiStaffTableWrap{flex:0 0 auto;}
 .makanaiDatesTableWrap{flex:1 1 auto;min-width:0;overflow-x:auto;-webkit-overflow-scrolling:touch;}
 .makanaiStaffTable,.makanaiDatesTable{width:auto;border-collapse:collapse;font-size:14px;}
-.makanaiStaffTable th,.makanaiStaffTable td,.makanaiDatesTable th,.makanaiDatesTable td{border:1px solid #e1e4e8;padding:6px 4px;text-align:center;white-space:nowrap;box-sizing:border-box;height:48px;}
+.makanaiStaffTable th,.makanaiStaffTable td,.makanaiDatesTable th,.makanaiDatesTable td{border:1px solid #e1e4e8;padding:4px 3px;text-align:center;white-space:nowrap;box-sizing:border-box;height:72px;}
 .makanaiStaffTable thead th,.makanaiDatesTable thead th{background:#f0e6c8;font-weight:800;position:sticky;top:0;}
 .makanaiStaffCol{text-align:left!important;padding:6px 10px!important;font-weight:700;display:flex;align-items:center;gap:6px;background:#fff;}
 .makanaiStaffTable thead .makanaiStaffCol{background:#f0e6c8;}
@@ -1239,7 +1239,8 @@ body{overflow-anchor:none!important;}
 .makanaiTotalCol{background:#faf1dc;font-weight:800;}
 .makanaiDatesTable thead .makanaiTotalCol{background:#e9d8ac;}
 td.makanaiWorkday{background:#fdf6e3;}
-button.makanaiCell{width:34px!important;height:34px!important;min-width:34px!important;margin:0!important;padding:0!important;border-radius:8px!important;font-size:16px!important;font-weight:800!important;line-height:1!important;border:1px solid transparent!important;}
+.makanaiDualCell{display:flex;flex-direction:column;gap:3px;align-items:center;}
+button.makanaiCell{width:46px!important;height:30px!important;min-width:46px!important;margin:0!important;padding:0!important;border-radius:7px!important;font-size:12px!important;font-weight:800!important;line-height:1!important;border:1px solid transparent!important;display:flex!important;align-items:center;justify-content:center;gap:2px;}
 button.makanaiUnset{background:#f2f2f2!important;color:#aaa!important;border-color:#e2e2e2!important;}
 td.makanaiWorkday button.makanaiUnset{background:#fff3cd!important;color:#8a6d00!important;border-color:#e6c46c!important;}
 button.makanaiYes{background:#eefaf1!important;color:#3f6b4f!important;border-color:#a6d4a0!important;}
@@ -7463,17 +7464,9 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       <button type="button" class="gray" id="makanaiMonthNext">翌月 ▶</button>
     </div>
   </div>
-  <div class="card" id="makanaiServiceCard">
-    <h2>🍽️ チェックする時間帯</h2>
-    <div class="row">
-      <button type="button" id="makanaiServiceLunch" class="shiftModeBtn">☀️ ランチ</button>
-      <button type="button" id="makanaiServiceDinner" class="shiftModeBtn active">🌙 ディナー</button>
-    </div>
-    <div class="small" style="margin-top:8px">ランチ・ディナーは別々にチェックします。印刷する時は両方まとめて1枚に出力されます。</div>
-  </div>
   <div class="card" id="makanaiTableCard">
     <div id="makanaiTableWrap" class="makanaiTableWrap"></div>
-    <div class="small" style="margin-top:8px">チェックしなくていいスタッフは、名前の右の✕でまかない一覧から外せます。</div>
+    <div class="small" style="margin-top:8px">1人1行で、日付ごとに☀️ランチ・🌙ディナーの両方をチェックできます。チェックしなくていいスタッフは、名前の右の✕でまかない一覧から外せます。</div>
   </div>
   <div class="card" id="makanaiExcludedCard" hidden>
     <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
@@ -9446,25 +9439,31 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 
   let schedules={},checks={},staffOrder=[],excludedStaff={};
   const SERVICES=['lunch','dinner'];
-  const serviceLabel=s=>s==='lunch'?'☀️ ランチ':'🌙 ディナー';
-  // 印刷対象の選択状態。未指定(undefined)の場合は「一件でも○/❌が記録されている」を既定値として使う。
-  const printSelection={lunch:{},dinner:{}};
-  function hasAnyCheck(service,name,dates){
-    const key=keyForName(name);
-    return dates.some(d=>{const v=checks[service]?.[d]?.[key];return v==='yes'||v==='no';});
+  const serviceIcon=s=>s==='lunch'?'☀️':'🌙';
+  // 印刷対象の選択状態（1人1行なので表示名だけで管理）。未指定(undefined)の場合は
+  // 「ランチ・ディナーどちらかで一件でも○/❌が記録されている」を既定値として使う。
+  const printSelection={};
+  // 出勤している時間帯（lunch/dinner）ごとに実際に使われている名前表記が違うことがある
+  // （例：同一人物でもランチ側だけ「さくら昼」のように末尾に「昼」が付く）。
+  // 表示名（mkDisplayStaffName適用後）を軸に1人1エントリへ束ね、
+  // lunchName/dinnerNameにそれぞれの時間帯での実際の名前表記を保持する。
+  function lunchKeyOf(entry){return keyForName(entry.lunchName||entry.displayName)}
+  function dinnerKeyOf(entry){return keyForName(entry.dinnerName||entry.displayName)}
+  function hasAnyCheck(entry,dates){
+    const lk=lunchKeyOf(entry), dk=dinnerKeyOf(entry);
+    return dates.some(d=>{
+      const lv=checks.lunch?.[d]?.[lk], dv=checks.dinner?.[d]?.[dk];
+      return lv==='yes'||lv==='no'||dv==='yes'||dv==='no';
+    });
   }
-  function isSelectedForPrint(service,name,dates){
-    const explicit=printSelection[service][name];
-    return explicit===undefined ? hasAnyCheck(service,name,dates) : explicit;
+  function isSelectedForPrint(entry,dates){
+    const explicit=printSelection[entry.displayName];
+    return explicit===undefined ? hasAnyCheck(entry,dates) : explicit;
   }
 
   function currentYM(){
     const v=$('makanaiMonth')?.value;
     return (v&&/^\d{4}-\d{2}$/.test(v))?v:todayYM();
-  }
-
-  function currentService(){
-    return $('makanaiServiceLunch')?.classList.contains('active') ? 'lunch' : 'dinner';
   }
 
   function monthDates(ym){
@@ -9493,25 +9492,45 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     return idx;
   }
 
-  // スタッフ一覧は「選択中の時間帯（ランチ／ディナー）にその月一度でも出勤があった人」に絞る。
+  // スタッフ一覧は「その月にランチ・ディナーどちらかで一度でも出勤があった人」に絞る。
   // 出勤日そのものによるセルのロックは行わない（出勤日でなくてもタップして選択できる）。
-  function isExcluded(name){
-    return !!excludedStaff[keyForName(name)];
+  // 除外は1人（表示名）単位。過去にランチ側・ディナー側それぞれの生の名前で
+  // 個別に除外されていた場合（旧仕様）も引き続き有効に扱う。
+  function isPersonExcluded(entry){
+    const keys=[entry.displayName,entry.lunchName,entry.dinnerName].filter(Boolean).map(keyForName);
+    return keys.some(k=>!!excludedStaff[k]);
   }
 
-  function buildRoster(scheduleIndex,service){
-    const all=new Set();
-    Object.values(scheduleIndex[service]).forEach(set=>set.forEach(n=>{if(!isExcluded(n))all.add(n);}));
-    const ordered=staffOrder.filter(n=>all.has(n));
-    const rest=[...all].filter(n=>!ordered.includes(n)).sort((a,b)=>a.localeCompare(b,'ja'));
+  // ランチ・ディナー両方の出勤者を、表示名（末尾の「昼」を取り除いた名前）を軸に
+  // 1人1エントリへ統合する。{displayName, lunchName, dinnerName} のlunchName/dinnerNameは
+  // その時間帯で実際に使われている生の名前表記（チェックの保存キーに使う）。
+  function buildUnifiedRoster(scheduleIndex){
+    const byDisplay=new Map();
+    SERVICES.forEach(service=>{
+      Object.values(scheduleIndex[service]).forEach(set=>{
+        set.forEach(rawName=>{
+          const disp=window.mkDisplayStaffName(rawName);
+          if(!byDisplay.has(disp)) byDisplay.set(disp,{displayName:disp,lunchName:null,dinnerName:null});
+          byDisplay.get(disp)[service+'Name']=rawName;
+        });
+      });
+    });
+    const entries=[...byDisplay.values()].filter(e=>!isPersonExcluded(e));
+    const orderIndex=new Map();
+    staffOrder.forEach((n,i)=>{
+      const d=window.mkDisplayStaffName(n);
+      if(!orderIndex.has(d)) orderIndex.set(d,i);
+    });
+    const ordered=entries.filter(e=>orderIndex.has(e.displayName)).sort((a,b)=>orderIndex.get(a.displayName)-orderIndex.get(b.displayName));
+    const rest=entries.filter(e=>!orderIndex.has(e.displayName)).sort((a,b)=>a.displayName.localeCompare(b.displayName,'ja'));
     return [...ordered,...rest];
   }
 
-  async function excludeStaff(name){
+  async function excludeStaff(displayName){
     if(!fb()) return;
-    if(!confirm(`「${window.mkDisplayStaffName(name)}」をまかない一覧から外しますか？\n（記録済みのチェックは削除されません。「非表示にしたスタッフ」からいつでも戻せます）`)) return;
+    if(!confirm(`「${displayName}」をまかない一覧から外しますか？\n（記録済みのチェックは削除されません。「非表示にしたスタッフ」からいつでも戻せます）`)) return;
     try{
-      await fb().set(ref('makanai/excludedStaff/'+keyForName(name)),name);
+      await fb().set(ref('makanai/excludedStaff/'+keyForName(displayName)),displayName);
     }catch(e){console.error('makanai exclude',e)}
   }
 
@@ -9532,15 +9551,23 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     list.querySelectorAll('[data-restore-key]').forEach(b=>{b.onclick=()=>restoreStaff(b.dataset.restoreKey);});
   }
 
+  // 1マス分の○/❌/？/－ボタンを作る（昼・夜どちらの時間帯かはserviceで区別）。
+  function makanaiCellButton(service,date,key,value,worked){
+    let cls='makanaiUnset', label=worked?'？':'－';
+    if(value==='yes'){cls='makanaiYes';label='○';}
+    else if(value==='no'){cls='makanaiNo';label='❌';}
+    return `<button type="button" class="makanaiCell ${cls}" data-service="${service}" data-date="${esc(date)}" data-key="${esc(key)}">${serviceIcon(service)}${label}</button>`;
+  }
+
   function renderTable(){
     const wrap=$('makanaiTableWrap');
     if(!wrap) return;
     renderExcludedList();
-    const ym=currentYM(), service=currentService();
+    const ym=currentYM();
     const dates=monthDates(ym);
     const scheduleIndex=buildScheduleIndex(ym);
-    const roster=buildRoster(scheduleIndex,service);
-    const hasAnySchedule=Object.keys(scheduleIndex[service]).length>0;
+    const roster=buildUnifiedRoster(scheduleIndex);
+    const hasAnySchedule=SERVICES.some(s=>Object.keys(scheduleIndex[s]).length>0);
     if(!roster.length){
       wrap.innerHTML = hasAnySchedule
         ? '<div class="empty">対象のスタッフは全員「非表示」に設定されています。下の「非表示にしたスタッフ」から戻せます。</div>'
@@ -9553,45 +9580,47 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       <button type="button" class="gray" id="makanaiSelectNone">全て解除</button>
     </div>`;
     const staffThead=`<tr><th class="makanaiStaffCol">印刷　スタッフ</th></tr>`;
-    const datesThead=`<tr>${dates.map(d=>`<th>${esc(dateLabel(d))}</th>`).join('')}<th class="makanaiTotalCol">合計</th></tr>`;
+    const datesThead=`<tr>${dates.map(d=>`<th>${esc(dateLabel(d))}</th>`).join('')}<th class="makanaiTotalCol">☀️合計</th><th class="makanaiTotalCol">🌙合計</th></tr>`;
     const staffRows=[];
     const datesRows=[];
-    roster.forEach(name=>{
-      let total=0;
-      const key=keyForName(name);
+    roster.forEach(entry=>{
+      let lunchTotal=0, dinnerTotal=0;
+      const lunchKey=lunchKeyOf(entry), dinnerKey=dinnerKeyOf(entry);
       const cells=dates.map(d=>{
-        const worked=!!scheduleIndex[service][d]?.has(name);
-        const tdClass=worked?' class="makanaiWorkday"':'';
-        const v=checks[service]?.[d]?.[key];
-        if(v==='yes'){total++;return `<td${tdClass}><button type="button" class="makanaiCell makanaiYes" data-date="${esc(d)}" data-name="${esc(name)}">○</button></td>`}
-        if(v==='no'){return `<td${tdClass}><button type="button" class="makanaiCell makanaiNo" data-date="${esc(d)}" data-name="${esc(name)}">❌</button></td>`}
-        return `<td${tdClass}><button type="button" class="makanaiCell makanaiUnset" data-date="${esc(d)}" data-name="${esc(name)}">${worked?'？':'－'}</button></td>`;
+        const lunchWorked=!!(entry.lunchName && scheduleIndex.lunch[d]?.has(entry.lunchName));
+        const dinnerWorked=!!(entry.dinnerName && scheduleIndex.dinner[d]?.has(entry.dinnerName));
+        const lv=checks.lunch?.[d]?.[lunchKey];
+        const dv=checks.dinner?.[d]?.[dinnerKey];
+        if(lv==='yes')lunchTotal++;
+        if(dv==='yes')dinnerTotal++;
+        const tdClass=(lunchWorked||dinnerWorked)?' class="makanaiWorkday"':'';
+        const lunchBtn=makanaiCellButton('lunch',d,lunchKey,lv,lunchWorked);
+        const dinnerBtn=makanaiCellButton('dinner',d,dinnerKey,dv,dinnerWorked);
+        return `<td${tdClass}><div class="makanaiDualCell">${lunchBtn}${dinnerBtn}</div></td>`;
       }).join('');
-      const checked=isSelectedForPrint(service,name,dates)?' checked':'';
-      const displayName=window.mkDisplayStaffName(name);
-      staffRows.push(`<tr><td class="makanaiStaffCol"><label class="makanaiPrintCheckLabel"><input type="checkbox" class="makanaiPrintCheck" data-print-name="${esc(name)}"${checked}> ${esc(displayName)}</label><button type="button" class="itemDelete makanaiExcludeBtn" data-exclude-name="${esc(name)}" aria-label="${esc(displayName)}をまかない一覧から外す" title="まかない一覧から外す">✕</button></td></tr>`);
-      datesRows.push(`<tr>${cells}<td class="makanaiTotalCol">${total}</td></tr>`);
+      const checked=isSelectedForPrint(entry,dates)?' checked':'';
+      staffRows.push(`<tr><td class="makanaiStaffCol"><label class="makanaiPrintCheckLabel"><input type="checkbox" class="makanaiPrintCheck" data-print-name="${esc(entry.displayName)}"${checked}> ${esc(entry.displayName)}</label><button type="button" class="itemDelete makanaiExcludeBtn" data-exclude-name="${esc(entry.displayName)}" aria-label="${esc(entry.displayName)}をまかない一覧から外す" title="まかない一覧から外す">✕</button></td></tr>`);
+      datesRows.push(`<tr>${cells}<td class="makanaiTotalCol">${lunchTotal}</td><td class="makanaiTotalCol">${dinnerTotal}</td></tr>`);
     });
     wrap.innerHTML=`${printBar}<div class="makanaiSplitWrap">
       <div class="makanaiStaffTableWrap"><table class="makanaiStaffTable"><thead>${staffThead}</thead><tbody>${staffRows.join('')}</tbody></table></div>
       <div class="makanaiDatesTableWrap"><table class="makanaiDatesTable"><thead>${datesThead}</thead><tbody>${datesRows.join('')}</tbody></table></div>
     </div>`;
     wrap.querySelectorAll('.makanaiCell').forEach(b=>{
-      b.onclick=()=>toggleCell(service,b.dataset.date,b.dataset.name);
+      b.onclick=()=>toggleCell(b.dataset.service,b.dataset.date,b.dataset.key);
     });
     wrap.querySelectorAll('.makanaiPrintCheck').forEach(cb=>{
-      cb.onchange=()=>{printSelection[service][cb.dataset.printName]=cb.checked;};
+      cb.onchange=()=>{printSelection[cb.dataset.printName]=cb.checked;};
     });
     wrap.querySelectorAll('.makanaiExcludeBtn').forEach(b=>{
       b.onclick=()=>excludeStaff(b.dataset.excludeName);
     });
-    $('makanaiSelectAll').onclick=e=>{e.preventDefault();roster.forEach(n=>printSelection[service][n]=true);renderTable();};
-    $('makanaiSelectNone').onclick=e=>{e.preventDefault();roster.forEach(n=>printSelection[service][n]=false);renderTable();};
+    $('makanaiSelectAll').onclick=e=>{e.preventDefault();roster.forEach(en=>printSelection[en.displayName]=true);renderTable();};
+    $('makanaiSelectNone').onclick=e=>{e.preventDefault();roster.forEach(en=>printSelection[en.displayName]=false);renderTable();};
   }
 
-  async function toggleCell(service,date,name){
+  async function toggleCell(service,date,key){
     if(!fb()) return;
-    const key=keyForName(name);
     const cur=checks[service]?.[date]?.[key]??null;
     const next = cur==='yes'?'no': cur==='no'?null : 'yes';
     const path=`makanai/checks/${service}/${date}/${key}`;
@@ -9619,33 +9648,33 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     const m=/^(\d{4})-(\d{2})$/.exec(ym);
     const ymLabel = m? `${m[1]}年${Number(m[2])}月` : ym;
     let html=`<h1>上々　まかないチェック表（${esc(ymLabel)}）</h1>`;
-    const anyRoster=SERVICES.some(s=>buildRoster(scheduleIndex,s).length);
-    if(!anyRoster){
+    const roster=buildUnifiedRoster(scheduleIndex);
+    const filtered=roster.filter(entry=>isSelectedForPrint(entry,dates));
+    if(!roster.length){
       html+='<p class="mkEmpty">この期間のシフトは登録されていません。</p>';
       return {html,colCount:dates.length};
     }
-    SERVICES.forEach(service=>{
-      const roster=buildRoster(scheduleIndex,service);
-      const filtered=roster.filter(name=>isSelectedForPrint(service,name,dates));
-      html+=`<h2>${esc(serviceLabel(service))}</h2>`;
-      if(!filtered.length){
-        html+='<p class="mkEmpty">印刷対象として選択されているスタッフがいません。</p>';
-        return;
-      }
-      html+=`<table><thead><tr><th class="mkName">スタッフ</th>${dates.map(d=>`<th>${printDateLabel(d)}</th>`).join('')}<th class="mkTotal">合計</th></tr></thead><tbody>`;
-      filtered.forEach(name=>{
-        let total=0;
-        const key=keyForName(name);
-        const tds=dates.map(d=>{
-          const v=checks[service]?.[d]?.[key];
-          if(v==='yes'){total++;return '<td>○</td>'}
-          if(v==='no') return '<td>❌</td>';
-          return '<td></td>';
-        }).join('');
-        html+=`<tr><td class="mkName">${esc(window.mkDisplayStaffName(name))}</td>${tds}<td class="mkTotal">${total}</td></tr>`;
-      });
-      html+='</tbody></table>';
+    if(!filtered.length){
+      html+='<p class="mkEmpty">印刷対象として選択されているスタッフがいません。</p>';
+      return {html,colCount:dates.length};
+    }
+    html+='<p class="mkNote">各日の欄は上段＝☀️ランチ／下段＝🌙ディナー</p>';
+    html+=`<table><thead><tr><th class="mkName">スタッフ</th>${dates.map(d=>`<th>${printDateLabel(d)}</th>`).join('')}<th class="mkTotal">☀️昼</th><th class="mkTotal">🌙夜</th></tr></thead><tbody>`;
+    filtered.forEach(entry=>{
+      let lunchTotal=0, dinnerTotal=0;
+      const lunchKey=lunchKeyOf(entry), dinnerKey=dinnerKeyOf(entry);
+      const tds=dates.map(d=>{
+        const lv=checks.lunch?.[d]?.[lunchKey];
+        const dv=checks.dinner?.[d]?.[dinnerKey];
+        if(lv==='yes')lunchTotal++;
+        if(dv==='yes')dinnerTotal++;
+        const lm=lv==='yes'?'○':lv==='no'?'❌':'';
+        const dm=dv==='yes'?'○':dv==='no'?'❌':'';
+        return `<td class="mkDual"><span>${lm}</span><span>${dm}</span></td>`;
+      }).join('');
+      html+=`<tr><td class="mkName">${esc(entry.displayName)}</td>${tds}<td class="mkTotal">${lunchTotal}</td><td class="mkTotal">${dinnerTotal}</td></tr>`;
     });
+    html+='</tbody></table>';
     return {html,colCount:dates.length};
   }
 
@@ -9661,8 +9690,8 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     // ページ外にはみ出して消える」事故が起きないようにする。
     const fontPt = colCount<=15?11:colCount<=20?9.5:colCount<=25?8:7;
     const padMm = colCount<=15?2:colCount<=20?1.6:colCount<=25?1.3:1;
-    const nameColPct=9, totalColPct=5;
-    const dateColPct=Math.max(1,(100-nameColPct-totalColPct)/Math.max(1,colCount));
+    const nameColPct=9, totalColEachPct=4.5;
+    const dateColPct=Math.max(1,(100-nameColPct-totalColEachPct*2)/Math.max(1,colCount));
 
     const styleEl=document.createElement('style');
     styleEl.id='makanaiPrintStyle';
@@ -9670,13 +9699,14 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 @media print{@page{size:A4 landscape;margin:8mm}}
 #makanaiPrintRoot{display:block;background:#fff;color:#000;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif}
 #makanaiPrintRoot h1{text-align:center;font-size:18pt;margin:0 0 4mm}
-#makanaiPrintRoot h2{font-size:13pt;margin:6mm 0 2mm;padding:1.5mm 2.5mm;background:#eee;border:1px solid #555}
-#makanaiPrintRoot h2:first-of-type{margin-top:0}
+#makanaiPrintRoot .mkNote{text-align:center;font-size:10pt;color:#444;margin:0 0 2mm}
 #makanaiPrintRoot table{width:100%;border-collapse:collapse;table-layout:fixed}
-#makanaiPrintRoot th,#makanaiPrintRoot td{border:1px solid #555;padding:${padMm}mm 0.8mm;font-size:${fontPt}pt;text-align:center;overflow:hidden;white-space:nowrap;line-height:1.3}
+#makanaiPrintRoot th,#makanaiPrintRoot td{border:1px solid #555;padding:${padMm}mm 0.8mm;font-size:${fontPt}pt;text-align:center;overflow:hidden;white-space:nowrap;line-height:1.25}
 #makanaiPrintRoot th,#makanaiPrintRoot td{width:${dateColPct}%}
 #makanaiPrintRoot th.mkName,#makanaiPrintRoot td.mkName{width:${nameColPct}%;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-#makanaiPrintRoot th.mkTotal,#makanaiPrintRoot td.mkTotal{width:${totalColPct}%;font-weight:800}
+#makanaiPrintRoot th.mkTotal,#makanaiPrintRoot td.mkTotal{width:${totalColEachPct}%;font-weight:800}
+#makanaiPrintRoot td.mkDual{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0.5mm;padding-top:0.3mm;padding-bottom:0.3mm}
+#makanaiPrintRoot td.mkDual span{display:block;line-height:1.15}
 #makanaiPrintRoot .mkEmpty{text-align:center;font-size:16pt}
 #makanaiPrintCloseBtn{position:fixed;top:10px;right:10px;width:auto;z-index:99999;padding:12px 16px;background:#7a2e2e;color:#fff;border-radius:14px;font-weight:800;box-shadow:0 2px 10px rgba(0,0,0,.3)}
 @media print{#makanaiPrintCloseBtn{display:none!important}}
@@ -9797,9 +9827,6 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     if(nextBtn && nextBtn.dataset.bound!=='1'){nextBtn.dataset.bound='1';nextBtn.addEventListener('click',e=>{e.preventDefault();if(monthInput)monthInput.value=shiftMonth(currentYM(),1);renderTable();});}
     const printBtn=$('makanaiPrintBtn');
     if(printBtn && printBtn.dataset.bound!=='1'){printBtn.dataset.bound='1';printBtn.type='button';printBtn.addEventListener('click',e=>{e.preventDefault();printMakanai();});}
-    const lunchBtn=$('makanaiServiceLunch'), dinnerBtn=$('makanaiServiceDinner');
-    if(lunchBtn && lunchBtn.dataset.bound!=='1'){lunchBtn.dataset.bound='1';lunchBtn.addEventListener('click',e=>{e.preventDefault();lunchBtn.classList.add('active');dinnerBtn?.classList.remove('active');renderTable();});}
-    if(dinnerBtn && dinnerBtn.dataset.bound!=='1'){dinnerBtn.dataset.bound='1';dinnerBtn.addEventListener('click',e=>{e.preventDefault();dinnerBtn.classList.add('active');lunchBtn?.classList.remove('active');renderTable();});}
     const excludedToggle=$('makanaiExcludedToggle'), excludedBody=$('makanaiExcludedBody');
     if(excludedToggle && excludedToggle.dataset.bound!=='1'){
       excludedToggle.dataset.bound='1';
