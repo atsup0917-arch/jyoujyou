@@ -9697,7 +9697,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       return {html,colCount:dates.length};
     }
     html+='<p class="mkNote">各日の欄は上段＝☀️ランチ／下段＝🌙ディナー</p>';
-    html+=`<table><thead><tr><th class="mkName">スタッフ</th>${dates.map(d=>`<th>${printDateLabel(d)}</th>`).join('')}<th class="mkTotal">☀️昼</th><th class="mkTotal">🌙夜</th></tr></thead><tbody>`;
+    html+=`<table><thead><tr><th class="mkName">スタッフ</th>${dates.map(d=>`<th>${printDateLabel(d)}</th>`).join('')}<th class="mkTotal">合計</th></tr></thead><tbody>`;
     filtered.forEach(entry=>{
       // 画面と同じく、昼夜どちらも入っている人だけ上下2段で表示し、
       // 片方しか入っていない人は1段だけにする（空の段が並んで分かりづらいのを防ぐ）。
@@ -9714,9 +9714,8 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
         if(dual) return `<td class="mkDual">${lm}<br>${dm}</td>`;
         return `<td>${entry.lunchName?lm:dm}</td>`;
       }).join('');
-      const lunchTotalCell=entry.lunchName?lunchTotal:'';
-      const dinnerTotalCell=entry.dinnerName?dinnerTotal:'';
-      html+=`<tr><td class="mkName">${esc(entry.displayName)}</td>${tds}<td class="mkTotal">${lunchTotalCell}</td><td class="mkTotal">${dinnerTotalCell}</td></tr>`;
+      const totalCell=lunchTotal+dinnerTotal;
+      html+=`<tr><td class="mkName">${esc(entry.displayName)}</td>${tds}<td class="mkTotal">${totalCell}</td></tr>`;
     });
     html+='</tbody></table>';
     return {html,colCount:dates.length};
@@ -9734,8 +9733,8 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     // ページ外にはみ出して消える」事故が起きないようにする。
     const fontPt = colCount<=15?11:colCount<=20?9.5:colCount<=25?8:7;
     const padMm = colCount<=15?2:colCount<=20?1.6:colCount<=25?1.3:1;
-    const nameColPct=9, totalColEachPct=4.5;
-    const dateColPct=Math.max(1,(100-nameColPct-totalColEachPct*2)/Math.max(1,colCount));
+    const nameColPct=9, totalColEachPct=6;
+    const dateColPct=Math.max(1,(100-nameColPct-totalColEachPct)/Math.max(1,colCount));
 
     const styleEl=document.createElement('style');
     styleEl.id='makanaiPrintStyle';
