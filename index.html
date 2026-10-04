@@ -2161,7 +2161,12 @@ const app=initializeApp(firebaseConfig), db=getDatabase(app), fbAuth=getAuth(app
 // データベースのセキュリティルールを「認証済みのみ許可」に戻したため、
 // 匿名サインインが完了してから window.__fb を公開する。
 // 各機能側は既存どおり window.__fb の有無だけを見て待機するため、他の画面のコードは変更不要。
-signInAnonymously(fbAuth).then(()=>{
+// 仕込み表（prep/*）の購読は認証完了前に発行すると権限エラーで永久に
+// 二度と再試行されずデータが出てこなくなる（買い物リストのstores/items等は
+// 読み取りが引き続き公開されているため影響を受けず、この問題は仕込み表の
+// positions/items/stateの購読にだけ起きていた）。認証完了を待ってから
+// 購読するよう、このPromiseを他の箇所からも使えるようにする。
+const authReady=signInAnonymously(fbAuth).then(()=>{
   window.__fb={db,ref,onValue,set,update,push,remove,get,runTransaction};
 }).catch(e=>{
   console.error('Firebase匿名認証に失敗しました。',e);
@@ -3049,33 +3054,6 @@ if($("prepSeasonAllToggle"))$("prepSeasonAllToggle").onclick=()=>{
   renderPrepList();
 };
 let prepStateMigrationStarted=false;
-onValue(prepPositionsRef,s=>{
-  prepPositions=s.val()||{};renderPrepSelectors();renderPrepFilters();renderPrepList();
-  // この購読が一度でも通ればDB接続の認証が確立済みだとわかるので、ここで一度だけ移行を実行する。
-  if(!prepStateMigrationStarted){prepStateMigrationStarted=true;migratePrepStateIfNeeded();}
-});
-onValue(prepItemsRef,s=>{
-  /* 品目管理欄（季節設定ボタン等）を操作すると、その上にある仕込み表本体（prepList）の
-     表示件数が増減して高さが変わり、画面が上下に揺れて見える不具合があったため、
-     #prepManageの画面上の位置を再描画の前後で比較し、ずれた分だけスクロール位置を
-     補正するようにした。他のonValueハンドラ（ポジション・状態）には影響しない。 */
-  const anchor=$("prepManage");
-  const beforeTop=anchor?anchor.getBoundingClientRect().top:null;
-  prepItems=s.val()||{};
-  renderPrepManage();
-  renderPrepFilters();
-  renderPrepList();
-  updatePrepBadge();
-  if(beforeTop!==null){
-    requestAnimationFrame(()=>{
-      const afterEl=$("prepManage");
-      if(!afterEl)return;
-      const afterTop=afterEl.getBoundingClientRect().top;
-      const delta=afterTop-beforeTop;
-      if(delta)window.scrollBy(0,delta);
-    });
-  }
-});
 // 選択中の日付のデータだけを購読する。日付を切り替えたら購読し直す。
 let prepStateUnsub=null;
 function updateConfirmPrepButton(){const b=$("confirmPrep");if(b)b.textContent=prepConfirmed?"仕込み確定を解除":"仕込み確定"}
@@ -3083,9 +3061,43 @@ function subscribePrepState(){
   if(prepStateUnsub)prepStateUnsub();
   prepStateUnsub=onValue(ref(db,"prep/state/"+prepSelectedDate),s=>{prepState=s.val()||{};prepConfirmed=!!prepState._confirmed;updateConfirmPrepButton();renderPrepFilters();renderPrepList();updatePrepBadge()});
 }
-subscribePrepState();
-// タブのバッジ（残り件数）は画面で選んでいる日付に関わらず、常に実際の「今日」の件数を出す。
-onValue(ref(db,"prep/state/"+prepTodayStr()),s=>{prepTodayState=s.val()||{};updatePrepBadge()});
+// prep/*（positions・items・state）は認証済みのみ読み取り可能なため、
+// 匿名サインイン完了前に購読を発行すると権限エラーになり、その後サインインが
+// 完了しても自動では再購読されず「仕込み表に何も表示されない」状態のまま
+// 固定されてしまっていた（前菜に限らず全ポジション・全品目が対象）。
+// authReady（サインイン完了後）を待ってから購読するようにする。
+authReady.then(()=>{
+  onValue(prepPositionsRef,s=>{
+    prepPositions=s.val()||{};renderPrepSelectors();renderPrepFilters();renderPrepList();
+    // この購読が一度でも通ればDB接続の認証が確立済みだとわかるので、ここで一度だけ移行を実行する。
+    if(!prepStateMigrationStarted){prepStateMigrationStarted=true;migratePrepStateIfNeeded();}
+  });
+  onValue(prepItemsRef,s=>{
+    /* 品目管理欄（季節設定ボタン等）を操作すると、その上にある仕込み表本体（prepList）の
+       表示件数が増減して高さが変わり、画面が上下に揺れて見える不具合があったため、
+       #prepManageの画面上の位置を再描画の前後で比較し、ずれた分だけスクロール位置を
+       補正するようにした。他のonValueハンドラ（ポジション・状態）には影響しない。 */
+    const anchor=$("prepManage");
+    const beforeTop=anchor?anchor.getBoundingClientRect().top:null;
+    prepItems=s.val()||{};
+    renderPrepManage();
+    renderPrepFilters();
+    renderPrepList();
+    updatePrepBadge();
+    if(beforeTop!==null){
+      requestAnimationFrame(()=>{
+        const afterEl=$("prepManage");
+        if(!afterEl)return;
+        const afterTop=afterEl.getBoundingClientRect().top;
+        const delta=afterTop-beforeTop;
+        if(delta)window.scrollBy(0,delta);
+      });
+    }
+  });
+  subscribePrepState();
+  // タブのバッジ（残り件数）は画面で選んでいる日付に関わらず、常に実際の「今日」の件数を出す。
+  onValue(ref(db,"prep/state/"+prepTodayStr()),s=>{prepTodayState=s.val()||{};updatePrepBadge()});
+});
 function updatePrepBadge(){
  const remaining=vals(prepItems).filter(([id])=>prepTodayState[id]&&!prepTodayState[id]?.done).length;
  $("tabPrep").innerHTML=`🔪 仕込み表${remaining?` <span class="count">${remaining}</span>`:""}`;
