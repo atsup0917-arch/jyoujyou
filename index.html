@@ -1870,6 +1870,12 @@ html.makanaiKiosk .brandHeader{
 <div id="openClosePage" class="page" hidden>
 <h1>✅ 開店・閉店チェック</h1>
 
+<div class="navtabs navtabs3" id="ccSectionTabs">
+<button type="button" id="ccSecOpen" class="active">🌅 開店作業</button>
+<button type="button" id="ccSecClose">🌇 閉店作業</button>
+<button type="button" id="ccSecFree">🙌 手空き作業</button>
+</div>
+
 <div class="navtabs" id="ccShiftTabs">
 <button type="button" id="ccTabLunch" class="active">🌞 ランチ</button>
 <button type="button" id="ccTabDinner">🌙 ディナー</button>
@@ -1931,12 +1937,18 @@ html.makanaiKiosk .brandHeader{
 </details>
 </div>
 
-<div class="card ccListCard settingsCard">
+<div class="card ccListCard settingsCard" data-cc-list="freeTime">
 <details open>
 <summary>🙌 手空き作業</summary>
 <div class="settingsBody">
+  <div class="ccListToolbar"><span class="ccHint">期限が近い項目（期限切れ含む）から順に表示されます。</span></div>
   <div class="ccFreeItems" id="ccFreeItems"></div>
   <div class="ccAddRow"><input type="text" id="ccFreeInput" data-cc-input="freeTime" placeholder="項目を入力して追加"><button type="button" class="gray" id="ccFreeAdd" data-cc-add="freeTime">＋ 追加</button></div>
+  <div class="ccFreeCalWrap">
+    <div class="ccFreeCalTitle">📅 期限カレンダー</div>
+    <div id="ccFreeCalendar"></div>
+    <div id="ccFreeCalInfo" class="ccFreeCalInfo" hidden></div>
+  </div>
 </div>
 </details>
 </div>
@@ -8664,6 +8676,27 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   /* 担当者欄を日付欄から少し離して右へずらす（スマホ表示は変更しない）。 */
   .ccFreeFieldsRow .ccPersonField{margin-left:24px}
 }
+.ccFreeCalWrap{margin-top:18px;padding-top:16px;border-top:1px solid #eee}
+.ccFreeCalTitle{font-size:16px;font-weight:800;color:#555;margin-bottom:10px}
+.ccFreeCalHead{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
+.ccFreeCalHead button{width:auto;flex:0 0 auto;margin:0;min-width:44px;padding:9px 12px}
+.ccFreeCalTitleMonth{font-size:17px;font-weight:800;text-align:center;flex:1}
+.ccFreeCalWeek{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:4px}
+.ccFreeCalWeek div{text-align:center;font-size:12px;font-weight:700;color:#666;padding:4px 0}
+.ccFreeCalGrid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.ccFreeCalDay{position:relative;min-height:44px;padding:6px 2px;border:1px solid #e5e7eb;border-radius:10px;background:#fff;color:#222!important;-webkit-text-fill-color:#222!important;font-size:15px;font-weight:700;cursor:pointer}
+.ccFreeCalDay.empty{border-color:transparent;background:transparent;cursor:default}
+.ccFreeCalDay.selected{outline:3px solid #7a2e2e;outline-offset:-2px}
+.ccFreeCalDay.hasDue{background:#f3e3d9;border-color:#d9a98a}
+.ccFreeCalDot{position:absolute;left:0;right:0;bottom:4px;display:block;width:7px;height:7px;margin:0 auto;border-radius:50%;background:#c0392b}
+.ccFreeCalHint{font-size:13px;color:#666;margin-top:8px;line-height:1.6}
+.ccFreeCalInfo{margin-top:10px;padding:12px;background:#f3e3d9;border:1px solid #d9a98a;border-radius:10px;font-size:15px;color:#7a2e2e;font-weight:700}
+.ccConfirmOverlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px}
+.ccConfirmBox{background:#fff;border-radius:18px;padding:22px;max-width:360px;width:100%;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+.ccConfirmMsg{font-size:17px;font-weight:700;color:#222;margin-bottom:18px;text-align:center;line-height:1.5}
+.ccConfirmBtns{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ccConfirmBtns button{margin:0!important}
+#ccRoleTabs[hidden],#ccShiftTabs[hidden]{display:none!important}
 </style>
 <style id="prepSeasonStyle">
 /* 仕込み品目の季節表示機能（2026-09-06追加）。
@@ -8747,7 +8780,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   const LIST_KEYS=['lunchOpen','lunchClose','dinnerOpen','dinnerClose','freeTime'];
   const DAY_KEYS=['lunchOpen','lunchClose','dinnerOpen','dinnerClose'];
   const DAY_LABELS=['日','月','火','水','木','金','土'];
-  let lists={},checked={},freeRecords={},mode='lunch',roleMode='hall',bound=false;
+  let lists={},checked={},freeRecords={},mode='lunch',roleMode='hall',bound=false,section='open';
   const freeThresholdDays=30;
   function itemThresholdDays(item){
     const v=Number(item&&item.thresholdDays);
@@ -8775,6 +8808,46 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     });
     window.__freeTaskDueDates=map;
     window.renderMemoCalendar?.();
+    renderFreeCalendar();
+  }
+  let freeCalAnchor=null,freeCalSelected=null;
+  function renderFreeCalendar(){
+    const box=$('ccFreeCalendar'); if(!box)return;
+    const dueDates=window.__freeTaskDueDates||{};
+    if(!freeCalAnchor){
+      const b=new Date(todayStr()+'T00:00:00');
+      freeCalAnchor=new Date(b.getFullYear(),b.getMonth(),1);
+    }
+    const y=freeCalAnchor.getFullYear(), m=freeCalAnchor.getMonth();
+    const first=new Date(y,m,1), last=new Date(y,m+1,0);
+    const monthLabel=`${y}年${m+1}月`;
+    let html=`<div class="ccFreeCalHead"><button type="button" class="gray" id="ccFreeCalPrev">‹</button><div class="ccFreeCalTitleMonth">${monthLabel}</div><button type="button" class="gray" id="ccFreeCalNext">›</button></div>`;
+    html+='<div class="ccFreeCalWeek"><div>日</div><div>月</div><div>火</div><div>水</div><div>木</div><div>金</div><div>土</div></div>';
+    html+='<div class="ccFreeCalGrid">';
+    for(let i=0;i<first.getDay();i++)html+='<div class="ccFreeCalDay empty"></div>';
+    for(let d=1;d<=last.getDate();d++){
+      const iso=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      const tasks=dueDates[iso];
+      const sel=iso===freeCalSelected;
+      const titleAttr=tasks&&tasks.length?` title="🔴 ${esc(tasks.join('、'))}"`:'';
+      html+=`<button type="button" class="ccFreeCalDay${tasks?' hasDue':''}${sel?' selected':''}" data-cc-cal-day="${iso}"${titleAttr}>${d}${tasks?'<span class="ccFreeCalDot"></span>':''}</button>`;
+    }
+    html+='</div><div class="ccFreeCalHint">🔴 印の付いた日は手空き作業の期限日です。日付をタップすると詳細が下に表示されます。</div>';
+    box.innerHTML=html;
+    renderFreeCalInfo();
+    box.querySelectorAll('[data-cc-cal-day]').forEach(b=>b.addEventListener('click',()=>{
+      freeCalSelected=b.dataset.ccCalDay;
+      renderFreeCalendar();
+    }));
+    $('ccFreeCalPrev')?.addEventListener('click',()=>{freeCalAnchor=new Date(y,m-1,1);renderFreeCalendar();});
+    $('ccFreeCalNext')?.addEventListener('click',()=>{freeCalAnchor=new Date(y,m+1,1);renderFreeCalendar();});
+  }
+  function renderFreeCalInfo(){
+    const box=$('ccFreeCalInfo'); if(!box)return;
+    const tasks=freeCalSelected?(window.__freeTaskDueDates||{})[freeCalSelected]:null;
+    if(!tasks||!tasks.length){box.hidden=true;box.textContent='';return;}
+    box.hidden=false;
+    box.textContent=`🔴 ${freeCalSelected} は手空き作業の期限日です：${tasks.join('、')}`;
   }
   let showAllState={},openDaysPanel={};
   function todayDow(){return new Date().getDay()}
@@ -8830,8 +8903,22 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     if(input)input.value='';
   }
 
+  function ccConfirm(message){
+    return new Promise(resolve=>{
+      const overlay=document.createElement('div');
+      overlay.className='ccConfirmOverlay';
+      overlay.innerHTML=`<div class="ccConfirmBox"><div class="ccConfirmMsg">${esc(message)}</div><div class="ccConfirmBtns"><button type="button" class="gray" data-cc-confirm-cancel>キャンセル</button><button type="button" class="danger" data-cc-confirm-ok>削除する</button></div></div>`;
+      document.body.appendChild(overlay);
+      const cleanup=v=>{overlay.remove();resolve(v)};
+      overlay.querySelector('[data-cc-confirm-ok]').onclick=()=>cleanup(true);
+      overlay.querySelector('[data-cc-confirm-cancel]').onclick=()=>cleanup(false);
+      overlay.addEventListener('click',e=>{if(e.target===overlay)cleanup(false)});
+    });
+  }
   async function deleteItem(key,id){
-    if(!confirm('この項目を削除しますか？'))return;
+    // iPhoneでホーム画面に追加した状態(standalone)だとwindow.confirm()が
+    // 表示されず削除できない不具合があったため、自前の確認モーダルに置き換えた。
+    if(!(await ccConfirm('この項目を削除しますか？')))return;
     await ccTransaction(key,arr=>{
       const i=arr.findIndex(x=>x.id===id);
       if(i>=0)arr.splice(i,1);
@@ -9072,8 +9159,15 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   function renderFree(){
     const container=$('ccFreeItems');
     if(!container)return;
-    const arr=lists.freeTime||[];
     updateFreeDueDates();
+    const arr=(lists.freeTime||[]).slice().sort((a,b)=>{
+      const da=dueDateISO((freeRecords[a.id]||{}).date,itemThresholdDays(a));
+      const db=dueDateISO((freeRecords[b.id]||{}).date,itemThresholdDays(b));
+      if(da&&db)return da<db?-1:da>db?1:0;
+      if(da&&!db)return -1;
+      if(!da&&db)return 1;
+      return 0;
+    });
     if(!arr.length){
       container.innerHTML='<div class="ccEmpty">項目がありません。下の「＋ 追加」から登録してください。</div>';
       return;
@@ -9084,27 +9178,43 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
       const overdue=isOverdue(rec.date,days);
       const thresholdOptions=[['7','1週間'],['14','2週間'],['30','1ヶ月'],['60','2ヶ月'],['90','3ヶ月'],['180','6ヶ月']]
         .map(([v,label])=>`<option value="${v}"${days===Number(v)?' selected':''}>${label}</option>`).join('');
-      return `<div class="ccFreeItem${overdue?' ccFreeOverdue':''}" data-cc-item="${esc(item.id)}"><div class="ccFreeItemTop"><span class="ccDragHandle">⋮⋮</span><div class="ccItemTextWrap"><input type="text" class="ccItemText" data-cc-text="${esc(item.id)}" value="${esc(item.text)}"></div></div><div class="ccFreeFieldsRow"><div class="ccFreeField ccThresholdField"><span class="ccFieldLabel">⏰ 期限の目安</span><select data-cc-free-threshold="${esc(item.id)}">${thresholdOptions}</select></div><div class="ccFreeField ccDateField"><span class="ccFieldLabel">📅 日付</span><input type="date" data-cc-free-date="${esc(item.id)}" value="${esc(rec.date||'')}">${overdue?'<span class="ccOverdueBadge">⚠️ 期限切れ</span>':''}</div><div class="ccFreeField ccPersonField"><span class="ccFieldLabel">👤 担当者</span><div class="ccPersonRow"><input type="text" class="ccFreePerson" data-cc-free-person="${esc(item.id)}" placeholder="担当者名" value="${esc(rec.person||'')}"><button type="button" class="ccDeleteBtn" data-cc-del="${esc(item.id)}" aria-label="削除" title="削除">❎</button></div></div></div></div>`;
+      return `<div class="ccFreeItem${overdue?' ccFreeOverdue':''}" data-cc-item="${esc(item.id)}"><div class="ccFreeItemTop"><div class="ccItemTextWrap"><input type="text" class="ccItemText" data-cc-text="${esc(item.id)}" value="${esc(item.text)}"></div></div><div class="ccFreeFieldsRow"><div class="ccFreeField ccThresholdField"><span class="ccFieldLabel">⏰ 期限の目安</span><select data-cc-free-threshold="${esc(item.id)}">${thresholdOptions}</select></div><div class="ccFreeField ccDateField"><span class="ccFieldLabel">📅 日付</span><input type="date" data-cc-free-date="${esc(item.id)}" value="${esc(rec.date||'')}">${overdue?'<span class="ccOverdueBadge">⚠️ 期限切れ</span>':''}</div><div class="ccFreeField ccPersonField"><span class="ccFieldLabel">👤 担当者</span><div class="ccPersonRow"><input type="text" class="ccFreePerson" data-cc-free-person="${esc(item.id)}" placeholder="担当者名" value="${esc(rec.person||'')}"><button type="button" class="ccDeleteBtn" data-cc-del="${esc(item.id)}" aria-label="削除" title="削除">❎</button></div></div></div></div>`;
     }).join('');
     bindFreeRowEvents(container);
-    bindDragReorder('freeTime',container);
     bindTextAutosize(container);
+  }
+
+  // 「開店作業／閉店作業／手空き作業」(section)と「ランチ／ディナー」(mode)の
+  // 組み合わせから、表示すべき1枚のカードだけを決めて他を隠す。
+  function applyCardVisibility(){
+    const want=section==='free'?'freeTime':(mode+section.charAt(0).toUpperCase()+section.slice(1));
+    ['lunchOpen','lunchClose','dinnerOpen','dinnerClose'].forEach(k=>{
+      const el=document.querySelector(`[data-cc-list="${k}"]`);
+      if(el)el.hidden=(k!==want);
+    });
+    const free=document.querySelector('[data-cc-list="freeTime"]');
+    if(free)free.hidden=(want!=='freeTime');
+    // 非表示（幅0）の間にレンダリングされた項目名欄は横幅を正しく測れていないため、
+    // 表示状態に切り替わったタイミングで測り直す。
+    if(want==='freeTime'){ if(free)bindTextAutosize(free); }
+    else{ const c=document.querySelector(`[data-cc-items="${want}"]`); if(c)bindTextAutosize(c); }
   }
 
   function setMode(m){
     mode=m;
     $('ccTabLunch')?.classList.toggle('active',m==='lunch');
     $('ccTabDinner')?.classList.toggle('active',m==='dinner');
-    const lo=document.querySelector('[data-cc-list="lunchOpen"]'),lc=document.querySelector('[data-cc-list="lunchClose"]');
-    const do_=document.querySelector('[data-cc-list="dinnerOpen"]'),dc=document.querySelector('[data-cc-list="dinnerClose"]');
-    if(lo)lo.hidden=m!=='lunch'; if(lc)lc.hidden=m!=='lunch';
-    if(do_)do_.hidden=m!=='dinner'; if(dc)dc.hidden=m!=='dinner';
-    // 非表示（幅0）の間にレンダリングされた項目名欄は横幅を正しく測れていないため、
-    // 表示状態に切り替わったタイミングで測り直す。
-    (m==='lunch'?['lunchOpen','lunchClose']:['dinnerOpen','dinnerClose']).forEach(k=>{
-      const c=document.querySelector(`[data-cc-items="${k}"]`);
-      if(c)bindTextAutosize(c);
-    });
+    applyCardVisibility();
+  }
+
+  function setSection(s){
+    section=s;
+    $('ccSecOpen')?.classList.toggle('active',s==='open');
+    $('ccSecClose')?.classList.toggle('active',s==='close');
+    $('ccSecFree')?.classList.toggle('active',s==='free');
+    const shiftTabs=$('ccShiftTabs'); if(shiftTabs)shiftTabs.hidden=(s==='free');
+    const roleTabs=$('ccRoleTabs'); if(roleTabs)roleTabs.hidden=(s==='free');
+    applyCardVisibility();
   }
 
   function setRoleMode(r){
@@ -9119,6 +9229,10 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     $('ccTabDinner')?.addEventListener('click',()=>setMode('dinner'));
     $('ccRoleHall')?.addEventListener('click',()=>setRoleMode('hall'));
     $('ccRoleKitchen')?.addEventListener('click',()=>setRoleMode('kitchen'));
+    $('ccSecOpen')?.addEventListener('click',()=>setSection('open'));
+    $('ccSecClose')?.addEventListener('click',()=>setSection('close'));
+    $('ccSecFree')?.addEventListener('click',()=>setSection('free'));
+    setSection(section);
     document.querySelectorAll('[data-cc-add]').forEach(b=>{
       if(b.dataset.ccAddBound==='1')return;
       b.dataset.ccAddBound='1';
