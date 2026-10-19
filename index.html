@@ -2151,7 +2151,6 @@ html.makanaiKiosk .brandHeader{
 <div class="card settingsCard"><details><summary>⚙️ 仕込み品目・ポジションの登録・並び替え</summary><div class="settingsBody">
 <h2>ポジション管理</h2><input id="newPos" placeholder="例：刺場"><button id="addPos">＋ ポジション追加</button><div id="posManage"></div>
 <h2 class="settingsHeading">品目管理</h2><label>ポジション</label><select id="prepPos"></select><label>品目</label><input id="newPrep" placeholder="例：大根つま">
-<div class="row"><div><label>平日必要数</label><input id="wdNeed" type="number" min="0" value="0"></div><div><label>週末必要数</label><input id="weNeed" type="number" min="0" value="0"></div></div>
 <label>単位</label><input id="prepUnit" placeholder="例：個 / p / 本"><button id="addPrep">＋ 品目登録</button><div id="prepManage"></div>
 </div></details></div>
 
@@ -3046,7 +3045,7 @@ async function movePos(id,d){const a=op(),i=a.findIndex(([x])=>x===id),j=i+d;if(
 async function moveItem(id,d){const x=prepItems[id],a=oi(x.positionId),i=a.findIndex(([z])=>z===id),j=i+d;if(j<0||j>=a.length)return;const u={};u[`prep/items/${a[i][0]}/order`]=j;u[`prep/items/${a[j][0]}/order`]=i;await update(ref(db),u)}
 $("prepPos").onchange=renderPrepManage;
 $("addPos").onclick=async()=>{const name=$("newPos").value.trim();if(!name)return;await push(prepPositionsRef,{name,order:op().length});$("newPos").value=""};
-$("addPrep").onclick=async()=>{const positionId=$("prepPos").value,name=$("newPrep").value.trim();if(!positionId||!name)return alert("ポジションと品目を入力してください");await push(prepItemsRef,{positionId,name,weekday:Number($("wdNeed").value)||0,weekend:Number($("weNeed").value)||0,unit:$("prepUnit").value.trim(),order:oi(positionId).length});$("newPrep").value="";$("prepUnit").value="";$("wdNeed").value=0;$("weNeed").value=0};
+$("addPrep").onclick=async()=>{const positionId=$("prepPos").value,name=$("newPrep").value.trim();if(!positionId||!name)return alert("ポジションと品目を入力してください");await push(prepItemsRef,{positionId,name,weekday:1,weekend:1,unit:$("prepUnit").value.trim(),order:oi(positionId).length});$("newPrep").value="";$("prepUnit").value=""};
 async function setNeeds(k){const u={};vals(prepItems).forEach(([id,x])=>u[`prep/state/${prepSelectedDate}/${id}/count`]=Number(x[k])||0);await update(ref(db),u)}
 $("clearPrep").onclick=async()=>{
   // 選択中のポジション（「全体」なら全ポジション）の、選択中の日付の仕込みを、選択前の状態（選択ボタン側）に戻す。
