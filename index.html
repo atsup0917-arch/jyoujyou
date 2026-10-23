@@ -3245,6 +3245,12 @@ if($("prepSummaryClose"))$("prepSummaryClose").onclick=()=>{$("prepSummaryModal"
 .prepRecipeOpen,.prepRecipeName{cursor:pointer;text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px}
 .recipePhotoViewer{display:none;position:fixed;inset:0;z-index:1000100;background:rgba(0,0,0,.86);padding:12px;align-items:center;justify-content:center}.recipePhotoViewer.open{display:flex}.recipePhotoViewerBox{position:relative;max-width:96vw;max-height:96vh;display:flex;align-items:center;justify-content:center}.recipePhotoViewerBox img{display:block;max-width:96vw;max-height:92vh;width:auto;height:auto;object-fit:contain;border-radius:12px}.recipePhotoViewerClose{position:absolute;right:0;top:-54px;width:46px;height:46px;border:0;border-radius:50%;background:#fff;color:#222;font-size:34px;line-height:1}
 .recipeViewTitle{font-size:22px;font-weight:800;margin-bottom:8px}.recipeViewSection{padding:10px 0;border-top:1px solid #eee}.recipeViewSection h3{font-size:18px;margin:0 0 7px}.recipeViewIngredient{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px dashed #ddd;font-size:17px}.recipeViewIngredient:last-child{border-bottom:0}.recipeViewStep{white-space:pre-wrap;font-size:17px;line-height:1.65}.recipeEditLink{width:auto!important;margin:0!important;padding:8px 12px!important;font-size:14px!important;background:#f0e6c8!important;color:#7a2e2e!important}
+.recipeViewScaleBox{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px;padding:9px 10px;background:#faf1dc;border:1px solid #e6d5a8;border-radius:12px}.recipeViewScaleBox[hidden]{display:none!important}
+.recipeViewScaleLabel{font-size:13px;font-weight:800;color:#5a4324;white-space:nowrap}
+.recipeViewScaleBtns{display:flex;gap:6px;flex-wrap:wrap}
+.recipeViewScaleBtns button{width:auto;min-width:48px;min-height:38px;margin:0;padding:7px 10px;font-size:14px;font-weight:700;background:#fff;color:#7a2e2e;border:1px solid #d9c48a}
+.recipeViewScaleBtns button.active{background:#7a2e2e;color:#fff;border-color:#7a2e2e}
+.recipeViewScaleNote{font-size:12px;color:#a33;margin-top:4px}
 @media(max-width:520px){
   #recipeModal,#recipeBookModal{padding:6px}
   .recipeBox{width:100%;margin:0;padding:12px;border-radius:16px}
@@ -3262,6 +3268,17 @@ if($("prepSummaryClose"))$("prepSummaryClose").onclick=()=>{$("prepSummaryModal"
     <div class="recipeTopBar"><button id="recipeTopClose" class="recipeTopClose" type="button" aria-label="閉じる">×</button></div>
     <div id="recipeTitle" class="recipeViewTitle">レシピ</div>
     <div id="recipeViewPanel">
+      <div id="recipeViewScaleBox" class="recipeViewScaleBox" hidden>
+        <span class="recipeViewScaleLabel">📐 分量を変更</span>
+        <div class="recipeViewScaleBtns" id="recipeViewScaleBtns">
+          <button type="button" class="active" data-rvs="1">×1</button>
+          <button type="button" data-rvs="1.5">×1.5</button>
+          <button type="button" data-rvs="2">×2</button>
+          <button type="button" data-rvs="3">×3</button>
+          <button type="button" data-rvs="4">×4</button>
+          <button type="button" data-rvs="5">×5</button>
+        </div>
+      </div>
       <div id="recipeViewContent"></div>
       <div class="recipeBtns"><button id="recipeEdit" class="gray" type="button">✏️ 編集</button></div>
     </div>
@@ -3319,7 +3336,7 @@ if($("prepSummaryClose"))$("prepSummaryClose").onclick=()=>{$("prepSummaryModal"
 
 <script>
 (function(){
-  let currentRecipeId=null,currentRecipeName="",recipeCache={},prepItemsCache={},currentRecipePhoto="",currentIngredients=[],recipeBookOrder=[],started=false;
+  let currentRecipeId=null,currentRecipeName="",recipeCache={},prepItemsCache={},currentRecipePhoto="",currentIngredients=[],recipeBookOrder=[],started=false,recipeViewScale=1;
   const defaultIngredientCategories={
     "よく使う":["塩","砂糖","醤油","酒","味醂","酢","味噌","白だし","だし","ごま油","サラダ油","オリーブオイル","マヨネーズ","ポン酢"],
     "野菜":["大根","人参","玉ねぎ","長ねぎ","キャベツ","白菜","きゅうり","トマト","生姜","にんにく","大葉"],
@@ -3949,25 +3966,45 @@ if($("prepSummaryClose"))$("prepSummaryClose").onclick=()=>{$("prepSummaryModal"
     renderRecipeCostSummary();
   }
   function addIngredient(name="",unit="g"){currentIngredients.push({name,qty:"",unit:units.includes(unit)?unit:"g"});renderIngredients();setTimeout(()=>{const rows=document.querySelectorAll("#recipeIngredients .recipeIngredient");rows[rows.length-1]?.querySelector(".riQty")?.focus()},30)}
+  // 表示中のみ数量を倍率表示する（保存データは変更しない）。分数等で数値化できない
+  // 値（「適量」など）はそのまま表示する。
+  function scaleQtyDisplay(qty,scale){
+    if(!scale||scale===1)return qty;
+    const n=parseRecipeQuantity(qty);
+    if(n==null)return qty;
+    const scaled=Math.round(n*scale*100)/100;
+    return String(scaled);
+  }
   function renderView(){
     const data=recipeData(recipeCache[currentRecipeId]);
     const ing=(data.ingredients||[]).map(normalizeIngredient).filter(x=>x.name||x.qty);
+    const scale=recipeViewScale||1;
     let h="";
-    if(data.yield&&Number(data.yield)>0){h+=`<div class="recipeViewSection"><h3>出来上がり量</h3><div class="recipeViewIngredient"><span>仕込み完成量</span><b>${escRecipe(data.yield)}${escRecipe(data.yieldUnit||"g")}</b></div></div>`}if(ing.length){h+='<div class="recipeViewSection"><h3>材料</h3>'+ing.map(x=>`<div class="recipeViewIngredient"><span>${escRecipe(x.name)}</span><b>${escRecipe(x.qty)}${escRecipe(x.unit)}</b></div>`).join("")+'</div>'}
+    if(data.yield&&Number(data.yield)>0){h+=`<div class="recipeViewSection"><h3>出来上がり量</h3><div class="recipeViewIngredient"><span>仕込み完成量</span><b>${escRecipe(scaleQtyDisplay(data.yield,scale))}${escRecipe(data.yieldUnit||"g")}</b></div></div>`}if(ing.length){h+='<div class="recipeViewSection"><h3>材料</h3>'+ing.map(x=>`<div class="recipeViewIngredient"><span>${escRecipe(x.name)}</span><b>${escRecipe(scaleQtyDisplay(x.qty,scale))}${escRecipe(x.unit)}</b></div>`).join("")+'</div>'}
     if(data.text.trim()) h+='<div class="recipeViewSection"><h3>手順</h3><div class="recipeViewStep">'+escRecipe(data.text)+'</div></div>';
     if(!ing.length&&!data.text.trim()) h='<div class="empty">まだレシピが登録されていません。</div>';
     if(data.photo) h+='<div class="recipeViewSection"><h3>写真</h3><button type="button" class="gray" id="recipeViewPhotoBtn" style="margin:0">📷 写真を見る</button></div>';
     document.getElementById("recipeViewContent").innerHTML=h;
     document.getElementById("recipeViewPhotoBtn")?.addEventListener("click",()=>openRecipePhotoViewer(data.photo));
+    const scaleBox=document.getElementById("recipeViewScaleBox");
+    if(scaleBox)scaleBox.hidden=!(ing.length||(data.yield&&Number(data.yield)>0));
+  }
+  function setRecipeViewScale(scale){
+    recipeViewScale=scale;
+    document.querySelectorAll("#recipeViewScaleBtns button").forEach(b=>b.classList.toggle("active",Number(b.dataset.rvs)===scale));
+    renderView();
+  }
+  function bindRecipeViewScale(){
+    document.querySelectorAll("#recipeViewScaleBtns [data-rvs]").forEach(b=>b.onclick=()=>setRecipeViewScale(Number(b.dataset.rvs)));
   }
   function setEditTab(tab){document.querySelectorAll("#recipeEditPanel .recipeTabs button").forEach(b=>b.classList.toggle("active",b.dataset.rp===tab));document.getElementById("recipePanelIngredients").hidden=tab!=="ingredients";document.getElementById("recipePanelSteps").hidden=tab!=="steps";document.getElementById("recipePanelPhoto").hidden=tab!=="photo"}
   function openRecipe(id,name){
     currentRecipeId=id;currentRecipeName=name||"";const data=recipeData(recipeCache[id]);currentRecipePhoto=data.photo||"";currentIngredients=(data.ingredients||[]).map(normalizeIngredient);document.getElementById("recipeYield").value=data.yield||"";document.getElementById("recipeYieldUnit").value=data.yieldUnit||"g";
-    document.getElementById("recipeTitle").textContent=currentRecipeName+" のレシピ";document.getElementById("recipeText").value=data.text;document.getElementById("recipePhotoInput").value="";showRecipePhoto(currentRecipePhoto);const qaForm=document.getElementById("recipeQuickAddForm");if(qaForm)qaForm.hidden=true;renderIngredients();renderQuickCats();renderView();
+    document.getElementById("recipeTitle").textContent=currentRecipeName+" のレシピ";document.getElementById("recipeText").value=data.text;document.getElementById("recipePhotoInput").value="";showRecipePhoto(currentRecipePhoto);const qaForm=document.getElementById("recipeQuickAddForm");if(qaForm)qaForm.hidden=true;renderIngredients();renderQuickCats();setRecipeViewScale(1);
     document.getElementById("recipeViewPanel").hidden=false;document.getElementById("recipeEditPanel").hidden=true;document.getElementById("recipeModal").style.display="block";document.documentElement.classList.add("recipeModalLocked");document.body.classList.add("recipeModalLocked");
   }
   function editRecipe(){document.getElementById("recipeViewPanel").hidden=true;document.getElementById("recipeEditPanel").hidden=false;setEditTab("ingredients")}
-  function closeRecipe(){document.getElementById("recipeModal").style.display="none";document.documentElement.classList.remove("recipeModalLocked");document.body.classList.remove("recipeModalLocked");currentRecipeId=null;currentRecipePhoto="";currentIngredients=[];document.getElementById("recipePhotoInput").value=""}
+  function closeRecipe(){document.getElementById("recipeModal").style.display="none";document.documentElement.classList.remove("recipeModalLocked");document.body.classList.remove("recipeModalLocked");currentRecipeId=null;currentRecipePhoto="";currentIngredients=[];recipeViewScale=1;document.getElementById("recipePhotoInput").value=""}
   let recipeBookOrderRef=null;
   function saveRecipeBookOrder(){
     if(!recipeBookOrderRef||!Array.isArray(recipeBookOrder))return;
@@ -4069,6 +4106,7 @@ if($("prepSummaryClose"))$("prepSummaryClose").onclick=()=>{$("prepSummaryModal"
     fb.onValue(recipesRef,s=>{recipeCache=s.val()||{};renderRecipeBook();bindPrepRecipeButtons();decoratePrepPhotoButtons()});
     fb.onValue(recipeBookOrderRef,s=>{const v=s.val();recipeBookOrder=Array.isArray(v)?v:[];renderRecipeBook()});
     document.getElementById("recipeEdit").onclick=editRecipe;document.getElementById("recipeTopClose").onclick=closeRecipe;
+    bindRecipeViewScale();
     document.getElementById("recipeYield").oninput=renderRecipeCostSummary;document.getElementById("recipeYieldUnit").onchange=renderRecipeCostSummary;
     bindRecipeQuickAdd();
     bindRecipeBookFilterUI();
