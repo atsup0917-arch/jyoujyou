@@ -918,8 +918,6 @@ html.recipeModalLocked, body.recipeModalLocked{
 #shiftPage .shiftMemoDay{position:relative;min-height:48px;padding:6px 2px;border:1px solid #e5e7eb;border-radius:10px;background:#fff;color:#222 !important;-webkit-text-fill-color:#222 !important;font-size:15px;font-weight:700;cursor:pointer}
 #shiftPage .shiftMemoDay.empty{border-color:transparent;background:transparent;cursor:default}
 #shiftPage .shiftMemoDay.hasMemo{background:#fff3a8;border-color:#e0c200;color:#222 !important;-webkit-text-fill-color:#222 !important}
-#shiftPage .shiftMemoDay.dayClosed{background:#e6e1d5;border-color:#d3ccba;color:#8a8478 !important;-webkit-text-fill-color:#8a8478 !important}
-#shiftPage .shiftMemoDay.dayClosed .shiftMemoDot{background:#fff3a8}
 #shiftPage .shiftMemoDay.selected{outline:3px solid #7a2e2e;outline-offset:-2px}
 #shiftPage .shiftMemoDot{position:absolute;right:5px;bottom:4px;width:7px;height:7px;border-radius:50%;background:#e0a800}
 #shiftPage .shiftFreeDueDot{position:absolute;left:5px;top:4px;width:7px;height:7px;border-radius:50%;background:#8a1f1f}
@@ -1209,12 +1207,7 @@ body{overflow-anchor:none!important;}
 .shiftLaborAiBox{margin-top:12px;padding:12px;border-radius:14px;background:#f0e6c8;border:1px solid #f0e6c8;white-space:pre-wrap;line-height:1.55}
 @media(max-width:520px){.shiftLaborGrid{grid-template-columns:1fr}.shiftLaborRateRow{grid-template-columns:58px 1fr 105px}.shiftLaborResult{overflow:auto}.shiftLaborResult table{min-width:430px}}
 </style>
-<style id="shiftSalesBridgeStyle">
-#shiftTodayPrevYearSales,#shiftOtherDayPrevYearSales{display:block!important;min-height:22px!important;margin-top:6px!important;padding:4px 10px!important;border-radius:8px!important;background:#f0e6c8!important;color:#7a2e2e!important;font-size:14px!important;font-weight:800!important;line-height:1.4!important;box-sizing:border-box!important;}
-</style>
-
 <style id="shiftSalesExpensePlacementStyle">
-#shiftRegisteredPeriods + #shiftSalesExpenseBtn{margin-top:14px!important;}
 .shiftSalesExpenseBtn{width:100%;background:#fff7fb!important;border:1px solid #e4a6c5!important;color:#b33b73!important;font-weight:900!important;}
 .salesPageHeader{display:flex;align-items:center;justify-content:space-between;gap:10px;}
 .salesPageCloseBtn{width:auto!important;margin:0!important;padding:8px 14px!important;background:#fff!important;color:#555!important;border:1px solid #d8dce3!important;font-weight:900!important;border-radius:12px!important;line-height:1;}
@@ -1902,11 +1895,6 @@ html.makanaiKiosk .brandHeader{
 <div class="settingsBody">
   <div class="ccListToolbar"><span class="ccHint">「📅 曜日設定」で選んだ曜日だけ表示されます（未設定の項目は毎日表示）。</span><button type="button" class="ccShowAllBtn" data-cc-showall="lunchClose">🔎 全項目を表示</button></div>
   <div class="ccItems" data-cc-items="lunchClose"></div>
-  <div class="ccSalesQuick" data-cc-sales="lunch">
-    <div class="ccSalesQuickLabel">🧾 本日のランチ売上</div>
-    <div class="ccSalesQuickRow"><input type="number" min="0" step="1" id="ccSalesLunchInput" placeholder="例：120000"><button type="button" id="ccSalesLunchSave">保存</button></div>
-    <div id="ccSalesLunchStatus" class="ccSalesQuickStatus"></div>
-  </div>
   <div class="ccAddRow"><input type="text" data-cc-input="lunchClose" placeholder="項目を入力して追加"><button type="button" class="gray" data-cc-add="lunchClose">＋ 追加</button></div>
 </div>
 </details>
@@ -1927,11 +1915,6 @@ html.makanaiKiosk .brandHeader{
 <div class="settingsBody">
   <div class="ccListToolbar"><span class="ccHint">「📅 曜日設定」で選んだ曜日だけ表示されます（未設定の項目は毎日表示）。</span><button type="button" class="ccShowAllBtn" data-cc-showall="dinnerClose">🔎 全項目を表示</button></div>
   <div class="ccItems" data-cc-items="dinnerClose"></div>
-  <div class="ccSalesQuick" data-cc-sales="dinner">
-    <div class="ccSalesQuickLabel">🧾 本日のディナー売上</div>
-    <div class="ccSalesQuickRow"><input type="number" min="0" step="1" id="ccSalesDinnerInput" placeholder="例：250000"><button type="button" id="ccSalesDinnerSave">保存</button></div>
-    <div id="ccSalesDinnerStatus" class="ccSalesQuickStatus"></div>
-  </div>
   <div class="ccAddRow"><input type="text" data-cc-input="dinnerClose" placeholder="項目を入力して追加"><button type="button" class="gray" data-cc-add="dinnerClose">＋ 追加</button></div>
 </div>
 </details>
@@ -1971,7 +1954,6 @@ html.makanaiKiosk .brandHeader{
       <div class="shiftSectionTitle">👥 本日の出勤者</div>
       <div id="shiftTodayDateLabel" class="shiftHeroDate"></div>
       <div id="shiftTodayQuickMemo" class="shiftHeroMemo" hidden></div>
-      <div id="shiftTodayPrevYearSales" class="shiftPrevYearSalesUnderDate"></div>
     </div>
   </div>
   <div id="shiftTodayQuickSummary" class="shiftHeroCount">読み込み中…</div>
@@ -2032,7 +2014,7 @@ html.makanaiKiosk .brandHeader{
   </div>
   <div id="shiftOtherDayBody">
   <div class="shiftDateRow">
-    <div><label>日付</label><input id="shiftViewDate" type="date"><div id="shiftOtherDayPrevYearSales" class="shiftPrevYearSalesUnderDate"></div></div>
+    <div><label>日付</label><input id="shiftViewDate" type="date"></div>
     <button type="button" class="gray" id="shiftTodayBtn">今日</button>
   </div>
   <div id="shiftDaySummary" class="shiftStatus" style="margin-top:10px">この日のシフトはありません。</div>
@@ -2073,7 +2055,6 @@ html.makanaiKiosk .brandHeader{
 </div>
 
 <div class="card shiftUploadStatusCard">
-  <button type="button" id="shiftSalesExpenseBtn" class="shiftSalesExpenseBtn">💰 売上確認</button>
   <button type="button" id="makanaiOpenBtn" class="shiftSalesExpenseBtn makanaiOpenBtn">🍚 まかないチェック表</button>
 </div>
 
@@ -2739,10 +2720,8 @@ $("uncheckAll").onclick=async()=>{for(const [id,x] of vals(items))if(x.done)awai
 const weekdays=["日","月","火","水","木","金","土"];
 function switchPage(which){
  $("shoppingPage").hidden=which!=="shopping"; $("openClosePage").hidden=which!=="openclose"; $("prepPage").hidden=which!=="prep"; $("shiftPage").hidden=which!=="shift";
- // シフト内の「売上確認」ページ・仕込み表内の「発注」ページは4大タブの管理外の
- // ページなので、開いたまま他のタブに切り替えると重なって表示され続けていた。
- // タブ切り替え時は必ず閉じる。
- const salesPage=$("salesPage"); if(salesPage)salesPage.hidden=true;
+ // 仕込み表内の「発注」ページは4大タブの管理外のページなので、
+ // 開いたまま他のタブに切り替えると重なって表示され続けていた。タブ切り替え時は必ず閉じる。
  const vegPage=$("vegetablePage"); if(vegPage)vegPage.hidden=true;
  const makanaiPage=$("makanaiPage"); if(makanaiPage)makanaiPage.hidden=true;
  $("tabShopping").classList.toggle("active",which==="shopping");
@@ -6025,7 +6004,6 @@ function displayShiftTime(v){
 
 function renderDay(){
     const date=$('shiftViewDate')?.value||today(); const list=$('shiftDayList'),sum=$('shiftDaySummary');if(!list||!sum)return;
-    renderPrevYearSalesUnderDate(date);
     const rows=window.sortShiftDisplayByPosition(Object.values(schedules).filter(x=>x?.date===date&&x?.name&&shiftIsCurrentType(x)));
     const byName={};
     rows.forEach(x=>{
@@ -6575,29 +6553,6 @@ function renderDay(){
       alert(`${name}の変更を保存しました。`);
     }catch(e){console.error(e);alert('保存に失敗しました。\n'+(e?.message||e));}
   }
-  function renderPrevYearSalesUnderDate(date){
-    // shiftTodayPrevYearSalesは常に「本日」、shiftOtherDayPrevYearSalesは
-    // 「別の日を見る・編集」で選んだ日付、と別々に計算する。
-    // (以前は1つのdateで両方を同じ値に上書きしており、タブ切替や
-    //  別の日の閲覧時に本日の欄まで別の日の金額になってしまっていた。)
-    const daily=window.__salesDailyData||{};
-    const type=shiftType();
-    const label=type==='lunch'?'ランチ':'ディナー';
-    function calc(d){
-      const p=typeof window.__salesPrevSameWeekday==='function'?window.__salesPrevSameWeekday(d):'';
-      const rec=p?daily?.[p]:null;
-      const isClosed=type==='lunch'?rec?.closedLunch:rec?.closedDinner;
-      if(rec&&isClosed) return p ? `前年同曜日売上（${label}）：定休日` : '';
-      const hasSplit=rec&&(rec.lunch!=null||rec.dinner!=null);
-      const v=Number(hasSplit?(type==='lunch'?rec.lunch:rec.dinner)||0:(rec?.amount||0));
-      return p ? `前年同曜日売上（${label}）：¥${v.toLocaleString('ja-JP')}${rec?'':'（未登録）'}` : '';
-    }
-    // 前年同曜日データがまだ準備できていない瞬間は空文字を返すため、
-    // その場合は既存の表示を消さずに残す（他の描画ロジックとの競合による点滅防止）。
-    const at=calc(today()); const a=$('shiftTodayPrevYearSales'); if(a&&at) a.textContent=at;
-    const bt=calc(date||today()); const b=$('shiftOtherDayPrevYearSales'); if(b&&bt) b.textContent=bt;
-  }
-  window.renderPrevYearSalesUnderDate=renderPrevYearSalesUnderDate;
   window.renderMemoCalendar=()=>renderMemoCalendar();
 
   function renderTodayQuick(){
@@ -6605,7 +6560,6 @@ function renderDay(){
     const label=$('shiftTodayDateLabel'),sum=$('shiftTodayQuickSummary'),list=$('shiftTodayQuickList'),memoBox=$('shiftTodayQuickMemo');
     if(!sum||!list)return;
     if(label){const d=new Date(date+'T00:00:00');label.textContent=`${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日（${['日','月','火','水','木','金','土'][d.getDay()]}）`; }
-    renderPrevYearSalesUnderDate(date);
     const rows=Object.values(schedules).filter(x=>x?.date===date&&x?.name&&shiftIsCurrentType(x));
     const byName={};
     rows.forEach(x=>{
@@ -6649,7 +6603,6 @@ function renderDay(){
     const y=base.getFullYear(), m=base.getMonth();
     const first=new Date(y,m,1), last=new Date(y,m+1,0);
     const memoDates=new Set(Object.values(memos||{}).filter(x=>x?.date&&String(x.text||'').trim()&&shiftMemoScopedKey(x)).map(x=>x.date));
-    const salesDaily=window.__salesDailyData||{};
     const freeDueDates=window.__freeTaskDueDates||{};
     const monthLabel=`${y}年${m+1}月`;
     let html=`<div class="shiftMemoCalendarHead"><button type="button" class="gray" id="shiftMemoPrevMonth">‹</button><div class="shiftMemoCalendarTitle">${monthLabel}</div><button type="button" class="gray" id="shiftMemoNextMonth">›</button></div>`;
@@ -6659,12 +6612,11 @@ function renderDay(){
     for(let d=1;d<=last.getDate();d++){
       const iso=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
       const has=memoDates.has(iso), sel=iso===selected;
-      const closed=shiftType()==='lunch'?!!salesDaily[iso]?.closedLunch:!!salesDaily[iso]?.closedDinner;
       const freeTasks=freeDueDates[iso];
       const freeTitle=freeTasks&&freeTasks.length?` title="🙌 手空き作業の期限：${freeTasks.map(t=>String(t).replace(/"/g,'')).join('、')}"`:'';
-      html+=`<button type="button" class="shiftMemoDay${has?' hasMemo':''}${closed?' dayClosed':''}${freeTasks?' hasFreeDue':''}${sel?' selected':''}" data-memo-day="${iso}"${freeTitle}>${d}${has?'<span class="shiftMemoDot"></span>':''}${freeTasks?'<span class="shiftFreeDueDot"></span>':''}</button>`;
+      html+=`<button type="button" class="shiftMemoDay${has?' hasMemo':''}${freeTasks?' hasFreeDue':''}${sel?' selected':''}" data-memo-day="${iso}"${freeTitle}>${d}${has?'<span class="shiftMemoDot"></span>':''}${freeTasks?'<span class="shiftFreeDueDot"></span>':''}</button>`;
     }
-    html+=`</div><div class="shiftMemoCalendarHint">🟨 色が付いた日は引き継ぎメモが登録されています。⬛ 灰色の日は${shiftType()==='lunch'?'ランチ':'ディナー'}の定休日です。🔴 赤丸は手空き作業の期限日です。日付をタップすると確認できます。</div>`;
+    html+=`</div><div class="shiftMemoCalendarHint">🟨 色が付いた日は引き継ぎメモが登録されています。🔴 赤丸は手空き作業の期限日です。日付をタップすると確認できます。</div>`;
     box.innerHTML=html;
     renderFreeDueInfo(selected);
     box.querySelectorAll('[data-memo-day]').forEach(b=>b.addEventListener('click',()=>{
@@ -7144,9 +7096,8 @@ function renderDay(){
       Object.entries(tabs).forEach(([key,id])=>{
         const el=$(id);if(el)el.classList.toggle('active',key===which);
       });
-      // シフト内の「売上確認」ページ・仕込み表内の「発注」ページは4大タブの管理外の
-      // ページなので、開いたまま他のタブに切り替えると重なって表示され続けていた。
-      const salesPage=$('salesPage');if(salesPage)salesPage.hidden=true;
+      // 仕込み表内の「発注」ページは4大タブの管理外のページなので、
+      // 開いたまま他のタブに切り替えると重なって表示され続けていた。
       const vegPage=$('vegetablePage');if(vegPage)vegPage.hidden=true;
       const makanaiPage=$('makanaiPage');if(makanaiPage)makanaiPage.hidden=true;
 
@@ -7427,98 +7378,6 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 })();
 </script>
 
-<style id="salesManagementAddStyle">
-#salesPage .salesGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-#salesPage .salesSummary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
-#salesPage .salesKpi{background:#faf1dc;border:1px solid #e1e4e8;border-radius:12px;padding:12px;text-align:center}
-#salesPage .salesKpi b{display:block;font-size:20px;margin-top:4px}
-#salesPage .salesRow{display:grid;grid-template-columns:105px 1fr 90px;gap:8px;align-items:end;margin:8px 0}
-#salesPage .salesList{max-height:420px;overflow:auto}
-#salesPage .salesItem{display:grid;grid-template-columns:100px 1fr auto;gap:8px;align-items:center;padding:9px 0;border-bottom:1px solid #eee}
-#salesPage .salesBadge{display:inline-block;margin:4px 4px 0 0;padding:4px 8px;border-radius:999px;background:#f0e6c8;font-size:13px;font-weight:700}
-#shiftPage .prevYearSalesBadge{display:block;margin-top:3px;font-size:12px;font-weight:700;color:#7a2e2e}
-#shiftPage .shiftPrevYearSalesUnderDate{margin-top:4px;font-size:14px;font-weight:800;color:#7a2e2e;line-height:1.35}
-#salesPage .salesStatusBadge{padding:12px 14px;border-radius:14px;font-weight:800;font-size:15px}
-#salesPage .salesStatusBadge.done{background:#eefaf1;color:#3f6b4f}
-#salesPage .salesStatusBadge.missing{background:#fff8e5;color:#805b00}
-#salesPage .salesStatusBadge.closed{background:#f1f1f1;color:#555}
-.ccSalesQuick{margin:12px 0;padding:12px;border:1px solid #f0e6c8;border-radius:14px;background:#faf1dc}
-.ccSalesQuickLabel{font-weight:800;font-size:15px;margin-bottom:8px}
-.ccSalesQuickRow{display:grid;grid-template-columns:1fr auto;gap:8px}
-.ccSalesQuickRow input{margin:0;padding:11px 10px;font-size:17px}
-.ccSalesQuickRow button{width:auto;margin:0;padding:0 18px}
-.ccSalesQuickStatus{margin-top:8px;font-size:13px;font-weight:700}
-.ccSalesQuickStatus.done{color:#3f6b4f}
-.ccSalesQuickStatus.missing{color:#a65f00}
-.ccSalesQuickStatus.closed{color:#777}
-#salesPage .salesCal{margin-top:12px;border:1px solid #e1e4e8;border-radius:16px;padding:12px;background:#fff}
-#salesPage .salesCalHead{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
-#salesPage .salesCalHead button{width:auto;flex:0 0 auto;margin:0;min-width:48px;padding:9px 12px}
-.salesTrendModeBtn,.salesTrendTargetBtn{width:auto!important;margin:0 0 0 6px!important;padding:8px 14px!important}
-.salesTrendTargetBtn{margin:0!important;flex:1}
-.salesTrendModeBtn.active,.salesTrendTargetBtn.active{background:#5b3a7a!important;color:#fff!important;border-color:#5b3a7a!important}
-#salesTrendDailyNav{gap:8px}
-#salesTrendDailyNav button{width:auto!important;flex:0 0 auto!important;min-width:48px;margin:0!important;padding:9px 12px!important}
-#salesTrendDailyLabel{flex:1 1 auto;text-align:center;white-space:nowrap}
-#salesPage .salesCalTitle{font-size:20px;font-weight:800;text-align:center;flex:1}
-#salesPage .salesCalWeek{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:4px}
-#salesPage .salesCalWeek div{text-align:center;font-size:12px;font-weight:700;color:#666;padding:4px 0}
-#salesPage .salesCalGrid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
-#salesPage .salesCalDay{position:relative;min-height:44px;padding:6px 2px;border:1px solid #e5e7eb;border-radius:10px;background:#fff;color:#222!important;-webkit-text-fill-color:#222!important;font-size:15px;font-weight:700;cursor:pointer}
-#salesPage .salesCalDay.empty{border-color:transparent;background:transparent;cursor:default}
-#salesPage .salesCalDay.selected{outline:3px solid #7a2e2e;outline-offset:-2px}
-#salesPage .salesCalDots{position:absolute;left:0;right:0;bottom:4px;display:flex;justify-content:center;gap:4px}
-#salesPage .salesCalDot{width:7px;height:7px;border-radius:50%;background:transparent;border:1px solid #ddd}
-#salesPage .salesCalDot.done{background:#3f6b4f;border-color:#3f6b4f}
-#salesPage .salesCalDot.closed{background:#666;border-color:#666}
-#salesPage .salesCalDot.missing{background:#d98a1f;border-color:#d98a1f}
-#salesPage .salesCalHint{font-size:13px;color:#666;margin-top:8px;line-height:1.6}
-#salesPage .salesStatusBadge{margin-bottom:8px}
-.salesClosedBtn.active{background:#8a1f1f!important;color:#fff!important;border-color:#8a1f1f!important}
-#salesPage label{display:flex;align-items:center;justify-content:space-between;gap:6px}
-.salesClearBtn{width:auto!important;display:inline!important;margin:0!important;padding:2px 8px!important;font-size:12px!important;font-weight:700!important;background:transparent!important;color:#b45309!important;border:1px solid #e6c68a!important;border-radius:999px!important}
-@media(max-width:600px){#salesPage .salesGrid,#salesPage .salesSummary{grid-template-columns:1fr 1fr}#salesPage .salesRow{grid-template-columns:1fr 1fr 72px}#salesPage .salesItem{grid-template-columns:82px 1fr auto}#salesPage .salesCalDay{min-height:40px}.navtabs4{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
-</style>
-<div id="salesPage" class="page" hidden>
-  <div class="salesPageHeader"><h1 style="margin:0">💰 売上確認</h1><button type="button" id="salesPageCloseBtn" class="salesPageCloseBtn" aria-label="売上確認を閉じる">✕</button></div>
-  <div class="card">
-    <h2>📊 日別売上を確認・入力</h2>
-    <div id="salesCalendar" class="salesCal"></div>
-    <div class="salesGrid" style="margin-top:12px">
-      <div><label>📅 日付</label><input id="salesDate" type="date"></div>
-      <div><label>📝 メモ</label><input id="salesMemo" type="text" placeholder="例：周年イベント"></div>
-    </div>
-    <div class="salesGrid" style="margin-top:10px">
-      <div><label>🍽️ ランチ売上 <button type="button" class="salesClearBtn" id="salesClearLunch" title="未入力に戻す">✕未入力に戻す</button></label><input id="salesAmountLunch" type="number" min="0" step="1" placeholder="例：120000"></div>
-      <div><label>🌙 ディナー売上 <button type="button" class="salesClearBtn" id="salesClearDinner" title="未入力に戻す">✕未入力に戻す</button></label><input id="salesAmountDinner" type="number" min="0" step="1" placeholder="例：250000"></div>
-    </div>
-    <div class="salesGrid" style="margin-top:10px">
-      <button type="button" class="gray salesClosedBtn" id="salesClosedLunchToggle">🚫 ランチを定休日に</button>
-      <button type="button" class="gray salesClosedBtn" id="salesClosedDinnerToggle">🚫 ディナーを定休日に</button>
-    </div>
-    <div style="margin-top:10px"><button id="salesSave">保存</button></div>
-    <div id="salesCompare" style="margin-top:12px"></div>
-  </div>
-  <div class="card">
-    <div class="salesPageHeader"><h2 style="margin:0">📈 売上推移</h2>
-      <div>
-        <button type="button" id="salesTrendModeMonthly" class="gray salesTrendModeBtn active">月別</button>
-        <button type="button" id="salesTrendModeDaily" class="gray salesTrendModeBtn">日別</button>
-      </div>
-    </div>
-    <div id="salesTrendTargetRow" style="display:flex;gap:6px;margin:8px 0 4px">
-      <button type="button" id="salesTrendTargetTotal" class="gray salesTrendTargetBtn active">合計</button>
-      <button type="button" id="salesTrendTargetLunch" class="gray salesTrendTargetBtn">ランチ</button>
-      <button type="button" id="salesTrendTargetDinner" class="gray salesTrendTargetBtn">夜</button>
-    </div>
-    <div id="salesTrendDailyNav" hidden style="display:flex;align-items:center;justify-content:space-between;margin:8px 0">
-      <button type="button" class="gray" id="salesTrendDailyPrev">‹</button>
-      <div id="salesTrendDailyLabel" style="font-weight:800"></div>
-      <button type="button" class="gray" id="salesTrendDailyNext">›</button>
-    </div>
-    <div id="salesMonthlyChart"></div>
-  </div>
-</div>
 
 <div id="makanaiPage" class="page" hidden>
   <div class="salesPageHeader"><h1 style="margin:0">🍚 まかないチェック表</h1><button type="button" id="makanaiCloseBtn" class="salesPageCloseBtn" aria-label="まかないチェック表を閉じる">✕</button></div>
@@ -7552,487 +7411,6 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   </div>
 </div>
 
-<script id="salesManagementAddScript">
-(function(){
-  const $=id=>document.getElementById(id);
-  const fb=()=>window.__fb;
-  const today=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
-  const fmt=n=>'¥'+Number(n||0).toLocaleString('ja-JP');
-  const esc=s=>String(s??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  let salesData={};
-  let closedLunchState=false, closedDinnerState=false;
-  function dateObj(s){const [y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d)}
-  function prevSameWeekday(dateStr){
-    const d=dateObj(dateStr), y=d.getFullYear()-1, target=d.getDay();
-    const base=new Date(y,d.getMonth(),d.getDate());
-    for(let delta=-3;delta<=3;delta++){const x=new Date(base);x.setDate(base.getDate()+delta);if(x.getDay()===target)return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0')}
-    return base.getFullYear()+'-'+String(base.getMonth()+1).padStart(2,'0')+'-'+String(base.getDate()).padStart(2,'0');
-  }
-  function updateClosedToggleUI(){
-    const lb=$('salesClosedLunchToggle'), db=$('salesClosedDinnerToggle');
-    if(lb){lb.textContent=closedLunchState?'🚫 ランチ定休日（解除する）':'🚫 ランチを定休日に';lb.classList.toggle('active',closedLunchState);}
-    if(db){db.textContent=closedDinnerState?'🚫 ディナー定休日（解除する）':'🚫 ディナーを定休日に';db.classList.toggle('active',closedDinnerState);}
-    if($('salesAmountLunch'))$('salesAmountLunch').disabled=closedLunchState;
-    if($('salesAmountDinner'))$('salesAmountDinner').disabled=closedDinnerState;
-  }
-  function statusLine(label,isClosed,amount){
-    if(isClosed)return `<div class="salesStatusBadge closed">🚫 ${label}は定休日として登録されています</div>`;
-    if(amount!=null)return `<div class="salesStatusBadge done">✅ ${label} 入力済み　${fmt(amount||0)}</div>`;
-    return `<div class="salesStatusBadge missing">⬜ ${label}はまだ入力されていません</div>`;
-  }
-  function renderStatus(d){
-    const rec=salesData[d];
-    const box=$('salesCompare'); if(!box)return;
-    let html=statusLine('ランチ',!!(rec&&rec.closedLunch),rec&&rec.lunch!=null?rec.lunch:null)
-      +statusLine('ディナー',!!(rec&&rec.closedDinner),rec&&rec.dinner!=null?rec.dinner:null);
-    if(rec&&rec.n)html+=`<div class="small">⚠️ ${esc(rec.n)}</div>`;
-    box.innerHTML=html;
-  }
-  let calendarAnchor=null;
-  function renderSalesCalendar(){
-    const box=$('salesCalendar'); if(!box)return;
-    const selected=$('salesDate')?.value||today();
-    if(!calendarAnchor){
-      const b=new Date((selected||today())+'T00:00:00');
-      calendarAnchor=new Date(b.getFullYear(),b.getMonth(),1);
-    }
-    const y=calendarAnchor.getFullYear(), m=calendarAnchor.getMonth();
-    const first=new Date(y,m,1), last=new Date(y,m+1,0);
-    const todayStr=today();
-    const monthLabel=`${y}年${m+1}月`;
-    let html=`<div class="salesCalHead"><button type="button" class="gray" id="salesCalPrevMonth">‹</button><div class="salesCalTitle">${monthLabel}</div><button type="button" class="gray" id="salesCalNextMonth">›</button></div>`;
-    html+='<div class="salesCalWeek"><div>日</div><div>月</div><div>火</div><div>水</div><div>木</div><div>金</div><div>土</div></div>';
-    html+='<div class="salesCalGrid">';
-    for(let i=0;i<first.getDay();i++)html+='<div class="salesCalDay empty"></div>';
-    function stateOf(iso,closedFlag,amount){
-      if(closedFlag)return 'closed';
-      if(amount!=null)return 'done';
-      if(iso<todayStr)return 'missing';
-      return 'none';
-    }
-    for(let d=1;d<=last.getDate();d++){
-      const iso=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-      const rec=salesData[iso];
-      const sel=iso===selected;
-      const lState=stateOf(iso,rec&&rec.closedLunch,rec&&rec.lunch!=null?rec.lunch:null);
-      const dState=stateOf(iso,rec&&rec.closedDinner,rec&&rec.dinner!=null?rec.dinner:null);
-      const dots=`<span class="salesCalDots"><span class="salesCalDot ${lState}"></span><span class="salesCalDot ${dState}"></span></span>`;
-      html+=`<button type="button" class="salesCalDay${sel?' selected':''}" data-sales-day="${iso}">${d}${dots}</button>`;
-    }
-    html+='</div><div class="salesCalHint">🟢 入力済み　⚫ 定休日　🟠 未入力（過去）　左のドット=ランチ／右のドット=ディナー。日付をタップすると下に表示されます。</div>';
-    box.innerHTML=html;
-    box.querySelectorAll('[data-sales-day]').forEach(b=>b.addEventListener('click',()=>{
-      const iso=b.dataset.salesDay;
-      if($('salesDate'))$('salesDate').value=iso;
-      applyDateToForm(iso);
-    }));
-    $('salesCalPrevMonth')?.addEventListener('click',()=>{calendarAnchor=new Date(y,m-1,1);renderSalesCalendar();});
-    $('salesCalNextMonth')?.addEventListener('click',()=>{calendarAnchor=new Date(y,m+1,1);renderSalesCalendar();});
-  }
-  function applyDateToForm(d){
-    const rec=salesData[d];
-    closedLunchState=!!(rec&&rec.closedLunch);
-    closedDinnerState=!!(rec&&rec.closedDinner);
-    if($('salesAmountLunch'))$('salesAmountLunch').value=(rec&&rec.lunch!=null)?rec.lunch:'';
-    if($('salesAmountDinner'))$('salesAmountDinner').value=(rec&&rec.dinner!=null)?rec.dinner:'';
-    if($('salesMemo'))$('salesMemo').value=(rec&&rec.memo)?rec.memo:'';
-    updateClosedToggleUI();
-    renderStatus(d);
-    const base=new Date(d+'T00:00:00');
-    calendarAnchor=new Date(base.getFullYear(),base.getMonth(),1);
-    renderSalesCalendar();
-  }
-  function manEn(n){return (Number(n||0)/10000).toLocaleString('ja-JP',{maximumFractionDigits:1})+'万';}
-  function valueOf(rec,target){
-    if(!rec)return null;
-    if(target==='lunch')return rec.lunch!=null?Number(rec.lunch):null;
-    if(target==='dinner')return rec.dinner!=null?Number(rec.dinner):null;
-    return rec.amount!=null?Number(rec.amount):null;
-  }
-  let salesTrendMode='monthly';
-  let salesTrendTarget='total'; // 'total' | 'lunch' | 'dinner'
-  let salesTrendDailyAnchor=null;
-  function monthlyTotalsFromDaily(target){
-    const totals={};
-    Object.entries(salesData||{}).forEach(([date,rec])=>{
-      const v=valueOf(rec,target);
-      if(v==null)return;
-      const ym=date.slice(0,7).replace('-','');
-      totals[ym]=(totals[ym]||0)+v;
-    });
-    return totals;
-  }
-  function targetLabel(t){return t==='lunch'?'ランチ':(t==='dinner'?'夜':'合計');}
-  function cumulativeOf(arr){
-    let sum=0;
-    return arr.map(v=>{ if(v==null)return null; sum+=v; return sum; });
-  }
-  async function renderMonthlySalesChart(){
-    const box=$('salesMonthlyChart'); if(!box)return;
-    $('salesTrendDailyNav').hidden=(salesTrendMode!=='daily');
-    if(salesTrendMode==='daily'){ await renderDailyTrendChart(box); return; }
-    const totals=monthlyTotalsFromDaily(salesTrendTarget);
-    const allYm=Object.keys(totals);
-    if(!allYm.length){box.innerHTML='<div class="small" style="color:#666">売上データがまだ登録されていません。</div>';return;}
-    const years=[...new Set(allYm.map(p=>p.slice(0,4)))].sort();
-    const thisYear=years[years.length-1];
-    const lastYear=String(Number(thisYear)-1);
-    const hasLastYear=years.includes(lastYear);
-    const thisVals=[], lastVals=[];
-    for(let m=1;m<=12;m++){
-      const ym=thisYear+String(m).padStart(2,'0');
-      const ymLast=lastYear+String(m).padStart(2,'0');
-      thisVals.push(totals[ym]!=null?totals[ym]:null);
-      lastVals.push(hasLastYear?(totals[ymLast]!=null?totals[ymLast]:null):null);
-    }
-    const max=Math.max(1,...thisVals.filter(v=>v!=null),...lastVals.filter(v=>v!=null));
-    const W=700,H=290,padB=34,padT=42,padL=36,padR=36;
-    const plotW=W-padL-padR, plotH=H-padB-padT;
-    const slot=plotW/12, barW=slot*0.32, gapC=slot*0.06;
-    const yOf=v=>H-padB-(v/max)*plotH;
-    let grid='';
-    [0,0.5,1].forEach(f=>{
-      const gy=H-padB-plotH*f;
-      grid+=`<line x1="${padL}" y1="${gy}" x2="${W-padR}" y2="${gy}" stroke="#e5e9eb" stroke-width="1"></line>`;
-      grid+=`<text x="2" y="${gy-3}" font-size="9" fill="#999">${manEn(max*f)}</text>`;
-    });
-    let bars=grid;
-    for(let i=0;i<12;i++){
-      const center=padL+slot*(i+0.5);
-      const xLast=center-gapC/2-barW, xThis=center+gapC/2;
-      const lv=lastVals[i], tv=thisVals[i];
-      if(lv!=null){
-        const by=yOf(lv), bh=Math.max(1,(H-padB)-by);
-        bars+=`<rect x="${xLast}" y="${by}" width="${barW}" height="${bh}" rx="2" fill="#c9c3d1" data-tap="${lastYear}年${i+1}月：¥${lv.toLocaleString('ja-JP')}"></rect>`;
-      }
-      if(tv!=null){
-        const by=yOf(tv), bh=Math.max(1,(H-padB)-by);
-        bars+=`<rect x="${xThis}" y="${by}" width="${barW}" height="${bh}" rx="2" fill="#5b3a7a" data-tap="${thisYear}年${i+1}月：¥${tv.toLocaleString('ja-JP')}"></rect>`;
-        bars+=`<text x="${xThis+barW/2}" y="${by-6}" text-anchor="middle" font-size="11" font-weight="700" fill="#3f2760">${manEn(tv)}</text>`;
-      }
-      bars+=`<text x="${center}" y="${H-padB+16}" text-anchor="middle" font-size="12" fill="#555">${i+1}月</text>`;
-    }
-    const thisTotal=thisVals.filter(v=>v!=null).reduce((a,b)=>a+b,0);
-    const sameSpanLastTotal=thisVals.reduce((sum,v,i)=>sum+(v!=null&&lastVals[i]!=null?lastVals[i]:0),0);
-    const diff=sameSpanLastTotal? Math.round((thisTotal-sameSpanLastTotal)/sameSpanLastTotal*1000)/10 : null;
-    const legend=`<div class="small" style="display:flex;gap:14px;align-items:center;margin-bottom:4px">`+
-      (hasLastYear?`<span><span style="display:inline-block;width:10px;height:10px;background:#c9c3d1;border-radius:2px;margin-right:4px"></span>${lastYear}年</span>`:'')+
-      `<span><span style="display:inline-block;width:10px;height:10px;background:#5b3a7a;border-radius:2px;margin-right:4px"></span>${thisYear}年（${targetLabel(salesTrendTarget)}）</span></div>`;
-    box.innerHTML=`<div id="salesDailyTapInfo" style="min-height:22px;font-weight:800;color:#3f2760;margin-bottom:4px">点をタップすると金額が表示されます</div>`+
-      legend+`<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block">${bars}</svg>`+
-      `<div class="small" style="margin-top:8px;color:#555">${thisYear}年 累計：¥${thisTotal.toLocaleString('ja-JP')}`+
-      (hasLastYear?`　（${lastYear}年同期間比 ${diff>=0?'+':''}${diff}%）`:'')+`</div>`;
-  }
-  function dailyValsForMonth(y,m,target){
-    const last=new Date(y,m+1,0).getDate();
-    const vals=[];
-    for(let d=1;d<=last;d++){
-      const iso=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-      vals.push(valueOf(salesData[iso],target));
-    }
-    return {vals,last};
-  }
-  async function renderDailyTrendChart(box){
-    if(!salesTrendDailyAnchor){
-      const keys=Object.keys(salesData||{});
-      const b=keys.length ? new Date(keys.sort().slice(-1)[0]+'T00:00:00') : new Date();
-      salesTrendDailyAnchor=new Date(b.getFullYear(),b.getMonth(),1);
-    }
-    const y=salesTrendDailyAnchor.getFullYear(), m=salesTrendDailyAnchor.getMonth();
-    $('salesTrendDailyLabel').textContent=`${y}年${m+1}月`;
-    const {vals,last}=dailyValsForMonth(y,m,salesTrendTarget);
-    const {vals:lastVals}=dailyValsForMonth(y-1,m,salesTrendTarget);
-    const present=vals.filter(v=>v!=null);
-    const lastPresent=lastVals.filter(v=>v!=null);
-    if(!present.length&&!lastPresent.length){box.innerHTML='<div class="small" style="color:#666">この月の売上入力データがまだありません。</div>';return;}
-    const cumVals=cumulativeOf(vals), lastCumVals=cumulativeOf(lastVals);
-    const max=Math.max(1,...cumVals.filter(v=>v!=null),...lastCumVals.filter(v=>v!=null));
-    const W=700,H=270,padB=30,padT=36,padL=36,padR=36;
-    const plotW=W-padL-padR, plotH=H-padB-padT;
-    const xOf=i=>padL+plotW*(i/(last-1));
-    const yOf=v=>H-padB-(v/max)*plotH;
-    let grid='';
-    [0,0.5,1].forEach(f=>{
-      const gy=H-padB-plotH*f;
-      grid+=`<line x1="${padL}" y1="${gy}" x2="${W-padR}" y2="${gy}" stroke="#e5e9eb" stroke-width="1"></line>`;
-      grid+=`<text x="2" y="${gy-3}" font-size="9" fill="#999">${manEn(max*f)}</text>`;
-    });
-    function lineOf(arr,color,width){
-      let segs='',cur=[];
-      arr.forEach((v,i)=>{
-        if(v!=null)cur.push(`${xOf(i)},${yOf(v)}`);
-        else{if(cur.length>1)segs+=`<polyline points="${cur.join(' ')}" fill="none" stroke="${color}" stroke-width="${width}" stroke-linejoin="round" stroke-linecap="round"/>`;cur=[];}
-      });
-      if(cur.length>1)segs+=`<polyline points="${cur.join(' ')}" fill="none" stroke="${color}" stroke-width="${width}" stroke-linejoin="round" stroke-linecap="round"/>`;
-      return segs;
-    }
-    let segs=lineOf(lastCumVals,'#c9c3d1',2)+lineOf(cumVals,'#5b3a7a',2.5);
-    let dots='';
-    lastCumVals.forEach((cv,i)=>{
-      if(cv==null)return;
-      const raw=lastVals[i];
-      dots+=`<circle cx="${xOf(i)}" cy="${yOf(cv)}" r="2.5" fill="#c9c3d1" data-tap="${y-1}年${m+1}月${i+1}日：${raw===0?'定休日':'¥'+raw.toLocaleString('ja-JP')}"></circle>`;
-    });
-    cumVals.forEach((cv,i)=>{
-      if(cv==null)return;
-      const raw=vals[i];
-      const showLabel=(i===0||i===last-1||(i+1)%5===0);
-      dots+=`<circle cx="${xOf(i)}" cy="${yOf(cv)}" r="${raw===0?2.5:3.5}" fill="${raw===0?'#ccc':'#5b3a7a'}" stroke="#fff" stroke-width="1" data-tap="${y}年${m+1}月${i+1}日：${raw===0?'定休日':'¥'+raw.toLocaleString('ja-JP')}"></circle>`;
-      if(showLabel)dots+=`<text x="${xOf(i)}" y="${yOf(cv)-8}" text-anchor="middle" font-size="10" font-weight="700" fill="#3f2760">${raw===0?'休':manEn(cv)}</text>`;
-    });
-    // 横軸の日付は、その日の売上有無に関わらず一定間隔で表示する（間隔を5日→2日に詰めて見やすく）
-    for(let i=0;i<last;i++){
-      if(!(i===0||i===last-1||(i+1)%2===0))continue;
-      dots+=`<text x="${xOf(i)}" y="${H-padB+14}" text-anchor="middle" font-size="9" fill="#777">${i+1}</text>`;
-    }
-    // スマホで点(・)を正確にタップしにくいため、各日1本ずつ縦に伸びる透明な帯を上に重ねて
-    // タップ判定領域を広げる（Y座標を気にせずその日の列をタップすれば金額が表示される）
-    const bandW=plotW/Math.max(1,last-1);
-    let bands='';
-    for(let i=0;i<last;i++){
-      const cx=xOf(i);
-      const bx=Math.max(padL,cx-bandW/2), bw=Math.min(W-padR,cx+bandW/2)-bx;
-      const thisRaw=vals[i], lastRaw=lastVals[i];
-      const thisText=thisRaw==null?'未入力':(thisRaw===0?'定休日':'¥'+thisRaw.toLocaleString('ja-JP'));
-      const lastText=lastRaw==null?'データなし':(lastRaw===0?'定休日':'¥'+lastRaw.toLocaleString('ja-JP'));
-      bands+=`<rect x="${bx}" y="${padT}" width="${bw}" height="${H-padB-padT}" fill="transparent" pointer-events="all" data-tap="${y}年${m+1}月${i+1}日：${thisText}（${y-1}年：${lastText}）"></rect>`;
-    }
-    const total=present.reduce((a,b)=>a+b,0), workDays=present.filter(v=>v>0).length;
-    const lastTotal=lastPresent.reduce((a,b)=>a+b,0);
-    const legend=`<div class="small" style="display:flex;gap:14px;align-items:center;margin-bottom:4px">`+
-      (lastPresent.length?`<span><span style="display:inline-block;width:10px;height:10px;background:#c9c3d1;border-radius:2px;margin-right:4px"></span>${y-1}年${m+1}月</span>`:'')+
-      `<span><span style="display:inline-block;width:10px;height:10px;background:#5b3a7a;border-radius:2px;margin-right:4px"></span>${y}年${m+1}月（${targetLabel(salesTrendTarget)}）</span></div>`;
-    let compareLine='';
-    if(lastTotal>0){
-      const gap=lastTotal-total;
-      compareLine=gap>0
-        ? `<div class="small" style="margin-top:4px;color:#c65a1f;font-weight:700">🎯 ${y-1}年${m+1}月（¥${lastTotal.toLocaleString('ja-JP')}）まであと ¥${gap.toLocaleString('ja-JP')}</div>`
-        : `<div class="small" style="margin-top:4px;color:#176b32;font-weight:700">🎉 ${y-1}年${m+1}月（¥${lastTotal.toLocaleString('ja-JP')}）を ¥${Math.abs(gap).toLocaleString('ja-JP')} 上回っています</div>`;
-    }
-    box.innerHTML=`<div id="salesDailyTapInfo" style="min-height:22px;font-weight:800;color:#3f2760;margin-bottom:4px">点をタップすると金額が表示されます</div>`+
-      legend+`<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block">${grid}${segs}${dots}${bands}</svg>`+
-      `<div class="small" style="margin-top:8px;color:#555">月合計：¥${total.toLocaleString('ja-JP')}　営業日数：${workDays}日${workDays?'　平均：¥'+Math.round(total/workDays).toLocaleString('ja-JP'):''}</div>`+compareLine;
-  }
-  function initSalesTrendControls(){
-    $('salesTrendModeMonthly')?.addEventListener('click',()=>{salesTrendMode='monthly';$('salesTrendModeMonthly').classList.add('active');$('salesTrendModeDaily').classList.remove('active');renderMonthlySalesChart();});
-    $('salesTrendModeDaily')?.addEventListener('click',()=>{salesTrendMode='daily';$('salesTrendModeDaily').classList.add('active');$('salesTrendModeMonthly').classList.remove('active');renderMonthlySalesChart();});
-    $('salesTrendDailyPrev')?.addEventListener('click',()=>{salesTrendDailyAnchor=new Date(salesTrendDailyAnchor.getFullYear(),salesTrendDailyAnchor.getMonth()-1,1);renderMonthlySalesChart();});
-    $('salesTrendDailyNext')?.addEventListener('click',()=>{salesTrendDailyAnchor=new Date(salesTrendDailyAnchor.getFullYear(),salesTrendDailyAnchor.getMonth()+1,1);renderMonthlySalesChart();});
-    const targetBtns={total:'salesTrendTargetTotal',lunch:'salesTrendTargetLunch',dinner:'salesTrendTargetDinner'};
-    Object.entries(targetBtns).forEach(([t,id])=>{
-      $(id)?.addEventListener('click',()=>{
-        salesTrendTarget=t;
-        Object.values(targetBtns).forEach(bid=>$(bid)?.classList.toggle('active',bid===id));
-        renderMonthlySalesChart();
-      });
-    });
-    $('salesMonthlyChart')?.addEventListener('click',(e)=>{
-      const t=e.target.closest('[data-tap]');
-      const info=$('salesDailyTapInfo');
-      if(t&&info)info.textContent=t.dataset.tap;
-    });
-  }
-  window.renderMonthlySalesChart=renderMonthlySalesChart;
-  async function load(){
-    if(!fb()?.get)return;
-    const a=await fb().get(fb().ref(fb().db,'sales/daily'));
-    salesData=a?.val?.()||{};
-    window.__salesDailyData=salesData;
-    window.__salesPrevSameWeekday=prevSameWeekday;
-    renderMonthlySalesChart();
-    window.renderMemoCalendar?.();
-    applyDateToForm($('salesDate')?.value||today());
-  }
-  async function saveDailySales(date,patch){
-    if(!fb()?.update||!fb()?.get)return false;
-    const snap=await fb().get(fb().ref(fb().db,'sales/daily/'+date));
-    const existing=snap?.val?.()||{};
-    const closedLunch=patch.closedLunch!==undefined?!!patch.closedLunch:!!existing.closedLunch;
-    const closedDinner=patch.closedDinner!==undefined?!!patch.closedDinner:!!existing.closedDinner;
-    let lunch,dinner;
-    if(closedLunch)lunch=0;
-    else if(patch.lunch===null)lunch=null;
-    else if(patch.lunch!==undefined)lunch=Number(patch.lunch||0);
-    else lunch=(existing.lunch!=null)?Number(existing.lunch):null;
-    if(closedDinner)dinner=0;
-    else if(patch.dinner===null)dinner=null;
-    else if(patch.dinner!==undefined)dinner=Number(patch.dinner||0);
-    else dinner=(existing.dinner!=null)?Number(existing.dinner):null;
-    const memo=patch.memo!==undefined?String(patch.memo||''):(existing.memo||'');
-    const base='sales/daily/'+date+'/';
-    await fb().update(fb().ref(fb().db),{[base+'date']:date,[base+'lunch']:lunch,[base+'dinner']:dinner,[base+'amount']:(lunch||0)+(dinner||0),[base+'closedLunch']:closedLunch,[base+'closedDinner']:closedDinner,[base+'memo']:memo,[base+'updatedAt']:Date.now()});
-    await load();
-    return true;
-  }
-  window.saveDailySales=saveDailySales;
-  async function saveSales(){
-    const d=$('salesDate')?.value||today();
-    const lunchRaw=String($('salesAmountLunch').value||'').trim();
-    const dinnerRaw=String($('salesAmountDinner').value||'').trim();
-    const memo=String($('salesMemo').value||'').trim();
-    const patch={closedLunch:closedLunchState,closedDinner:closedDinnerState,memo};
-    if(closedLunchState)patch.lunch=0;
-    else if(lunchRaw!=='')patch.lunch=Number(lunchRaw);
-    if(closedDinnerState)patch.dinner=0;
-    else if(dinnerRaw!=='')patch.dinner=Number(dinnerRaw);
-    if(patch.lunch===undefined&&patch.dinner===undefined&&!closedLunchState&&!closedDinnerState&&!memo){
-      alert('ランチかディナーの売上を入力するか、定休日に設定してください。');
-      return;
-    }
-    await saveDailySales(d,patch);
-    alert('保存しました。');
-  }
-  async function clearField(which){
-    const d=$('salesDate')?.value||today();
-    const label=which==='lunch'?'ランチ':'ディナー';
-    if(!confirm(`${label}の売上を「未入力」に戻します。よろしいですか？`))return;
-    await saveDailySales(d,{[which]:null});
-    alert(`${label}を未入力に戻しました。`);
-  }
-  function augmentShift(){
-    const date=$('shiftViewDate')?.value||today();
-    if(date) renderPrevYearSalesUnderDate(date);
-  }
-  function switchSalesPage(){if(typeof window.switchPage==='function')window.switchPage('sales')}
-  function closeSalesPage(){
-    const sales=$('salesPage'), shift=$('shiftPage');
-    if(sales)sales.hidden=true;
-    if(shift)shift.hidden=false;
-    $('tabShift')?.classList.add('active');
-    $('tabShopping')?.classList.remove('active');$('tabOpenClose')?.classList.remove('active');$('tabPrep')?.classList.remove('active');
-    try{window.dispatchEvent(new CustomEvent('shift-page-opened'));}catch(_){}
-  }
-  function init(){
-    if($('salesDate'))$('salesDate').value=today();
-    $('tabSales')?.addEventListener('click',switchSalesPage);
-    $('salesPageCloseBtn')?.addEventListener('click',closeSalesPage);
-    $('salesDate')?.addEventListener('change',()=>applyDateToForm($('salesDate').value||today()));
-    $('salesSave')?.addEventListener('click',saveSales);
-    $('salesClosedLunchToggle')?.addEventListener('click',()=>{closedLunchState=!closedLunchState;updateClosedToggleUI();});
-    $('salesClosedDinnerToggle')?.addEventListener('click',()=>{closedDinnerState=!closedDinnerState;updateClosedToggleUI();});
-    $('salesClearLunch')?.addEventListener('click',()=>clearField('lunch'));
-    $('salesClearDinner')?.addEventListener('click',()=>clearField('dinner'));
-    initSalesTrendControls();
-    function bootLoad(){if(fb()?.get){load().then(augmentShift);}else{setTimeout(bootLoad,200);}}
-    bootLoad();
-    setInterval(augmentShift,1500);
-  }
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
-})();
-</script>
-<script id="shiftSalesExpenseButtonBind">
-(function(){
-  function bind(){
-    const b=document.getElementById('shiftSalesExpenseBtn');
-    if(b && b.dataset.bound!=='1'){
-      b.dataset.bound='1';
-      b.addEventListener('click',function(){
-        if(typeof window.switchPage==='function') window.switchPage('sales');
-        else {
-          document.getElementById('shiftPage')?.setAttribute('hidden','');
-          document.getElementById('salesPage')?.removeAttribute('hidden');
-        }
-      });
-    }
-  }
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bind);else bind();
-  setInterval(bind,1000);
-})();
-</script>
-
-
-<!-- SHIFT_SALES_BRIDGE_V3 -->
-<script>
-(function(){
-  'use strict';
-  function el(id){return document.getElementById(id)}
-  function isoToday(){
-    const d=new Date();
-    return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
-  }
-  function dateObj(s){
-    const m=String(s||'').match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
-    return m?new Date(Number(m[1]),Number(m[2])-1,Number(m[3])):new Date('invalid');
-  }
-  function prevSameWeekday(s){
-    // 他の前年同曜日売上ロジック(shiftStandaloneFixed/salesManagementAddScript)と
-    // 探索範囲を完全に一致させ、表示のちらつき・食い違いを防ぐ。
-    const d=dateObj(s); if(isNaN(d.getTime())) return '';
-    const target=d.getDay();
-    const base=new Date(d.getFullYear()-1,d.getMonth(),d.getDate());
-    for(let delta=-3;delta<=3;delta++){
-      const x=new Date(base); x.setDate(base.getDate()+delta);
-      if(x.getDay()===target) return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0');
-    }
-    return '';
-  }
-  let daily={};
-  function ensureBoxes(){
-    const todayLabel=el('shiftTodayDateLabel');
-    if(todayLabel && !el('shiftTodayPrevYearSales')){
-      const b=document.createElement('div'); b.id='shiftTodayPrevYearSales'; b.className='shiftPrevYearSalesUnderDate';
-      todayLabel.insertAdjacentElement('afterend',b);
-    }
-    const input=el('shiftViewDate');
-    if(input && !el('shiftOtherDayPrevYearSales')){
-      const parent=input.parentElement;
-      if(parent){const b=document.createElement('div');b.id='shiftOtherDayPrevYearSales';b.className='shiftPrevYearSalesUnderDate';input.insertAdjacentElement('afterend',b);}
-    }
-  }
-  function paint(date){
-    // shiftTodayPrevYearSalesは常に「本日」、shiftOtherDayPrevYearSalesは
-    // 引数のdate(「別の日を見る・編集」で選んだ日付)で、別々に計算する。
-    ensureBoxes();
-    const type=document.body.dataset.shiftMode==='lunch'?'lunch':'dinner';
-    const label=type==='lunch'?'ランチ':'ディナー';
-    function calc(d){
-      const p=prevSameWeekday(d);
-      const rec=p?daily[p]:null;
-      const isClosed=type==='lunch'?rec?.closedLunch:rec?.closedDinner;
-      if(rec&&isClosed) return p?'前年同曜日売上（'+label+'）：定休日':'';
-      const hasSplit=rec&&(rec.lunch!=null||rec.dinner!=null);
-      const amount=Number(hasSplit?(type==='lunch'?rec.lunch:rec.dinner)||0:(rec&&rec.amount!=null?rec.amount:0));
-      return p?'前年同曜日売上（'+label+'）：¥'+amount.toLocaleString('ja-JP')+(rec?'':'（未登録）'):'';
-    }
-    const a=el('shiftTodayPrevYearSales'); if(a)a.textContent=calc(isoToday());
-    const b=el('shiftOtherDayPrevYearSales'); if(b)b.textContent=calc(date||isoToday());
-  }
-  function bind(){
-    ensureBoxes();
-    const d=el('shiftViewDate');
-    if(d&&!d.dataset.salesBridgeV3){
-      d.dataset.salesBridgeV3='1';
-      d.addEventListener('change',function(){paint(d.value||isoToday())});
-    }
-    paint(isoToday()); paint(d&&d.value?d.value:isoToday());
-  }
-  function start(){
-    if(!window.__fb || !window.__fb.db || !window.__fb.ref || !window.__fb.get){return false}
-    bind();
-    try{
-      const r=window.__fb.ref(window.__fb.db,'sales/daily');
-      if(window.__fb.onValue){
-        window.__fb.onValue(r,function(snap){daily=snap.val()||{};bind();paint(isoToday());paint(el('shiftViewDate')?.value||isoToday())});
-      }else{
-        window.__fb.get(r).then(function(snap){daily=snap.val()||{};bind()}).catch(function(e){console.warn('前年売上取得:',e);});
-      }
-    }catch(e){console.warn('前年売上連携:',e)}
-    return true;
-  }
-  function boot(){
-    ensureBoxes();
-    if(start()) return;
-    setTimeout(boot,300);
-  }
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
-  // シフト画面の再描画後にも必ず表示欄を復元
-  setInterval(function(){
-    ensureBoxes();
-    const d=el('shiftViewDate');
-    paint(d&&d.value?d.value:isoToday());
-  },1000);
-})();
-</script>
 
 
 
@@ -8487,8 +7865,8 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 })();
 </script>
 
-<style id="salesMobileLayoutV6">
-/* 売上・経費ページ：既存スマホ画面と同じ4タブ・カード型の見た目 */
+<style id="navtabs4LayoutStyle">
+/* 4タブ・カード型ナビゲーションの見た目 */
 .navtabs.navtabs4{
   display:grid!important;
   grid-template-columns:repeat(4,minmax(0,1fr))!important;
@@ -8502,72 +7880,11 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   padding:12px 4px!important;
   white-space:nowrap!important;
 }
-#salesPage{box-sizing:border-box;}
-#salesPage .salesPageHeader{
-  position:relative;
-  display:flex!important;
-  align-items:center!important;
-  justify-content:space-between!important;
-  gap:10px!important;
-  margin-bottom:14px!important;
-}
-#salesPage .salesPageHeader h1{font-size:clamp(24px,6vw,34px)!important;line-height:1.2!important;}
-#salesPage .salesPageCloseBtn{flex:0 0 auto!important;width:46px!important;height:46px!important;border-radius:50%!important;font-size:22px!important;padding:0!important;display:flex!important;align-items:center!important;justify-content:center!important;}
-#salesPage .card{border-radius:20px!important;margin-bottom:14px!important;}
 @media(max-width:600px){
   .navtabs.navtabs4{grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:8px!important;}
   .navtabs.navtabs4 button{font-size:14px!important;padding:11px 2px!important;border-radius:18px!important;}
-  #salesPage .salesGrid{grid-template-columns:1fr!important;gap:8px!important;}
-  #salesPage .salesSummary{grid-template-columns:1fr!important;}
-  #salesPage .salesRow{grid-template-columns:1fr!important;}
-  #salesPage .salesItem{grid-template-columns:78px 1fr auto!important;}
-  #salesPage h2{font-size:21px!important;}
 }
 </style>
-<script id="salesPageOpenCloseV6">
-(function(){
-  'use strict';
-  function top(){
-    try{window.scrollTo({top:0,left:0,behavior:'auto'});}catch(e){window.scrollTo(0,0);}
-    try{document.documentElement.scrollTop=0;document.body.scrollTop=0;}catch(e){}
-  }
-  function showSales(){
-    var sales=document.getElementById('salesPage'), shift=document.getElementById('shiftPage');
-    if(!sales)return;
-    document.querySelectorAll('.page').forEach(function(p){p.hidden=true;});
-    sales.hidden=false;
-    document.querySelectorAll('.navtabs.navtabs4 button').forEach(function(b){b.classList.remove('active');});
-    top();
-    setTimeout(top,30);
-  }
-  function showShift(){
-    var sales=document.getElementById('salesPage'), shift=document.getElementById('shiftPage');
-    if(sales)sales.hidden=true;
-    if(shift)shift.hidden=false;
-    var b=document.getElementById('tabShift');if(b)b.classList.add('active');
-    ['tabShopping','tabOpenClose','tabPrep'].forEach(function(id){var x=document.getElementById(id);if(x)x.classList.remove('active');});
-    top();
-    try{window.dispatchEvent(new CustomEvent('shift-page-opened'));}catch(e){}
-  }
-  function bind(){
-    var b=document.getElementById('shiftSalesExpenseBtn');
-    if(b && b.dataset.salesV6!=='1'){
-      b.dataset.salesV6='1';
-      b.addEventListener('click',function(e){e.preventDefault();showSales();});
-    }
-    var c=document.getElementById('salesPageCloseBtn');
-    if(c && c.dataset.salesCloseV6!=='1'){
-      c.dataset.salesCloseV6='1';
-      c.addEventListener('click',function(e){e.preventDefault();showShift();});
-    }
-    /* 売上ページを開く処理を一本化。既存4タブは従来どおり */
-    window.__openSalesPageV6=showSales;
-    window.__closeSalesPageV6=showShift;
-  }
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bind);else bind();
-  setInterval(bind,1000);
-})();
-</script>
 
 <script id="pageSwipeNavigation">
 /* スマホで 買い物 → 野菜発注 → 仕込み表 → シフト をスワイプで切り替える機能を追加。
@@ -9340,60 +8657,6 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
     }
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
-})();
-</script>
-<script id="closingSalesQuickEntry">
-(function(){
-  const $=id=>document.getElementById(id);
-  const today=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
-  const fmt=n=>'¥'+Number(n||0).toLocaleString('ja-JP');
-  function paint(meal,rec){
-    const input=$('ccSales'+meal+'Input'), status=$('ccSales'+meal+'Status');
-    if(!input||!status)return;
-    const key=meal==='Lunch'?'lunch':'dinner';
-    const closedKey=meal==='Lunch'?'closedLunch':'closedDinner';
-    if(rec&&rec[closedKey]){
-      status.textContent='🚫 本日は'+(meal==='Lunch'?'ランチ':'ディナー')+'の定休日として登録されています';
-      status.className='ccSalesQuickStatus closed';
-      input.disabled=true;
-    }else if(rec&&rec[key]!=null){
-      input.disabled=false;
-      if(document.activeElement!==input)input.value=rec[key];
-      status.textContent='✅ 入力済み：'+fmt(rec[key]);
-      status.className='ccSalesQuickStatus done';
-    }else{
-      input.disabled=false;
-      status.textContent='⚠️ まだ入力されていません';
-      status.className='ccSalesQuickStatus missing';
-    }
-  }
-  async function save(meal){
-    const key=meal==='Lunch'?'lunch':'dinner';
-    const input=$('ccSales'+meal+'Input');
-    if(!input)return;
-    const v=Number(input.value||0);
-    if(typeof window.saveDailySales!=='function'){alert('準備中です。少し待ってから再度お試しください。');return}
-    const btn=$('ccSales'+meal+'Save'); if(btn)btn.disabled=true;
-    try{
-      await window.saveDailySales(today(),{[key]:v});
-    }catch(e){console.error(e);alert('保存に失敗しました。');}
-    finally{if(btn)btn.disabled=false;}
-  }
-  function bind(){
-    $('ccSalesLunchSave')?.addEventListener('click',()=>save('Lunch'));
-    $('ccSalesDinnerSave')?.addEventListener('click',()=>save('Dinner'));
-    const wait=setInterval(()=>{
-      if(!window.__fb)return;
-      clearInterval(wait);
-      const {db,ref,onValue}=window.__fb;
-      onValue(ref(db,'sales/daily/'+today()),s=>{
-        const rec=s.val();
-        paint('Lunch',rec);
-        paint('Dinner',rec);
-      });
-    },200);
-  }
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bind);else bind();
 })();
 </script>
 <script id="receiptManagementScript">
